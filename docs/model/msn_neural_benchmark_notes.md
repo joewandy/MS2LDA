@@ -115,6 +115,12 @@ only after a Stage 1 run exists. It writes another model directory with
 predicted `theta.npy`, copied `beta.npy`, validation metrics, and checkpoint
 files.
 
+`scripts/run_msn_fixed_beta_encoder_experiment.py` trains tomotopy LDA on a
+train split, freezes the resulting `beta`, infers tomotopy `theta` for held-out
+validation/test spectra, and trains a BoW neural encoder to replace that
+inference step. It writes `split_indices.json` plus standard model directories
+for `lda_inferred` and `neural_encoder`.
+
 ## Models Kept
 
 `lda` is the tomotopy baseline and should remain the reference point.
@@ -160,6 +166,12 @@ The Stage 2 encoder did not yet generalize well. A dense BoW MLP overfit the
 training spectra and reached only about `0.587` validation theta cosine against
 the Stage 1 teacher. The token-set encoder failed to learn useful validation
 theta assignments in the small smoke run.
+
+The fixed-beta encoder smoke run is recorded in
+`docs/model/msn_fixed_beta_encoder_results.md`. On the 2k held-out test split,
+tomotopy inference scored coverage `0.083`, mean SoS `0.5252`, QAC `0.0436`;
+the neural encoder scored coverage `0.056`, mean SoS `0.5397`, QAC `0.0302`.
+This did not meet the threshold for a full-data run.
 
 ## Interpretation
 

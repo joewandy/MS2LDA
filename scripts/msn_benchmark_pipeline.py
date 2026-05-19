@@ -196,6 +196,87 @@ def read_documents_jsonl(path: Path) -> list[list[str]]:
     return documents
 
 
+def train_validation_test_split(
+    n_items: int,
+    *,
+    train_fraction: float = 0.8,
+    validation_fraction: float = 0.1,
+    test_fraction: float = 0.1,
+    seed: int = 42,
+) -> dict[str, np.ndarray]:
+    """Create deterministic non-overlapping train/validation/test indices."""
+    split_names = ("train", "validation", "test")
+    fractions = np.asarray(
+        [train_fraction, validation_fraction, test_fraction],
+        dtype=np.float64,
+    )
+    if int(n_items) < len(split_names):
+        raise ValueError(
+            "Need at least three spectra for a train/validation/test split."
+        )
+    if np.any(fractions <= 0):
+        raise ValueError("All split fractions must be greater than zero.")
+    fraction_sum = float(fractions.sum())
+    if fraction_sum <= 0:
+        raise ValueError("Split fractions must sum to a positive value.")
+
+    raw_counts = int(n_items) * fractions / fraction_sum
+    counts = np.floor(raw_counts).astype(int)
+    remainders = raw_counts - counts
+    order_for_extra = np.argsort(-remainders)
+    for offset in range(int(n_items) - int(counts.sum())):
+        counts[int(order_for_extra[offset % len(counts)])] += 1
+    while np.any(counts == 0):
+        zero_index = int(np.where(counts == 0)[0][0])
+        donor_index = int(np.argmax(counts))
+        if counts[donor_index] <= 1:
+            raise ValueError("Cannot allocate non-empty train/validation/test splits.")
+        counts[zero_index] += 1
+        counts[donor_index] -= 1
+
+    rng = np.random.default_rng(int(seed))
+    order = rng.permutation(int(n_items)).astype(np.int64)
+    train_end = int(counts[0])
+    validation_end = train_end + int(counts[1])
+    return {
+        "train_indices": np.sort(order[:train_end]).astype(np.int64),
+        "validation_indices": np.sort(order[train_end:validation_end]).astype(np.int64),
+        "test_indices": np.sort(order[validation_end:]).astype(np.int64),
+    }
+
+
+def split_indices_json_payload(splits: dict[str, np.ndarray]) -> dict[str, list[int]]:
+    return {key: [int(value) for value in values] for key, values in splits.items()}
+
+
+def build_bow_matrix_for_vocabulary(
+    documents: list[list[str]],
+    vocab: list[str],
+) -> sparse.csr_matrix:
+    """Build a BoW matrix using an already ordered vocabulary."""
+    if not vocab:
+        raise ValueError("Cannot build a BoW matrix with an empty vocabulary.")
+
+    token_to_idx = {str(token): idx for idx, token in enumerate(vocab)}
+    rows: list[int] = []
+    cols: list[int] = []
+    data: list[float] = []
+    for doc_index, document in enumerate(documents):
+        counts = Counter(str(token) for token in document)
+        for token, count in counts.items():
+            vocab_index = token_to_idx.get(token)
+            if vocab_index is None:
+                continue
+            rows.append(doc_index)
+            cols.append(vocab_index)
+            data.append(float(count))
+    return sparse.csr_matrix(
+        (np.asarray(data, dtype=np.float32), (rows, cols)),
+        shape=(len(documents), len(vocab)),
+        dtype=np.float32,
+    )
+
+
 def prepare_input_cache(
     *,
     dataset: Path,
@@ -434,6 +515,29 @@ def run_tomotopy_lda(
     lda_iterations: int,
     seed: int,
 ) -> tuple[np.ndarray, np.ndarray, list[str], list[dict[str, float]], dict]:
+    model, history, metadata = train_tomotopy_lda_model(
+        documents,
+        n_motifs=n_motifs,
+        min_df=min_df,
+        min_cf=min_cf,
+        rm_top=rm_top,
+        lda_iterations=lda_iterations,
+        seed=seed,
+    )
+    theta, beta, vocab = tomotopy_lda_model_outputs(model)
+    return theta, beta, vocab, history, metadata
+
+
+def train_tomotopy_lda_model(
+    documents: list[list[str]],
+    *,
+    n_motifs: int,
+    min_df: int,
+    min_cf: float,
+    rm_top: int,
+    lda_iterations: int,
+    seed: int,
+):
     try:
         import tomotopy as tp
     except ModuleNotFoundError as err:
@@ -467,6 +571,24 @@ def run_tomotopy_lda(
             }
         )
 
+    if not list(model.used_vocabs):
+        raise ValueError("Tomotopy LDA vocabulary is empty after filtering.")
+
+    metadata = {
+        "lda_iterations": int(lda_iterations),
+        "lda_k": int(model.k),
+        "lda_alpha": LDA_ALPHA,
+        "lda_eta": LDA_ETA,
+        "lda_min_df": int(min_df),
+        "lda_min_cf": int(min_cf),
+        "lda_rm_top": int(rm_top),
+        "lda_ll_per_word": float(model.ll_per_word),
+        "lda_perplexity": float(model.perplexity),
+    }
+    return model, history, metadata
+
+
+def tomotopy_lda_model_outputs(model) -> tuple[np.ndarray, np.ndarray, list[str]]:
     vocab = list(model.used_vocabs)
     if not vocab:
         raise ValueError("Tomotopy LDA vocabulary is empty after filtering.")
@@ -483,18 +605,48 @@ def run_tomotopy_lda(
             ]
         )
     )
+    return theta, beta, vocab
+
+
+def infer_tomotopy_lda_theta(
+    model,
+    documents: list[list[str]],
+    *,
+    iterations: int = 100,
+) -> tuple[np.ndarray, dict[str, int | float]]:
+    vocab = set(str(token) for token in model.used_vocabs)
+    rows = []
+    log_likelihoods = []
+    empty_documents = 0
+    for document in documents:
+        filtered = [str(token) for token in document if str(token) in vocab]
+        if not filtered:
+            empty_documents += 1
+            rows.append(np.full(int(model.k), 1.0 / float(model.k), dtype=np.float32))
+            continue
+        doc = model.make_doc(filtered)
+        topic_dist, log_likelihood = model.infer(
+            doc,
+            iter=int(iterations),
+            workers=1,
+            parallel=1,
+        )
+        rows.append(np.asarray(topic_dist, dtype=np.float32))
+        log_likelihoods.append(float(log_likelihood))
+    theta = (
+        normalize_rows(np.vstack(rows))
+        if rows
+        else np.empty((0, int(model.k)), dtype=np.float32)
+    )
     metadata = {
-        "lda_iterations": int(lda_iterations),
-        "lda_k": int(model.k),
-        "lda_alpha": LDA_ALPHA,
-        "lda_eta": LDA_ETA,
-        "lda_min_df": int(min_df),
-        "lda_min_cf": int(min_cf),
-        "lda_rm_top": int(rm_top),
-        "lda_ll_per_word": float(model.ll_per_word),
-        "lda_perplexity": float(model.perplexity),
+        "documents": int(len(documents)),
+        "empty_documents": int(empty_documents),
+        "inference_iterations": int(iterations),
+        "mean_log_likelihood": (
+            float(np.mean(log_likelihoods)) if log_likelihoods else 0.0
+        ),
     }
-    return theta, beta, vocab, history, metadata
+    return theta, metadata
 
 
 def topic_usage_loss(theta, *, mode: str = "mse"):

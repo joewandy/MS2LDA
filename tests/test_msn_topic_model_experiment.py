@@ -5,7 +5,38 @@ from scipy import sparse
 
 from scripts import msn_benchmark_pipeline as pipeline
 from scripts import evaluate_motif_substructure_quality as quality
+from scripts import export_msn_model_outputs as exporter
 from scripts import run_msn_topic_model_experiment as experiment
+
+
+def test_train_validation_test_split_is_deterministic_and_nonoverlapping():
+    split_a = pipeline.train_validation_test_split(10, seed=7)
+    split_b = pipeline.train_validation_test_split(10, seed=7)
+
+    assert split_a.keys() == split_b.keys()
+    for key in split_a:
+        assert split_a[key].tolist() == split_b[key].tolist()
+    assert len(split_a["train_indices"]) == 8
+    assert len(split_a["validation_indices"]) == 1
+    assert len(split_a["test_indices"]) == 1
+    combined = np.concatenate(list(split_a.values()))
+    assert sorted(combined.tolist()) == list(range(10))
+    assert len(set(combined.tolist())) == 10
+
+
+def test_build_bow_matrix_for_vocabulary_uses_explicit_order():
+    docs = [
+        ["frag@100", "frag@100", "loss@50", "ignored"],
+        ["loss@50", "frag@200"],
+    ]
+
+    matrix = pipeline.build_bow_matrix_for_vocabulary(
+        docs,
+        ["loss@50", "frag@100"],
+    )
+
+    assert matrix.shape == (2, 2)
+    assert matrix.toarray().tolist() == [[1.0, 2.0], [1.0, 0.0]]
 
 
 def test_build_bow_matrix_filters_and_counts():
@@ -317,6 +348,57 @@ def test_export_memberships_accepts_cached_metadata():
             "smiles": "CCC",
             "membership_score": pytest.approx(0.8),
         },
+    ]
+
+
+def test_split_aware_export_selects_only_requested_metadata_rows(tmp_path):
+    split_path = tmp_path / "split_indices.json"
+    pipeline.write_json(
+        split_path,
+        {
+            "train_indices": [0, 2],
+            "validation_indices": [1],
+            "test_indices": [3],
+        },
+    )
+    theta = np.array(
+        [
+            [0.7, 0.3],
+            [0.2, 0.8],
+            [0.6, 0.4],
+            [0.1, 0.9],
+        ],
+        dtype=np.float32,
+    )
+    metadata = pd.DataFrame(
+        [
+            {"doc_index": 0, "smiles": "CCO"},
+            {"doc_index": 1, "smiles": "CCC"},
+            {"doc_index": 2, "smiles": "CCN"},
+            {"doc_index": 3, "smiles": "CNC"},
+        ]
+    )
+
+    test_indices = exporter.load_split_indices(split_path, "test")
+    theta_export, metadata_export = exporter.select_export_split(
+        theta,
+        metadata,
+        test_indices,
+    )
+    memberships = pipeline.export_memberships(
+        theta_export,
+        metadata_export,
+        [0, 1],
+        membership_threshold=0.5,
+    )
+
+    assert metadata_export["smiles"].tolist() == ["CNC"]
+    assert memberships.to_dict("records") == [
+        {
+            "motif_id": "motif_1",
+            "smiles": "CNC",
+            "membership_score": pytest.approx(0.9),
+        }
     ]
 
 
