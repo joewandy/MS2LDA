@@ -121,6 +121,12 @@ validation/test spectra, and trains a BoW neural encoder to replace that
 inference step. It writes `split_indices.json` plus standard model directories
 for `lda_inferred` and `neural_encoder`.
 
+`scripts/run_msn_amortized_neural_topic_experiment.py` is the neural-only
+follow-up. It learns `beta`, local train-document `theta`, and an encoder
+jointly from cached BoW spectra, without tomotopy LDA or `documents.jsonl.gz`.
+It exports full-cache encoder `theta.npy`, learned `beta.npy`, `vocab.json`, and
+`split_indices.json` for held-out scoring.
+
 ## Models Kept
 
 `lda` is the tomotopy baseline and should remain the reference point.
@@ -145,6 +151,11 @@ yet provide inference for unseen spectra.
 `run_msn_stage2_encoder_experiment.py` trains an encoder after Stage 1 so that
 new spectra can be mapped to the learned motif space. This is the right place
 to test whether a neural method adds value through fast inference.
+
+`run_msn_amortized_neural_topic_experiment.py` is intended to close the gap left
+by `neural-lda`: it keeps the train-document topic parameters that helped
+`neural-lda` find useful motifs, but also trains an encoder against the same
+learned `beta` so held-out spectra can be exported without LDA.
 
 ## Current Results
 
@@ -172,6 +183,13 @@ The fixed-beta encoder smoke run is recorded in
 tomotopy inference scored coverage `0.083`, mean SoS `0.5252`, QAC `0.0436`;
 the neural encoder scored coverage `0.056`, mean SoS `0.5397`, QAC `0.0302`.
 This did not meet the threshold for a full-data run.
+
+The no-LDA amortized neural topic runs are recorded in
+`docs/model/msn_amortized_neural_topic_results.md`. On the same 2k held-out test
+split, the 500-motif run scored coverage `0.238`, mean SoS `0.5194`, QAC
+`0.1236`; the 1000-motif run scored coverage `0.124`, mean SoS `0.5498`, QAC
+`0.0682`. These runs did not collapse, but they still do not justify a full-data
+benchmark.
 
 ## Interpretation
 
