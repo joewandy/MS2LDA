@@ -78,7 +78,7 @@ results/
 
 
 
-For advanced tuning and notebook-based workflows, see the [GitHub repository](https://github.com/vdhooftcompmet/MS2LDA/blob/main/README_CLI.md).
+For advanced tuning and notebook-based workflows, see the [command-line README](../../../README_CLI.md).
 
 Want a quick refresher on the Viz App? 🔗 or looking for end-to-end examples? 📚
 

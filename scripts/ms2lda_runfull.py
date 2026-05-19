@@ -150,7 +150,7 @@ def download_all_aux_data() -> str:
     Returns a printable summary.
     """
     pkg_root = Path(MS2LDA.__file__).resolve().parent
-    repo = "vdhooftcompmet/MS2LDA"
+    repo = "joewandy/MS2LDA_private"
     summary: List[str] = []
 
     # 1. Spec2Vec (positive mode)

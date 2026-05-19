@@ -55,7 +55,7 @@ As well as MotifDB:
 **Torres Ortega et al. bioRxiv, 2025** → [https://doi.org/10.1101/2025.06.19.659491](https://doi.org/10.1101/2025.06.19.659491)
 
 
-Ongoing development continues in collaboration with the broader metabolomics and computational biology community. We welcome feedback, issues, and pull requests on our [GitHub repository](https://github.com/vdhooftcompmet/MS2LDA).  
+Ongoing development continues in collaboration with the broader metabolomics and computational biology community.
 
 Questions? Open an issue or contact the development team directly 🤝
 

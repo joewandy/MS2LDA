@@ -11,6 +11,6 @@ You can find all tutorials in the following YouTube playlist ([MS2LDA video tuto
 ### ▶️ Command-line analysis (Tutorial 3)
 
 
-For further information and examples, please check the [notebooks](https://github.com/vdhooftcompmet/MS2LDA/tree/main/notebooks) directory in the repository.
+For further information and examples, please check the `notebooks` directory in the repository.
 
 If there is a topic you would like us to cover, feel free to open an issue on GitHub.

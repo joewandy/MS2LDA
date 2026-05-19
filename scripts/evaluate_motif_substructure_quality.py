@@ -69,6 +69,12 @@ def parse_args() -> argparse.Namespace:
         required=True,
         help="Directory where score CSVs and summary JSON will be written.",
     )
+    parser.add_argument(
+        "--membership-threshold",
+        type=float,
+        default=MEMBERSHIP_THRESHOLD,
+        help="Minimum motif membership score used to associate molecules.",
+    )
     return parser.parse_args()
 
 
@@ -151,9 +157,13 @@ def load_csv_inputs(
     missing_annotation = required_annotation_cols - set(annotations.columns)
     missing_membership = required_membership_cols - set(memberships.columns)
     if missing_annotation:
-        raise ValueError(f"Missing annotation CSV columns: {sorted(missing_annotation)}")
+        raise ValueError(
+            f"Missing annotation CSV columns: {sorted(missing_annotation)}"
+        )
     if missing_membership:
-        raise ValueError(f"Missing membership CSV columns: {sorted(missing_membership)}")
+        raise ValueError(
+            f"Missing membership CSV columns: {sorted(missing_membership)}"
+        )
 
     motif_inputs = []
     for motif_id, group in annotations.groupby("motif_id", sort=False):
@@ -260,7 +270,13 @@ def score_motifs(
     return pd.DataFrame(rows), pd.DataFrame(associated_rows)
 
 
-def summarize_scores(scores: pd.DataFrame, metadata: dict, output_dir: Path) -> dict:
+def summarize_scores(
+    scores: pd.DataFrame,
+    metadata: dict,
+    output_dir: Path,
+    *,
+    membership_threshold: float,
+) -> dict:
     included = scores[scores["included_in_range"]].copy()
     quality_counts = included["quality_bin"].value_counts().to_dict()
     panel_counts = included.groupby("candidate_range").size().to_dict()
@@ -272,7 +288,7 @@ def summarize_scores(scores: pd.DataFrame, metadata: dict, output_dir: Path) -> 
         "created_utc": datetime.now(timezone.utc).isoformat(),
         "parameters": {
             "fingerprint": FINGERPRINT_TYPE,
-            "membership_threshold": MEMBERSHIP_THRESHOLD,
+            "membership_threshold": float(membership_threshold),
             "annotation_threshold": ANNOTATION_THRESHOLD,
             "candidate_ranges": ",".join(label for label, _, _ in CANDIDATE_RANGES),
         },
@@ -316,7 +332,7 @@ def main() -> None:
     motif_inputs, associated_smiles_by_motif, metadata = load_csv_inputs(
         args.annotations_csv.resolve(),
         args.memberships_csv.resolve(),
-        membership_threshold=MEMBERSHIP_THRESHOLD,
+        membership_threshold=args.membership_threshold,
     )
 
     scores, associated_molecules = score_motifs(
@@ -326,7 +342,12 @@ def main() -> None:
     scores.to_csv(args.out_dir / "motif_substructure_scores.csv", index=False)
     associated_molecules.to_csv(args.out_dir / "associated_molecules.csv", index=False)
 
-    summary = summarize_scores(scores, metadata, args.out_dir)
+    summary = summarize_scores(
+        scores,
+        metadata,
+        args.out_dir,
+        membership_threshold=args.membership_threshold,
+    )
     (args.out_dir / "motif_substructure_summary.json").write_text(
         json.dumps(summary, indent=2) + "\n"
     )

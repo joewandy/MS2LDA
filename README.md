@@ -1,4 +1,4 @@
-![header](https://raw.githubusercontent.com/vdhooftcompmet/MS2LDA/main/App/assets/MS2LDA_LOGO_white.jpg)
+![header](App/assets/MS2LDA_LOGO_white.jpg)
 ![Maintainer](https://img.shields.io/badge/maintainer-Rosina_Torres_Ortega-blue)
 ![Maintainer](https://img.shields.io/badge/maintainer-Jonas_Dietrich-blue)
 ![Maintainer](https://img.shields.io/badge/maintainer-Joe_Wandy-blue)
@@ -51,7 +51,7 @@ For instructions on starting and using the visualization application, see the [*
 
 ## MS2LDA Documentation
 
-📚 **[View the full documentation](https://vdhooftcompmet.github.io/MS2LDA/)**
+📚 **[View the full documentation](docs/docs/index.md)**
 
 Our comprehensive documentation includes:
 - Getting started guides
@@ -69,7 +69,6 @@ Torres Ortega, L.R., Dietrich, J., Wandy, J., Mol, H., & van der Hooft, J.J.J. (
 
 ## Our Research Group
 
-[![GitHub Logo](https://github.com/vdhooftcompmet/group-website/blob/main/website/custom/logo/logo.png?raw=true)](https://vdhooftcompmet.github.io)
 [![Github Logo](App/assets/WUR_RGB_standard_2021.png?raw=true)](https://www.wur.nl/en.htm)
 
 ---

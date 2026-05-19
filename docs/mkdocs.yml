@@ -1,10 +1,10 @@
 site_name: MS2LDA - Mass Spectrometry Substructure Discovery
-site_url: https://vdhooftcompmet.github.io/MS2LDA/
+site_url: https://github.com/joewandy/MS2LDA_private
 site_description: Unsupervised Substructure Discovery using Topic Modelling with Automated Annotation
 site_author: MS2LDA Development Team
 
-repo_name: vdhooftcompmet/MS2LDA
-repo_url: https://github.com/vdhooftcompmet/MS2LDA
+repo_name: joewandy/MS2LDA_private
+repo_url: https://github.com/joewandy/MS2LDA_private
 edit_uri: edit/main/docs/docs/
 
 nav:
@@ -96,7 +96,7 @@ markdown_extensions:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/vdhooftcompmet/MS2LDA
+      link: https://github.com/joewandy/MS2LDA_private
     - icon: fontawesome/solid/globe
       link: https://ms2lda.org
 

@@ -38,7 +38,7 @@ MS2LDA works on macOS, Linux, and Windows (Anaconda Prompt or Windows Subsystem 
 
 ```bash
 # Clone the repository
-git clone https://github.com/vdhooftcompmet/MS2LDA.git
+git clone https://github.com/joewandy/MS2LDA_private.git
 
 # Load MS2LDA directory
 cd MS2LDA

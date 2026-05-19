@@ -10,8 +10,8 @@ maintainers = [
 ]
 license     = "MIT"
 readme      = "README.md"
-homepage    = "https://github.com/vdhooftcompmet/MS2LDA"
-repository  = "https://github.com/vdhooftcompmet/MS2LDA"
+homepage    = "https://github.com/joewandy/MS2LDA_private"
+repository  = "https://github.com/joewandy/MS2LDA_private"
 documentation = "https://ms2lda.org"
 keywords    = ["mass spectrometry", "metabolomics", "topic modeling", "LDA", "substructure discovery", "cheminformatics"]
 classifiers = [
