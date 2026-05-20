@@ -236,3 +236,9 @@ The main open problem is not producing `theta`/`beta` for the training spectra.
 The hard part is learning stable, reusable motif structure and then inferring
 good motif memberships for unseen spectra without collapsing to a few generic
 topics.
+
+The final recommendation is recorded in
+`docs/model/msn_neural_replacement_conclusion.md`: stop the unsupervised
+no-tomotopy neural replacement path for now, keep tomotopy LDA as the
+production/paper reference, and treat the neural/no-LDA experiments as negative
+evidence and future R&D context.
