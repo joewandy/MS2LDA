@@ -622,3 +622,104 @@ def test_amortized_neural_topic_experiment_smoke_without_documents_or_tomotopy(
     }
     assert (out_dir / "model_checkpoint.pt").exists()
     assert (out_dir / "validation_metrics.json").exists()
+
+
+def test_prodlda_experiment_smoke_without_documents_tomotopy_or_pyro(
+    tmp_path,
+    monkeypatch,
+):
+    pytest.importorskip("torch")
+    from types import SimpleNamespace
+
+    from scripts import run_msn_prodlda_experiment as prodlda
+
+    monkeypatch.setitem(__import__("sys").modules, "tomotopy", None)
+    monkeypatch.setitem(__import__("sys").modules, "pyro", None)
+    cache_dir = tmp_path / "cache"
+    cache_dir.mkdir()
+    matrix = sparse.csr_matrix(
+        np.array(
+            [
+                [2.0, 1.0, 0.0, 0.0],
+                [1.0, 2.0, 0.0, 0.0],
+                [0.0, 0.0, 2.0, 1.0],
+                [0.0, 0.0, 1.0, 2.0],
+                [1.0, 0.0, 0.0, 1.0],
+                [0.0, 1.0, 1.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0],
+            ],
+            dtype=np.float32,
+        )
+    )
+    sparse.save_npz(cache_dir / "bow.npz", matrix)
+    pipeline.write_json(
+        cache_dir / "vocab.json",
+        {"vocab": ["frag@100", "frag@101", "loss@50", "loss@51"]},
+    )
+    pd.DataFrame(
+        [
+            {"doc_index": index, "smiles": f"C{index}"}
+            for index in range(matrix.shape[0])
+        ]
+    ).to_csv(cache_dir / "spectra_metadata.csv", index=False)
+    pipeline.write_json(
+        cache_dir / "cache_summary.json",
+        {
+            "input": {"documents": int(matrix.shape[0]), "vocab_size": matrix.shape[1]},
+            "vocabulary_parameters": {"min_df": 1, "min_cf": 0.0, "rm_top": 0},
+        },
+    )
+
+    out_dir = tmp_path / "prodlda"
+    summary = prodlda.run_experiment(
+        SimpleNamespace(
+            input_cache=cache_dir,
+            out_dir=out_dir,
+            n_motifs=3,
+            epochs=2,
+            batch_size=3,
+            lr=1e-3,
+            hidden_size=8,
+            dropout=0.0,
+            weight_decay=0.0,
+            train_fraction=0.6,
+            validation_fraction=0.2,
+            test_fraction=0.2,
+            kl_weight=0.1,
+            kl_anneal_epochs=2,
+            theta_entropy_weight=0.0,
+            topic_usage_weight=0.0,
+            beta_target_support=2.0,
+            beta_target_weight=0.0,
+            background_weight=0.0,
+            beta_init_noise=0.01,
+            theta_export_power=1.5,
+            membership_threshold=0.5,
+            seed=1,
+            device="cpu",
+            overwrite=True,
+        )
+    )
+
+    theta = np.load(out_dir / "theta.npy")
+    theta_raw = np.load(out_dir / "theta_raw.npy")
+    beta = np.load(out_dir / "beta.npy")
+    split_payload = pd.read_json(out_dir / "split_indices.json", typ="series")
+
+    assert summary["model"] == "prodlda"
+    assert theta.shape == (matrix.shape[0], 3)
+    assert theta_raw.shape == theta.shape
+    assert beta.shape == (3, matrix.shape[1])
+    assert np.isfinite(theta).all()
+    assert np.isfinite(theta_raw).all()
+    assert np.isfinite(beta).all()
+    assert theta.sum(axis=1).tolist() == pytest.approx([1.0] * matrix.shape[0])
+    assert theta_raw.sum(axis=1).tolist() == pytest.approx([1.0] * matrix.shape[0])
+    assert beta.sum(axis=1).tolist() == pytest.approx([1.0, 1.0, 1.0])
+    assert set(split_payload.index) == {
+        "train_indices",
+        "validation_indices",
+        "test_indices",
+    }
+    assert (out_dir / "model_checkpoint.pt").exists()
+    assert (out_dir / "validation_metrics.json").exists()

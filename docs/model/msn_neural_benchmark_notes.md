@@ -127,6 +127,12 @@ jointly from cached BoW spectra, without tomotopy LDA or `documents.jsonl.gz`.
 It exports full-cache encoder `theta.npy`, learned `beta.npy`, `vocab.json`, and
 `split_indices.json` for held-out scoring.
 
+`scripts/run_msn_prodlda_experiment.py` is the variational no-LDA follow-up. It
+implements a ProdLDA/AVITM-style encoder directly in PyTorch: cached BoW spectra
+are mapped to logistic-normal topic latents, `theta = softmax(z)`, and the
+decoder reconstructs word counts with `softmax(theta @ beta_logits)`. It does
+not learn local per-document topic parameters and does not use tomotopy outputs.
+
 ## Models Kept
 
 `lda` is the tomotopy baseline and should remain the reference point.
@@ -156,6 +162,12 @@ to test whether a neural method adds value through fast inference.
 by `neural-lda`: it keeps the train-document topic parameters that helped
 `neural-lda` find useful motifs, but also trains an encoder against the same
 learned `beta` so held-out spectra can be exported without LDA.
+
+`run_msn_prodlda_experiment.py` removes the local train-document topic
+parameters and tests the cleaner variational topic-model form. It is closest to
+the ProdLDA idea: the encoder parameterizes an approximate posterior over topic
+logits and training balances count reconstruction against a logistic-normal KL
+term.
 
 ## Current Results
 
@@ -190,6 +202,11 @@ split, the 500-motif run scored coverage `0.238`, mean SoS `0.5194`, QAC
 `0.1236`; the 1000-motif run scored coverage `0.124`, mean SoS `0.5498`, QAC
 `0.0682`. These runs did not collapse, but they still do not justify a full-data
 benchmark.
+
+The ProdLDA validation plan and results are recorded in
+`docs/model/msn_prodlda_results.md`. This is the current test of whether a
+proper amortized variational topic model is a better no-LDA replacement than the
+Poisson/PF-style models tried so far.
 
 ## Interpretation
 
