@@ -624,6 +624,92 @@ def test_amortized_neural_topic_experiment_smoke_without_documents_or_tomotopy(
     assert (out_dir / "validation_metrics.json").exists()
 
 
+def test_theta_refinement_outputs_benchmark_contract(tmp_path):
+    pytest.importorskip("torch")
+    from types import SimpleNamespace
+
+    from scripts import refine_msn_theta_outputs as refiner
+
+    cache_dir = tmp_path / "cache"
+    model_dir = tmp_path / "model"
+    cache_dir.mkdir()
+    model_dir.mkdir()
+    matrix = sparse.csr_matrix(
+        np.array(
+            [
+                [4.0, 4.0, 0.0, 0.0],
+                [2.0, 3.0, 0.0, 0.0],
+                [0.0, 0.0, 4.0, 4.0],
+                [0.0, 0.0, 2.0, 3.0],
+                [0.0, 0.0, 0.0, 0.0],
+            ],
+            dtype=np.float32,
+        )
+    )
+    vocab = ["frag@100", "frag@101", "loss@50", "loss@51"]
+    beta = np.array(
+        [
+            [0.49, 0.49, 0.01, 0.01],
+            [0.01, 0.01, 0.49, 0.49],
+        ],
+        dtype=np.float32,
+    )
+    theta_raw = np.full((matrix.shape[0], 2), 0.5, dtype=np.float32)
+
+    sparse.save_npz(cache_dir / "bow.npz", matrix)
+    pipeline.write_json(cache_dir / "vocab.json", {"vocab": vocab})
+    pd.DataFrame(
+        [{"doc_index": index, "smiles": f"C{index}"} for index in range(matrix.shape[0])]
+    ).to_csv(cache_dir / "spectra_metadata.csv", index=False)
+    pipeline.write_json(
+        cache_dir / "cache_summary.json",
+        {"input": {"documents": int(matrix.shape[0]), "vocab_size": matrix.shape[1]}},
+    )
+    np.save(model_dir / "beta.npy", beta)
+    np.save(model_dir / "theta_raw.npy", theta_raw)
+    pipeline.write_json(model_dir / "vocab.json", {"vocab": vocab})
+    pipeline.write_json(
+        model_dir / "split_indices.json",
+        {"train_indices": [0, 1, 2], "validation_indices": [3], "test_indices": [4]},
+    )
+
+    out_dir = tmp_path / "refined"
+    summary = refiner.run_refinement(
+        SimpleNamespace(
+            input_cache=cache_dir,
+            model_dir=model_dir,
+            out_dir=out_dir,
+            theta_init="raw",
+            refine_iters=5,
+            encoder_prior_weight=0.0,
+            min_theta=1e-12,
+            theta_export_power=1.0,
+            membership_threshold=0.5,
+            batch_size=3,
+            device="cpu",
+            overwrite=True,
+        )
+    )
+
+    theta = np.load(out_dir / "theta.npy")
+    theta_refined_raw = np.load(out_dir / "theta_refined_raw.npy")
+    copied_beta = np.load(out_dir / "beta.npy")
+
+    assert summary["model"] == "theta-refined"
+    assert theta.shape == theta_raw.shape
+    assert theta_refined_raw.shape == theta_raw.shape
+    assert copied_beta.shape == beta.shape
+    assert np.isfinite(theta).all()
+    assert np.isfinite(theta_refined_raw).all()
+    assert theta.sum(axis=1).tolist() == pytest.approx([1.0] * matrix.shape[0])
+    assert copied_beta.sum(axis=1).tolist() == pytest.approx([1.0, 1.0])
+    assert theta[0, 0] > 0.9
+    assert theta[2, 1] > 0.9
+    assert theta[4].tolist() == pytest.approx([0.5, 0.5])
+    assert (out_dir / "split_indices.json").exists()
+    assert (out_dir / "theta_refinement_metrics.json").exists()
+
+
 def test_prodlda_experiment_smoke_without_documents_tomotopy_or_pyro(
     tmp_path,
     monkeypatch,

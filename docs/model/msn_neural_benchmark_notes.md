@@ -127,6 +127,11 @@ jointly from cached BoW spectra, without tomotopy LDA or `documents.jsonl.gz`.
 It exports full-cache encoder `theta.npy`, learned `beta.npy`, `vocab.json`, and
 `split_indices.json` for held-out scoring.
 
+`scripts/refine_msn_theta_outputs.py` is a semi-amortized inference check. It
+keeps a learned neural `beta` fixed, starts from an existing `theta`, and refines
+theta against the observed BoW spectrum. It writes another benchmark-compatible
+model directory, so export and scoring stay unchanged.
+
 `scripts/run_msn_prodlda_experiment.py` is the variational no-LDA follow-up. It
 implements a ProdLDA/AVITM-style encoder directly in PyTorch: cached BoW spectra
 are mapped to logistic-normal topic latents, `theta = softmax(z)`, and the
@@ -201,7 +206,9 @@ The no-LDA amortized neural topic runs are recorded in
 split, the 500-motif run scored coverage `0.238`, mean SoS `0.5194`, QAC
 `0.1236`; the 1000-motif run scored coverage `0.124`, mean SoS `0.5498`, QAC
 `0.0682`. These runs did not collapse, but they still do not justify a full-data
-benchmark.
+benchmark. A follow-up theta-refinement check improved held-out BoW
+reconstruction but reduced QAC; the best refined 500-motif setting scored QAC
+`0.0982`, below the unrefined `0.1236`.
 
 The ProdLDA validation plan and results are recorded in
 `docs/model/msn_prodlda_results.md`. This is the current test of whether a

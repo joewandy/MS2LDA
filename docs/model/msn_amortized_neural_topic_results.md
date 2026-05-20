@@ -76,3 +76,35 @@ Next experiments should focus on improving held-out coverage before scaling:
 - try a token-set encoder only after the current dense BoW objective is stable;
 - compare held-out train/test scoring against a held-out LDA baseline with the
   same number of motifs.
+
+## 2026-05-20 theta refinement check
+
+`scripts/refine_msn_theta_outputs.py` tests semi-amortized inference without
+retraining: start from the neural encoder's `theta_raw.npy`, keep learned
+`beta.npy` fixed, run multiplicative KL-NMF-style theta updates against each
+observed spectrum, then export the refined theta with the same benchmark
+contract.
+
+This still uses no tomotopy LDA beta, theta, or inference. It only uses the
+held-out spectrum BoW at inference time, which is the same kind of information
+tomotopy held-out inference would use.
+
+| Model | Refine iters | Encoder prior | Test membership rows | Active motifs at 0.5 | Recon before | Recon after | Coverage | Mean SoS | QAC |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Amortized neural, 500 motifs | 0 | n/a | 147 | 119 | n/a | n/a | 0.238 | 0.5194 | 0.1236 |
+| Amortized neural, 500 motifs | 10 | 0.0 | 93 | 81 | 4.9079 | 4.3495 | 0.162 | 0.5505 | 0.0892 |
+| Amortized neural, 500 motifs | 20 | 0.0 | 92 | 80 | 4.9079 | 4.3483 | 0.160 | 0.5539 | 0.0886 |
+| Amortized neural, 500 motifs | 10 | 0.1 | 100 | 89 | 4.9079 | 4.3786 | 0.178 | 0.5518 | 0.0982 |
+| Amortized neural, 1000 motifs | 0 | n/a | 143 | 124 | n/a | n/a | 0.124 | 0.5498 | 0.0682 |
+| Amortized neural, 1000 motifs | 10 | 0.0 | 86 | 82 | 4.5808 | 3.9681 | 0.082 | 0.5281 | 0.0433 |
+
+Refinement reliably improves BoW reconstruction, but it hurts the motif
+benchmark. The refined assignments become more reconstruction-optimal under the
+learned neural beta while covering fewer useful held-out motifs. A light encoder
+prior is the least bad tested setting, but it still stays below the unrefined
+500-motif model.
+
+The conclusion is that the remaining issue is not just held-out theta inference.
+The learned beta/reconstruction objective itself is not aligned enough with the
+MSn motif quality benchmark, so making theta more optimal for that beta can make
+the benchmark result worse.
