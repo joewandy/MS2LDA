@@ -710,6 +710,136 @@ def test_theta_refinement_outputs_benchmark_contract(tmp_path):
     assert (out_dir / "theta_refinement_metrics.json").exists()
 
 
+def test_variational_lda_infers_expected_theta_from_fixed_beta():
+    from scripts import run_msn_variational_lda_experiment as vlda
+
+    matrix = sparse.csr_matrix(
+        np.array(
+            [
+                [4.0, 4.0, 0.0, 0.0],
+                [0.0, 0.0, 4.0, 4.0],
+            ],
+            dtype=np.float32,
+        )
+    )
+    beta = np.array(
+        [
+            [0.49, 0.49, 0.01, 0.01],
+            [0.01, 0.01, 0.49, 0.49],
+        ],
+        dtype=np.float32,
+    )
+    background = np.full(4, 0.25, dtype=np.float32)
+
+    theta = vlda.initialize_theta_for_inference(matrix, beta, mode="uniform")
+    for _ in range(5):
+        theta, _beta, metrics = vlda.em_step(
+            matrix,
+            theta,
+            beta,
+            background,
+            alpha=0.01,
+            eta=0.01,
+            background_weight=0.0,
+            update_beta=False,
+        )
+
+    assert metrics["empty_documents"] == 0
+    assert theta.sum(axis=1).tolist() == pytest.approx([1.0, 1.0])
+    assert theta[0, 0] > 0.95
+    assert theta[1, 1] > 0.95
+
+
+def test_variational_lda_experiment_smoke_without_tomotopy(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+
+    from scripts import run_msn_variational_lda_experiment as vlda
+
+    monkeypatch.setitem(__import__("sys").modules, "tomotopy", None)
+    cache_dir = tmp_path / "cache"
+    cache_dir.mkdir()
+    matrix = sparse.csr_matrix(
+        np.array(
+            [
+                [2.0, 1.0, 0.0, 0.0],
+                [1.0, 2.0, 0.0, 0.0],
+                [0.0, 0.0, 2.0, 1.0],
+                [0.0, 0.0, 1.0, 2.0],
+                [1.0, 0.0, 0.0, 1.0],
+                [0.0, 1.0, 1.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0],
+            ],
+            dtype=np.float32,
+        )
+    )
+    sparse.save_npz(cache_dir / "bow.npz", matrix)
+    pipeline.write_json(
+        cache_dir / "vocab.json",
+        {"vocab": ["frag@100", "frag@101", "loss@50", "loss@51"]},
+    )
+    pd.DataFrame(
+        [
+            {"doc_index": index, "smiles": f"C{index}"}
+            for index in range(matrix.shape[0])
+        ]
+    ).to_csv(cache_dir / "spectra_metadata.csv", index=False)
+    pipeline.write_json(
+        cache_dir / "cache_summary.json",
+        {
+            "input": {"documents": int(matrix.shape[0]), "vocab_size": matrix.shape[1]},
+            "vocabulary_parameters": {"min_df": 1, "min_cf": 0.0, "rm_top": 0},
+        },
+    )
+
+    out_dir = tmp_path / "variational_lda"
+    summary = vlda.run_experiment(
+        SimpleNamespace(
+            input_cache=cache_dir,
+            out_dir=out_dir,
+            n_motifs=3,
+            em_iterations=2,
+            theta_infer_iters=2,
+            validation_every=1,
+            alpha=0.1,
+            eta=0.01,
+            background_weight=0.0,
+            init="random",
+            nmf_max_iter=5,
+            train_fraction=0.6,
+            validation_fraction=0.2,
+            test_fraction=0.2,
+            theta_infer_init="projection",
+            theta_export_power=1.5,
+            membership_threshold=0.5,
+            seed=1,
+            overwrite=True,
+        )
+    )
+
+    theta = np.load(out_dir / "theta.npy")
+    theta_raw = np.load(out_dir / "theta_raw.npy")
+    beta = np.load(out_dir / "beta.npy")
+    split_payload = pd.read_json(out_dir / "split_indices.json", typ="series")
+
+    assert summary["model"] == "variational-lda-em"
+    assert theta.shape == (matrix.shape[0], 3)
+    assert theta_raw.shape == theta.shape
+    assert beta.shape == (3, matrix.shape[1])
+    assert np.isfinite(theta).all()
+    assert np.isfinite(theta_raw).all()
+    assert np.isfinite(beta).all()
+    assert theta.sum(axis=1).tolist() == pytest.approx([1.0] * matrix.shape[0])
+    assert theta_raw.sum(axis=1).tolist() == pytest.approx([1.0] * matrix.shape[0])
+    assert beta.sum(axis=1).tolist() == pytest.approx([1.0, 1.0, 1.0])
+    assert set(split_payload.index) == {
+        "train_indices",
+        "validation_indices",
+        "test_indices",
+    }
+    assert (out_dir / "model_checkpoint.npz").exists()
+    assert (out_dir / "validation_metrics.json").exists()
+
+
 def test_prodlda_experiment_smoke_without_documents_tomotopy_or_pyro(
     tmp_path,
     monkeypatch,

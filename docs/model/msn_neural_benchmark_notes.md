@@ -132,6 +132,11 @@ keeps a learned neural `beta` fixed, starts from an existing `theta`, and refine
 theta against the observed BoW spectrum. It writes another benchmark-compatible
 model directory, so export and scoring stay unchanged.
 
+`scripts/run_msn_variational_lda_experiment.py` is a no-tomotopy LDA-like EM
+benchmark. It learns `beta` on the train split only using local theta and
+token-topic responsibilities, then infers theta for validation/test spectra with
+`beta` frozen. It has no encoder and does not use tomotopy outputs.
+
 `scripts/run_msn_prodlda_experiment.py` is the variational no-LDA follow-up. It
 implements a ProdLDA/AVITM-style encoder directly in PyTorch: cached BoW spectra
 are mapped to logistic-normal topic latents, `theta = softmax(z)`, and the
@@ -209,6 +214,13 @@ split, the 500-motif run scored coverage `0.238`, mean SoS `0.5194`, QAC
 benchmark. A follow-up theta-refinement check improved held-out BoW
 reconstruction but reduced QAC; the best refined 500-motif setting scored QAC
 `0.0982`, below the unrefined `0.1236`.
+
+The no-tomotopy variational LDA runs are recorded in
+`docs/model/msn_variational_lda_results.md`. The random-initialized 500-motif
+run is the best no-LDA held-out result so far, with coverage `0.262`, mean SoS
+`0.5487`, and QAC `0.1438`. It still remains well below the 2k LDA reference QAC
+around `0.323`, and its best checkpoint occurred at iteration 1 with very broad
+beta rows.
 
 The ProdLDA validation plan and results are recorded in
 `docs/model/msn_prodlda_results.md`. This is the current test of whether a
