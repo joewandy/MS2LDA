@@ -1,0 +1,147 @@
+{
+  "schema_version": 2,
+  "created_date": "2026-08-02",
+  "supported_model": {
+    "production_api": "HybridLDAModel.finalize_inference",
+    "encoder_trained_during_topic_discovery": false,
+    "finalization_is_required_and_one_way": true,
+    "inference_epochs": 12,
+    "objective": {
+      "refinement_steps": 2,
+      "refined_elbo_weight": 1.0,
+      "zero_step_elbo_weight": 0.1
+    }
+  },
+  "synthetic_replication_evaluation": {
+    "seeds": [23, 29, 31],
+    "encoder_initialization": "identical_fresh_seeded",
+    "encoder_epochs": 12,
+    "comparison": "equal-epoch benchmark-only posterior-mean regression",
+    "common_reference": {
+      "steps": 100,
+      "tolerance": 1e-8,
+      "initializers": [
+        "symmetric",
+        "posterior_regression_baseline",
+        "semi_amortized"
+      ],
+      "selected_source_counts_by_seed": {
+        "23": {
+          "symmetric": 75,
+          "posterior_regression_baseline": 3,
+          "semi_amortized": 2
+        },
+        "29": {
+          "symmetric": 77,
+          "posterior_regression_baseline": 1,
+          "semi_amortized": 2
+        },
+        "31": {
+          "symmetric": 78,
+          "posterior_regression_baseline": 2,
+          "semi_amortized": 0
+        }
+      }
+    },
+    "two_step_gap_reductions": [
+      0.1337191394304258,
+      0.20040015745196824,
+      0.14154237356275637
+    ],
+    "relative_reduction_in_across_seed_mean_two_step_gap": 0.15839104208405635,
+    "arithmetic_mean_paired_two_step_gap_reduction": 0.15855389014838348,
+    "fractional_change_in_across_seed_mean_zero_step_observed_nll": 0.0008615564267723646,
+    "interpretation": "Oracle-topic internal robustness check. The positive zero-step NLL change is a small regression; the two-step ELBO gap and NLL improve. Oracle topics and latent-derived embeddings are not chemical validation."
+  },
+  "mushroom_frozen_topic_evaluation": {
+    "seeds": [42, 43, 44, 45, 46],
+    "encoder_epochs": 12,
+    "encoder_initialization": "identical_fresh_seeded",
+    "comparison": "equal-epoch benchmark-only posterior-mean regression",
+    "split": {
+      "train_documents": 2171,
+      "test_documents": 539,
+      "vocab_size": 10029,
+      "observed_test_tokens": 209497,
+      "heldout_test_tokens": 214271,
+      "physical_peak_pair_split": true,
+      "artifact_manifest_hashes_verified": true,
+      "partial_spectrum_cache_identifiers_verified": true
+    },
+    "per_seed": [
+      {
+        "seed": 42,
+        "two_step_gap_reduction": 0.10426233925134715,
+        "zero_step_heldout_nll_change": -0.08348093219280273,
+        "two_step_heldout_nll_change": -0.019189572149693745,
+        "candidate_two_step_vs_baseline_five_step_nll_change": -0.04933129779582757,
+        "passes_prespecified_10_percent_gate": true
+      },
+      {
+        "seed": 43,
+        "two_step_gap_reduction": 0.08870075246408787,
+        "zero_step_heldout_nll_change": -0.04879040165758308,
+        "two_step_heldout_nll_change": -0.013566106936580447,
+        "candidate_two_step_vs_baseline_five_step_nll_change": -0.048978460953256864,
+        "passes_prespecified_10_percent_gate": false
+      },
+      {
+        "seed": 44,
+        "two_step_gap_reduction": 0.10427873334549437,
+        "zero_step_heldout_nll_change": -0.04519390878394702,
+        "two_step_heldout_nll_change": -0.017022804399189795,
+        "candidate_two_step_vs_baseline_five_step_nll_change": -0.05109456740336249,
+        "passes_prespecified_10_percent_gate": true
+      },
+      {
+        "seed": 45,
+        "two_step_gap_reduction": 0.07392260886225636,
+        "zero_step_heldout_nll_change": -0.013531381269587861,
+        "two_step_heldout_nll_change": -0.0012366823048939324,
+        "candidate_two_step_vs_baseline_five_step_nll_change": -0.04615601652933332,
+        "passes_prespecified_10_percent_gate": false
+      },
+      {
+        "seed": 46,
+        "two_step_gap_reduction": 0.10517038024431166,
+        "zero_step_heldout_nll_change": -0.04947164646622948,
+        "two_step_heldout_nll_change": -0.0221297292686522,
+        "candidate_two_step_vs_baseline_five_step_nll_change": -0.05399184207829144,
+        "passes_prespecified_10_percent_gate": true
+      }
+    ],
+    "aggregate": {
+      "directionally_improved_gap_and_nll_runs": 5,
+      "passes_prespecified_10_percent_gate": 3,
+      "runs": 5,
+      "mean_two_step_gap_reduction": 0.09526696283349949,
+      "sample_sd_two_step_gap_reduction": 0.013774097485293716,
+      "range_two_step_gap_reduction": [
+        0.07392260886225636,
+        0.10517038024431166
+      ],
+      "mean_zero_step_heldout_nll_change": -0.04809365407403003,
+      "sample_sd_zero_step_heldout_nll_change": 0.024787108529634696,
+      "mean_two_step_heldout_nll_change": -0.014628979011802023,
+      "sample_sd_two_step_heldout_nll_change": 0.00811285973477405,
+      "mean_candidate_two_step_vs_baseline_five_step_nll_change": -0.04991043695201434,
+      "mean_baseline_zero_step_nll": 7.099854154176564,
+      "mean_candidate_zero_step_nll": 7.051760500102533,
+      "mean_baseline_two_step_nll": 7.019449552363703,
+      "mean_candidate_two_step_nll": 7.004820573351902,
+      "mean_baseline_five_step_nll": 7.054731010303915,
+      "mean_candidate_five_step_nll": 7.046721873710283,
+      "max_reference_continuation_gain_per_observed_token": 0.000010183985471376082,
+      "max_reference_continuation_positive_documents": 107,
+      "max_reference_continuation_elbo_gain_per_document": 0.90625
+    },
+    "invariants": {
+      "topic_and_structured_prior_tensors_bitwise_unchanged": true,
+      "comparison_encoders_started_bitwise_identically": true,
+      "stored_artifact_predictions_reproduced": true,
+      "stored_nll_mean_absolute_error": 1.283918171779419e-8,
+      "stored_nll_max_absolute_error": 3.713735630128667e-8
+    }
+  },
+  "interpretation_boundary": "This supports frozen-topic limited-budget document inference from a fresh encoder. It is not evidence for improved motif discovery, chemical motif quality, or publication-level novelty by itself."
+}
