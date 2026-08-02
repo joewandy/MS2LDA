@@ -147,6 +147,10 @@ def test_config_rejects_invalid_invariants() -> None:
         HybridLDAConfig(num_topics=3, embedding_dim=4, alpha=np.nan)
     with pytest.raises(ValueError, match="positive integers"):
         HybridLDAConfig(num_topics=3.5, embedding_dim=4)
+    with pytest.raises(ValueError, match="seed"):
+        HybridLDAConfig(num_topics=3, embedding_dim=4, seed=-1)
+    with pytest.raises(ValueError, match="seed"):
+        HybridLDAConfig(num_topics=3, embedding_dim=4, seed=2**64)
 
 
 def test_sparse_batch_preserves_counts_without_dense_vocabulary_tensor() -> None:

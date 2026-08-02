@@ -9,8 +9,6 @@ production model.
 
 from __future__ import annotations
 
-from collections.abc import Callable
-
 import torch
 
 from ms2lda_hybrid import HybridLDAModel
@@ -26,7 +24,6 @@ def fit_posterior_regression_baseline(
     *,
     epochs: int,
     target_steps: int,
-    progress_callback: Callable[[dict[str, float]], None] | None = None,
 ) -> list[dict[str, float]]:
     """Fit an equal-epoch normalized-posterior regression comparator.
 
@@ -45,9 +42,6 @@ def fit_posterior_regression_baseline(
     target_steps
         Number of classical local-VB updates used to construct the fixed
         target posterior means.
-    progress_callback
-        Optional callback receiving a defensive copy of each epoch record.
-
     Returns
     -------
     list of dict
@@ -126,8 +120,6 @@ def fit_posterior_regression_baseline(
             "encoder_gradient_norm": gradient_norm_sum / max(batches, 1),
         }
         history.append(metrics)
-        if progress_callback is not None:
-            progress_callback(dict(metrics))
 
     if not torch.equal(lambda_snapshot, core.lambda_posterior):
         raise RuntimeError("posterior-regression baseline changed frozen topics")

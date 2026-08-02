@@ -69,8 +69,12 @@ class HybridLDAConfig:
         if invalid_integers:
             names = ", ".join(invalid_integers)
             raise ValueError(f"positive integers required for: {names}")
-        if isinstance(self.seed, bool) or not isinstance(self.seed, Integral):
-            raise ValueError("seed must be an integer")
+        if (
+            isinstance(self.seed, bool)
+            or not isinstance(self.seed, Integral)
+            or not 0 <= self.seed < 2**64
+        ):
+            raise ValueError("seed must be an integer between 0 and 2**64 - 1")
 
         finite_settings = {
             "eta": self.eta,
