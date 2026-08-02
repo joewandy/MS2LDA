@@ -79,9 +79,10 @@ def spectrum_arrays(spectrum: Any) -> tuple[np.ndarray, np.ndarray, float]:
         raise ValueError("m/z and intensity must be equal-length non-empty vectors")
     if not np.all(np.isfinite(mz)) or not np.all(np.isfinite(intensities)):
         raise ValueError("spectrum peaks contain non-finite values")
-    if np.any(mz <= 0) or np.any(intensities < 0):
+    if np.any(mz <= 0) or np.any(intensities < 0) or not np.any(intensities > 0):
         raise ValueError(
-            "spectrum peaks require positive m/z and nonnegative intensity"
+            "spectrum peaks require positive m/z, nonnegative intensity, "
+            "and at least one positive intensity"
         )
     precursor = float(_metadata(spectrum, "precursor_mz", np.nan))
     if not np.isfinite(precursor) or precursor <= 0:

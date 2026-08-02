@@ -39,6 +39,7 @@ from ms2lda_hybrid.dreams_features import (
     DreaMSFeatureBatch,
     parse_spectral_word,
     pool_word_embeddings,
+    spectrum_arrays,
 )
 
 
@@ -779,6 +780,19 @@ def feature_batch() -> DreaMSFeatureBatch:
         precursor_mz=np.asarray([150.0, 150.0], dtype=np.float32),
         provenance={"model": "test"},
     )
+
+
+def test_spectrum_arrays_rejects_all_zero_intensities() -> None:
+    spectrum = SimpleNamespace(
+        peaks=SimpleNamespace(
+            mz=np.asarray([100.0, 150.0], dtype=np.float32),
+            intensities=np.zeros(2, dtype=np.float32),
+        ),
+        metadata={"precursor_mz": 200.0},
+    )
+
+    with pytest.raises(ValueError, match="positive intensity"):
+        spectrum_arrays(spectrum)
 
 
 def test_peak_states_pool_into_fragment_and_loss_words() -> None:
