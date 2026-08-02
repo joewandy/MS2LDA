@@ -14,24 +14,32 @@ import pytest
 import scipy.sparse as sp
 import torch
 
-from MS2LDA.dreams_features import (
+from benchmarks.inference_baselines import fit_posterior_regression_baseline
+from benchmarks.semi_amortized_inference import METHODS, run_seed
+from ms2lda_hybrid import HybridLDAConfig, HybridLDAModel
+from ms2lda_hybrid._variational import (
+    corpus_elbo_minibatch_scale as _corpus_elbo_minibatch_scale,
+)
+from ms2lda_hybrid._variational import (
+    expected_log_dirichlet as _expected_log_dirichlet,
+)
+from ms2lda_hybrid._variational import (
+    expected_topic_word_counts as _expected_topic_word_counts,
+)
+from ms2lda_hybrid._variational import (
+    local_document_elbo as _local_document_elbo,
+)
+from ms2lda_hybrid._variational import (
+    local_vb as _local_vb,
+)
+from ms2lda_hybrid._variational import (
+    make_sparse_batch as _make_sparse_batch,
+)
+from ms2lda_hybrid.dreams_features import (
     DreaMSFeatureBatch,
     parse_spectral_word,
     pool_word_embeddings,
 )
-from MS2LDA.hybrid_lda import (
-    HybridLDAConfig,
-    HybridLDAModel,
-    _corpus_elbo_minibatch_scale,
-    _expected_log_dirichlet,
-    _expected_topic_word_counts,
-    _local_document_elbo,
-    _local_vb,
-    _make_sparse_batch,
-)
-from scripts.benchmark_mushroom_inference_phase import paired_completion_split
-from scripts.benchmark_semi_amortized_inference import METHODS, run_seed
-from scripts.inference_baselines import fit_posterior_regression_baseline
 
 
 def small_config(*, seed: int = 7) -> HybridLDAConfig:
@@ -52,9 +60,9 @@ def small_config(*, seed: int = 7) -> HybridLDAConfig:
 
 
 def test_package_import_does_not_load_the_full_workflow() -> None:
-    """Reference submodules must not require the optional application stack."""
+    """The reference package must not import the production workflow."""
     project_root = Path(__file__).resolve().parents[1]
-    check = "import sys, MS2LDA.hybrid_lda; assert 'MS2LDA.run' not in sys.modules"
+    check = "import sys, ms2lda_hybrid; assert 'MS2LDA' not in sys.modules"
 
     subprocess.run(  # noqa: S603
         [sys.executable, "-c", check],
@@ -132,8 +140,12 @@ def test_config_rejects_invalid_invariants() -> None:
         )
     with pytest.raises(ValueError, match="finite"):
         HybridLDAConfig(num_topics=3, embedding_dim=4, encoder_learning_rate=np.nan)
+    with pytest.raises(ValueError, match="eta"):
+        HybridLDAConfig(num_topics=3, embedding_dim=4, eta=np.nan)
     with pytest.raises(ValueError, match="alpha"):
         HybridLDAConfig(num_topics=3, embedding_dim=4, alpha=np.nan)
+    with pytest.raises(ValueError, match="positive integers"):
+        HybridLDAConfig(num_topics=3.5, embedding_dim=4)
 
 
 def test_sparse_batch_preserves_counts_without_dense_vocabulary_tensor() -> None:
@@ -364,6 +376,18 @@ def test_structured_prior_has_declared_fixed_mass() -> None:
         torch.full((model.k,), expected),
     )
     assert bool(torch.all(prior > 0))
+
+
+def test_global_update_rejects_nonfinite_expected_counts() -> None:
+    model = prepared_model()
+    assert model._core is not None and model._matrix is not None
+    core = model._core
+    prior = core.structured_prior(float(model._matrix.sum()), epoch=1)
+    statistics = torch.zeros_like(core.lambda_posterior)
+    statistics[0, 0] = torch.nan
+
+    with pytest.raises(ValueError, match="expected topic-word counts"):
+        core.update_topics(statistics, prior)
 
 
 def test_model_construction_does_not_change_global_torch_rng() -> None:
@@ -664,30 +688,6 @@ def test_benchmark_regression_baseline_handles_multiple_minibatches() -> None:
     )
 
 
-def test_physical_peak_forcing_preserves_two_sided_split() -> None:
-    matrix = sp.csr_matrix([[1.0, 1.0]], dtype=np.float32)
-    spectrum = SimpleNamespace(
-        peaks=SimpleNamespace(
-            mz=np.asarray([100.0], dtype=np.float32),
-            intensities=np.asarray([1.0], dtype=np.float32),
-        ),
-        metadata={"precursor_mz": 150.0},
-    )
-
-    observed, heldout, _ = paired_completion_split(
-        matrix,
-        [spectrum],
-        ["unmapped", "frag@100.00"],
-        observed_fraction=0.5,
-        seed=0,
-        mz_tolerance=0.02,
-    )
-
-    np.testing.assert_array_equal(observed.toarray(), [[0.0, 1.0]])
-    np.testing.assert_array_equal(heldout.toarray(), [[1.0, 0.0]])
-    np.testing.assert_array_equal((observed + heldout).toarray(), matrix.toarray())
-
-
 def test_synthetic_benchmark_reference_includes_every_inference_basin() -> None:
     run = run_seed(
         SimpleNamespace(
@@ -797,6 +797,30 @@ def test_peak_states_pool_into_fragment_and_loss_words() -> None:
         pooled["loss@50.00"],
         np.asarray([2.0, 0.0, 0.0, 0.0]),
     )
+
+
+@pytest.mark.parametrize("tolerance", [np.nan, np.inf, -np.inf, 0.0])
+def test_peak_pooling_rejects_nonfinite_or_nonpositive_tolerance(
+    tolerance: float,
+) -> None:
+    with pytest.raises(ValueError, match="finite and positive"):
+        pool_word_embeddings([[], []], feature_batch(), mz_tolerance=tolerance)
+
+
+def test_feature_batch_rejects_invalid_peak_metadata() -> None:
+    features = feature_batch()
+    invalid_peak_mz = features.peak_mz.copy()
+    invalid_peak_mz[0, 0] = np.nan
+
+    with pytest.raises(ValueError, match="observed peak"):
+        replace(features, peak_mz=invalid_peak_mz)
+    with pytest.raises(ValueError, match="precursor"):
+        replace(
+            features,
+            precursor_mz=np.asarray([150.0, np.inf], dtype=np.float32),
+        )
+    with pytest.raises(ValueError, match="peak_mask"):
+        replace(features, peak_mask=features.peak_mask.astype(np.int8))
 
 
 def test_spectral_word_parser_is_shared_and_strict() -> None:

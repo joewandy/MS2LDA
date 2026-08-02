@@ -5,7 +5,7 @@ dependencies:
   - python=3.11
   - pip
   - pip:
-      # Pinned embedding-path runtime; install DreaMS separately as in README.
+      # Pinned embedding-path runtime; install DreaMS as documented in the method.
       - numpy==1.25.0
       - scipy==1.13.1
       - numba==0.58.0

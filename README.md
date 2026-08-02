@@ -33,87 +33,26 @@ For more detailed installation options and development setup:
 
 ---
 
-## Experimental neural MS2LDA reference
+## Experimental hybrid LDA reference
 
-The branch contains a deliberately isolated proof-of-concept combining frozen
-[DreaMS](https://github.com/pluskal-lab/DreaMS) chemical embeddings with
-variational LDA. Tomotopy remains the default production backend; the normal
-CLI and dashboard are unchanged.
+The isolated [`ms2lda_hybrid`](ms2lda_hybrid) package combines classical
+variational LDA topic discovery with frozen DreaMS features and a
+semi-amortized new-document inference stage. It does not change the production
+`MS2LDA` package, CLI, dashboard, or Tomotopy backend.
 
-Create the pinned Python 3.11 environment, then install this checkout without
-re-resolving its production dependencies:
+The exact model, assumptions, limitations, and validation status are specified
+in [`docs/hybrid_lda_method.tex`](docs/hybrid_lda_method.tex). A pinned Python
+3.11 environment is provided in [`environment-hybrid.yml`](environment-hybrid.yml).
+After creating it, install the DreaMS commit named in the method document and
+this checkout with `--no-deps`. The reproducible inference-only experiment is:
 
 ```bash
-conda env create -f environment-hybrid.yml
-conda activate ms2lda-hybrid
-python -m pip install --no-deps \
-  "git+https://github.com/pluskal-lab/DreaMS.git@dbec3a0b514a99e5056cfccde4559fda8cfe8129"
-python -m pip install --no-deps -e .
+python -m benchmarks.semi_amortized_inference
 ```
 
-This environment is for the reference model and its tests. Use the normal
-MS2LDA installation for the full CLI, dashboard, and annotation workflow.
-The explicit `--no-deps` keeps DreaMS's unused full-toolkit packages out of
-this environment and prevents its moving `msml@main` dependency from replacing
-the exact commit pinned in the YAML file.
-
-The model-specific code is
-[`MS2LDA/hybrid_lda.py`](MS2LDA/hybrid_lda.py) and
-[`MS2LDA/dreams_features.py`](MS2LDA/dreams_features.py). Here, `documents`
-are the existing lists of `frag@...` and `loss@...` MS2LDA words. They must
-correspond one-for-one, in the same order, to the matchms `spectra`. The
-mathematical specification, limitations, and prespecified validation protocol
-are in
-[`docs/hybrid_lda_method.tex`](docs/hybrid_lda_method.tex), with a compiled
-[`PDF`](output/pdf/hybrid_lda_method.pdf). A minimal usage example follows:
-
-```python
-from MS2LDA.dreams_features import DreaMSFeatureExtractor, pool_word_embeddings
-from MS2LDA.hybrid_lda import HybridLDAConfig, HybridLDAModel
-
-extractor = DreaMSFeatureExtractor()
-features = extractor.extract(spectra)
-word_features = pool_word_embeddings(documents, features)
-
-config = HybridLDAConfig(
-    num_topics=200,
-    embedding_dim=features.spectrum_embeddings.shape[1],
-)
-model = HybridLDAModel(config)
-model.set_word_embeddings(word_features)
-for words, embedding in zip(documents, features.spectrum_embeddings, strict=True):
-    model.add_doc(words, embedding=embedding)
-
-# Stage 1: discover topics with classical sparse variational LDA.
-model.train()
-
-# Stage 2 (required): freeze discovery permanently and train the document
-# encoder through two differentiable local-VB updates.
-model.finalize_inference()
-```
-
-For a new spectrum, extract its DreaMS embedding with the same `extractor`,
-then call `make_doc(query_words, embedding=...)` and `infer(...)`. The default
-performs the same two local updates used by the finalization objective.
-Passing `tolerance=1e-4` makes `iter` a maximum adaptive-refinement budget;
-the stopping test is relative to the current gamma magnitude with only a
-numerical epsilon floor. The default `tolerance=None` preserves an exact
-number of updates.
-`finalize_inference()` is deliberately one-way: after it succeeds, topic
-training cannot resume, and before it succeeds the model cannot infer new
-documents or save an inference checkpoint. Its fixed objective evaluates the
-local LDA ELBO after exactly two unrolled coordinate updates, together with a
-small zero-step ELBO term that keeps direct encoder predictions useful. The
-number of finalization epochs is configured with `inference_epochs` (default
-12); the mathematical objective itself is not exposed as an ablation surface.
-The model exposes the topic and document accessors needed by Tomotopy-shaped
-downstream code. The synthetic benchmark is reproducible through
-`scripts/benchmark_semi_amortized_inference.py`; the trusted mushroom-artifact
-check uses
-`scripts/benchmark_mushroom_inference_phase.py`. Their aggregate is in
-[`docs/benchmarks/semi_amortized_inference_summary.json`](docs/benchmarks/semi_amortized_inference_summary.json).
-Comparative topic discovery and chemical motif quality remain separate
-validation questions.
+That synthetic experiment tests limited-budget inference under fixed oracle
+topics; it is not evidence of improved topic discovery or chemical motif
+quality.
 
 ---
 

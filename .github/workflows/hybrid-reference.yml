@@ -1,0 +1,53 @@
+name: Hybrid LDA reference
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/hybrid-reference.yml"
+      - "benchmarks/**"
+      - "environment-hybrid.yml"
+      - "ms2lda_hybrid/**"
+      - "pyproject.toml"
+      - "tests/test_hybrid_lda.py"
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/hybrid-reference.yml"
+      - "benchmarks/**"
+      - "environment-hybrid.yml"
+      - "ms2lda_hybrid/**"
+      - "pyproject.toml"
+      - "tests/test_hybrid_lda.py"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install focused test dependencies
+        run: |
+          python -m pip install \
+            --index-url https://download.pytorch.org/whl/cpu \
+            torch==2.2.1
+          python -m pip install \
+            black==24.10.0 h5py==3.11.0 numpy==1.25.0 pytest==8.3.5 \
+            ruff==0.11.13 scipy==1.13.1
+      - name: Install the package without the production dependency stack
+        run: python -m pip install --no-deps -e .
+      - name: Check formatting
+        run: >-
+          python -m black --check
+          ms2lda_hybrid benchmarks tests/test_hybrid_lda.py
+      - name: Check imports and runtime errors
+        run: >-
+          python -m ruff check --select E4,E7,E9,F,I
+          ms2lda_hybrid benchmarks tests/test_hybrid_lda.py
+      - name: Run focused tests
+        run: python -m pytest -q tests/test_hybrid_lda.py

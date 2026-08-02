@@ -1,6 +1,6 @@
 """Benchmark-only inference baselines kept outside the production model.
 
-The supported :class:`MS2LDA.hybrid_lda.HybridLDAModel` exposes only its
+The supported :class:`ms2lda_hybrid.HybridLDAModel` exposes only its
 semi-amortized ELBO finalization. This module contains the posterior-regression
 comparator needed to reproduce objective studies without expanding the public
 model API or allowing a comparator checkpoint to masquerade as a finalized
@@ -13,11 +13,11 @@ from collections.abc import Callable
 
 import torch
 
-from MS2LDA.hybrid_lda import (
+from ms2lda_hybrid import HybridLDAModel
+from ms2lda_hybrid._variational import (
     EPSILON,
-    HybridLDAModel,
-    _expected_log_dirichlet,
-    _make_sparse_batch,
+    expected_log_dirichlet,
+    make_sparse_batch,
 )
 
 
@@ -65,7 +65,7 @@ def fit_posterior_regression_baseline(
     prior_snapshot = [
         parameter.detach().clone() for parameter in core.prior_parameters()
     ]
-    expected_log_beta = _expected_log_dirichlet(lambda_snapshot).detach()
+    expected_log_beta = expected_log_dirichlet(lambda_snapshot).detach()
     word_topic = torch.softmax(expected_log_beta.transpose(0, 1), dim=1).detach()
     target_posteriors = model._refine_training_posteriors(steps=target_steps)
     optimizer = torch.optim.Adam(
@@ -83,7 +83,7 @@ def fit_posterior_regression_baseline(
         batches = 0
         for start in range(0, len(model.docs), model.config.batch_size):
             indices = shuffled[start : start + model.config.batch_size]
-            batch = _make_sparse_batch(model._matrix, indices, device=model.device)
+            batch = make_sparse_batch(model._matrix, indices, device=model.device)
             predicted_gamma = core.encode(
                 batch,
                 model._embedding_batch(model.docs, indices),

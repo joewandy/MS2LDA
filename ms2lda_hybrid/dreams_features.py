@@ -1,4 +1,4 @@
-"""Extract frozen DreaMS features and align them with MS2LDA words.
+"""Extract frozen DreaMS features and align them with spectral words.
 
 DreaMS is imported only when ``DreaMSFeatureExtractor`` is constructed.  The
 rest of MS2LDA therefore remains usable without the optional dependency. This
@@ -32,6 +32,28 @@ def _sha256(path: Path) -> str:
         for block in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(block)
     return digest.hexdigest()
+
+
+def _installed_dreams_commit() -> str | None:
+    """Return the PEP 610 commit recorded for the installed DreaMS package."""
+    try:
+        distribution = importlib.metadata.distribution("dreams")
+    except importlib.metadata.PackageNotFoundError:
+        return None
+    direct_url = distribution.read_text("direct_url.json")
+    if direct_url is None:
+        return None
+    try:
+        metadata = json.loads(direct_url)
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(metadata, Mapping):
+        return None
+    vcs_info = metadata.get("vcs_info")
+    if not isinstance(vcs_info, Mapping):
+        return None
+    commit = vcs_info.get("commit_id")
+    return str(commit) if commit else None
 
 
 def _metadata(spectrum: Any, key: str, default: Any = None) -> Any:
@@ -118,6 +140,8 @@ class DreaMSFeatureBatch:
         peak_shape = self.peak_embeddings.shape[:2]
         if any(values.shape != peak_shape for values in (self.peak_mz, self.peak_mask)):
             raise ValueError("peak metadata is not aligned to peak embeddings")
+        if not np.issubdtype(self.peak_mask.dtype, np.bool_):
+            raise ValueError("peak_mask must be boolean")
         if self.precursor_mz.shape != (count,):
             raise ValueError("precursor_mz must contain one value per spectrum")
         if self.peak_embeddings.shape[2] != self.spectrum_embeddings.shape[1]:
@@ -126,6 +150,11 @@ class DreaMSFeatureBatch:
             raise ValueError("spectrum embeddings contain non-finite values")
         if not np.all(np.isfinite(self.peak_embeddings)):
             raise ValueError("peak embeddings contain non-finite values")
+        observed_mz = self.peak_mz[self.peak_mask]
+        if not np.all(np.isfinite(observed_mz)) or np.any(observed_mz <= 0):
+            raise ValueError("observed peak m/z values must be finite and positive")
+        if not np.all(np.isfinite(self.precursor_mz)) or np.any(self.precursor_mz <= 0):
+            raise ValueError("precursor m/z values must be finite and positive")
 
     def save(self, path: str | Path) -> None:
         """Write a compressed, self-describing HDF5 cache."""
@@ -209,6 +238,12 @@ class DreaMSFeatureExtractor:
             raise ImportError(
                 "install the pinned DreaMS dependency described in the README"
             ) from exc
+        installed_commit = _installed_dreams_commit()
+        if installed_commit != DREAMS_GIT_COMMIT:
+            raise RuntimeError(
+                "DreaMS must be installed from the pinned commit "
+                f"{DREAMS_GIT_COMMIT}; found {installed_commit or 'no commit metadata'}"
+            )
         requested_device = torch.device(device)
         if requested_device.type == "cuda" and not torch.cuda.is_available():
             raise RuntimeError("CUDA was requested but is not available")
@@ -234,6 +269,7 @@ class DreaMSFeatureExtractor:
             version = None
         self._provenance: dict[str, Any] = {
             "expected_dreams_git_commit": DREAMS_GIT_COMMIT,
+            "installed_dreams_git_commit": installed_commit,
             "dreams_package_version": version,
             "model_name": DREAMS_MODEL_NAME,
             "head_checkpoint_sha256": (
@@ -344,8 +380,10 @@ def pool_word_embeddings(
     order; callers should pass training rows only to avoid leakage.
     """
 
-    if len(documents) != len(features.identifiers) or mz_tolerance <= 0:
-        raise ValueError("documents must align with features and tolerance be positive")
+    if len(documents) != len(features.identifiers):
+        raise ValueError("documents must align with feature rows")
+    if not np.isfinite(mz_tolerance) or mz_tolerance <= 0:
+        raise ValueError("mz_tolerance must be finite and positive")
     vocabulary = list(dict.fromkeys(str(word) for doc in documents for word in doc))
     columns = {str(word): index for index, word in enumerate(vocabulary)}
     sums = np.zeros(

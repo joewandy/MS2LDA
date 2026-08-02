@@ -1,17 +1,15 @@
 """DreaMS-conditioned LDA with classical discovery and neural local inference.
 
-``HybridLDAModel`` has one explicit two-stage lifecycle. First, classical
-variational LDA discovers topics through sparse local coordinate ascent and
-full-corpus expected counts, with a bounded DreaMS-conditioned word prior.
-Second, :meth:`HybridLDAModel.finalize_inference` freezes those topics and
-trains a DreaMS document encoder through two differentiable local updates.
-The neural document encoder never contributes counts to topic discovery.
+``HybridLDAModel`` has one explicit two-stage lifecycle. Classical
+variational LDA first discovers topics from sparse expected counts and a
+bounded DreaMS-conditioned word prior. The finalized topics are then frozen
+while a DreaMS document encoder learns through two differentiable local
+updates. The document encoder never contributes counts to topic discovery.
 """
 
 from __future__ import annotations
 
 import copy
-import math
 from collections import Counter
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import asdict, dataclass, field
@@ -20,569 +18,38 @@ from pathlib import Path
 import numpy as np
 import scipy.sparse as sp
 import torch
-from torch import nn
-from torch.nn import functional as nn_functional
 
-from MS2LDA.dreams_features import parse_spectral_word
+from ._core import HybridLDACore as _HybridLDACore
+from ._variational import (
+    EPSILON,
+    observed_token_nll,
+)
+from ._variational import (
+    corpus_elbo_minibatch_scale as _corpus_elbo_minibatch_scale,
+)
+from ._variational import (
+    expected_log_dirichlet as _expected_log_dirichlet,
+)
+from ._variational import (
+    expected_topic_word_counts as _expected_topic_word_counts,
+)
+from ._variational import (
+    local_document_elbo as _local_document_elbo,
+)
+from ._variational import (
+    local_vb as _local_vb,
+)
+from ._variational import (
+    make_sparse_batch as _make_sparse_batch,
+)
+from .config import HybridLDAConfig
+from .dreams_features import parse_spectral_word
 
-EPSILON = 1e-12
 CHECKPOINT_FORMAT = "ms2lda-hybrid-reference"
 CHECKPOINT_VERSION = 3
 INFERENCE_REFINEMENT_STEPS = 2
 ZERO_STEP_ELBO_WEIGHT = 0.1
 TopicWord = tuple[str, float]
-
-
-@dataclass(frozen=True)
-class HybridLDAConfig:
-    """Scientific and optimization settings for the reference model.
-
-    The neural architecture is intentionally fixed to the two-hidden-layer
-    network described in the method paper. Only settings that are useful for
-    fitting or controlled experiments remain configurable.
-    """
-
-    # LDA and input dimensions.
-    num_topics: int
-    embedding_dim: int
-    alpha: float | tuple[float, ...] = 0.1
-    eta: float = 0.01
-
-    # Local VB and the final semi-amortized document encoder.
-    hidden_size: int = 256
-    feature_projection_dim: int = 128
-    training_local_steps: int = 50
-    batch_size: int = 128
-    encoder_learning_rate: float = 1e-3
-    inference_epochs: int = 12
-
-    # Empirical-Bayes topic-word prior.
-    prior_mass_fraction: float = 0.05
-    prior_warmup_epochs: int = 15
-    prior_training_epochs: int = 20
-    prior_temperature: float = 0.5
-    prior_learning_rate: float = 1e-3
-    topic_diversity_weight: float = 1e-3
-
-    # Local and global stopping rules.
-    local_tolerance: float = 1e-4
-    global_tolerance: float = 1e-3
-    global_patience: int = 3
-    max_epochs: int = 100
-    seed: int = 42
-
-    def __post_init__(self) -> None:
-        """Reject configurations that would make the algorithm ill-defined."""
-        positive_integers = {
-            "num_topics": self.num_topics,
-            "embedding_dim": self.embedding_dim,
-            "hidden_size": self.hidden_size,
-            "feature_projection_dim": self.feature_projection_dim,
-            "training_local_steps": self.training_local_steps,
-            "batch_size": self.batch_size,
-            "inference_epochs": self.inference_epochs,
-            "prior_warmup_epochs": self.prior_warmup_epochs,
-            "prior_training_epochs": self.prior_training_epochs,
-            "global_patience": self.global_patience,
-            "max_epochs": self.max_epochs,
-        }
-        invalid = [name for name, value in positive_integers.items() if value < 1]
-        if invalid:
-            raise ValueError(f"positive values required for: {', '.join(invalid)}")
-        finite_settings = {
-            "eta": self.eta,
-            "encoder_learning_rate": self.encoder_learning_rate,
-            "prior_mass_fraction": self.prior_mass_fraction,
-            "prior_temperature": self.prior_temperature,
-            "prior_learning_rate": self.prior_learning_rate,
-            "topic_diversity_weight": self.topic_diversity_weight,
-            "local_tolerance": self.local_tolerance,
-            "global_tolerance": self.global_tolerance,
-        }
-        nonfinite = [
-            name for name, value in finite_settings.items() if not np.isfinite(value)
-        ]
-        if nonfinite:
-            raise ValueError(f"finite values required for: {', '.join(nonfinite)}")
-        if self.eta <= 0:
-            raise ValueError("eta must be positive")
-        if self.encoder_learning_rate <= 0 or self.prior_learning_rate <= 0:
-            raise ValueError("learning rates must be positive")
-        if self.prior_temperature <= 0:
-            raise ValueError("prior_temperature must be positive")
-        if self.local_tolerance <= 0 or self.global_tolerance <= 0:
-            raise ValueError("convergence tolerances must be positive")
-        if not 0 <= self.prior_mass_fraction <= 1:
-            raise ValueError("prior_mass_fraction must lie between zero and one")
-        if self.topic_diversity_weight < 0:
-            raise ValueError("topic_diversity_weight cannot be negative")
-        if self.prior_training_epochs < self.prior_warmup_epochs:
-            raise ValueError("prior training must cover the prior warmup")
-        if self.max_epochs <= self.prior_training_epochs:
-            raise ValueError("max_epochs must include at least one fixed-prior epoch")
-        self.alpha_vector()
-
-    def alpha_vector(self) -> np.ndarray:
-        """Return one positive alpha value per topic."""
-        values = np.asarray(self.alpha, dtype=np.float32)
-        if values.ndim == 0:
-            values = np.repeat(values, self.num_topics)
-        if (
-            values.shape != (self.num_topics,)
-            or not np.all(np.isfinite(values))
-            or np.any(values <= 0)
-        ):
-            raise ValueError("alpha must be positive and scalar or one value per topic")
-        return values
-
-
-@dataclass(frozen=True)
-class _SparseBatch:
-    """Padded nonzero words for one batch.
-
-    Word tensors have shape ``batch x positions``; ``totals`` has shape
-    ``batch x 1``. The mask distinguishes real entries from padding.
-    """
-
-    word_ids: torch.Tensor
-    word_counts: torch.Tensor
-    word_mask: torch.Tensor
-    totals: torch.Tensor
-
-
-def _make_sparse_batch(
-    matrix: sp.csr_matrix,
-    indices: Sequence[int] | np.ndarray,
-    *,
-    device: torch.device,
-) -> _SparseBatch:
-    """Pad selected CSR rows without constructing a dense vocabulary matrix."""
-    subset = matrix[np.asarray(indices, dtype=np.int64)].tocsr()
-    lengths = np.diff(subset.indptr)
-    width = max(int(lengths.max()) if lengths.size else 0, 1)
-    word_ids = np.zeros((subset.shape[0], width), dtype=np.int64)
-    word_counts = np.zeros((subset.shape[0], width), dtype=np.float32)
-    word_mask = np.zeros((subset.shape[0], width), dtype=bool)
-    for row, length in enumerate(lengths):
-        if not length:
-            continue
-        start = subset.indptr[row]
-        end = subset.indptr[row + 1]
-        word_ids[row, :length] = subset.indices[start:end]
-        word_counts[row, :length] = subset.data[start:end]
-        word_mask[row, :length] = True
-    counts = torch.from_numpy(word_counts).to(device)
-    mask = torch.from_numpy(word_mask).to(device)
-    return _SparseBatch(
-        word_ids=torch.from_numpy(word_ids).to(device),
-        word_counts=counts,
-        word_mask=mask,
-        totals=(counts * mask).sum(dim=1, keepdim=True),
-    )
-
-
-def observed_token_nll(
-    matrix: sp.csr_matrix,
-    theta: np.ndarray,
-    beta: np.ndarray,
-) -> float:
-    """Return mean negative log likelihood per observed token."""
-    matrix = matrix.tocsr()
-    loss = 0.0
-    tokens = 0.0
-    for row in range(matrix.shape[0]):
-        start, end = matrix.indptr[row], matrix.indptr[row + 1]
-        words = matrix.indices[start:end]
-        counts = matrix.data[start:end]
-        probabilities = theta[row] @ beta[:, words]
-        loss -= float(np.sum(counts * np.log(np.clip(probabilities, EPSILON, None))))
-        tokens += float(counts.sum())
-    return loss / max(tokens, EPSILON)
-
-
-def _expected_log_dirichlet(parameters: torch.Tensor) -> torch.Tensor:
-    """Compute ``E[log p]`` for rows of Dirichlet parameters.
-
-    This is used for both document-topic parameters ``gamma`` and topic-word
-    parameters ``lambda`` in the equations from the method paper.
-    """
-    return torch.digamma(parameters) - torch.digamma(
-        parameters.sum(dim=1, keepdim=True)
-    )
-
-
-def _responsibilities(
-    batch: _SparseBatch,
-    gamma: torch.Tensor,
-    expected_log_beta: torch.Tensor,
-) -> torch.Tensor:
-    """Return ``phi[d, v, k]`` for the nonzero words in a sparse batch.
-
-    ``phi[d,v,k]`` is proportional to
-    ``exp(E[log theta[d,k]] + E[log beta[k,v]])``. Padded word positions are
-    harmless because their counts are zero in every subsequent calculation.
-    """
-    expected_log_theta = _expected_log_dirichlet(gamma)
-    word_values = expected_log_beta[:, batch.word_ids].permute(1, 2, 0)
-    return torch.softmax(expected_log_theta.unsqueeze(1) + word_values, dim=2)
-
-
-# The mathematical inputs stay explicit; bundling them into a state object
-# would hide the two coordinate updates this reference is meant to show.
-def _local_vb(  # noqa: PLR0913
-    batch: _SparseBatch,
-    initial_gamma: torch.Tensor,
-    alpha: torch.Tensor,
-    expected_log_beta: torch.Tensor,
-    *,
-    steps: int,
-    tolerance: float | None,
-) -> tuple[torch.Tensor, torch.Tensor]:
-    """Alternate the two local LDA updates for a batch of documents.
-
-    Each iteration evaluates ``phi`` with :func:`_responsibilities`, then
-    applies ``gamma[d,k] = alpha[k] + sum_v x[d,v] phi[d,v,k]``. The returned
-    ``phi`` is recomputed from the final ``gamma`` so the global expected
-    counts correspond to the returned document posterior. Adaptive stopping
-    uses the maximum componentwise change divided by
-    ``max(abs(gamma[d,k]), EPSILON)``.
-    """
-    if steps < 1:
-        raise ValueError("steps must be positive")
-    gamma = initial_gamma
-    counts = batch.word_counts * batch.word_mask
-    for _ in range(steps):
-        phi = _responsibilities(batch, gamma, expected_log_beta)
-        updated = alpha.unsqueeze(0) + (counts.unsqueeze(-1) * phi).sum(dim=1)
-        change = ((updated - gamma).abs() / gamma.abs().clamp_min(EPSILON)).amax()
-        gamma = updated
-        if tolerance is not None and float(change) < tolerance:
-            break
-    return gamma, _responsibilities(batch, gamma, expected_log_beta)
-
-
-def _local_document_elbo(
-    batch: _SparseBatch,
-    gamma: torch.Tensor,
-    alpha: torch.Tensor,
-    expected_log_beta: torch.Tensor,
-) -> torch.Tensor:
-    """Return the encoder-dependent local LDA ELBO for each document.
-
-    The global topic posterior is treated as fixed.  For a supplied ``gamma``,
-    the categorical factor ``phi`` is optimized analytically and collapsed into
-    a ``logsumexp``.  This is exactly equivalent to the usual
-    ``phi * (Elogtheta + Elogbeta - log(phi))`` expression, but avoids taking
-    the logarithm of very small responsibilities.
-
-    The omitted beta-posterior terms and multinomial combinatorial constants do
-    not depend on document inference, so they cannot affect encoder gradients.
-    """
-    expected_shape = (batch.word_ids.shape[0], alpha.numel())
-    if tuple(gamma.shape) != expected_shape:
-        raise ValueError(f"gamma must have shape {expected_shape}")
-    if expected_log_beta.ndim != 2 or expected_log_beta.shape[0] != alpha.numel():
-        raise ValueError("expected_log_beta has incompatible topic dimensions")
-
-    expected_log_theta = _expected_log_dirichlet(gamma)
-    word_values = expected_log_beta[:, batch.word_ids].permute(1, 2, 0)
-    logits = expected_log_theta.unsqueeze(1) + word_values
-    counts = batch.word_counts * batch.word_mask
-    token_bound = (counts * torch.logsumexp(logits, dim=2)).sum(dim=1)
-
-    # -KL[Dir(gamma) || Dir(alpha)].  Keeping this expression explicit makes
-    # the probabilistic objective reviewable and differentiable end to end.
-    negative_dirichlet_kl = (
-        torch.lgamma(alpha.sum())
-        - torch.lgamma(alpha).sum()
-        - torch.lgamma(gamma.sum(dim=1))
-        + torch.lgamma(gamma).sum(dim=1)
-        + ((alpha.unsqueeze(0) - gamma) * expected_log_theta).sum(dim=1)
-    )
-    return negative_dirichlet_kl + token_bound
-
-
-def _corpus_elbo_minibatch_scale(
-    *,
-    corpus_documents: int,
-    batch_documents: int,
-    corpus_tokens: float,
-) -> float:
-    """Scale a uniform document minibatch to the corpus-per-token objective."""
-    if (
-        corpus_documents < 1
-        or batch_documents < 1
-        or not np.isfinite(corpus_tokens)
-        or corpus_tokens <= 0
-    ):
-        raise ValueError("corpus and minibatch sizes must be positive")
-    return corpus_documents / (batch_documents * corpus_tokens)
-
-
-def _expected_topic_word_counts(
-    batch: _SparseBatch,
-    phi: torch.Tensor,
-    *,
-    num_topics: int,
-    vocab_size: int,
-) -> torch.Tensor:
-    """Compute ``sum_d x[d,v] phi[d,v,k]`` without a dense count matrix."""
-    statistics = torch.zeros(
-        (num_topics, vocab_size),
-        device=phi.device,
-        dtype=phi.dtype,
-    )
-    # The short document loop mirrors the mathematical sum over d. Each
-    # ``index_add_`` writes the observed words into the K x V result.
-    for row in range(batch.word_ids.shape[0]):
-        observed = batch.word_mask[row]
-        words = batch.word_ids[row, observed]
-        weighted_phi = (
-            batch.word_counts[row, observed].unsqueeze(1) * phi[row, observed]
-        )
-        statistics.index_add_(1, words, weighted_phi.transpose(0, 1))
-    return statistics
-
-
-class _HybridLDACore(nn.Module):
-    """PyTorch parameters for the document encoder and structured word prior.
-
-    The orchestration wrapper is separate because ``nn.Module.train(mode)``
-    conflicts with the Tomotopy-shaped ``HybridLDAModel.train(iter)`` API.
-    Keeping tensors here also makes checkpoint contents explicit.
-    """
-
-    def __init__(self, vocab_size: int, config: HybridLDAConfig) -> None:
-        """Create tensors with the dimensions declared by ``config``."""
-        super().__init__()
-        self.config = config
-        self.vocab_size = int(vocab_size)
-        if self.vocab_size < 1:
-            raise ValueError("vocab_size must be positive")
-
-        with torch.random.fork_rng(devices=[]):
-            torch.manual_seed(config.seed)
-            self.document_projector = nn.Sequential(
-                nn.LayerNorm(config.embedding_dim),
-                nn.Linear(config.embedding_dim, config.feature_projection_dim),
-                nn.GELU(),
-                nn.LayerNorm(config.feature_projection_dim),
-            )
-            self.word_projector = nn.Sequential(
-                nn.LayerNorm(config.embedding_dim),
-                nn.Linear(
-                    config.embedding_dim,
-                    config.feature_projection_dim,
-                    bias=False,
-                ),
-            )
-            self.word_type_embedding = nn.Embedding(3, config.feature_projection_dim)
-            self.word_mz_projector = nn.Sequential(
-                nn.Linear(1, config.feature_projection_dim),
-                nn.GELU(),
-                nn.Linear(
-                    config.feature_projection_dim,
-                    config.feature_projection_dim,
-                ),
-            )
-            self.topic_embeddings = nn.Parameter(
-                torch.empty(config.num_topics, config.feature_projection_dim)
-            )
-            nn.init.normal_(
-                self.topic_embeddings,
-                std=1.0 / math.sqrt(config.feature_projection_dim),
-            )
-            input_size = config.num_topics + config.feature_projection_dim
-            self.encoder = nn.Sequential(
-                nn.Linear(input_size, config.hidden_size),
-                nn.ReLU(),
-                nn.Linear(config.hidden_size, config.hidden_size),
-                nn.ReLU(),
-                nn.Linear(config.hidden_size, config.num_topics),
-            )
-            nn.init.zeros_(self.encoder[-1].weight)
-            nn.init.zeros_(self.encoder[-1].bias)
-
-        self.register_buffer("alpha", torch.from_numpy(config.alpha_vector()))
-        self.register_buffer(
-            "lambda_posterior",
-            torch.full(
-                (config.num_topics, self.vocab_size),
-                config.eta + 1.0,
-                dtype=torch.float32,
-            ),
-        )
-        self.register_buffer(
-            "word_context_embeddings",
-            torch.zeros(self.vocab_size, config.embedding_dim),
-        )
-        self.register_buffer(
-            "word_context_observed",
-            torch.zeros(self.vocab_size, dtype=torch.bool),
-        )
-        self.register_buffer("word_mz", torch.zeros(self.vocab_size, 1))
-        self.register_buffer(
-            "word_type",
-            torch.full((self.vocab_size,), 2, dtype=torch.long),
-        )
-
-    def initialize_topics(self, total_tokens: float) -> None:
-        """Initialize free topic-word factors from a seeded random simplex."""
-        if total_tokens <= 0:
-            raise ValueError("at least one token is required")
-        generator = torch.Generator(device="cpu").manual_seed(self.config.seed)
-        raw = torch.empty(
-            self.config.num_topics,
-            self.vocab_size,
-            dtype=torch.float32,
-        ).exponential_(1.0, generator=generator)
-        means = raw / raw.sum(dim=1, keepdim=True).clamp_min(EPSILON)
-        mass = total_tokens / self.config.num_topics
-        self.lambda_posterior.copy_((self.config.eta + mass * means).to(self.device))
-
-    @property
-    def device(self) -> torch.device:
-        """Device holding the model buffers and parameters."""
-        return self.lambda_posterior.device
-
-    def set_word_features(
-        self,
-        contextual_embeddings: np.ndarray,
-        observed: np.ndarray,
-        mz_values: np.ndarray,
-        word_types: np.ndarray,
-    ) -> None:
-        """Copy aligned contextual, mass, and type features into model buffers."""
-        expected = (self.vocab_size, self.config.embedding_dim)
-        if contextual_embeddings.shape != expected:
-            raise ValueError(f"word embeddings must have shape {expected}")
-        if observed.shape != (self.vocab_size,):
-            raise ValueError("observed must contain one flag per word")
-        if mz_values.shape != (self.vocab_size,):
-            raise ValueError("mz_values must contain one value per word")
-        if word_types.shape != (self.vocab_size,):
-            raise ValueError("word_types must contain one value per word")
-        self.word_context_embeddings.copy_(
-            torch.as_tensor(contextual_embeddings, device=self.device)
-        )
-        self.word_context_observed.copy_(torch.as_tensor(observed, device=self.device))
-        self.word_mz.copy_(
-            torch.as_tensor(mz_values, device=self.device).reshape(-1, 1)
-        )
-        self.word_type.copy_(torch.as_tensor(word_types, device=self.device))
-
-    def encoder_parameters(self) -> list[nn.Parameter]:
-        """Parameters trained to amortize the local VB posterior."""
-        return [*self.encoder.parameters(), *self.document_projector.parameters()]
-
-    def prior_parameters(self) -> list[nn.Parameter]:
-        """Parameters trained to construct the bounded topic-word prior."""
-        return [
-            *self.word_projector.parameters(),
-            *self.word_type_embedding.parameters(),
-            *self.word_mz_projector.parameters(),
-            self.topic_embeddings,
-        ]
-
-    def beta_mean(self) -> torch.Tensor:
-        """Return posterior-mean topic-word probabilities, shape ``K x V``."""
-        return self.lambda_posterior / self.lambda_posterior.sum(
-            dim=1, keepdim=True
-        ).clamp_min(EPSILON)
-
-    def _word_topic_evidence(
-        self,
-        batch: _SparseBatch,
-        word_topic: torch.Tensor,
-    ) -> torch.Tensor:
-        """Average current topic evidence over each document's observed words."""
-        counts = batch.word_counts * batch.word_mask
-        evidence = (counts.unsqueeze(-1) * word_topic[batch.word_ids]).sum(dim=1)
-        evidence = evidence / batch.totals.clamp_min(1.0)
-        empty = batch.totals <= 0
-        if torch.any(empty):
-            evidence = torch.where(
-                empty,
-                torch.full_like(evidence, 1.0 / self.config.num_topics),
-                evidence,
-            )
-        return evidence / evidence.sum(dim=1, keepdim=True).clamp_min(EPSILON)
-
-    def encode(
-        self,
-        batch: _SparseBatch,
-        document_embeddings: torch.Tensor,
-        word_topic: torch.Tensor,
-    ) -> torch.Tensor:
-        """Predict initial ``gamma`` from topic evidence and a DreaMS embedding.
-
-        The network predicts a residual on top of the current LDA evidence,
-        then preserves the Dirichlet mass invariant
-        ``sum(gamma[d]) = sum(alpha) + N[d]``.
-        """
-        expected = (batch.word_ids.shape[0], self.config.embedding_dim)
-        if tuple(document_embeddings.shape) != expected:
-            raise ValueError(f"document embeddings must have shape {expected}")
-        evidence = self._word_topic_evidence(batch, word_topic)
-        projected = self.document_projector(document_embeddings)
-        residual = self.encoder(torch.cat([evidence, projected], dim=1))
-        topic_mean = torch.softmax(
-            evidence.clamp_min(EPSILON).log() + residual,
-            dim=1,
-        )
-        return self.alpha.unsqueeze(0) + batch.totals * topic_mean
-
-    def _projected_words(self) -> torch.Tensor:
-        """Combine contextual peak, normalized mass, and token-type features."""
-        context = self.word_projector(self.word_context_embeddings)
-        context = context * self.word_context_observed.unsqueeze(-1)
-        mz = self.word_mz_projector(self.word_mz)
-        token_type = self.word_type_embedding(self.word_type)
-        return nn_functional.normalize(context + mz + token_type, dim=1)
-
-    def structured_prior(self, total_tokens: float, epoch: int) -> torch.Tensor:
-        """Return ``eta + r[e] rho N/K p[k,v]`` for every topic and word."""
-        baseline = torch.full_like(self.lambda_posterior, self.config.eta)
-        topics = nn_functional.normalize(self.topic_embeddings, dim=1)
-        logits = topics @ self._projected_words().transpose(0, 1)
-        distribution = torch.softmax(logits / self.config.prior_temperature, dim=1)
-        warmup = min(max(float(epoch), 0.0) / self.config.prior_warmup_epochs, 1.0)
-        topic_mass = total_tokens / self.config.num_topics
-        structured_mass = warmup * self.config.prior_mass_fraction * topic_mass
-        return baseline + structured_mass * distribution
-
-    def prior_loss(
-        self,
-        total_tokens: float,
-        epoch: int,
-    ) -> torch.Tensor:
-        """Empirical-Bayes loss for the structured prior parameters."""
-        prior = self.structured_prior(total_tokens, epoch)
-        posterior = self.lambda_posterior.detach()
-        expected_log_beta = _expected_log_dirichlet(posterior)
-        expected_log_prior = (
-            torch.lgamma(prior.sum(dim=1))
-            - torch.lgamma(prior).sum(dim=1)
-            + ((prior - 1.0) * expected_log_beta).sum(dim=1)
-        ).mean() / self.vocab_size
-        topics = nn_functional.normalize(self.topic_embeddings, dim=1)
-        gram = topics @ topics.transpose(0, 1)
-        identity = torch.eye(
-            self.config.num_topics,
-            device=self.device,
-            dtype=gram.dtype,
-        )
-        orthogonality = ((gram - identity) ** 2).mean()
-        return -expected_log_prior + self.config.topic_diversity_weight * orthogonality
-
-    @torch.no_grad()
-    def update_topics(self, statistics: torch.Tensor, prior: torch.Tensor) -> None:
-        """Apply the global VB update ``lambda = prior + expected counts``."""
-        if statistics.shape != self.lambda_posterior.shape:
-            raise ValueError("statistics shape does not match topic posterior")
-        if prior.shape != self.lambda_posterior.shape or torch.any(prior <= 0):
-            raise ValueError("invalid Dirichlet prior")
-        self.lambda_posterior.copy_(prior + statistics)
 
 
 @dataclass
@@ -614,9 +81,10 @@ class HybridLDAModel:
     document-inference objective. New-document :meth:`infer` and :meth:`save`
     are intentionally unavailable until that finalization succeeds.
 
-    The remaining public surface mirrors the small part of Tomotopy used by
-    model-facing MS2LDA code: documents, topic accessors, and safe checkpoint
-    I/O. Unsupported Tomotopy options are not accepted silently.
+    The deliberately small experiment-facing surface covers documents, topic
+    accessors, frozen-topic inference, and safe checkpoint I/O. It is not a
+    drop-in replacement for Tomotopy's sampled token assignments or the
+    production visualization/export workflow.
     """
 
     def __init__(

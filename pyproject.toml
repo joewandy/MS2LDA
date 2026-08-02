@@ -30,6 +30,7 @@ classifiers = [
 
 packages = [
   { include = "MS2LDA" },
+  { include = "ms2lda_hybrid" },
   { include = "App" },
   { include = "scripts" },          # for scripts.ms2lda_runfull
   { include = "massql4motifs" }     # Vendored until merged upstream

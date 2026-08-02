@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """Compare the supported inference method with one synthetic-corpus baseline.
 
 This benchmark intentionally removes topic-discovery variance.  Every method
@@ -16,7 +15,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import sys
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -25,22 +23,17 @@ from typing import Any
 import numpy as np
 import torch
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT))
-
-from MS2LDA.hybrid_lda import (
+from benchmarks.inference_baselines import fit_posterior_regression_baseline
+from ms2lda_hybrid import HybridLDAConfig, HybridLDAModel
+from ms2lda_hybrid._variational import (
     EPSILON,
-    INFERENCE_REFINEMENT_STEPS,
-    HybridLDAConfig,
-    HybridLDAModel,
-    _expected_log_dirichlet,
-    _local_document_elbo,
-    _local_vb,
-    _make_sparse_batch,
+    expected_log_dirichlet,
+    local_document_elbo,
+    local_vb,
+    make_sparse_batch,
     observed_token_nll,
 )
-from scripts.inference_baselines import fit_posterior_regression_baseline
+from ms2lda_hybrid.model import INFERENCE_REFINEMENT_STEPS
 
 
 @dataclass(frozen=True)
@@ -214,9 +207,9 @@ def build_common_reference(
     ]
     matrix = template._documents_to_matrix(documents)
     indices = np.arange(len(documents))
-    batch = _make_sparse_batch(matrix, indices, device=template.device)
+    batch = make_sparse_batch(matrix, indices, device=template.device)
     core = template._core
-    expected_log_beta = _expected_log_dirichlet(core.lambda_posterior)
+    expected_log_beta = expected_log_dirichlet(core.lambda_posterior)
     word_topic = torch.softmax(expected_log_beta.transpose(0, 1), dim=1)
     starts = [("symmetric", core.alpha.unsqueeze(0) + batch.totals / template.k)]
     for name, model in models.items():
@@ -253,7 +246,7 @@ def build_common_reference(
     )
     selected_tail_gain = torch.zeros_like(best_elbo)
     for source_index, (_, initial_gamma) in enumerate(starts):
-        solved_gamma, _ = _local_vb(
+        solved_gamma, _ = local_vb(
             batch,
             initial_gamma,
             core.alpha,
@@ -261,13 +254,13 @@ def build_common_reference(
             steps=REFERENCE_STEPS,
             tolerance=REFERENCE_TOLERANCE,
         )
-        solved_elbo = _local_document_elbo(
+        solved_elbo = local_document_elbo(
             batch,
             solved_gamma,
             core.alpha,
             expected_log_beta,
         )
-        tail_gamma, _ = _local_vb(
+        tail_gamma, _ = local_vb(
             batch,
             solved_gamma,
             core.alpha,
@@ -275,7 +268,7 @@ def build_common_reference(
             steps=1,
             tolerance=None,
         )
-        tail_elbo = _local_document_elbo(
+        tail_elbo = local_document_elbo(
             batch,
             tail_gamma,
             core.alpha,
@@ -340,9 +333,9 @@ def evaluate_model(
     ]
     matrix = model._documents_to_matrix(documents)
     indices = np.arange(len(documents))
-    batch = _make_sparse_batch(matrix, indices, device=model.device)
+    batch = make_sparse_batch(matrix, indices, device=model.device)
     core = model._core
-    expected_log_beta = _expected_log_dirichlet(core.lambda_posterior)
+    expected_log_beta = expected_log_dirichlet(core.lambda_posterior)
     word_topic = torch.softmax(expected_log_beta.transpose(0, 1), dim=1)
     test_embeddings = model._embedding_batch(documents, indices)
     reference_gamma = torch.as_tensor(
@@ -369,7 +362,7 @@ def evaluate_model(
             started = time.perf_counter()
             gamma_zero = core.encode(batch, test_embeddings, word_topic)
             gamma = (
-                _local_vb(
+                local_vb(
                     batch,
                     gamma_zero,
                     core.alpha,
@@ -383,7 +376,7 @@ def evaluate_model(
             timings.append(time.perf_counter() - started)
         if gamma is None:
             raise RuntimeError("inference timing did not run")
-        elbo = _local_document_elbo(batch, gamma, core.alpha, expected_log_beta)
+        elbo = local_document_elbo(batch, gamma, core.alpha, expected_log_beta)
         theta = gamma / gamma.sum(dim=1, keepdim=True)
         posterior_kl = (
             reference_theta

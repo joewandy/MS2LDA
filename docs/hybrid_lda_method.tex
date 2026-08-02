@@ -36,7 +36,7 @@ bounded DreaMS-conditioned topic--word prior. Second, topic discovery is frozen
 permanently and a DreaMS document encoder is trained with a semi-amortized local
 LDA objective: the exact local evidence lower bound (ELBO) is differentiated
 through two unrolled coordinate updates. The encoder is never trained or used
-inside topic discovery. The implementation exposes a small Tomotopy-shaped
+inside topic discovery. The implementation exposes a small experiment-facing
 interface, a one-way finalization lifecycle, and weights-only inference
 checkpoints. Focused tests and fresh-encoder frozen-topic experiments support a
 narrow limited-budget inference claim. Comparative motif discovery and
@@ -377,18 +377,20 @@ only padded nonzero word identifiers and counts.
 \subsection{Implementation and compatibility boundary}
 
 Conceptually the system is one fitted \code{HybridLDAModel} plus one frozen
-external feature extractor. \path{MS2LDA/hybrid_lda.py} contains the sparse
-LDA equations, neural modules, global update, checkpoint, and adapter.
-\path{MS2LDA/dreams_features.py} contains the lazy DreaMS loader, aligned HDF5
-cache, and train-only peak-to-word pooling. There is no second model
-implementation.
+external feature extractor. \path{ms2lda_hybrid/_variational.py} contains the
+sparse local LDA equations and ELBO, \path{ms2lda_hybrid/_core.py} contains the
+neural modules and global topic update, and \path{ms2lda_hybrid/model.py} owns
+the lifecycle and checkpoint boundary. \path{ms2lda_hybrid/dreams_features.py}
+contains the lazy DreaMS loader, aligned HDF5 cache, and train-only peak-to-word
+pooling. There is no second model implementation.
 
-\code{HybridLDAModel} implements only the small subset of
-\code{tomotopy.LDAModel} needed by model-facing experiments: adding documents,
-classical discovery, inference finalization, topic access, new-document
-inference, document topic distributions, likelihood summaries, and save/load.
-It is not wired into the existing CLI, dashboard, or visualizer. Tomotopy
-remains the production backend.
+\code{HybridLDAModel} provides only the experiment-facing operations needed to
+add documents, run classical discovery, finalize inference, inspect topics,
+infer new-document mixtures, and save or load inference checkpoints. Some names
+mirror the existing model API where their semantics agree, but this is not a
+drop-in Tomotopy replacement: in particular, it does not expose sampled
+token-topic assignments. It is not wired into the existing CLI, dashboard, or
+visualizer. Tomotopy remains the production backend.
 
 The version-3 reference checkpoint can be written only after successful
 finalization. It contains the topic posterior, neural parameters,
@@ -427,46 +429,14 @@ lower. This simulator
 isolates inference behavior; its oracle topics and latent-derived embeddings
 are not chemical evidence.
 
-A second experiment used the archived random-split mushroom artifacts only to
-freeze the same discovered topics and reconstruct the exact split: 2,171
-training spectra, 539 eligible test spectra, 10,029 training-vocabulary words,
-209,497 observed test tokens, and 214,271 held-out test tokens. For each topic
-seed 42--46, both comparison encoders were reset to the same fresh seeded
-initialization before any final-stage training. Each received the same frozen
-topics, document order, minibatch random-number-generator state, and 12 epochs.
-The benchmark comparator regressed to normalized local-VB posterior means; the
-current method optimized Equation~\ref{eq:semi-amortized-objective}. Test
-embeddings came from partial spectra containing observed physical peaks only.
-
-The semi-amortized arm reduced the two-step signed ELBO gap in all five seeds:
-7.39--10.52\%, with mean 9.53\% and sample standard deviation 1.38 percentage
-points. Three of five seeds exceeded a prespecified 10\% diagnostic threshold;
-the threshold was retained rather than revised after observing the rerun.
-Held-out NLL was lower in all five seeds at both zero and two refinement steps.
-The mean improvements were 0.0481 nats/token at zero steps and 0.0146 at two
-steps; mean two-step NLL was 7.0048 rather than 7.0194. The current method at
-two steps was also 0.0499 nats/token better than the comparator after five
-steps. Every topic and structured-prior tensor remained bitwise unchanged.
-
-Long local solves were diagnostics, not claims of uniform numerical
-convergence. Across seeds, one additional coordinate update was positive for
-as many as 107 documents and had a maximum individual gain of 0.9063 nats. The
-largest corpus-average continuation gain was only
-$1.02\times10^{-5}$ per observed token, too small to explain the finite-budget
-differences. As an artifact-integrity check, migrated predictions reproduced
-stored NLL values with mean absolute error $1.28\times10^{-8}$ and maximum
-absolute error $3.71\times10^{-8}$ nats/token.
-
 The synthetic driver is
-\path{scripts/benchmark_semi_amortized_inference.py}; the trusted-artifact
-mushroom driver is
-\path{scripts/benchmark_mushroom_inference_phase.py}. The regression comparator
-lives only in \path{scripts/inference_baselines.py}; it is not exposed by the
-production model or serializable as a finalized checkpoint. Both drivers retain
-machine-readable raw results. These experiments support a narrow claim: from a
-fresh seeded encoder and fixed topics, the final semi-amortized encoder is a
-better limited-budget document-inference initializer than this comparator.
-They do not show that discovered motifs are more chemically meaningful, more
+\path{benchmarks/semi_amortized_inference.py}. The regression comparator lives
+only in \path{benchmarks/inference_baselines.py}; it is not exposed by the
+reference package or serializable as a finalized checkpoint. The driver can
+write all per-seed results as JSON. This experiment supports a narrow claim:
+from a fresh seeded encoder and fixed topics, the final semi-amortized encoder
+is a better limited-budget document-inference initializer than this comparator.
+It does not show that discovered motifs are more chemically meaningful, more
 stable, or superior to another topic-discovery method.
 
 \section{Planned topic-discovery and chemical benchmark}
@@ -540,23 +510,22 @@ not therefore guarantee a useful motif prior.
 
 The structured-prior mass, warm-up, and temperature are fixed design choices
 that have not yet been validated. The two-step objective and 0.1 zero-step
-weight were selected in an internal simulator; the fresh-encoder mushroom
-rerun is a useful robustness check but not an independent model-selection
-study. Finalization intentionally locks topic discovery, so fitting on a
-premature topic state cannot be repaired without training a new model. The
-model is not an end-to-end neural topic model, and the production MS2LDA
-workflow does not yet select it as a backend. Finally, a passing software test
-suite and frozen-topic inference improvement cannot replace external chemical
+weight were selected during development; the current synthetic experiment is
+therefore a mechanism check, not an independent confirmatory study.
+Finalization intentionally locks topic discovery, so fitting on a premature
+topic state cannot be repaired without training a new model. The model is not
+an end-to-end neural topic model, and the production MS2LDA workflow does not
+yet select it as a backend. Finally, a passing software test suite and
+frozen-topic inference improvement cannot replace external chemical
 validation.
 
 \section{Reproducibility}
 
 The self-contained reference surface consists of
-\path{MS2LDA/hybrid_lda.py}, \path{MS2LDA/dreams_features.py},
-\path{tests/test_hybrid_lda.py}, \path{scripts/inference_baselines.py}, the two
-benchmark drivers named above, \path{environment-hybrid.yml}, and this document.
-A small lazy import in \path{MS2LDA/__init__.py} prevents the full application
-stack from loading when the reference modules are imported.
+the \path{ms2lda_hybrid/} package, \path{tests/test_hybrid_lda.py}, the two
+modules in \path{benchmarks/}, \path{environment-hybrid.yml}, and this document.
+The package is isolated from the production \path{MS2LDA/} import and workflow
+boundary.
 
 The environment uses Python 3.11 and pins NumPy 1.25.0, PyTorch 2.2.1, and
 DreaMS at Git commit
@@ -576,13 +545,15 @@ python -m pip install --no-deps \
   "git+https://github.com/pluskal-lab/DreaMS.git@dbec3a0b514a99e5056cfccde4559fda8cfe8129"
 python -m pip install --no-deps -e .
 python -m pytest -q tests/test_hybrid_lda.py
+python -m benchmarks.semi_amortized_inference
 \end{verbatim}
 }
 
-DreaMS caches record the expected package commit, installed package version,
-both public checkpoint hashes, embedding dimension, and peak limit. Model
-loading does not enforce a cache match. Reference checkpoints contain no
-spectra and cannot resume training.
+Extractor construction verifies the PEP~610 installed-package commit against
+the pinned DreaMS commit. DreaMS caches record both commit fields, the installed
+package version, both public checkpoint hashes, embedding dimension, and peak
+limit. Model loading does not enforce a cache match. Reference checkpoints
+contain no spectra and cannot resume training.
 
 \section{Conclusion}
 
