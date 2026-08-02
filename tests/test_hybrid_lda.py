@@ -103,9 +103,13 @@ def documents() -> tuple[list[list[str]], np.ndarray, dict[str, np.ndarray]]:
     return words, embeddings, word_embeddings
 
 
-def prepared_model(*, seed: int = 7) -> HybridLDAModel:
+def prepared_model(
+    config: HybridLDAConfig | None = None,
+    *,
+    seed: int = 7,
+) -> HybridLDAModel:
     words, embeddings, word_embeddings = documents()
-    model = HybridLDAModel(small_config(seed=seed))
+    model = HybridLDAModel(small_config(seed=seed) if config is None else config)
     model.set_word_embeddings(word_embeddings)
     for document, embedding in zip(words, embeddings, strict=True):
         model.add_doc(document, embedding=embedding)
@@ -429,7 +433,15 @@ def test_convergence_starts_only_after_the_prior_is_fixed() -> None:
 
 
 def test_training_inference_and_safe_checkpoint_round_trip(tmp_path: Path) -> None:
-    model = prepared_model()
+    config = replace(
+        small_config(),
+        num_topics=np.int64(3),
+        embedding_dim=np.int64(4),
+        alpha=np.asarray([0.1, 0.1, 0.1], dtype=np.float32),
+        eta=np.float32(0.01),
+        seed=np.uint64(7),
+    )
+    model = prepared_model(config)
     model.train(2)
     model.finalize_inference()
     words, embeddings, _ = documents()
@@ -448,6 +460,11 @@ def test_training_inference_and_safe_checkpoint_round_trip(tmp_path: Path) -> No
     assert restored.docs == []
     assert restored._prior_optimizer is None
     assert restored.inference_finalized
+    assert type(restored.config.num_topics) is int
+    assert type(restored.config.eta) is float
+    assert type(restored.config.seed) is int
+    assert isinstance(restored.config.alpha, tuple)
+    assert all(type(value) is float for value in restored.config.alpha)
     with pytest.raises(RuntimeError, match="cannot resume"):
         restored.train(1)
 

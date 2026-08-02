@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from numbers import Integral
+from numbers import Integral, Real
 
 import numpy as np
 
@@ -47,7 +47,7 @@ class HybridLDAConfig:
     seed: int = 42
 
     def __post_init__(self) -> None:
-        """Reject configurations that would make the algorithm ill-defined."""
+        """Validate settings and normalize them to checkpoint-safe primitives."""
         positive_integers = {
             "num_topics": self.num_topics,
             "embedding_dim": self.embedding_dim,
@@ -86,11 +86,17 @@ class HybridLDAConfig:
             "local_tolerance": self.local_tolerance,
             "global_tolerance": self.global_tolerance,
         }
-        nonfinite = [
-            name for name, value in finite_settings.items() if not np.isfinite(value)
+        invalid_scalars = [
+            name
+            for name, value in finite_settings.items()
+            if isinstance(value, (bool, np.bool_))
+            or not isinstance(value, Real)
+            or not np.isfinite(float(value))
         ]
-        if nonfinite:
-            raise ValueError(f"finite values required for: {', '.join(nonfinite)}")
+        if invalid_scalars:
+            raise ValueError(
+                f"finite scalar values required for: {', '.join(invalid_scalars)}"
+            )
         if self.eta <= 0:
             raise ValueError("eta must be positive")
         if self.encoder_learning_rate <= 0 or self.prior_learning_rate <= 0:
@@ -107,7 +113,22 @@ class HybridLDAConfig:
             raise ValueError("prior training must cover the prior warmup")
         if self.max_epochs <= self.prior_training_epochs:
             raise ValueError("max_epochs must include at least one fixed-prior epoch")
-        self.alpha_vector()
+        alpha = self.alpha_vector()
+
+        # Frozen configurations remain immutable after construction, but their
+        # accepted NumPy scalar/array inputs are canonicalized here. This keeps
+        # dataclass serialization compatible with torch.load(weights_only=True).
+        for name, value in positive_integers.items():
+            object.__setattr__(self, name, int(value))
+        object.__setattr__(self, "seed", int(self.seed))
+        for name, value in finite_settings.items():
+            object.__setattr__(self, name, float(value))
+        normalized_alpha: float | tuple[float, ...]
+        if np.asarray(self.alpha).ndim == 0:
+            normalized_alpha = float(self.alpha)
+        else:
+            normalized_alpha = tuple(float(value) for value in alpha)
+        object.__setattr__(self, "alpha", normalized_alpha)
 
     def alpha_vector(self) -> np.ndarray:
         """Return one positive alpha value per topic."""
