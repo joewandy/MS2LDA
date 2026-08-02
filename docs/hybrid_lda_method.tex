@@ -1,0 +1,469 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=0.88in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{microtype}
+\usepackage{seqsplit}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{url}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!55!black,
+  citecolor=blue!55!black,
+  urlcolor=blue!55!black
+}
+\setlength{\emergencystretch}{2em}
+\newcommand{\method}{DreaMS-conditioned Hybrid MS2LDA}
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\hash}[1]{\texttt{\seqsplit{#1}}}
+
+\title{\method:\\
+Pretrained Spectral Conditioning for Neural LDA Inference and Mass2Motif Discovery}
+\author{MS2LDA Development Team}
+\date{2 August 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+MS2LDA discovers recurring fragment and neutral-loss patterns by treating
+tandem mass spectra as documents in latent Dirichlet allocation (LDA).
+This note specifies a hybrid in which a frozen pretrained DreaMS transformer
+conditions both amortized document inference and a learned, fixed-mass
+Dirichlet prior, while classical expected-count updates continue to discover
+free topics. The prior is learned for a bounded number of epochs and then
+frozen so convergence is assessed against a stationary model. The reference
+implementation exposes a small Tomotopy-shaped interface without changing the
+production MS2LDA backend. It is accompanied by focused correctness tests and
+a prespecified validation protocol. No comparative performance or chemical
+motif-quality claim is made here; those claims require a new reproducible
+benchmark fitted directly from this cleaned implementation.
+\end{abstract}
+
+\section{Introduction}
+
+Latent Dirichlet allocation represents a document as a mixture of latent
+topics and each topic as a probability distribution over words
+\cite{blei2003}. MS2LDA transfers this construction to tandem mass
+spectrometry: spectra are documents, discretized fragments and neutral losses
+are words, and topics are Mass2Motifs that may represent recurring molecular
+substructures \cite{vanderhooft2016}. One spectrum can contain several motifs,
+and one motif can recur across otherwise different molecules.
+
+There are two distinct tasks. In \emph{discovery}, the topic--word
+distributions are learned from a corpus. In \emph{decomposition}, a new
+spectrum is assigned mixture weights over already learned topics. A network
+that predicts membership in fixed motifs can accelerate decomposition, but it
+cannot discover new motifs. A fully neural topic model can learn both parts,
+but changes the optimizer and can suffer component collapse or unstable topic
+identification \cite{srivastava2017}.
+
+This reference takes a middle route. Free topics are updated from variational
+LDA expected counts, while a frozen public spectral encoder supplies continuous
+features to an empirical-Bayes word prior and an amortized new-document
+initializer. The scientific question is whether these features add useful
+chemical structure without replacing LDA's auditable topic update. That
+question remains to be answered by the planned benchmark; this document first
+defines exactly what will be tested.
+
+The contributions are:
+\begin{enumerate}
+  \item a frozen DreaMS feature extractor that returns aligned spectrum-level
+        and contextual peak representations;
+  \item one hybrid LDA model that uses those representations in amortized
+        document inference and a structured topic--word prior;
+  \item a deliberately small adapter surface for fitting, inference, topic
+        access, and safe inference-only checkpoints; and
+  \item a reproducible protocol for later comparison with Tomotopy and the
+        frozen DreaMS representation itself.
+\end{enumerate}
+
+\section{Background}
+
+\subsection{Classical and neural topic models}
+
+Mean-field variational inference for LDA alternates local document updates
+with global expected-count updates \cite{blei2003,hoffman2013}. Tomotopy uses
+a collapsed Gibbs sampler rather than mean-field variational inference, but
+fits the same broad LDA factorization. Both methods are stochastic and
+label-invariant: different seeds can find different local solutions even when
+all topics are used.
+
+Neural topic models such as ProdLDA replace repeated local optimization with
+an amortized encoder \cite{srivastava2017}. This makes inference fast and
+allows continuous covariates, but creates an amortization gap: one shared
+mapping need not return the best variational posterior for every document
+\cite{cremer2018}. Semi-amortized inference reduces this gap by using the
+encoder output as the start of local optimization \cite{kim2018}. Our model
+uses this idea while retaining a conjugate LDA topic posterior.
+
+\subsection{Pretrained DreaMS representations}
+
+DreaMS is a transformer pretrained by self-supervision on millions of
+unannotated tandem mass spectra \cite{bushuiev2026}. It emits
+1,024-dimensional contextual representations for spectral peaks and a
+spectrum-level representation at its precursor token. Its training objective
+and attention architecture encode peak context and pairwise mass differences,
+information absent from an MS2LDA count vector. We use the public
+\code{DreaMS\_embedding} checkpoint without fine-tuning the transformer.
+
+\section{Method}
+
+\subsection{LDA core}
+
+Let $x_{dv}$ be the count of feature $v$ in spectrum $d$, with $K$ motifs and
+$V$ retained features. Conditional on the empirically estimated
+$\boldsymbol\eta$, the model is classical LDA:
+\begin{align}
+  \boldsymbol\beta_k &\sim
+    \operatorname{Dirichlet}(\boldsymbol\eta_k), \\
+  \boldsymbol\theta_d &\sim
+    \operatorname{Dirichlet}(\boldsymbol\alpha), \\
+  z_{dn} &\sim \operatorname{Categorical}(\boldsymbol\theta_d), \\
+  w_{dn} &\sim \operatorname{Categorical}
+    (\boldsymbol\beta_{z_{dn}}).
+\end{align}
+The topic--word variational posterior is
+$q(\boldsymbol\beta_k)=\operatorname{Dirichlet}(\boldsymbol\lambda_k)$,
+and the document posterior is
+$q(\boldsymbol\theta_d)=\operatorname{Dirichlet}(\boldsymbol\gamma_d)$.
+For each nonzero feature count,
+\begin{align}
+  \phi_{dvk} &\propto \exp\left[
+    \psi(\gamma_{dk})-\psi\left(\sum_j\gamma_{dj}\right)
+    +\psi(\lambda_{kv})-\psi\left(\sum_u\lambda_{ku}\right)
+    \right],\\
+  \gamma_{dk} &= \alpha_k+\sum_v x_{dv}\phi_{dvk},\\
+  \lambda_{kv} &= \eta_{kv}+\sum_d x_{dv}\phi_{dvk}.
+\end{align}
+The last equation is a full-corpus expected-count update. The neural
+components do not replace it.
+
+The implementation names the sparse count matrix \code{x}, the local
+parameters \code{gamma}, the responsibilities \code{phi}, and the global
+parameters \code{lambda\_posterior}. The method \code{beta\_mean()} returns
+the posterior mean of $\boldsymbol\beta$. These names intentionally follow the
+equations.
+
+\subsection{Frozen spectrum and peak features}
+
+For spectrum $d$, the frozen DreaMS checkpoint produces a global representation
+$\mathbf s_d\in\mathbb R^{1024}$ and a contextual representation
+$\mathbf h_{dp}\in\mathbb R^{1024}$ for each retained peak $p$. The extractor
+uses the official DreaMS preprocessor and its top 100 peaks.
+
+Contextual word features are constructed from training spectra only. For a
+fragment word at mass $m_v$, we pool the state of the nearest peak within
+0.02 Da. For a neutral-loss word at loss $\ell_v$, we pool the nearest peak to
+precursor mass minus $\ell_v$. Repeated occurrences contribute according to
+their counts. This gives a mean contextual vector $\bar{\mathbf h}_v$.
+Unmatched words receive a zero contextual vector but retain their mass and
+word-type features.
+
+\subsection{Chemically structured topic--word prior}
+
+The contextual vector, numeric mass, and feature type are combined into a
+trainable normalized word representation:
+\begin{equation}
+ \mathbf u_v = \operatorname{normalize}\left[
+ W_h\bar{\mathbf h}_v+
+ g_m(\widetilde m_v)+\mathbf e_{\operatorname{type}(v)}
+ \right].
+\end{equation}
+The scalar input is
+$\widetilde m_v=\log(1+\max(m_v,0))/\log(2001)$. Here $g_m$ is a small
+multilayer perceptron, and
+$\mathbf e_{\operatorname{type}(v)}$ distinguishes fragments, losses, and
+other tokens. Each topic has a trainable normalized vector $\mathbf t_k$.
+The prior for topic $k$ is
+\begin{align}
+ p_{kv} &=
+ \operatorname{softmax}_v\left(
+ \frac{\mathbf t_k^\top\mathbf u_v}{T}\right),\\
+ \eta_{kv}^{(e)} &= \eta+
+ r_e\,\rho\,\frac{N}{K}p_{kv},
+\end{align}
+where $N$ is the number of training tokens, $T=0.5$, $\rho=0.05$, and
+$r_e=\min(e/15,1)$ is a 15-epoch warm-up. Every topic therefore receives the
+same structured prior mass.
+
+With row-normalized topic vectors collected in $\widetilde T$, the prior
+parameters minimize
+\begin{equation}
+ -\frac{1}{KV}\sum_k \mathbb E_q[\log
+   \operatorname{Dir}(\boldsymbol\beta_k;\boldsymbol\eta_k^{(e)})]
+ +10^{-3}\frac{\|\widetilde T\widetilde T^\top-I\|_F^2}{K^2}.
+\end{equation}
+One Adam update is taken per global epoch through epoch 20. The prior is then
+fixed. A run stops only after the relative $L_1$ change in
+$\boldsymbol\lambda$ is below $10^{-3}$ for three consecutive fixed-prior
+epochs, with a maximum of 100 epochs. This is an operational stopping rule,
+not a proof of ELBO convergence.
+
+\subsection{DreaMS-conditioned document encoder}
+
+The encoder is anchored to the current free topics. Define
+\begin{align}
+ \ell_{kv} &=
+ \psi(\lambda_{kv})-\psi\left(\sum_u\lambda_{ku}\right),\\
+ r_{vk} &= \operatorname{softmax}_k(\ell_{kv}),\\
+ e_{dk} &= \sum_v\frac{x_{dv}}{N_d}r_{vk},
+ \qquad N_d=\sum_v x_{dv}.
+\end{align}
+The spectrum representation is projected to 128 dimensions and concatenated
+with $\mathbf e_d$. Two 256-unit hidden layers followed by an output layer
+predict a residual:
+\begin{align}
+ \mathbf a_d &= g_\omega\left[
+ \mathbf e_d;\operatorname{proj}(\mathbf s_d)\right],\\
+ \widehat{\boldsymbol\pi}_d &=
+ \operatorname{softmax}\left(\log(\mathbf e_d+\epsilon)+\mathbf a_d\right),\\
+ \boldsymbol\gamma_d^{(0)} &=
+ \boldsymbol\alpha+N_d\widehat{\boldsymbol\pi}_d.
+\end{align}
+The final residual layer starts at zero, so the untrained network begins from
+topic evidence supplied by LDA rather than an unrelated coordinate system.
+The encoder is trained by
+$\operatorname{KL}(\boldsymbol\theta_d^*\Vert
+\widehat{\boldsymbol\theta}_d)$ against stop-gradient locally refined
+posteriors.
+
+Training VB starts from the retained $\boldsymbol\gamma_d$ from the preceding
+epoch, not from the encoder. Consequently, global spectrum embeddings affect
+new-document inference but not discovered topics. Only pooled contextual peak
+features affect discovery, through the structured word prior. This is an
+alternating amortizer, not a ProdLDA-style end-to-end ELBO model.
+
+During discovery, document posteriors are refined with up to 50 sparse local
+coordinate updates and tolerance $10^{-4}$ before the global expected-count
+update. For a new spectrum, the encoder returns an immediate estimate, which
+may be followed by standard local LDA updates. Refinement changes only that
+document's topic mixture; it does not change learned motifs.
+
+\subsection{Training and inference sequence}
+
+The implementation follows one explicit sequence:
+\begin{enumerate}
+  \item build a training-only vocabulary and sparse document--word matrix,
+        then initialize the topic posterior from a seeded random simplex;
+  \item refine each training document's $\boldsymbol\gamma_d$ and
+        $\boldsymbol\phi_{dv}$ using the current topics;
+  \item train the document encoder to reproduce those refined local
+        posteriors;
+  \item accumulate full-corpus expected topic--word counts, update the bounded
+        structured prior during its declared window, and set
+        $\boldsymbol\lambda$ to prior plus expected counts;
+  \item stop only under the stationary-prior convergence rule; and
+  \item for an unseen spectrum, compute the encoder initialization and
+        optionally apply local VB without changing $\boldsymbol\lambda$.
+\end{enumerate}
+No dense document-by-vocabulary tensor is constructed. Each batch contains
+only padded nonzero word identifiers and counts.
+
+\subsection{Implementation and compatibility boundary}
+
+Conceptually the system is one fitted \code{HybridLDAModel} plus one frozen
+external feature extractor. \path{MS2LDA/hybrid_lda.py} contains the sparse
+LDA equations, neural modules, global update, checkpoint, and adapter.
+\path{MS2LDA/dreams_features.py} contains the lazy DreaMS loader, aligned HDF5
+cache, and train-only peak-to-word pooling. There is no second model
+implementation.
+
+\code{HybridLDAModel} implements only the small subset of
+\code{tomotopy.LDAModel} needed by model-facing experiments: adding documents,
+training, topic access, new-document inference, document topic distributions,
+likelihood summaries, and save/load. It is not wired into the existing CLI,
+dashboard, or visualizer. Tomotopy remains the production backend.
+
+The reference checkpoint contains the topic posterior, neural parameters,
+configuration, and vocabulary. It deliberately excludes training documents,
+optimizer state, and random-number-generator state and is therefore
+inference-only. It is loaded with PyTorch's weights-only mode. Feature
+provenance is stored in the DreaMS cache rather than the model checkpoint, so
+callers must keep compatible artifacts together.
+
+\section{Validation status}
+
+The current evidence is limited to implementation-level checks. The focused
+tests verify configuration invariants, sparse count handling, the two local
+LDA equations, conservation of token and Dirichlet mass, fixed prior mass,
+stationary-prior convergence, deterministic same-seed training, amortized
+inference, topic and document accessors, safe checkpoint round trips, feature
+caching, peak-to-word pooling, and the shared spectral-word parser.
+
+These tests show that the code implements the stated algorithm. They do not
+show that its learned topics are chemically meaningful, more predictive, more
+stable, or faster than another method. Comparative claims will be added only
+when the clean implementation is retrained by the protocol below.
+
+\section{Planned comparative benchmark}
+
+\subsection{Artifacts and split discipline}
+
+The benchmark will live outside the reference implementation on a validation
+branch. It must contain a single documented driver, a redistributable input or
+an immutable input manifest, exact train/test assignments, configuration and
+seed records, and machine-readable outputs. Generated feature caches and model
+checkpoints may remain external when large, but their hashes and construction
+commands must be recorded.
+
+Vocabulary construction and pooled word features must use training spectra
+only. Two 80/20 evaluations will be frozen before results are inspected:
+\begin{enumerate}
+  \item a seeded random spectrum split; and
+  \item a grouped split that keeps DreaMS-similar spectra on the same side.
+\end{enumerate}
+For document completion, fragment and neutral-loss words originating from the
+same physical peak must be kept together. A test-spectrum DreaMS embedding
+must be recomputed from its observed peak groups rather than from the complete
+spectrum.
+
+\subsection{Compared representations}
+
+The primary topic-model comparison is the cleaned hybrid against the existing
+Tomotopy LDA backend, trained from scratch with the same topic count and input
+counts over seeds 42--46. A raw global-DreaMS similarity baseline is also
+required. It is not a competing topic model; it tests whether mapping the
+pretrained representation through topics adds information beyond using that
+representation directly.
+
+Training budgets and inference settings must be stated explicitly. Report
+both model-side latency with cached DreaMS features and end-to-end latency that
+includes feature extraction. A latency-matched Tomotopy setting should
+accompany its standard inference setting.
+
+\subsection{Metrics and claims}
+
+Predictive quality will use held-out negative log likelihood per token:
+\begin{equation}
+ \operatorname{NLL}=-\frac{1}{N_{\mathrm{held}}}
+ \sum_{d,v}x^{\mathrm{held}}_{dv}\log\left(
+ \sum_k\widehat\theta_{dk}\widehat\beta_{kv}\right).
+\end{equation}
+Lower NLL is better. Topic diagnostics will include active topics, top-word
+diversity, word-co-occurrence NPMI, and cross-seed stability after optimal
+topic matching. Same-seed matched cosine and top-word Jaccard similarity will
+describe overlap between methods, not establish correctness.
+
+Chemical evaluation must use labels withheld from training and model
+selection. The preferred primary endpoint is recovery of existing manual
+motif--spectrum annotations on an independent, redistributable corpus.
+Spectral-family retrieval may be reported as supporting evidence, with
+family-macro average precision and paired uncertainty intervals, but spectral
+network components are not direct substructure annotations.
+
+Metrics, exclusions, seed count, and the primary endpoint must be fixed before
+test results are inspected. All seeds must be reported. Results from this
+protocol should replace the validation-status section rather than be combined
+with exploratory numbers from older implementations.
+
+\section{Limitations}
+
+The hybrid retains LDA's non-convex, label-invariant topic discovery, so
+different seeds can still reach different solutions. DreaMS is trained to
+represent whole-spectrum molecular context, whereas a Mass2Motif is intended
+to capture a smaller recurring pattern. A useful global representation does
+not therefore guarantee a useful motif prior.
+
+The structured-prior mass, warm-up, and temperature are fixed design choices
+that have not yet been validated. The document encoder is trained after each
+local update and therefore trails the newest global topic update by one epoch;
+this difference should be small only near convergence. The model is not an
+end-to-end neural topic model, and the production MS2LDA workflow does not yet
+select it as a backend. Finally, a passing software test suite cannot replace
+external chemical validation.
+
+\section{Reproducibility}
+
+The self-contained reference surface consists of
+\path{MS2LDA/hybrid_lda.py}, \path{MS2LDA/dreams_features.py},
+\path{tests/test_hybrid_lda.py}, \path{environment-hybrid.yml}, and this
+document. A small lazy import in \path{MS2LDA/__init__.py} prevents the full
+application stack from loading when the reference modules are imported.
+
+The environment uses Python 3.11 and pins NumPy 1.25.0, PyTorch 2.2.1, and
+DreaMS at Git commit
+\hash{dbec3a0b514a99e5056cfccde4559fda8cfe8129}. The required DreaMS legacy
+architecture package is pinned at
+\hash{d35b34b0caee38348098cda852bff30d8b25cd25}. Installing DreaMS with
+\code{--no-deps} is deliberate: the YAML supplies the packages imported by
+the embedding path and prevents DreaMS's moving \code{msml@main} requirement
+from replacing the exact legacy-architecture commit.
+
+The reference can be installed and tested with:
+{\footnotesize
+\begin{verbatim}
+conda env create -f environment-hybrid.yml
+conda activate ms2lda-hybrid
+python -m pip install --no-deps \
+  "git+https://github.com/pluskal-lab/DreaMS.git@dbec3a0b514a99e5056cfccde4559fda8cfe8129"
+python -m pip install --no-deps -e .
+python -m pytest -q tests/test_hybrid_lda.py
+\end{verbatim}
+}
+
+DreaMS caches record the expected package commit, installed package version,
+both public checkpoint hashes, embedding dimension, and peak limit. Model
+loading does not enforce a cache match. Reference checkpoints contain no
+spectra and cannot resume training.
+
+\section{Conclusion}
+
+\method\ is a focused reference implementation of conjugate free-topic
+discovery with two neural additions: a DreaMS-conditioned topic--word prior and
+an amortized new-document initializer. The mathematical ownership is explicit:
+expected counts discover topics, the structured prior biases their word
+distributions, and the encoder accelerates document inference. The reference
+is ready for a clean benchmark, but it does not yet justify replacing
+Tomotopy or claiming chemically superior Mass2Motifs.
+
+\begin{thebibliography}{10}
+
+\bibitem{blei2003}
+D. M. Blei, A. Y. Ng, and M. I. Jordan.
+Latent Dirichlet allocation.
+\emph{Journal of Machine Learning Research}, 3:993--1022, 2003.
+
+\bibitem{hoffman2013}
+M. D. Hoffman, D. M. Blei, C. Wang, and J. Paisley.
+Stochastic variational inference.
+\emph{Journal of Machine Learning Research}, 14:1303--1347, 2013.
+
+\bibitem{vanderhooft2016}
+J. J. J. van der Hooft, J. Wandy, M. P. Barrett, K. E. V. Burgess, and
+S. Rogers.
+Topic modeling for untargeted substructure exploration in metabolomics.
+\emph{Proceedings of the National Academy of Sciences},
+113(48):13738--13743, 2016.
+doi:10.1073/pnas.1608041113.
+
+\bibitem{srivastava2017}
+A. Srivastava and C. Sutton.
+Autoencoding variational inference for topic models.
+In \emph{Proceedings of the 5th International Conference on Learning
+Representations}, 2017.
+
+\bibitem{cremer2018}
+C. Cremer, X. Li, and D. Duvenaud.
+Inference suboptimality in variational autoencoders.
+In \emph{Proceedings of the 35th International Conference on Machine
+Learning}, PMLR 80:1078--1086, 2018.
+
+\bibitem{kim2018}
+Y. Kim, S. Wiseman, A. Miller, D. Sontag, and A. Rush.
+Semi-amortized variational autoencoders.
+In \emph{Proceedings of the 35th International Conference on Machine
+Learning}, PMLR 80:2678--2687, 2018.
+
+\bibitem{bushuiev2026}
+R. Bushuiev, A. Bushuiev, R. Samusevich, C. Brungs, J. Sivic, et al.
+Self-supervised learning of molecular representations from millions of tandem
+mass spectra using DreaMS.
+\emph{Nature Biotechnology}, 44:630--640, 2026.
+doi:10.1038/s41587-025-02663-3.
+
+\end{thebibliography}
+
+\end{document}
