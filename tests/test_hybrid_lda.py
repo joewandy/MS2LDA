@@ -28,6 +28,7 @@ from MS2LDA.hybrid_lda import (
     _local_vb,
     _make_sparse_batch,
 )
+from scripts.inference_baselines import fit_posterior_regression_baseline
 
 
 def small_config(*, seed: int = 7) -> HybridLDAConfig:
@@ -38,7 +39,7 @@ def small_config(*, seed: int = 7) -> HybridLDAConfig:
         feature_projection_dim=6,
         training_local_steps=3,
         batch_size=3,
-        encoder_updates_per_epoch=1,
+        inference_epochs=2,
         prior_warmup_epochs=1,
         prior_training_epochs=2,
         max_epochs=3,
@@ -126,6 +127,10 @@ def test_config_rejects_invalid_invariants() -> None:
             prior_training_epochs=5,
             max_epochs=5,
         )
+    with pytest.raises(ValueError, match="finite"):
+        HybridLDAConfig(num_topics=3, embedding_dim=4, encoder_learning_rate=np.nan)
+    with pytest.raises(ValueError, match="alpha"):
+        HybridLDAConfig(num_topics=3, embedding_dim=4, alpha=np.nan)
 
 
 def test_sparse_batch_preserves_counts_without_dense_vocabulary_tensor() -> None:
@@ -358,7 +363,7 @@ def test_convergence_starts_only_after_the_prior_is_fixed() -> None:
 def test_training_inference_and_safe_checkpoint_round_trip(tmp_path: Path) -> None:
     model = prepared_model()
     model.train(2)
-    model.fit_inference_network(epochs=1, refinement_steps=1)
+    model.finalize_inference()
     words, embeddings, _ = documents()
     query = model.make_doc(words[0], embedding=embeddings[0])
     original_theta, original_ll = model.infer(query, iter=5)
@@ -373,8 +378,8 @@ def test_training_inference_and_safe_checkpoint_round_trip(tmp_path: Path) -> No
     np.testing.assert_array_equal(restored_theta, original_theta)
     assert restored_ll == original_ll
     assert restored.docs == []
-    assert restored._encoder_optimizer is None
     assert restored._prior_optimizer is None
+    assert restored.inference_finalized
     with pytest.raises(RuntimeError, match="cannot resume"):
         restored.train(1)
 
@@ -392,6 +397,7 @@ def test_same_seed_reproduces_trained_topics() -> None:
 def test_document_embedding_affects_zero_step_amortized_inference() -> None:
     model = prepared_model()
     model.train(2)
+    model.finalize_inference()
     words, embeddings, _ = documents()
     first = model.make_doc(words[0], embedding=embeddings[0])
     second = model.make_doc(words[0], embedding=embeddings[4])
@@ -413,14 +419,17 @@ def test_post_discovery_inference_training_cannot_change_topics() -> None:
         parameter.detach().clone() for parameter in core.encoder_parameters()
     ]
 
-    history = model.fit_inference_network(
-        epochs=2,
-        refinement_steps=1,
-        reset_optimizer=True,
-    )
+    history = model.finalize_inference()
 
     assert len(history) == 2
     assert all(np.isfinite(list(metrics.values())).all() for metrics in history)
+    assert set(history[0]) == {
+        "inference_epoch",
+        "loss",
+        "refined_elbo_per_token",
+        "zero_step_elbo_per_token",
+        "encoder_gradient_norm",
+    }
     torch.testing.assert_close(core.lambda_posterior, topics_before, rtol=0, atol=0)
     for current, previous in zip(core.prior_parameters(), prior_before, strict=True):
         torch.testing.assert_close(current, previous, rtol=0, atol=0)
@@ -434,60 +443,167 @@ def test_post_discovery_inference_training_cannot_change_topics() -> None:
     )
 
 
-def test_inference_phase_rejects_untrained_model_without_preparing_it() -> None:
+def test_finalization_rejects_untrained_model_without_preparing_it() -> None:
     words, embeddings, _ = documents()
     model = HybridLDAModel(small_config())
     model.add_doc(words[0], embedding=embeddings[0])
 
-    with pytest.raises(RuntimeError, match="global epoch"):
-        model.fit_inference_network(epochs=1)
+    with pytest.raises(RuntimeError, match="topic-discovery epoch"):
+        model.finalize_inference()
 
     assert model._core is None
     model.add_doc(words[1], embedding=embeddings[1])
     assert len(model.docs) == 2
 
 
-def test_inference_objective_skips_inactive_refinement_branches() -> None:
-    distilled = prepared_model(seed=17)
-    distilled.train(1)
-    distilled_history = distilled.fit_inference_network(
-        epochs=1,
-        refinement_steps=0,
-        refined_elbo_weight=0.0,
-        zero_step_elbo_weight=0.0,
-        distillation_weight=1.0,
-        teacher_steps=1,
-    )
-    assert "teacher_mean_kl" in distilled_history[0]
-    assert "refined_elbo_per_token" not in distilled_history[0]
-    assert "zero_step_elbo_per_token" not in distilled_history[0]
+def test_discovery_never_updates_document_encoder() -> None:
+    model = prepared_model(seed=17)
+    assert model._core is not None
+    before = [
+        parameter.detach().clone() for parameter in model._core.encoder_parameters()
+    ]
 
-    zero_step = prepared_model(seed=19)
-    zero_step.train(1)
-    zero_history = zero_step.fit_inference_network(
-        epochs=1,
-        refinement_steps=0,
-        refined_elbo_weight=0.0,
-        zero_step_elbo_weight=1.0,
-        distillation_weight=0.0,
-        teacher_steps=0,
-    )
-    assert "zero_step_elbo_per_token" in zero_history[0]
-    assert "refined_elbo_per_token" not in zero_history[0]
-    assert "teacher_mean_kl" not in zero_history[0]
+    model.train(2)
+
+    for current, expected in zip(
+        model._core.encoder_parameters(),
+        before,
+        strict=True,
+    ):
+        torch.testing.assert_close(current, expected, rtol=0, atol=0)
 
 
-def test_inference_phase_rejects_nonfinite_objective_weights() -> None:
-    model = prepared_model()
+def test_finalization_is_required_and_permanently_freezes_discovery(
+    tmp_path: Path,
+) -> None:
+    model = prepared_model(seed=19)
     model.train(1)
+    words, embeddings, _ = documents()
 
-    with pytest.raises(ValueError, match="finite"):
-        model.fit_inference_network(refined_elbo_weight=np.nan)
+    with pytest.raises(RuntimeError, match="finalize"):
+        model.make_doc(words[0], embedding=embeddings[0])
+    with pytest.raises(RuntimeError, match="finalize"):
+        model.save(tmp_path / "unfinished.bin")
+
+    model.finalize_inference()
+    assert model.inference_finalized
+    with pytest.raises(RuntimeError, match="cannot resume"):
+        model.train(1)
+    with pytest.raises(RuntimeError, match="already"):
+        model.finalize_inference()
+
+
+def test_same_seed_reproduces_finalized_encoder() -> None:
+    first = prepared_model(seed=23)
+    second = prepared_model(seed=23)
+    first.train(2)
+    second.train(2)
+
+    first_history = first.finalize_inference()
+    second_history = second.finalize_inference()
+
+    assert first_history == second_history
+    assert first._core is not None and second._core is not None
+    for left, right in zip(
+        first._core.encoder_parameters(),
+        second._core.encoder_parameters(),
+        strict=True,
+    ):
+        torch.testing.assert_close(left, right, rtol=0, atol=0)
+
+
+def test_finalization_callback_failure_rolls_back_and_can_retry() -> None:
+    failed = prepared_model(seed=27)
+    control = prepared_model(seed=27)
+    failed.train(1)
+    control.train(1)
+    assert failed._core is not None and control._core is not None
+    encoder_before = [
+        parameter.detach().clone() for parameter in failed._core.encoder_parameters()
+    ]
+    module_mode_before = failed._core.training
+
+    def fail_after_first_epoch(_: dict[str, float]) -> None:
+        raise LookupError("intentional callback failure")
+
+    with pytest.raises(LookupError, match="intentional"):
+        failed.finalize_inference(progress_callback=fail_after_first_epoch)
+
+    assert not failed.inference_finalized
+    assert not failed._finalization_in_progress
+    assert failed.inference_history == []
+    assert failed._core.training is module_mode_before
+    for current, expected in zip(
+        failed._core.encoder_parameters(),
+        encoder_before,
+        strict=True,
+    ):
+        torch.testing.assert_close(current, expected, rtol=0, atol=0)
+
+    failed_history = failed.finalize_inference()
+    control_history = control.finalize_inference()
+    assert failed_history == control_history
+    for current, expected in zip(
+        failed._core.encoder_parameters(),
+        control._core.encoder_parameters(),
+        strict=True,
+    ):
+        torch.testing.assert_close(current, expected, rtol=0, atol=0)
+
+
+def test_finalization_rejects_recursive_callback_and_rolls_back() -> None:
+    model = prepared_model(seed=28)
+    model.train(1)
+    assert model._core is not None
+    encoder_before = [
+        parameter.detach().clone() for parameter in model._core.encoder_parameters()
+    ]
+
+    def recurse(_: dict[str, float]) -> None:
+        model.finalize_inference()
+
+    with pytest.raises(RuntimeError, match="already in progress"):
+        model.finalize_inference(progress_callback=recurse)
+
+    assert not model.inference_finalized
+    assert not model._finalization_in_progress
+    assert model.inference_history == []
+    for current, expected in zip(
+        model._core.encoder_parameters(),
+        encoder_before,
+        strict=True,
+    ):
+        torch.testing.assert_close(current, expected, rtol=0, atol=0)
+
+
+def test_benchmark_regression_baseline_handles_multiple_minibatches() -> None:
+    model = prepared_model(seed=29)
+    model.train(1)
+    assert len(model.docs) > model.config.batch_size
+    assert model._core is not None
+    topics_before = model._core.lambda_posterior.detach().clone()
+
+    history = fit_posterior_regression_baseline(
+        model,
+        epochs=2,
+        target_steps=1,
+    )
+
+    assert len(history) == 2
+    assert np.isfinite(list(history[0].values())).all()
+    assert not model.inference_finalized
+    torch.testing.assert_close(
+        model._core.lambda_posterior,
+        topics_before,
+        rtol=0,
+        atol=0,
+    )
 
 
 def test_adaptive_inference_can_stop_after_one_exact_update() -> None:
     model = prepared_model()
     model.train(2)
+    model.finalize_inference()
     words, embeddings, _ = documents()
     fixed = model.make_doc(words[0], embedding=embeddings[0])
     adaptive = model.make_doc(words[0], embedding=embeddings[0])

@@ -1,29 +1,37 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "created_date": "2026-08-02",
-  "objective": {
-    "refinement_steps": 2,
-    "refined_elbo_weight": 1.0,
-    "zero_step_elbo_weight": 0.1,
-    "distillation_weight": 0.0
+  "supported_model": {
+    "production_api": "HybridLDAModel.finalize_inference",
+    "encoder_trained_during_topic_discovery": false,
+    "finalization_is_required_and_one_way": true,
+    "inference_epochs": 12,
+    "objective": {
+      "refinement_steps": 2,
+      "refined_elbo_weight": 1.0,
+      "zero_step_elbo_weight": 0.1
+    }
   },
   "synthetic_replication_evaluation": {
     "seeds": [23, 29, 31],
+    "encoder_initialization": "identical_fresh_seeded",
     "encoder_epochs": 12,
-    "comparison": "equal-epoch final-topic posterior distillation",
+    "comparison": "equal-epoch benchmark-only posterior-mean regression",
     "two_step_gap_reductions": [
       0.13371990930210012,
       0.20040075205296415,
       0.141543805410686
     ],
-    "mean_two_step_gap_reduction": 0.1583919936933212,
-    "mean_zero_step_observed_nll_fractional_change": 0.0008615536292628923,
-    "interpretation": "Oracle-topic internal robustness check; the driver also evaluates other ablations on these seeds, so this is not a publication-grade held-out study or chemical validation."
+    "relative_reduction_in_across_seed_mean_two_step_gap": 0.1583919936933212,
+    "arithmetic_mean_paired_two_step_gap_reduction": 0.15855482225525008,
+    "fractional_change_in_across_seed_mean_zero_step_observed_nll": 0.0008615536292628923,
+    "interpretation": "Oracle-topic internal robustness check. The positive zero-step NLL change is a small regression; the two-step ELBO gap and NLL improve. Oracle topics and latent-derived embeddings are not chemical validation."
   },
   "mushroom_frozen_topic_evaluation": {
     "seeds": [42, 43, 44, 45, 46],
     "encoder_epochs": 12,
-    "comparison": "equal-epoch final-topic posterior distillation",
+    "encoder_initialization": "identical_fresh_seeded",
+    "comparison": "equal-epoch benchmark-only posterior-mean regression",
     "split": {
       "train_documents": 2171,
       "test_documents": 539,
@@ -31,82 +39,83 @@
       "observed_test_tokens": 209497,
       "heldout_test_tokens": 214271,
       "physical_peak_pair_split": true,
-      "historical_manifest_hashes_verified": true,
+      "artifact_manifest_hashes_verified": true,
       "partial_spectrum_cache_identifiers_verified": true
     },
     "per_seed": [
       {
         "seed": 42,
-        "two_step_gap_reduction": 0.1709672771867829,
-        "zero_step_heldout_nll_change": -0.07947401301631629,
-        "two_step_heldout_nll_change": -0.036199986277892116,
-        "candidate_two_step_vs_distillation_five_step_nll_change": -0.036253013722821414,
-        "passes_fixed_configuration_smoke_gate": true
+        "two_step_gap_reduction": 0.10426233925134715,
+        "zero_step_heldout_nll_change": -0.08348093219280273,
+        "two_step_heldout_nll_change": -0.019189572149693745,
+        "candidate_two_step_vs_baseline_five_step_nll_change": -0.04933129779582757,
+        "passes_prespecified_10_percent_gate": true
       },
       {
         "seed": 43,
-        "two_step_gap_reduction": 0.13439394414737302,
-        "zero_step_heldout_nll_change": -0.07209986091863563,
-        "two_step_heldout_nll_change": -0.03735610868839245,
-        "candidate_two_step_vs_distillation_five_step_nll_change": -0.03778641850722764,
-        "passes_fixed_configuration_smoke_gate": true
+        "two_step_gap_reduction": 0.08870075246408787,
+        "zero_step_heldout_nll_change": -0.04879040165758308,
+        "two_step_heldout_nll_change": -0.013566106936580447,
+        "candidate_two_step_vs_baseline_five_step_nll_change": -0.048978460953256864,
+        "passes_prespecified_10_percent_gate": false
       },
       {
         "seed": 44,
-        "two_step_gap_reduction": 0.13269752464671114,
-        "zero_step_heldout_nll_change": -0.0693780342913266,
-        "two_step_heldout_nll_change": -0.03001029773904751,
-        "candidate_two_step_vs_distillation_five_step_nll_change": -0.03361200567402722,
-        "passes_fixed_configuration_smoke_gate": true
+        "two_step_gap_reduction": 0.10427873334549437,
+        "zero_step_heldout_nll_change": -0.04519390878394702,
+        "two_step_heldout_nll_change": -0.017022804399189795,
+        "candidate_two_step_vs_baseline_five_step_nll_change": -0.05109456740336249,
+        "passes_prespecified_10_percent_gate": true
       },
       {
         "seed": 45,
-        "two_step_gap_reduction": 0.1366381884112022,
-        "zero_step_heldout_nll_change": -0.09954102124313824,
-        "two_step_heldout_nll_change": -0.04022580495504169,
-        "candidate_two_step_vs_distillation_five_step_nll_change": -0.04803698704177073,
-        "passes_fixed_configuration_smoke_gate": true
+        "two_step_gap_reduction": 0.07392260886225636,
+        "zero_step_heldout_nll_change": -0.013531381269587861,
+        "two_step_heldout_nll_change": -0.0012366823048939324,
+        "candidate_two_step_vs_baseline_five_step_nll_change": -0.04615601652933332,
+        "passes_prespecified_10_percent_gate": false
       },
       {
         "seed": 46,
-        "two_step_gap_reduction": 0.18114333635599858,
-        "zero_step_heldout_nll_change": -0.09526627283764721,
-        "two_step_heldout_nll_change": -0.05002073632748427,
-        "candidate_two_step_vs_distillation_five_step_nll_change": -0.05688837348089848,
-        "passes_fixed_configuration_smoke_gate": true
+        "two_step_gap_reduction": 0.10517038024431166,
+        "zero_step_heldout_nll_change": -0.04947164646622948,
+        "two_step_heldout_nll_change": -0.0221297292686522,
+        "candidate_two_step_vs_baseline_five_step_nll_change": -0.05399184207829144,
+        "passes_prespecified_10_percent_gate": true
       }
     ],
     "aggregate": {
-      "passes": 5,
+      "directionally_improved_gap_and_nll_runs": 5,
+      "passes_prespecified_10_percent_gate": 3,
       "runs": 5,
-      "mean_two_step_gap_reduction": 0.15116805414961357,
-      "sample_sd_two_step_gap_reduction": 0.023044386524103403,
+      "mean_two_step_gap_reduction": 0.09526696283349949,
+      "sample_sd_two_step_gap_reduction": 0.013774097485293716,
       "range_two_step_gap_reduction": [
-        0.13269752464671114,
-        0.18114333635599858
+        0.07392260886225636,
+        0.10517038024431166
       ],
-      "mean_zero_step_heldout_nll_change": -0.0831518404614128,
-      "mean_two_step_heldout_nll_change": -0.03876258679757161,
-      "mean_candidate_two_step_vs_distillation_five_step_nll_change": -0.0425153596853491,
-      "mean_historical_zero_step_nll": 7.3179556280305125,
-      "mean_historical_two_step_nll": 7.077729172594911,
-      "mean_historical_five_step_nll": 7.081533410926134,
-      "mean_distillation_zero_step_nll": 7.312288096675324,
-      "mean_candidate_zero_step_nll": 7.22913625621391,
-      "mean_distillation_two_step_nll": 7.0784304122310235,
-      "mean_candidate_two_step_nll": 7.039667825433453,
-      "mean_distillation_five_step_nll": 7.082183185118801,
-      "mean_candidate_five_step_nll": 7.0593725104877,
+      "mean_zero_step_heldout_nll_change": -0.04809365407403003,
+      "sample_sd_zero_step_heldout_nll_change": 0.024787108529634696,
+      "mean_two_step_heldout_nll_change": -0.014628979011802023,
+      "sample_sd_two_step_heldout_nll_change": 0.00811285973477405,
+      "mean_candidate_two_step_vs_baseline_five_step_nll_change": -0.04991043695201434,
+      "mean_baseline_zero_step_nll": 7.099854154176564,
+      "mean_candidate_zero_step_nll": 7.051760500102533,
+      "mean_baseline_two_step_nll": 7.019449552363703,
+      "mean_candidate_two_step_nll": 7.004820573351902,
+      "mean_baseline_five_step_nll": 7.054731010303915,
+      "mean_candidate_five_step_nll": 7.046721873710283,
       "max_reference_continuation_gain_per_observed_token": 0.000010183985471376082,
       "max_reference_continuation_positive_documents": 107,
-      "max_reference_continuation_elbo_gain_per_document": 0.47119140625
+      "max_reference_continuation_elbo_gain_per_document": 0.90625
     },
     "invariants": {
       "topic_and_structured_prior_tensors_bitwise_unchanged": true,
-      "historical_predictions_reproduced": true,
-      "historical_nll_mean_absolute_error": 1.283918171779419e-8,
-      "historical_nll_max_absolute_error": 3.713735630128667e-8
+      "comparison_encoders_started_bitwise_identically": true,
+      "stored_artifact_predictions_reproduced": true,
+      "stored_nll_mean_absolute_error": 1.283918171779419e-8,
+      "stored_nll_max_absolute_error": 3.713735630128667e-8
     }
   },
-  "interpretation_boundary": "This supports frozen-topic limited-budget document inference only. It is not evidence for improved motif discovery or chemical motif quality."
+  "interpretation_boundary": "This supports frozen-topic limited-budget document inference from a fresh encoder. It is not evidence for improved motif discovery, chemical motif quality, or publication-level novelty by itself."
 }

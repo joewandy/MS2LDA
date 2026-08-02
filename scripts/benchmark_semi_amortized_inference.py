@@ -1,13 +1,10 @@
 #!/usr/bin/env python
-"""Compare frozen-topic inference objectives on a deterministic synthetic corpus.
+"""Compare the supported inference method with one synthetic-corpus baseline.
 
 This benchmark intentionally removes topic-discovery variance.  Every method
 receives the same known topic posterior, encoder initialization, documents, and
-embeddings.  Only the post-discovery encoder objective changes:
-
-* posterior distillation;
-* a pure ELBO after differentiable local-VB refinement; and
-* the combined anytime objective used by the experimental branch.
+embeddings. Only the frozen-topic encoder objective changes: the fixed
+two-step semi-amortized ELBO is compared with equal-epoch posterior regression.
 
 The benchmark reports the local-ELBO gap to a long local solve, posterior KL,
 and observed-token NLL at several inference budgets.  It is an inference
@@ -33,6 +30,7 @@ if str(REPO_ROOT) not in sys.path:
 
 from MS2LDA.hybrid_lda import (
     EPSILON,
+    INFERENCE_REFINEMENT_STEPS,
     HybridLDAConfig,
     HybridLDAModel,
     _expected_log_dirichlet,
@@ -41,6 +39,7 @@ from MS2LDA.hybrid_lda import (
     _make_sparse_batch,
     observed_token_nll,
 )
+from scripts.inference_baselines import fit_posterior_regression_baseline
 
 
 @dataclass(frozen=True)
@@ -55,33 +54,7 @@ class SyntheticCorpus:
     test_embeddings: np.ndarray
 
 
-OBJECTIVES = {
-    "distillation": {
-        "refined_elbo_weight": 0.0,
-        "zero_step_elbo_weight": 0.0,
-        "distillation_weight": 1.0,
-    },
-    "unrolled_elbo": {
-        "refined_elbo_weight": 1.0,
-        "zero_step_elbo_weight": 0.0,
-        "distillation_weight": 0.0,
-    },
-    "unrolled_plus_zero": {
-        "refined_elbo_weight": 1.0,
-        "zero_step_elbo_weight": 0.1,
-        "distillation_weight": 0.0,
-    },
-    "unrolled_plus_teacher": {
-        "refined_elbo_weight": 1.0,
-        "zero_step_elbo_weight": 0.0,
-        "distillation_weight": 0.1,
-    },
-    "combined_light": {
-        "refined_elbo_weight": 1.0,
-        "zero_step_elbo_weight": 0.025,
-        "distillation_weight": 0.05,
-    },
-}
+METHODS = ("posterior_regression_baseline", "semi_amortized")
 
 
 def parse_args() -> argparse.Namespace:
@@ -89,12 +62,11 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
-    parser.add_argument("--seeds", default="7,11,19")
+    parser.add_argument("--seeds", default="23,29,31")
     parser.add_argument("--train-documents", type=int, default=240)
     parser.add_argument("--test-documents", type=int, default=80)
     parser.add_argument("--tokens-per-document", type=int, default=40)
     parser.add_argument("--encoder-epochs", type=int, default=12)
-    parser.add_argument("--refinement-steps", type=int, default=2)
     parser.add_argument("--output", type=Path)
     return parser.parse_args()
 
@@ -152,7 +124,12 @@ def make_corpus(
     )
 
 
-def build_frozen_topic_model(corpus: SyntheticCorpus, *, seed: int) -> HybridLDAModel:
+def build_frozen_topic_model(
+    corpus: SyntheticCorpus,
+    *,
+    seed: int,
+    inference_epochs: int,
+) -> HybridLDAModel:
     """Build the same seeded encoder and install the known frozen topics."""
     config = HybridLDAConfig(
         num_topics=corpus.beta.shape[0],
@@ -163,7 +140,7 @@ def build_frozen_topic_model(corpus: SyntheticCorpus, *, seed: int) -> HybridLDA
         feature_projection_dim=24,
         training_local_steps=30,
         batch_size=64,
-        encoder_updates_per_epoch=1,
+        inference_epochs=inference_epochs,
         prior_mass_fraction=0.0,
         prior_warmup_epochs=1,
         prior_training_epochs=1,
@@ -208,7 +185,7 @@ def evaluate_model(
     if model._core is None:
         raise RuntimeError("model core is not prepared")
     documents = [
-        model.make_doc(words, embedding=embedding)
+        model._new_document(words, embedding)
         for words, embedding in zip(
             corpus.test_words,
             corpus.test_embeddings,
@@ -314,7 +291,7 @@ def evaluate_model(
 
 
 def run_seed(args: argparse.Namespace, seed: int) -> dict[str, Any]:
-    """Train all inference objectives from identical frozen-topic models."""
+    """Train both inference methods from identical frozen-topic models."""
     corpus = make_corpus(
         seed=seed,
         train_documents=args.train_documents,
@@ -322,8 +299,12 @@ def run_seed(args: argparse.Namespace, seed: int) -> dict[str, Any]:
         tokens_per_document=args.tokens_per_document,
     )
     results: dict[str, Any] = {"seed": seed, "methods": {}}
-    for name, weights in OBJECTIVES.items():
-        model = build_frozen_topic_model(corpus, seed=seed)
+    for name in METHODS:
+        model = build_frozen_topic_model(
+            corpus,
+            seed=seed,
+            inference_epochs=args.encoder_epochs,
+        )
         if model._core is None:
             raise RuntimeError("model core is not prepared")
         topics_before = model._core.lambda_posterior.detach().clone()
@@ -331,12 +312,14 @@ def run_seed(args: argparse.Namespace, seed: int) -> dict[str, Any]:
             parameter.detach().clone() for parameter in model._core.prior_parameters()
         ]
         started = time.perf_counter()
-        history = model.fit_inference_network(
-            epochs=args.encoder_epochs,
-            refinement_steps=args.refinement_steps,
-            reset_optimizer=True,
-            **weights,
-        )
+        if name == "semi_amortized":
+            history = model.finalize_inference()
+        else:
+            history = fit_posterior_regression_baseline(
+                model,
+                epochs=args.encoder_epochs,
+                target_steps=model.config.training_local_steps,
+            )
         training_seconds = time.perf_counter() - started
         if not torch.equal(topics_before, model._core.lambda_posterior):
             raise RuntimeError("an inference objective changed the frozen topics")
@@ -355,7 +338,7 @@ def run_seed(args: argparse.Namespace, seed: int) -> dict[str, Any]:
             **evaluate_model(
                 model,
                 corpus,
-                training_refinement_steps=args.refinement_steps,
+                training_refinement_steps=INFERENCE_REFINEMENT_STEPS,
             ),
         }
     return results
@@ -366,9 +349,9 @@ def aggregate(
     *,
     training_refinement_steps: int,
 ) -> dict[str, Any]:
-    """Calculate mean metrics and compare objectives to distillation."""
+    """Calculate mean metrics and compare the supported method to baseline."""
     methods: dict[str, Any] = {}
-    for name in OBJECTIVES:
+    for name in METHODS:
         budgets: dict[str, Any] = {}
         available_budgets = runs[0]["methods"][name]["budgets"]
         for budget in sorted(available_budgets, key=int):
@@ -381,51 +364,44 @@ def aggregate(
             }
         methods[name] = {"budgets": budgets}
     comparison_budget = str(training_refinement_steps)
-    baseline_gap = methods["distillation"]["budgets"][comparison_budget][
-        "mean_elbo_gap_per_token"
-    ]
-    baseline_zero_nll = methods["distillation"]["budgets"]["0"][
+    baseline_gap = methods["posterior_regression_baseline"]["budgets"][
+        comparison_budget
+    ]["mean_elbo_gap_per_token"]
+    baseline_zero_nll = methods["posterior_regression_baseline"]["budgets"]["0"][
         "mean_observed_token_nll"
     ]
-    comparisons: dict[str, dict[str, float | bool]] = {}
-    for name in OBJECTIVES:
-        if name == "distillation":
-            continue
-        candidate_gap = methods[name]["budgets"][comparison_budget][
-            "mean_elbo_gap_per_token"
-        ]
-        candidate_zero_nll = methods[name]["budgets"]["0"]["mean_observed_token_nll"]
-        gap_reduction = (baseline_gap - candidate_gap) / max(
-            baseline_gap,
-            EPSILON,
+    candidate_gap = methods["semi_amortized"]["budgets"][comparison_budget][
+        "mean_elbo_gap_per_token"
+    ]
+    candidate_zero_nll = methods["semi_amortized"]["budgets"]["0"][
+        "mean_observed_token_nll"
+    ]
+    gap_reduction = (baseline_gap - candidate_gap) / max(baseline_gap, EPSILON)
+    zero_nll_change = (candidate_zero_nll - baseline_zero_nll) / max(
+        baseline_zero_nll,
+        EPSILON,
+    )
+    paired_reductions = []
+    for run in runs:
+        paired_baseline = run["methods"]["posterior_regression_baseline"]["budgets"][
+            comparison_budget
+        ]["elbo_gap_per_token"]
+        paired_candidate = run["methods"]["semi_amortized"]["budgets"][
+            comparison_budget
+        ]["elbo_gap_per_token"]
+        paired_reductions.append(
+            (paired_baseline - paired_candidate) / max(abs(paired_baseline), EPSILON)
         )
-        zero_nll_change = (candidate_zero_nll - baseline_zero_nll) / max(
-            baseline_zero_nll,
-            EPSILON,
-        )
-        paired_reductions = []
-        for run in runs:
-            paired_baseline = run["methods"]["distillation"]["budgets"][
-                comparison_budget
-            ]["elbo_gap_per_token"]
-            paired_candidate = run["methods"][name]["budgets"][comparison_budget][
-                "elbo_gap_per_token"
-            ]
-            paired_reductions.append(
-                (paired_baseline - paired_candidate)
-                / max(abs(paired_baseline), EPSILON)
-            )
-        comparisons[name] = {
-            "comparison_budget": training_refinement_steps,
-            "mean_gap_reduction": gap_reduction,
-            "paired_gap_reductions": paired_reductions,
-            "zero_step_nll_change": zero_nll_change,
-            "passes_exploratory_acceptance_criterion": gap_reduction >= 0.10
-            and zero_nll_change <= 0.05,
-        }
     return {
         "methods": methods,
-        "comparisons_to_distillation": comparisons,
+        "comparison_to_posterior_regression": {
+            "comparison_budget": training_refinement_steps,
+            "relative_reduction_in_across_seed_mean_gap": gap_reduction,
+            "paired_gap_reductions": paired_reductions,
+            "fractional_change_in_across_seed_mean_zero_step_nll": zero_nll_change,
+            "passes_exploratory_acceptance_criterion": gap_reduction >= 0.10
+            and zero_nll_change <= 0.05,
+        },
     }
 
 
@@ -443,12 +419,12 @@ def main() -> None:
             "test_documents": args.test_documents,
             "tokens_per_document": args.tokens_per_document,
             "encoder_epochs": args.encoder_epochs,
-            "refinement_steps": args.refinement_steps,
+            "refinement_steps": INFERENCE_REFINEMENT_STEPS,
         },
         "runs": runs,
         "aggregate": aggregate(
             runs,
-            training_refinement_steps=args.refinement_steps,
+            training_refinement_steps=INFERENCE_REFINEMENT_STEPS,
         ),
     }
     rendered = json.dumps(report, indent=2, sort_keys=True)

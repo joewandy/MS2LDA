@@ -83,20 +83,31 @@ model = HybridLDAModel(config)
 model.set_word_embeddings(word_features)
 for words, embedding in zip(documents, features.spectrum_embeddings, strict=True):
     model.add_doc(words, embedding=embedding)
+
+# Stage 1: discover topics with classical sparse variational LDA.
 model.train()
-# Optional final frozen-topic phase: train the encoder through two local VB
-# updates without changing the learned topics or structured word prior.
-model.fit_inference_network()
+
+# Stage 2 (required): freeze discovery permanently and train the document
+# encoder through two differentiable local-VB updates.
+model.finalize_inference()
 ```
 
 For a new spectrum, extract its DreaMS embedding with the same `extractor`,
-then call `make_doc(query_words, embedding=...)` and `infer(..., iter=5)`.
+then call `make_doc(query_words, embedding=...)` and `infer(...)`. The default
+performs the same two local updates used by the finalization objective.
 Passing `tolerance=1e-4` makes `iter` a maximum adaptive-refinement budget;
 the default `tolerance=None` preserves an exact number of updates.
+`finalize_inference()` is deliberately one-way: after it succeeds, topic
+training cannot resume, and before it succeeds the model cannot infer new
+documents or save an inference checkpoint. Its fixed objective evaluates the
+local LDA ELBO after exactly two unrolled coordinate updates, together with a
+small zero-step ELBO term that keeps direct encoder predictions useful. The
+number of finalization epochs is configured with `inference_epochs` (default
+12); the mathematical objective itself is not exposed as an ablation surface.
 The model exposes the topic and document accessors needed by Tomotopy-shaped
 downstream code. The synthetic benchmark is reproducible through
-`scripts/benchmark_semi_amortized_inference.py`; the trusted historical
-mushroom-artifact check uses
+`scripts/benchmark_semi_amortized_inference.py`; the trusted mushroom-artifact
+check uses
 `scripts/benchmark_mushroom_inference_phase.py`. Their aggregate is in
 [`docs/benchmarks/semi_amortized_inference_summary.json`](docs/benchmarks/semi_amortized_inference_summary.json).
 Comparative topic discovery and chemical motif quality remain separate

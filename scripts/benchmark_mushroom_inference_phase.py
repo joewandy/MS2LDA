@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Validate post-hoc semi-amortized inference on the frozen mushroom model.
+"""Validate the supported semi-amortized method on frozen mushroom topics.
 
 This is deliberately a one-off migration benchmark for trusted historical
 artifacts.  It reconstructs the exact random document-completion split used by
@@ -7,12 +7,11 @@ the earlier mushroom benchmark, migrates a legacy hybrid checkpoint into the
 current reference implementation, and compares only document-inference
 objectives while keeping every topic and structured-prior value frozen.
 
-The three arms are:
+The three reference initializers are:
 
-* the historical encoder without further training;
-* equal-epoch posterior distillation against the final frozen topics; and
-* a fixed differentiable objective consisting of the two-step local ELBO plus
-  0.1 times the encoder-only local ELBO.
+* the archived encoder, used only to verify artifact migration;
+* an equal-epoch posterior-regression benchmark from a fresh seeded encoder;
+* supported finalization from the identical fresh seeded encoder.
 
 The test DreaMS cache must have been extracted from observed physical peaks
 only.  Held-out words are used solely for posterior-mean predictive NLL.
@@ -49,6 +48,7 @@ if str(REPO_ROOT) not in sys.path:
 from MS2LDA.dreams_features import spectrum_arrays  # noqa: E402
 from MS2LDA.hybrid_lda import (  # noqa: E402
     EPSILON,
+    INFERENCE_REFINEMENT_STEPS,
     HybridLDAConfig,
     HybridLDAModel,
     _expected_log_dirichlet,
@@ -56,6 +56,9 @@ from MS2LDA.hybrid_lda import (  # noqa: E402
     _local_vb,
     _make_sparse_batch,
     observed_token_nll,
+)
+from scripts.inference_baselines import (  # noqa: E402
+    fit_posterior_regression_baseline,
 )
 
 BUDGETS = (0, 1, 2, 5, 20)
@@ -113,8 +116,11 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     parser.add_argument("--epochs", type=int, default=12)
-    parser.add_argument("--refinement-steps", type=int, default=2)
-    parser.add_argument("--teacher-steps", type=int)
+    parser.add_argument(
+        "--baseline-target-steps",
+        type=int,
+        help="Local-VB steps used to construct posterior-regression targets.",
+    )
     parser.add_argument("--reference-steps", type=int, default=100)
     parser.add_argument("--reference-tolerance", type=float, default=1e-7)
     parser.add_argument("--timing-repeats", type=int, default=5)
@@ -634,6 +640,7 @@ def config_from_legacy(
     payload: dict[str, Any],
     *,
     device: str,
+    inference_epochs: int,
 ) -> HybridLDAConfig:
     """Translate the legacy wrapper configuration into the reference config."""
     values = payload["init_parameters"]
@@ -660,7 +667,7 @@ def config_from_legacy(
         training_local_steps=int(values["local_steps"]),
         batch_size=int(values["batch_size"]),
         encoder_learning_rate=float(values["encoder_learning_rate"]),
-        encoder_updates_per_epoch=int(values["encoder_updates_per_epoch"]),
+        inference_epochs=inference_epochs,
         prior_mass_fraction=float(values["prior_mass_fraction"]),
         prior_warmup_epochs=int(values["prior_warmup_epochs"]),
         prior_training_epochs=int(values["prior_training_epochs"]),
@@ -747,9 +754,15 @@ def build_migrated_model(
     data: ReconstructedSplit,
     *,
     device: str,
+    inference_epochs: int,
+    reset_document_encoder: bool,
 ) -> tuple[HybridLDAModel, dict[str, Any]]:
     """Rebuild documents, validate vocabulary alignment, and migrate state."""
-    config = config_from_legacy(payload, device=device)
+    config = config_from_legacy(
+        payload,
+        device=device,
+        inference_epochs=inference_epochs,
+    )
     model = HybridLDAModel(config, device=device)
     model.set_word_embeddings(payload["word_embeddings"])
     documents = payload["documents"]
@@ -766,6 +779,7 @@ def build_migrated_model(
     if model._core is None or model._matrix is None:
         raise RuntimeError("migrated model failed to prepare")
     core = model._core
+    fresh_encoder = encoder_state(model)
     _require_equal(
         "legacy vocabulary size", model.num_vocabs, data.train_matrix.shape[1]
     )
@@ -800,6 +814,11 @@ def build_migrated_model(
             raise RuntimeError(f"vocabulary alignment check failed for {buffer_name}")
     translated = translate_legacy_state(prepared_state, legacy_state)
     core.load_state_dict(translated, strict=True)
+    if reset_document_encoder:
+        with torch.no_grad():
+            reset_state = core.state_dict()
+            for name, value in fresh_encoder.items():
+                reset_state[name].copy_(value.to(reset_state[name].device))
     if not torch.equal(
         core.lambda_posterior.cpu(), legacy_state["lambda_posterior"].cpu()
     ):
@@ -837,7 +856,7 @@ def make_test_data(
 ) -> tuple[list[Any], sp.csr_matrix, sp.csr_matrix]:
     """Index observed words and align heldout columns to the model vocabulary."""
     documents = [
-        model.make_doc(words, embedding=embedding)
+        model._new_document(words, embedding)
         for words, embedding in zip(
             data.observed_words, data.observed_embeddings, strict=True
         )
@@ -1061,7 +1080,7 @@ def run_fixed_budget(
     if model._core is None:
         raise RuntimeError("model core is not prepared")
     documents = [
-        model.make_doc(document, embedding=embedding)
+        model._new_document(document, embedding)
         for document, embedding in zip(words, embeddings, strict=True)
     ]
     matrix = model._documents_to_matrix(documents)
@@ -1140,7 +1159,7 @@ def training_callback(arm: str, total_epochs: int):
             for key, label in (
                 ("refined_elbo_per_token", "refined_elbo/token"),
                 ("zero_step_elbo_per_token", "zero_elbo/token"),
-                ("teacher_mean_kl", "teacher_kl"),
+                ("posterior_mean_kl", "posterior_mean_kl"),
             ):
                 if key in metrics:
                     values.append(f"{label}={metrics[key]:.5g}")
@@ -1154,32 +1173,27 @@ def fit_arm(
     model: HybridLDAModel,
     args: argparse.Namespace,
 ) -> tuple[list[dict[str, float]], float]:
-    """Run one fixed post-hoc objective or preserve the historical encoder."""
+    """Fit one comparison encoder or preserve the archived encoder."""
     if name == "historical":
         return [], 0.0
-    if name == "distillation":
-        weights = {
-            "refined_elbo_weight": 0.0,
-            "zero_step_elbo_weight": 0.0,
-            "distillation_weight": 1.0,
-        }
-    elif name == "unrolled_plus_zero":
-        weights = {
-            "refined_elbo_weight": 1.0,
-            "zero_step_elbo_weight": 0.1,
-            "distillation_weight": 0.0,
-        }
+    started = time.perf_counter()
+    if name == "posterior_regression":
+        history = fit_posterior_regression_baseline(
+            model,
+            epochs=args.epochs,
+            target_steps=(
+                model.config.training_local_steps
+                if args.baseline_target_steps is None
+                else args.baseline_target_steps
+            ),
+            progress_callback=training_callback(name, args.epochs),
+        )
+    elif name == "semi_amortized":
+        history = model.finalize_inference(
+            progress_callback=training_callback(name, args.epochs)
+        )
     else:  # pragma: no cover - internal caller controls names
         raise ValueError(f"unknown arm {name!r}")
-    started = time.perf_counter()
-    history = model.fit_inference_network(
-        epochs=args.epochs,
-        refinement_steps=args.refinement_steps,
-        teacher_steps=args.teacher_steps,
-        reset_optimizer=True,
-        progress_callback=training_callback(name, args.epochs),
-        **weights,
-    )
     return history, time.perf_counter() - started
 
 
@@ -1281,10 +1295,15 @@ def legacy_reproduction(
     }
 
 
-def comparison_gate(arms: dict[str, Any]) -> dict[str, Any]:
-    """Apply the prespecified smoke-test gate against equal-epoch distillation."""
-    baseline = arms["distillation"]["metrics"]["budgets"]
-    candidate = arms["unrolled_plus_zero"]["metrics"]["budgets"]
+def comparison_diagnostics(arms: dict[str, Any]) -> dict[str, Any]:
+    """Compare the fixed method with equal-epoch posterior regression.
+
+    The 10% threshold predates the fresh-encoder rerun and is retained as a
+    descriptive diagnostic. The signed effect sizes are the scientific result;
+    this helper never changes the threshold in response to an observed seed.
+    """
+    baseline = arms["posterior_regression"]["metrics"]["budgets"]
+    candidate = arms["semi_amortized"]["metrics"]["budgets"]
     baseline_gap = float(baseline["2"]["signed_reference_gap_per_token"])
     candidate_gap = float(candidate["2"]["signed_reference_gap_per_token"])
     gap_reduction: float | None = None
@@ -1310,9 +1329,9 @@ def comparison_gate(arms: dict[str, Any]) -> dict[str, Any]:
         "two_step_gap_reduction": gap_reduction,
         "zero_step_nll_change": zero_nll_change,
         "two_step_nll_change": two_nll_change,
-        "candidate_two_vs_distillation_five_nll_change": two_vs_five_nll_change,
+        "candidate_two_vs_baseline_five_nll_change": two_vs_five_nll_change,
         "checks": checks,
-        "passes_smoke_gate": all(checks.values()),
+        "passes_prespecified_10_percent_gate": all(checks.values()),
     }
 
 
@@ -1341,10 +1360,10 @@ def validate_args(args: argparse.Namespace) -> None:
         args.legacy_run_summary = (
             args.legacy_checkpoint.parent / "run_summary.json"
         ).resolve()
-    if args.epochs < 1 or args.refinement_steps < 1:
-        raise ValueError("epochs and refinement_steps must be positive")
-    if args.teacher_steps is not None and args.teacher_steps < 1:
-        raise ValueError("teacher_steps must be positive")
+    if args.epochs < 1:
+        raise ValueError("epochs must be positive")
+    if args.baseline_target_steps is not None and args.baseline_target_steps < 1:
+        raise ValueError("baseline_target_steps must be positive")
     if (
         args.reference_steps < 1
         or not np.isfinite(args.reference_tolerance)
@@ -1412,28 +1431,35 @@ def main() -> None:
     observed_tokens = float(data.observed_matrix.sum())
 
     for arm_index, arm_name in enumerate(
-        ("historical", "distillation", "unrolled_plus_zero")
+        ("historical", "posterior_regression", "semi_amortized")
     ):
-        progress(f"Building arm={arm_name} from the identical frozen checkpoint ...")
+        reset_document_encoder = arm_name != "historical"
+        progress(f"Building frozen-topic arm={arm_name} ...")
         model, current_migration = build_migrated_model(
-            legacy_payload, data, device=args.device
+            legacy_payload,
+            data,
+            device=args.device,
+            inference_epochs=args.epochs,
+            reset_document_encoder=reset_document_encoder,
         )
         if migration_report is None:
             migration_report = current_migration
         initial_encoder_hash = tensor_state_sha256(encoder_state(model))
         initial_frozen = frozen_state(model)
         frozen_hash = tensor_state_sha256(initial_frozen)
-        if common_initial_encoder_hash is None:
-            common_initial_encoder_hash = initial_encoder_hash
+        if common_frozen_hash is None:
             common_frozen_hash = frozen_hash
         else:
+            _require_equal(
+                f"{arm_name} initial frozen hash", frozen_hash, common_frozen_hash
+            )
+        if reset_document_encoder and common_initial_encoder_hash is None:
+            common_initial_encoder_hash = initial_encoder_hash
+        elif reset_document_encoder:
             _require_equal(
                 f"{arm_name} initial encoder hash",
                 initial_encoder_hash,
                 common_initial_encoder_hash,
-            )
-            _require_equal(
-                f"{arm_name} initial frozen hash", frozen_hash, common_frozen_hash
             )
 
         history, training_seconds = fit_arm(arm_name, model, args)
@@ -1479,10 +1505,13 @@ def main() -> None:
                 "none"
                 if arm_name == "historical"
                 else (
-                    "final-topic posterior distillation"
-                    if arm_name == "distillation"
+                    "posterior-mean regression benchmark"
+                    if arm_name == "posterior_regression"
                     else "refined local ELBO + 0.1 * zero-step local ELBO"
                 )
+            ),
+            "encoder_initialization": (
+                "archived" if arm_name == "historical" else "fresh_seeded"
             ),
             "training_seconds": training_seconds,
             "training_history": history,
@@ -1513,11 +1542,10 @@ def main() -> None:
         arm_reports["historical"]["metrics"],
         tolerance=args.legacy_nll_tolerance,
     )
-    gate = comparison_gate(arm_reports)
+    comparison = comparison_diagnostics(arm_reports)
     fixed_default_configuration = (
         args.epochs == 12
-        and args.refinement_steps == 2
-        and args.teacher_steps is None
+        and args.baseline_target_steps is None
         and args.reference_steps == 100
         and args.reference_tolerance == 1e-7
         and args.timing_repeats == 5
@@ -1528,9 +1556,11 @@ def main() -> None:
         and args.mz_tolerance == 0.02
         and args.legacy_nll_tolerance == 1e-5
     )
-    gate["fixed_default_configuration"] = fixed_default_configuration
-    gate["passes_fixed_configuration_smoke_gate"] = (
-        gate["passes_smoke_gate"] if fixed_default_configuration else None
+    comparison["fixed_default_configuration"] = fixed_default_configuration
+    comparison["passes_prespecified_gate_under_fixed_configuration"] = (
+        comparison["passes_prespecified_10_percent_gate"]
+        if fixed_default_configuration
+        else None
     )
     split_report = {
         "mode": "random",
@@ -1551,11 +1581,11 @@ def main() -> None:
         "configuration": {
             "checkpoint_seed": checkpoint_seed,
             "epochs": args.epochs,
-            "refinement_steps": args.refinement_steps,
-            "teacher_steps": (
+            "refinement_steps": INFERENCE_REFINEMENT_STEPS,
+            "baseline_target_steps": (
                 int(legacy_payload["init_parameters"]["local_steps"])
-                if args.teacher_steps is None
-                else args.teacher_steps
+                if args.baseline_target_steps is None
+                else args.baseline_target_steps
             ),
             "reference_steps": args.reference_steps,
             "reference_tolerance": args.reference_tolerance,
@@ -1588,7 +1618,7 @@ def main() -> None:
         },
         "arms": arm_reports,
         "legacy_reproduction": reproduction,
-        "comparison_to_equal_epoch_distillation": gate,
+        "comparison_to_equal_epoch_posterior_regression": comparison,
         "interpretation_boundary": (
             "This benchmark evaluates document inference only. Frozen topics mean "
             "it provides no new evidence about motif discovery or chemical quality."
@@ -1599,8 +1629,10 @@ def main() -> None:
         json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
     progress(
-        f"Wrote {args.output}; smoke_gate={gate['passes_smoke_gate']} "
-        f"gap_reduction={gate['two_step_gap_reduction']}"
+        "Wrote "
+        f"{args.output}; prespecified_gate="
+        f"{comparison['passes_prespecified_10_percent_gate']} "
+        f"gap_reduction={comparison['two_step_gap_reduction']}"
     )
 
 
