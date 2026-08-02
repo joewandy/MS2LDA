@@ -382,9 +382,22 @@ def paired_completion_split(  # noqa: PLR0913
         shuffled = rng.permutation(len(group_keys))
         observed_count = int(round(observed_fraction * len(group_keys)))
         observed_count = min(max(observed_count, 1), len(group_keys) - 1)
-        selected_groups = {
-            group_keys[int(index)] for index in shuffled[:observed_count]
-        }
+        selected_order = [group_keys[int(index)] for index in shuffled[:observed_count]]
+        selected_groups = set(selected_order)
+        if not any(group[0] == "peak" for group in selected_groups):
+            # Force one observed physical peak without changing the requested
+            # split size: exchange it for the last randomly selected group.
+            # In particular, a two-group row must retain one held-out group.
+            physical_candidates = [
+                group_keys[int(index)]
+                for index in shuffled[observed_count:]
+                if group_keys[int(index)][0] == "peak"
+            ]
+            if not physical_candidates:
+                raise ValueError(f"test row {row} has no mapped physical peak")
+            moved = physical_candidates[0]
+            selected_groups.remove(selected_order[-1])
+            selected_groups.add(moved)
         selected_peaks_list: list[int] = []
         for group, entries in groups.items():
             destination = observed if group in selected_groups else heldout
@@ -394,14 +407,7 @@ def paired_completion_split(  # noqa: PLR0913
                 selected_peaks_list.append(group[1])
         selected_peaks = np.asarray(sorted(selected_peaks_list), dtype=np.int64)
         if not len(selected_peaks):
-            physical_groups = [group for group in group_keys if group[0] == "peak"]
-            if not physical_groups:
-                raise ValueError(f"test row {row} has no mapped physical peak")
-            moved = physical_groups[0]
-            for column, count in groups[moved]:
-                heldout[row, column] = 0
-                observed[row, column] = count
-            selected_peaks = np.asarray([moved[1]], dtype=np.int64)
+            raise RuntimeError("physical-peak forcing did not select a peak")
         assignment_hash.update(np.asarray(selected_peaks, dtype="<i8").tobytes())
 
     observed_csr = observed.tocsr()

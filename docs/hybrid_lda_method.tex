@@ -269,6 +269,9 @@ before declaring finalization successful. If optimization or a progress
 callback fails, it restores the encoder, random-generator state, history, and
 module mode. Topic discovery cannot resume after successful finalization, and
 new-document inference and checkpoint saving are unavailable beforehand.
+If a discovery progress callback finalizes the just-completed epoch, the outer
+discovery loop detects the one-way state transition and stops before another
+topic update.
 
 For a candidate document posterior $\boldsymbol\gamma_d$, write
 \begin{equation}
@@ -341,9 +344,11 @@ making the objective and its back-propagation path fixed for every document.
 
 At inference time, the default is the same two-update budget, although a caller
 may request another exact number of local updates. Alternatively, a positive
-tolerance makes that number a maximum batch-level budget. Adaptive stopping is
-never used in the differentiable training
-graph.  Reported training-document topic mixtures are also recomputed from
+tolerance makes that number a maximum batch-level budget and stops when
+$\max_{d,k}|\gamma_{dk}^{(t+1)}-\gamma_{dk}^{(t)}|/
+\max(|\gamma_{dk}^{(t)}|,\epsilon)$ falls below the threshold. Adaptive
+stopping is never used in the differentiable training graph. Reported
+training-document topic mixtures are also recomputed from
 retained classical-VB state under the final topics, rather than from the
 neural initializer.
 
@@ -411,6 +416,9 @@ The fixed objective was first explored in a deterministic oracle-topic
 simulator and then rerun on seeds 23, 29, and 31 from fresh seeded encoders. A
 benchmark-only posterior-mean regression comparator received the same topics,
 initial encoder, documents, minibatch order, and 12 training epochs. The
+common per-document reference was the maximum ELBO among 100-step solves from
+the symmetric initializer and both trained encoder initializers, followed by
+one diagnostic continuation step. The
 semi-amortized objective reduced the two-step ELBO gap by 13.37\%, 20.04\%, and
 14.15\%, respectively. Their arithmetic mean was 15.86\%; the relative
 reduction between the across-seed mean gaps was 15.84\%. Across-seed mean

@@ -7,6 +7,7 @@ import sys
 from dataclasses import replace
 from itertools import combinations
 from pathlib import Path
+from types import SimpleNamespace
 
 import numpy as np
 import pytest
@@ -28,6 +29,8 @@ from MS2LDA.hybrid_lda import (
     _local_vb,
     _make_sparse_batch,
 )
+from scripts.benchmark_mushroom_inference_phase import paired_completion_split
+from scripts.benchmark_semi_amortized_inference import METHODS, run_seed
 from scripts.inference_baselines import fit_posterior_regression_baseline
 
 
@@ -169,6 +172,42 @@ def test_one_local_vb_step_matches_the_two_lda_equations() -> None:
             dim=2,
         ),
     )
+
+
+def test_local_vb_tolerance_is_relative_below_unit_gamma() -> None:
+    matrix = sp.csr_matrix([[0.1]])
+    batch = _make_sparse_batch(matrix, [0], device=torch.device("cpu"))
+    alpha = torch.tensor([0.1, 0.1])
+    initial_gamma = torch.tensor([[0.1, 0.1]])
+    expected_log_beta = torch.tensor([[0.0], [-2.0]])
+
+    one_step, _ = _local_vb(
+        batch,
+        initial_gamma,
+        alpha,
+        expected_log_beta,
+        steps=1,
+        tolerance=None,
+    )
+    two_steps, _ = _local_vb(
+        batch,
+        initial_gamma,
+        alpha,
+        expected_log_beta,
+        steps=2,
+        tolerance=None,
+    )
+    adaptive, _ = _local_vb(
+        batch,
+        initial_gamma,
+        alpha,
+        expected_log_beta,
+        steps=2,
+        tolerance=0.1,
+    )
+
+    assert not torch.allclose(one_step, two_steps)
+    torch.testing.assert_close(adaptive, two_steps)
 
 
 def test_sparse_local_elbo_matches_expanded_responsibility_formula() -> None:
@@ -493,6 +532,31 @@ def test_finalization_is_required_and_permanently_freezes_discovery(
         model.finalize_inference()
 
 
+def test_discovery_stops_if_progress_callback_finalizes_inference() -> None:
+    model = prepared_model(seed=21)
+    finalized_topics: list[torch.Tensor] = []
+
+    def finalize_after_first_epoch(_: dict[str, float]) -> None:
+        if model.inference_finalized:
+            return
+        model.finalize_inference()
+        assert model._core is not None
+        finalized_topics.append(model._core.lambda_posterior.detach().clone())
+
+    model.train(3, progress_callback=finalize_after_first_epoch)
+
+    assert model.inference_finalized
+    assert model._epochs == 1
+    assert len(finalized_topics) == 1
+    assert model._core is not None
+    torch.testing.assert_close(
+        model._core.lambda_posterior,
+        finalized_topics[0],
+        rtol=0,
+        atol=0,
+    )
+
+
 def test_same_seed_reproduces_finalized_encoder() -> None:
     first = prepared_model(seed=23)
     second = prepared_model(seed=23)
@@ -598,6 +662,51 @@ def test_benchmark_regression_baseline_handles_multiple_minibatches() -> None:
         rtol=0,
         atol=0,
     )
+
+
+def test_physical_peak_forcing_preserves_two_sided_split() -> None:
+    matrix = sp.csr_matrix([[1.0, 1.0]], dtype=np.float32)
+    spectrum = SimpleNamespace(
+        peaks=SimpleNamespace(
+            mz=np.asarray([100.0], dtype=np.float32),
+            intensities=np.asarray([1.0], dtype=np.float32),
+        ),
+        metadata={"precursor_mz": 150.0},
+    )
+
+    observed, heldout, _ = paired_completion_split(
+        matrix,
+        [spectrum],
+        ["unmapped", "frag@100.00"],
+        observed_fraction=0.5,
+        seed=0,
+        mz_tolerance=0.02,
+    )
+
+    np.testing.assert_array_equal(observed.toarray(), [[0.0, 1.0]])
+    np.testing.assert_array_equal(heldout.toarray(), [[1.0, 0.0]])
+    np.testing.assert_array_equal((observed + heldout).toarray(), matrix.toarray())
+
+
+def test_synthetic_benchmark_reference_includes_every_inference_basin() -> None:
+    run = run_seed(
+        SimpleNamespace(
+            train_documents=24,
+            test_documents=12,
+            tokens_per_document=12,
+            encoder_epochs=2,
+        ),
+        seed=13,
+    )
+
+    for method in METHODS:
+        report = run["methods"][method]
+        assert set(report["reference_source_counts"]) == {"symmetric", *METHODS}
+        assert sum(report["reference_source_counts"].values()) == 12
+        assert all(
+            budget["elbo_gap_per_token"] >= -1e-6
+            for budget in report["budgets"].values()
+        )
 
 
 def test_adaptive_inference_can_stop_after_one_exact_update() -> None:

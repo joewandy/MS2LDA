@@ -96,7 +96,9 @@ For a new spectrum, extract its DreaMS embedding with the same `extractor`,
 then call `make_doc(query_words, embedding=...)` and `infer(...)`. The default
 performs the same two local updates used by the finalization objective.
 Passing `tolerance=1e-4` makes `iter` a maximum adaptive-refinement budget;
-the default `tolerance=None` preserves an exact number of updates.
+the stopping test is relative to the current gamma magnitude with only a
+numerical epsilon floor. The default `tolerance=None` preserves an exact
+number of updates.
 `finalize_inference()` is deliberately one-way: after it succeeds, topic
 training cannot resume, and before it succeeds the model cannot infer new
 documents or save an inference checkpoint. Its fixed objective evaluates the

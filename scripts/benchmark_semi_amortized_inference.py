@@ -6,9 +6,10 @@ receives the same known topic posterior, encoder initialization, documents, and
 embeddings. Only the frozen-topic encoder objective changes: the fixed
 two-step semi-amortized ELBO is compared with equal-epoch posterior regression.
 
-The benchmark reports the local-ELBO gap to a long local solve, posterior KL,
-and observed-token NLL at several inference budgets.  It is an inference
-algorithm check, not evidence about chemical Mass2Motif quality.
+The benchmark reports the local-ELBO gap to the per-document best long solve
+from the symmetric and both trained encoder initializers, posterior KL, and
+observed-token NLL at several inference budgets. It is an inference algorithm
+check, not evidence about chemical Mass2Motif quality.
 """
 
 from __future__ import annotations
@@ -54,7 +55,19 @@ class SyntheticCorpus:
     test_embeddings: np.ndarray
 
 
+@dataclass(frozen=True)
+class ReferenceSolution:
+    """Per-document best long local solve across all compared initializers."""
+
+    gamma: np.ndarray
+    elbo: np.ndarray
+    tail_gain_per_token: float
+    source_counts: dict[str, int]
+
+
 METHODS = ("posterior_regression_baseline", "semi_amortized")
+REFERENCE_STEPS = 100
+REFERENCE_TOLERANCE = 1e-8
 
 
 def parse_args() -> argparse.Namespace:
@@ -175,13 +188,146 @@ def build_frozen_topic_model(
 
 
 @torch.no_grad()
+def build_common_reference(
+    models: dict[str, HybridLDAModel],
+    corpus: SyntheticCorpus,
+) -> ReferenceSolution:
+    """Solve from every compared basin and retain the best result per document.
+
+    Local LDA inference can have initializer-dependent fixed points. A common
+    reference must therefore include the symmetric start and the trained
+    initializer from every benchmark arm; otherwise an arm can legitimately
+    exceed the purported reference and produce a misleading negative gap.
+    """
+    if not models:
+        raise ValueError("at least one model is required for the reference solve")
+    template = next(iter(models.values()))
+    if template._core is None:
+        raise RuntimeError("template model core is not prepared")
+    documents = [
+        template._new_document(words, embedding)
+        for words, embedding in zip(
+            corpus.test_words,
+            corpus.test_embeddings,
+            strict=True,
+        )
+    ]
+    matrix = template._documents_to_matrix(documents)
+    indices = np.arange(len(documents))
+    batch = _make_sparse_batch(matrix, indices, device=template.device)
+    core = template._core
+    expected_log_beta = _expected_log_dirichlet(core.lambda_posterior)
+    word_topic = torch.softmax(expected_log_beta.transpose(0, 1), dim=1)
+    starts = [("symmetric", core.alpha.unsqueeze(0) + batch.totals / template.k)]
+    for name, model in models.items():
+        if model._core is None:
+            raise RuntimeError(f"model core is not prepared for {name}")
+        if model.device != template.device or model.used_vocabs != template.used_vocabs:
+            raise RuntimeError("reference models do not share device and vocabulary")
+        if not torch.equal(model._core.lambda_posterior, core.lambda_posterior):
+            raise RuntimeError("reference models do not share frozen topics")
+        model._core.eval()
+        starts.append(
+            (
+                name,
+                model._core.encode(
+                    batch,
+                    model._embedding_batch(documents, indices),
+                    word_topic,
+                ),
+            )
+        )
+
+    best_gamma = torch.zeros_like(starts[0][1])
+    best_elbo = torch.full(
+        (len(documents),),
+        -torch.inf,
+        device=template.device,
+        dtype=best_gamma.dtype,
+    )
+    best_source = torch.full(
+        (len(documents),),
+        -1,
+        device=template.device,
+        dtype=torch.long,
+    )
+    selected_tail_gain = torch.zeros_like(best_elbo)
+    for source_index, (_, initial_gamma) in enumerate(starts):
+        solved_gamma, _ = _local_vb(
+            batch,
+            initial_gamma,
+            core.alpha,
+            expected_log_beta,
+            steps=REFERENCE_STEPS,
+            tolerance=REFERENCE_TOLERANCE,
+        )
+        solved_elbo = _local_document_elbo(
+            batch,
+            solved_gamma,
+            core.alpha,
+            expected_log_beta,
+        )
+        tail_gamma, _ = _local_vb(
+            batch,
+            solved_gamma,
+            core.alpha,
+            expected_log_beta,
+            steps=1,
+            tolerance=None,
+        )
+        tail_elbo = _local_document_elbo(
+            batch,
+            tail_gamma,
+            core.alpha,
+            expected_log_beta,
+        )
+        tail_is_better = tail_elbo > solved_elbo
+        candidate_gamma = torch.where(
+            tail_is_better.unsqueeze(1),
+            tail_gamma,
+            solved_gamma,
+        )
+        candidate_elbo = torch.maximum(solved_elbo, tail_elbo)
+        candidate_tail_gain = torch.clamp(tail_elbo - solved_elbo, min=0.0)
+        candidate_is_better = candidate_elbo > best_elbo
+        best_gamma = torch.where(
+            candidate_is_better.unsqueeze(1),
+            candidate_gamma,
+            best_gamma,
+        )
+        best_elbo = torch.maximum(best_elbo, candidate_elbo)
+        best_source = torch.where(
+            candidate_is_better,
+            torch.full_like(best_source, source_index),
+            best_source,
+        )
+        selected_tail_gain = torch.where(
+            candidate_is_better,
+            candidate_tail_gain,
+            selected_tail_gain,
+        )
+
+    total_tokens = float(batch.totals.sum().cpu())
+    return ReferenceSolution(
+        gamma=best_gamma.cpu().numpy(),
+        elbo=best_elbo.cpu().numpy(),
+        tail_gain_per_token=float(selected_tail_gain.sum().cpu()) / total_tokens,
+        source_counts={
+            source: int((best_source == source_index).sum().cpu())
+            for source_index, (source, _) in enumerate(starts)
+        },
+    )
+
+
+@torch.no_grad()
 def evaluate_model(
     model: HybridLDAModel,
     corpus: SyntheticCorpus,
+    reference: ReferenceSolution,
     *,
     training_refinement_steps: int,
 ) -> dict[str, Any]:
-    """Evaluate the amortization gap at several fixed inference budgets."""
+    """Evaluate fixed inference budgets against one common reference."""
     if model._core is None:
         raise RuntimeError("model core is not prepared")
     documents = [
@@ -199,43 +345,18 @@ def evaluate_model(
     expected_log_beta = _expected_log_dirichlet(core.lambda_posterior)
     word_topic = torch.softmax(expected_log_beta.transpose(0, 1), dim=1)
     test_embeddings = model._embedding_batch(documents, indices)
-    symmetric = core.alpha.unsqueeze(0) + batch.totals / model.k
-    reference_gamma, _ = _local_vb(
-        batch,
-        symmetric,
-        core.alpha,
-        expected_log_beta,
-        steps=100,
-        tolerance=1e-8,
+    reference_gamma = torch.as_tensor(
+        reference.gamma,
+        device=model.device,
+        dtype=core.lambda_posterior.dtype,
     )
-    reference_elbo = _local_document_elbo(
-        batch,
-        reference_gamma,
-        core.alpha,
-        expected_log_beta,
+    reference_elbo = torch.as_tensor(
+        reference.elbo,
+        device=model.device,
+        dtype=core.lambda_posterior.dtype,
     )
-    tail_gamma, _ = _local_vb(
-        batch,
-        reference_gamma,
-        core.alpha,
-        expected_log_beta,
-        steps=1,
-        tolerance=None,
-    )
-    tail_elbo = _local_document_elbo(
-        batch,
-        tail_gamma,
-        core.alpha,
-        expected_log_beta,
-    )
-    reference_tail_gain = torch.clamp(tail_elbo - reference_elbo, min=0.0)
-    improved = tail_elbo > reference_elbo
-    reference_gamma = torch.where(
-        improved.unsqueeze(1),
-        tail_gamma,
-        reference_gamma,
-    )
-    reference_elbo = torch.maximum(reference_elbo, tail_elbo)
+    if reference_gamma.shape != (len(documents), model.k):
+        raise ValueError("reference gamma is not aligned to evaluation documents")
     reference_theta = reference_gamma / reference_gamma.sum(dim=1, keepdim=True)
     total_tokens = float(batch.totals.sum().cpu())
     beta = core.beta_mean().cpu().numpy()
@@ -284,8 +405,8 @@ def evaluate_model(
             * float(np.median(timings)),
         }
     return {
-        "reference_tail_gain_per_token": float(reference_tail_gain.sum().cpu())
-        / total_tokens,
+        "reference_tail_gain_per_token": reference.tail_gain_per_token,
+        "reference_source_counts": dict(reference.source_counts),
         "budgets": budgets,
     }
 
@@ -299,6 +420,8 @@ def run_seed(args: argparse.Namespace, seed: int) -> dict[str, Any]:
         tokens_per_document=args.tokens_per_document,
     )
     results: dict[str, Any] = {"seed": seed, "methods": {}}
+    models: dict[str, HybridLDAModel] = {}
+    training_records: dict[str, tuple[float, list[dict[str, float]]]] = {}
     for name in METHODS:
         model = build_frozen_topic_model(
             corpus,
@@ -332,12 +455,20 @@ def run_seed(args: argparse.Namespace, seed: int) -> dict[str, Any]:
             )
         ):
             raise RuntimeError("an inference objective changed the structured prior")
+        models[name] = model
+        training_records[name] = (training_seconds, history)
+
+    reference = build_common_reference(models, corpus)
+    for name in METHODS:
+        model = models[name]
+        training_seconds, history = training_records[name]
         results["methods"][name] = {
             "training_seconds": training_seconds,
             "final_training_metrics": history[-1],
             **evaluate_model(
                 model,
                 corpus,
+                reference,
                 training_refinement_steps=INFERENCE_REFINEMENT_STEPS,
             ),
         }
@@ -420,6 +551,9 @@ def main() -> None:
             "tokens_per_document": args.tokens_per_document,
             "encoder_epochs": args.encoder_epochs,
             "refinement_steps": INFERENCE_REFINEMENT_STEPS,
+            "reference_steps": REFERENCE_STEPS,
+            "reference_tolerance": REFERENCE_TOLERANCE,
+            "reference_initializers": ["symmetric", *METHODS],
         },
         "runs": runs,
         "aggregate": aggregate(

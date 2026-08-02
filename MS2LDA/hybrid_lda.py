@@ -243,7 +243,9 @@ def _local_vb(  # noqa: PLR0913
     Each iteration evaluates ``phi`` with :func:`_responsibilities`, then
     applies ``gamma[d,k] = alpha[k] + sum_v x[d,v] phi[d,v,k]``. The returned
     ``phi`` is recomputed from the final ``gamma`` so the global expected
-    counts correspond to the returned document posterior.
+    counts correspond to the returned document posterior. Adaptive stopping
+    uses the maximum componentwise change divided by
+    ``max(abs(gamma[d,k]), EPSILON)``.
     """
     if steps < 1:
         raise ValueError("steps must be positive")
@@ -252,7 +254,7 @@ def _local_vb(  # noqa: PLR0913
     for _ in range(steps):
         phi = _responsibilities(batch, gamma, expected_log_beta)
         updated = alpha.unsqueeze(0) + (counts.unsqueeze(-1) * phi).sum(dim=1)
-        change = ((updated - gamma).abs() / gamma.abs().clamp_min(1.0)).amax()
+        change = ((updated - gamma).abs() / gamma.abs().clamp_min(EPSILON)).amax()
         gamma = updated
         if tolerance is not None and float(change) < tolerance:
             break
@@ -1207,7 +1209,9 @@ class HybridLDAModel:
         Finalization permanently declares the current topics frozen, after
         which this method raises instead of silently making the encoder stale.
         ``progress_callback`` receives a copy of the three scalar discovery
-        diagnostics from each completed epoch.
+        diagnostics from each completed epoch. If the callback finalizes
+        inference from that completed state, discovery stops immediately so
+        the finalized encoder cannot become stale.
 
         Parameters
         ----------
@@ -1250,6 +1254,8 @@ class HybridLDAModel:
                 self._stable_epochs = 0
             if progress_callback is not None:
                 progress_callback(dict(metrics))
+                if self._inference_finalized:
+                    break
         self._refresh_training_documents()
 
     @torch.no_grad()

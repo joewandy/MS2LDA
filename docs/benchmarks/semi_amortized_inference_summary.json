@@ -17,14 +17,40 @@
     "encoder_initialization": "identical_fresh_seeded",
     "encoder_epochs": 12,
     "comparison": "equal-epoch benchmark-only posterior-mean regression",
+    "common_reference": {
+      "steps": 100,
+      "tolerance": 1e-8,
+      "initializers": [
+        "symmetric",
+        "posterior_regression_baseline",
+        "semi_amortized"
+      ],
+      "selected_source_counts_by_seed": {
+        "23": {
+          "symmetric": 75,
+          "posterior_regression_baseline": 3,
+          "semi_amortized": 2
+        },
+        "29": {
+          "symmetric": 77,
+          "posterior_regression_baseline": 1,
+          "semi_amortized": 2
+        },
+        "31": {
+          "symmetric": 78,
+          "posterior_regression_baseline": 2,
+          "semi_amortized": 0
+        }
+      }
+    },
     "two_step_gap_reductions": [
-      0.13371990930210012,
-      0.20040075205296415,
-      0.141543805410686
+      0.1337191394304258,
+      0.20040015745196824,
+      0.14154237356275637
     ],
-    "relative_reduction_in_across_seed_mean_two_step_gap": 0.1583919936933212,
-    "arithmetic_mean_paired_two_step_gap_reduction": 0.15855482225525008,
-    "fractional_change_in_across_seed_mean_zero_step_observed_nll": 0.0008615536292628923,
+    "relative_reduction_in_across_seed_mean_two_step_gap": 0.15839104208405635,
+    "arithmetic_mean_paired_two_step_gap_reduction": 0.15855389014838348,
+    "fractional_change_in_across_seed_mean_zero_step_observed_nll": 0.0008615564267723646,
     "interpretation": "Oracle-topic internal robustness check. The positive zero-step NLL change is a small regression; the two-step ELBO gap and NLL improve. Oracle topics and latent-derived embeddings are not chemical validation."
   },
   "mushroom_frozen_topic_evaluation": {
