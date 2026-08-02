@@ -37,9 +37,10 @@ free topics. The prior is learned for a bounded number of epochs and then
 frozen so convergence is assessed against a stationary model. The reference
 implementation exposes a small Tomotopy-shaped interface without changing the
 production MS2LDA backend. It is accompanied by focused correctness tests and
-a prespecified validation protocol. No comparative performance or chemical
-motif-quality claim is made here; those claims require a new reproducible
-benchmark fitted directly from this cleaned implementation.
+a frozen-topic comparison of limited-budget document inference. No comparative
+topic-discovery or chemical motif-quality claim is made here; those claims
+require a new reproducible benchmark fitted directly from this cleaned
+implementation.
 \end{abstract}
 
 \section{Introduction}
@@ -228,7 +229,7 @@ topic evidence supplied by LDA rather than an unrelated coordinate system.
 The encoder is trained by
 $\operatorname{KL}(\boldsymbol\theta_d^*\Vert
 \widehat{\boldsymbol\theta}_d)$ against stop-gradient locally refined
-posteriors.
+posteriors during topic discovery.
 
 Training VB starts from the retained $\boldsymbol\gamma_d$ from the preceding
 epoch, not from the encoder. Consequently, global spectrum embeddings affect
@@ -241,6 +242,76 @@ coordinate updates and tolerance $10^{-4}$ before the global expected-count
 update. For a new spectrum, the encoder returns an immediate estimate, which
 may be followed by standard local LDA updates. Refinement changes only that
 document's topic mixture; it does not change learned motifs.
+
+\subsection{Frozen-topic semi-amortized inference phase}
+
+After the final topic update, the implementation can replace moving-target
+posterior distillation with a separate semi-amortized phase.  The complete
+topic posterior $\boldsymbol\lambda$ is cloned and detached, the structured
+prior is held fixed, and a fresh Adam optimizer updates only the document
+encoder and spectrum projector.  Thus this phase cannot alter a discovered
+topic.
+
+For a candidate document posterior $\boldsymbol\gamma_d$, write
+\begin{equation}
+ \bar\theta_{dk}=\psi(\gamma_{dk})-
+ \psi\left(\sum_j\gamma_{dj}\right).
+\end{equation}
+With the categorical responsibilities set to their coordinate optimum, the
+local sparse LDA ELBO, up to constants independent of the local variational
+parameters, is
+\begin{align}
+ \mathcal L_d(\boldsymbol\gamma_d)
+ ={}& \log\Gamma(\alpha_0)-\sum_k\log\Gamma(\alpha_k)
+      -\log\Gamma(\gamma_{d0})+\sum_k\log\Gamma(\gamma_{dk}) \notag\\
+ &+\sum_k(\alpha_k-\gamma_{dk})\bar\theta_{dk}
+ +\sum_v x_{dv}\log\sum_k
+   \exp\left(\bar\theta_{dk}+\ell_{kv}\right),
+ \label{eq:local-elbo}
+\end{align}
+where $\alpha_0=\sum_k\alpha_k$ and
+$\gamma_{d0}=\sum_k\gamma_{dk}$.  The final term is exactly the usual
+expected assignment term plus categorical entropy, evaluated with a stable
+log-sum-exp.
+
+Starting from the encoder output $\boldsymbol\gamma_d^{(0)}$, two fixed
+coordinate steps are unrolled:
+\begin{align}
+ \phi_{dvk}^{(t)}
+   &=\operatorname{softmax}_k\left(
+     \bar\theta_{dk}^{(t)}+\ell_{kv}\right),\\
+ \gamma_{dk}^{(t+1)}
+   &=\alpha_k+\sum_v x_{dv}\phi_{dvk}^{(t)}.
+\end{align}
+Back-propagation passes through both steps.  The default encoder objective is
+\begin{equation}
+ \mathcal J_{\mathrm{SA}}
+ =-\frac{\sum_d\left[
+       \mathcal L_d(\boldsymbol\gamma_d^{(2)})
+       +0.1\,\mathcal L_d(\boldsymbol\gamma_d^{(0)})
+     \right]}{\sum_d N_d}.
+ \label{eq:semi-amortized-objective}
+\end{equation}
+For a uniformly shuffled minibatch of $B$ documents from a corpus of $D$
+documents, its ELBO sum is multiplied by
+$D/(B\sum_d N_d)$.  This is an unbiased stochastic-gradient estimator of
+Equation~\ref{eq:semi-amortized-objective}; normalizing separately by the
+random token total of each minibatch would reweight short and long batches.
+Epoch progress values are online minibatch diagnostics because the encoder
+changes between updates, not a fresh evaluation of the final epoch parameters.
+The small zero-step term retains useful encoder-only predictions.  A
+stop-gradient posterior KL remains available as an ablation or auxiliary
+term, but its default weight in this final phase is zero.  Training uses a
+fixed number of updates rather than an adaptive stopping rule because the
+gradient through coordinate ascent becomes negligible close to its fixed
+point.
+
+At inference time, a caller may still request an exact number of local updates.
+Alternatively, a positive tolerance makes that number a maximum batch-level
+budget.  Adaptive stopping is never used in the differentiable training
+graph.  Reported training-document topic mixtures are also recomputed from
+retained classical-VB state under the final topics, rather than from the
+neural initializer.
 
 \subsection{Training and inference sequence}
 
@@ -255,7 +326,10 @@ The implementation follows one explicit sequence:
   \item accumulate full-corpus expected topic--word counts, update the bounded
         structured prior during its declared window, and set
         $\boldsymbol\lambda$ to prior plus expected counts;
-  \item stop only under the stationary-prior convergence rule; and
+  \item stop only under the stationary-prior convergence rule;
+  \item optionally freeze the final topics and train the encoder through two
+        differentiable local updates using
+        Equation~\ref{eq:semi-amortized-objective}; and
   \item for an unseen spectrum, compute the encoder initialization and
         optionally apply local VB without changing $\boldsymbol\lambda$.
 \end{enumerate}
@@ -286,19 +360,63 @@ callers must keep compatible artifacts together.
 
 \section{Validation status}
 
-The current evidence is limited to implementation-level checks. The focused
-tests verify configuration invariants, sparse count handling, the two local
-LDA equations, conservation of token and Dirichlet mass, fixed prior mass,
-stationary-prior convergence, deterministic same-seed training, amortized
-inference, topic and document accessors, safe checkpoint round trips, feature
+The focused tests verify configuration invariants, sparse count handling, the
+local LDA updates and ELBO, monotonic coordinate refinement, differentiable
+short refinement, conservation of token and Dirichlet mass, fixed prior mass,
+stationary-prior convergence, deterministic same-seed training, encoder-only
+topic invariance, adaptive inference, safe checkpoint round trips, feature
 caching, peak-to-word pooling, and the shared spectral-word parser.
 
-These tests show that the code implements the stated algorithm. They do not
-show that its learned topics are chemically meaningful, more predictive, more
-stable, or faster than another method. Comparative claims will be added only
-when the clean implementation is retrained by the protocol below.
+\subsection{Frozen-topic inference experiments}
 
-\section{Planned comparative benchmark}
+The inference objective was first explored in a deterministic oracle-topic
+simulator.  A sweep on seeds 7, 11, and 19 motivated the canonical two-step
+ELBO plus 0.1 zero-step ELBO objective, which was then replicated on seeds 23,
+29, and 31.  Relative to final-topic posterior
+distillation, it reduced the two-step ELBO gap by 13.37\%, 20.04\%, and
+14.15\%, respectively (mean 15.84\%).  Encoder-only observed-token NLL changed
+by 0.086\% on average.  This simulator isolates inference behavior; its oracle
+topics and latent-derived embeddings are not chemical evidence.  Because the
+benchmark driver also evaluates the other ablations on the replication seeds,
+this is an internal robustness check rather than a publication-grade held-out
+study.
+
+A second experiment used the archived random-split mushroom artifacts without
+retraining topics.  The exact historical split hashes were reconstructed: 2,171
+training spectra, 539 eligible test spectra, 10,029 training-vocabulary words,
+209,497 observed test tokens, and 214,271 held-out test tokens.  For each of
+five already-fitted topic models (seeds 42--46), the historical encoder,
+12-epoch final-topic distillation, and 12-epoch
+Equation~\ref{eq:semi-amortized-objective} arms started from the identical
+checkpoint and minibatch RNG state.  Test embeddings came from partial spectra
+containing observed physical peaks only.
+
+Against equal-epoch distillation, the semi-amortized arm passed the
+fixed-configuration inference gate in all five seeds.  Its two-step signed ELBO-gap
+reduction was 15.12\% on average (sample standard deviation 2.30 percentage
+points, range 13.27--18.11\%).  Held-out NLL improved by 0.0832 nats/token at
+zero steps and 0.0388 nats/token at two steps on average; mean two-step NLL was
+7.0397 rather than 7.0784.  Its two-step NLL was also 0.0425 nats/token better
+than the distillation arm after five steps.  Every topic and structured-prior tensor
+remained bitwise unchanged.  The long reference solves were diagnostics, not
+claims of uniform numerical convergence: one additional coordinate update was
+positive for as many as 107 documents and had a maximum per-document gain of
+0.4712 nats.  Including the symmetric reference initialization, however, its
+largest corpus-average gain was only $1.02\times10^{-5}$ per observed token,
+too small to explain the finite-budget differences.  Migrated historical
+predictions reproduced archived NLL values with mean absolute error
+$1.28\times10^{-8}$ and maximum absolute error $3.72\times10^{-8}$ nats/token.
+
+The synthetic driver is
+\path{scripts/benchmark_semi_amortized_inference.py}; the trusted-artifact
+mushroom driver is
+\path{scripts/benchmark_mushroom_inference_phase.py}.  Both retain
+machine-readable raw results.  These experiments support a narrow claim: the
+final frozen-topic encoder is a better limited-budget document-inference
+initializer.  They do not show that discovered motifs are more chemically
+meaningful, more stable, or superior to another topic-discovery method.
+
+\section{Planned topic-discovery and chemical benchmark}
 
 \subsection{Artifacts and split discipline}
 
@@ -415,9 +533,10 @@ spectra and cannot resume training.
 discovery with two neural additions: a DreaMS-conditioned topic--word prior and
 an amortized new-document initializer. The mathematical ownership is explicit:
 expected counts discover topics, the structured prior biases their word
-distributions, and the encoder accelerates document inference. The reference
-is ready for a clean benchmark, but it does not yet justify replacing
-Tomotopy or claiming chemically superior Mass2Motifs.
+distributions, and the semi-amortized encoder accelerates document inference.
+Frozen-topic experiments support the limited-budget inference mechanism, but
+they do not justify replacing Tomotopy for motif discovery or claiming
+chemically superior Mass2Motifs.
 
 \begin{thebibliography}{10}
 

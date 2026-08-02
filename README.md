@@ -84,13 +84,23 @@ model.set_word_embeddings(word_features)
 for words, embedding in zip(documents, features.spectrum_embeddings, strict=True):
     model.add_doc(words, embedding=embedding)
 model.train()
+# Optional final frozen-topic phase: train the encoder through two local VB
+# updates without changing the learned topics or structured word prior.
+model.fit_inference_network()
 ```
 
 For a new spectrum, extract its DreaMS embedding with the same `extractor`,
 then call `make_doc(query_words, embedding=...)` and `infer(..., iter=5)`.
+Passing `tolerance=1e-4` makes `iter` a maximum adaptive-refinement budget;
+the default `tolerance=None` preserves an exact number of updates.
 The model exposes the topic and document accessors needed by Tomotopy-shaped
-downstream code. Its focused tests establish implementation correctness;
-comparative performance and chemical motif quality remain to be benchmarked.
+downstream code. The synthetic benchmark is reproducible through
+`scripts/benchmark_semi_amortized_inference.py`; the trusted historical
+mushroom-artifact check uses
+`scripts/benchmark_mushroom_inference_phase.py`. Their aggregate is in
+[`docs/benchmarks/semi_amortized_inference_summary.json`](docs/benchmarks/semi_amortized_inference_summary.json).
+Comparative topic discovery and chemical motif quality remain separate
+validation questions.
 
 ---
 

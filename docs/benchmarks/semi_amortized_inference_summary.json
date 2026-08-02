@@ -1,0 +1,112 @@
+{
+  "schema_version": 1,
+  "created_date": "2026-08-02",
+  "objective": {
+    "refinement_steps": 2,
+    "refined_elbo_weight": 1.0,
+    "zero_step_elbo_weight": 0.1,
+    "distillation_weight": 0.0
+  },
+  "synthetic_replication_evaluation": {
+    "seeds": [23, 29, 31],
+    "encoder_epochs": 12,
+    "comparison": "equal-epoch final-topic posterior distillation",
+    "two_step_gap_reductions": [
+      0.13371990930210012,
+      0.20040075205296415,
+      0.141543805410686
+    ],
+    "mean_two_step_gap_reduction": 0.1583919936933212,
+    "mean_zero_step_observed_nll_fractional_change": 0.0008615536292628923,
+    "interpretation": "Oracle-topic internal robustness check; the driver also evaluates other ablations on these seeds, so this is not a publication-grade held-out study or chemical validation."
+  },
+  "mushroom_frozen_topic_evaluation": {
+    "seeds": [42, 43, 44, 45, 46],
+    "encoder_epochs": 12,
+    "comparison": "equal-epoch final-topic posterior distillation",
+    "split": {
+      "train_documents": 2171,
+      "test_documents": 539,
+      "vocab_size": 10029,
+      "observed_test_tokens": 209497,
+      "heldout_test_tokens": 214271,
+      "physical_peak_pair_split": true,
+      "historical_manifest_hashes_verified": true,
+      "partial_spectrum_cache_identifiers_verified": true
+    },
+    "per_seed": [
+      {
+        "seed": 42,
+        "two_step_gap_reduction": 0.1709672771867829,
+        "zero_step_heldout_nll_change": -0.07947401301631629,
+        "two_step_heldout_nll_change": -0.036199986277892116,
+        "candidate_two_step_vs_distillation_five_step_nll_change": -0.036253013722821414,
+        "passes_fixed_configuration_smoke_gate": true
+      },
+      {
+        "seed": 43,
+        "two_step_gap_reduction": 0.13439394414737302,
+        "zero_step_heldout_nll_change": -0.07209986091863563,
+        "two_step_heldout_nll_change": -0.03735610868839245,
+        "candidate_two_step_vs_distillation_five_step_nll_change": -0.03778641850722764,
+        "passes_fixed_configuration_smoke_gate": true
+      },
+      {
+        "seed": 44,
+        "two_step_gap_reduction": 0.13269752464671114,
+        "zero_step_heldout_nll_change": -0.0693780342913266,
+        "two_step_heldout_nll_change": -0.03001029773904751,
+        "candidate_two_step_vs_distillation_five_step_nll_change": -0.03361200567402722,
+        "passes_fixed_configuration_smoke_gate": true
+      },
+      {
+        "seed": 45,
+        "two_step_gap_reduction": 0.1366381884112022,
+        "zero_step_heldout_nll_change": -0.09954102124313824,
+        "two_step_heldout_nll_change": -0.04022580495504169,
+        "candidate_two_step_vs_distillation_five_step_nll_change": -0.04803698704177073,
+        "passes_fixed_configuration_smoke_gate": true
+      },
+      {
+        "seed": 46,
+        "two_step_gap_reduction": 0.18114333635599858,
+        "zero_step_heldout_nll_change": -0.09526627283764721,
+        "two_step_heldout_nll_change": -0.05002073632748427,
+        "candidate_two_step_vs_distillation_five_step_nll_change": -0.05688837348089848,
+        "passes_fixed_configuration_smoke_gate": true
+      }
+    ],
+    "aggregate": {
+      "passes": 5,
+      "runs": 5,
+      "mean_two_step_gap_reduction": 0.15116805414961357,
+      "sample_sd_two_step_gap_reduction": 0.023044386524103403,
+      "range_two_step_gap_reduction": [
+        0.13269752464671114,
+        0.18114333635599858
+      ],
+      "mean_zero_step_heldout_nll_change": -0.0831518404614128,
+      "mean_two_step_heldout_nll_change": -0.03876258679757161,
+      "mean_candidate_two_step_vs_distillation_five_step_nll_change": -0.0425153596853491,
+      "mean_historical_zero_step_nll": 7.3179556280305125,
+      "mean_historical_two_step_nll": 7.077729172594911,
+      "mean_historical_five_step_nll": 7.081533410926134,
+      "mean_distillation_zero_step_nll": 7.312288096675324,
+      "mean_candidate_zero_step_nll": 7.22913625621391,
+      "mean_distillation_two_step_nll": 7.0784304122310235,
+      "mean_candidate_two_step_nll": 7.039667825433453,
+      "mean_distillation_five_step_nll": 7.082183185118801,
+      "mean_candidate_five_step_nll": 7.0593725104877,
+      "max_reference_continuation_gain_per_observed_token": 0.000010183985471376082,
+      "max_reference_continuation_positive_documents": 107,
+      "max_reference_continuation_elbo_gain_per_document": 0.47119140625
+    },
+    "invariants": {
+      "topic_and_structured_prior_tensors_bitwise_unchanged": true,
+      "historical_predictions_reproduced": true,
+      "historical_nll_mean_absolute_error": 1.283918171779419e-8,
+      "historical_nll_max_absolute_error": 3.713735630128667e-8
+    }
+  },
+  "interpretation_boundary": "This supports frozen-topic limited-budget document inference only. It is not evidence for improved motif discovery or chemical motif quality."
+}

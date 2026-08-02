@@ -235,6 +235,64 @@ def _local_vb(  # noqa: PLR0913
     return gamma, _responsibilities(batch, gamma, expected_log_beta)
 
 
+def _local_document_elbo(
+    batch: _SparseBatch,
+    gamma: torch.Tensor,
+    alpha: torch.Tensor,
+    expected_log_beta: torch.Tensor,
+) -> torch.Tensor:
+    """Return the encoder-dependent local LDA ELBO for each document.
+
+    The global topic posterior is treated as fixed.  For a supplied ``gamma``,
+    the categorical factor ``phi`` is optimized analytically and collapsed into
+    a ``logsumexp``.  This is exactly equivalent to the usual
+    ``phi * (Elogtheta + Elogbeta - log(phi))`` expression, but avoids taking
+    the logarithm of very small responsibilities.
+
+    The omitted beta-posterior terms and multinomial combinatorial constants do
+    not depend on document inference, so they cannot affect encoder gradients.
+    """
+    expected_shape = (batch.word_ids.shape[0], alpha.numel())
+    if tuple(gamma.shape) != expected_shape:
+        raise ValueError(f"gamma must have shape {expected_shape}")
+    if expected_log_beta.ndim != 2 or expected_log_beta.shape[0] != alpha.numel():
+        raise ValueError("expected_log_beta has incompatible topic dimensions")
+
+    expected_log_theta = _expected_log_dirichlet(gamma)
+    word_values = expected_log_beta[:, batch.word_ids].permute(1, 2, 0)
+    logits = expected_log_theta.unsqueeze(1) + word_values
+    counts = batch.word_counts * batch.word_mask
+    token_bound = (counts * torch.logsumexp(logits, dim=2)).sum(dim=1)
+
+    # -KL[Dir(gamma) || Dir(alpha)].  Keeping this expression explicit makes
+    # the probabilistic objective reviewable and differentiable end to end.
+    negative_dirichlet_kl = (
+        torch.lgamma(alpha.sum())
+        - torch.lgamma(alpha).sum()
+        - torch.lgamma(gamma.sum(dim=1))
+        + torch.lgamma(gamma).sum(dim=1)
+        + ((alpha.unsqueeze(0) - gamma) * expected_log_theta).sum(dim=1)
+    )
+    return negative_dirichlet_kl + token_bound
+
+
+def _corpus_elbo_minibatch_scale(
+    *,
+    corpus_documents: int,
+    batch_documents: int,
+    corpus_tokens: float,
+) -> float:
+    """Scale a uniform document minibatch to the corpus-per-token objective."""
+    if (
+        corpus_documents < 1
+        or batch_documents < 1
+        or not np.isfinite(corpus_tokens)
+        or corpus_tokens <= 0
+    ):
+        raise ValueError("corpus and minibatch sizes must be positive")
+    return corpus_documents / (batch_documents * corpus_tokens)
+
+
 def _expected_topic_word_counts(
     batch: _SparseBatch,
     phi: torch.Tensor,
@@ -543,6 +601,7 @@ class HybridLDAModel:
         self.docs: list[HybridDocument] = []
         self.used_vocabs: list[str] = []
         self.history: list[dict[str, float]] = []
+        self.inference_history: list[dict[str, float]] = []
         self._word_embeddings: dict[str, np.ndarray] = {}
         self._vocab_index: dict[str, int] = {}
         self._matrix: sp.csr_matrix | None = None
@@ -809,6 +868,276 @@ class HybridLDAModel:
                 batches += 1
         return total_loss / max(batches, 1)
 
+    @torch.no_grad()
+    def _training_posterior_targets(self, *, steps: int) -> np.ndarray:
+        """Solve local posteriors against the current frozen topic posterior.
+
+        The initializer is retained classical-VB state, never the document
+        encoder.  This keeps the targets and reported training likelihoods
+        independent of the global DreaMS document embeddings.
+        """
+        if self._core is None or self._matrix is None or self._gamma is None:
+            raise RuntimeError("model is not prepared")
+        if steps < 1:
+            raise ValueError("steps must be positive")
+        core = self._core
+        core.eval()
+        expected_log_beta = _expected_log_dirichlet(core.lambda_posterior)
+        targets = np.empty((len(self.docs), self.k), dtype=np.float32)
+        for start in range(0, len(self.docs), self.config.batch_size):
+            indices = np.arange(
+                start,
+                min(start + self.config.batch_size, len(self.docs)),
+            )
+            batch = _make_sparse_batch(self._matrix, indices, device=self.device)
+            initial = torch.as_tensor(
+                self._gamma[indices],
+                device=self.device,
+                dtype=core.lambda_posterior.dtype,
+            )
+            gamma, _ = _local_vb(
+                batch,
+                initial,
+                core.alpha,
+                expected_log_beta,
+                steps=steps,
+                tolerance=self.config.local_tolerance,
+            )
+            targets[indices] = gamma.cpu().numpy()
+        return targets
+
+    def fit_inference_network(  # noqa: PLR0913
+        self,
+        epochs: int = 5,
+        *,
+        refinement_steps: int = 2,
+        refined_elbo_weight: float = 1.0,
+        zero_step_elbo_weight: float = 0.1,
+        distillation_weight: float = 0.0,
+        teacher_steps: int | None = None,
+        reset_optimizer: bool = True,
+        progress_callback: Callable[[dict[str, float]], None] | None = None,
+    ) -> list[dict[str, float]]:
+        """Fit topic-preserving semi-amortized inference after discovery.
+
+        The current topics and structured prior are frozen for this phase. The
+        method is intended to run after the final discovery epoch; calling
+        :meth:`train` afterward can change the topics and make the encoder
+        stale. The encoder predicts
+        ``gamma[0]`` and gradients pass through a small, fixed number of local
+        VB refinements before evaluating the exact local LDA ELBO. An auxiliary
+        zero-step ELBO preserves useful encoder-only inference while the
+        refined objective trains a good initializer for a limited inference
+        budget. Posterior distillation remains available as an optional
+        comparison or regularizer.
+
+        This method deliberately never feeds encoder-derived responsibilities
+        into the global expected-count update.  It therefore cannot change the
+        discovered topic-word posterior.
+        """
+        if self._inference_only:
+            raise RuntimeError("an inference artifact has no training documents")
+        count = int(epochs)
+        steps = int(refinement_steps)
+        resolved_teacher_steps = (
+            self.config.training_local_steps
+            if teacher_steps is None
+            else int(teacher_steps)
+        )
+        weights = (
+            float(refined_elbo_weight),
+            float(zero_step_elbo_weight),
+            float(distillation_weight),
+        )
+        if count < 0:
+            raise ValueError("epochs cannot be negative")
+        if steps < 0 or resolved_teacher_steps < 0:
+            raise ValueError("refinement and teacher steps cannot be negative")
+        if weights[0] > 0 and steps < 1:
+            raise ValueError("refinement steps must be positive when its ELBO is used")
+        if weights[2] > 0 and resolved_teacher_steps < 1:
+            raise ValueError("teacher steps must be positive for distillation")
+        if (
+            not all(np.isfinite(weight) for weight in weights)
+            or any(weight < 0 for weight in weights)
+            or not any(weights)
+        ):
+            raise ValueError(
+                "objective weights must be finite, nonnegative, and not all zero"
+            )
+        if count == 0:
+            return []
+        if self._epochs < 1:
+            raise RuntimeError(
+                "fit at least one global epoch before the inference phase"
+            )
+        if self._core is None or self._matrix is None:
+            raise RuntimeError("model is not prepared")
+        core = self._core
+        if reset_optimizer:
+            self._encoder_optimizer = torch.optim.Adam(
+                core.encoder_parameters(),
+                lr=self.config.encoder_learning_rate,
+            )
+        if self._encoder_optimizer is None:
+            raise RuntimeError("encoder optimizer is not prepared")
+
+        # Snapshot the complete topic posterior.  All quantities entering the
+        # differentiable inference graph are derived from this detached copy.
+        lambda_snapshot = core.lambda_posterior.detach().clone()
+        prior_snapshot = [
+            parameter.detach().clone() for parameter in core.prior_parameters()
+        ]
+        expected_log_beta = _expected_log_dirichlet(lambda_snapshot).detach()
+        word_topic = torch.softmax(expected_log_beta.transpose(0, 1), dim=1).detach()
+        teacher_gamma = (
+            self._training_posterior_targets(steps=resolved_teacher_steps)
+            if weights[2] > 0
+            else None
+        )
+        corpus_tokens = max(float(self._matrix.sum()), EPSILON)
+        corpus_documents = len(self.docs)
+        phase_history: list[dict[str, float]] = []
+        for phase_epoch in range(1, count + 1):
+            core.train()
+            shuffled = self._rng.permutation(len(self.docs))
+            loss_sum = 0.0
+            refined_elbo_sum = 0.0
+            zero_elbo_sum = 0.0
+            teacher_kl_sum = 0.0
+            token_sum = 0.0
+            document_sum = 0
+            gradient_norm_sum = 0.0
+            batches = 0
+            for start in range(0, len(self.docs), self.config.batch_size):
+                indices = shuffled[start : start + self.config.batch_size]
+                batch = _make_sparse_batch(self._matrix, indices, device=self.device)
+                gamma_zero = core.encode(
+                    batch,
+                    self._embedding_batch(self.docs, indices),
+                    word_topic,
+                )
+                refined_elbo: torch.Tensor | None = None
+                if weights[0] > 0:
+                    gamma_refined, _ = _local_vb(
+                        batch,
+                        gamma_zero,
+                        core.alpha,
+                        expected_log_beta,
+                        steps=steps,
+                        tolerance=None,
+                    )
+                    refined_elbo = _local_document_elbo(
+                        batch,
+                        gamma_refined,
+                        core.alpha,
+                        expected_log_beta,
+                    )
+                zero_elbo = (
+                    _local_document_elbo(
+                        batch,
+                        gamma_zero,
+                        core.alpha,
+                        expected_log_beta,
+                    )
+                    if weights[1] > 0
+                    else None
+                )
+                teacher_kl: torch.Tensor | None = None
+                if teacher_gamma is not None:
+                    target_gamma = torch.as_tensor(
+                        teacher_gamma[indices],
+                        device=self.device,
+                        dtype=gamma_zero.dtype,
+                    )
+                    target_theta = target_gamma / target_gamma.sum(
+                        dim=1,
+                        keepdim=True,
+                    )
+                    predicted_theta = gamma_zero / gamma_zero.sum(
+                        dim=1,
+                        keepdim=True,
+                    )
+                    teacher_kl = (
+                        target_theta
+                        * (
+                            target_theta.clamp_min(EPSILON).log()
+                            - predicted_theta.clamp_min(EPSILON).log()
+                        )
+                    ).sum(dim=1)
+                # A uniformly sampled document minibatch sees B/D of the
+                # corpus ELBO in expectation.  D/(B*T) therefore gives an
+                # unbiased gradient estimator of the corpus token-normalized
+                # objective, unlike normalizing by each batch's random token
+                # total.
+                elbo_scale = _corpus_elbo_minibatch_scale(
+                    corpus_documents=corpus_documents,
+                    batch_documents=len(indices),
+                    corpus_tokens=corpus_tokens,
+                )
+                loss = gamma_zero.sum() * 0.0
+                if refined_elbo is not None:
+                    loss = loss - weights[0] * refined_elbo.sum() * elbo_scale
+                if zero_elbo is not None:
+                    loss = loss - weights[1] * zero_elbo.sum() * elbo_scale
+                if teacher_kl is not None:
+                    loss = loss + weights[2] * teacher_kl.mean()
+                self._encoder_optimizer.zero_grad(set_to_none=True)
+                loss.backward()
+                gradient_norm = torch.nn.utils.clip_grad_norm_(
+                    core.encoder_parameters(),
+                    10.0,
+                )
+                self._encoder_optimizer.step()
+
+                batch_tokens = float(batch.totals.sum().detach().cpu())
+                batch_documents = len(indices)
+                loss_sum += float(loss.detach().cpu())
+                if refined_elbo is not None:
+                    refined_elbo_sum += float(refined_elbo.sum().detach().cpu())
+                if zero_elbo is not None:
+                    zero_elbo_sum += float(zero_elbo.sum().detach().cpu())
+                if teacher_kl is not None:
+                    teacher_kl_sum += float(teacher_kl.sum().detach().cpu())
+                token_sum += batch_tokens
+                document_sum += batch_documents
+                gradient_norm_sum += float(gradient_norm.detach().cpu())
+                batches += 1
+            metrics: dict[str, float] = {
+                "inference_epoch": float(phase_epoch),
+                "loss": loss_sum / max(batches, 1),
+                "encoder_gradient_norm": gradient_norm_sum / max(batches, 1),
+            }
+            if weights[0] > 0:
+                metrics["refined_elbo_per_token"] = refined_elbo_sum / max(
+                    token_sum,
+                    EPSILON,
+                )
+            if weights[1] > 0:
+                metrics["zero_step_elbo_per_token"] = zero_elbo_sum / max(
+                    token_sum,
+                    EPSILON,
+                )
+            if teacher_gamma is not None:
+                metrics["teacher_mean_kl"] = teacher_kl_sum / max(document_sum, 1)
+            self.inference_history.append(metrics)
+            phase_history.append(dict(metrics))
+            if progress_callback is not None:
+                progress_callback(dict(metrics))
+
+        if not torch.equal(lambda_snapshot, core.lambda_posterior):
+            raise RuntimeError("inference training unexpectedly changed the topics")
+        if any(
+            not torch.equal(previous, current)
+            for previous, current in zip(
+                prior_snapshot,
+                core.prior_parameters(),
+                strict=True,
+            )
+        ):
+            raise RuntimeError("inference training unexpectedly changed the prior")
+        return phase_history
+
     def _fit_epoch(self) -> dict[str, float]:
         """Run one local-VB, amortizer, and global expected-count cycle."""
         if self._core is None or self._matrix is None or self._gamma is None:
@@ -927,8 +1256,15 @@ class HybridLDAModel:
         documents: Sequence[HybridDocument],
         *,
         refinement_steps: int,
+        tolerance: float | None = None,
     ) -> np.ndarray:
-        """Run the neural initializer and optional local VB on a sparse matrix."""
+        """Run the neural initializer and optional local VB on a sparse matrix.
+
+        When ``tolerance`` is supplied, ``refinement_steps`` is a maximum
+        budget and a batch stops once every document satisfies the relative
+        gamma-change threshold.  Fixed-step differentiable training never uses
+        this adaptive path.
+        """
         if self._core is None:
             raise RuntimeError("model is not prepared")
         core = self._core
@@ -954,7 +1290,7 @@ class HybridLDAModel:
                     core.alpha,
                     expected_log_beta,
                     steps=refinement_steps,
-                    tolerance=None,
+                    tolerance=tolerance,
                 )
             gamma_parts.append(gamma.cpu().numpy())
         gamma_matrix = np.vstack(gamma_parts).astype(np.float32, copy=False)
@@ -963,14 +1299,11 @@ class HybridLDAModel:
         )
 
     def _refresh_training_documents(self) -> None:
-        """Store final locally refined topic means on training documents."""
-        if self._matrix is None:
+        """Store LDA-refined topic means without using the neural initializer."""
+        if self._matrix is None or self._gamma is None:
             raise RuntimeError("training matrix is not prepared")
-        theta = self._infer_matrix(
-            self._matrix,
-            self.docs,
-            refinement_steps=self.config.training_local_steps,
-        )
+        gamma = self._training_posterior_targets(steps=self.config.training_local_steps)
+        theta = gamma / np.maximum(gamma.sum(axis=1, keepdims=True), EPSILON)
         for row, document in enumerate(self.docs):
             document._topic_dist = theta[row]
 
@@ -992,15 +1325,20 @@ class HybridLDAModel:
         doc: HybridDocument | Sequence[HybridDocument],
         *,
         iter: int = 5,
+        tolerance: float | None = None,
     ) -> tuple[np.ndarray, float] | tuple[list[np.ndarray], np.ndarray]:
-        """Infer topic mixtures; ``iter`` is the number of local VB updates.
+        """Infer topic mixtures with fixed or adaptive local VB updates.
 
-        The accompanying likelihood is a posterior-mean plug-in score for the
-        supplied document, not a training ELBO or Tomotopy Gibbs likelihood.
+        With ``tolerance=None``, ``iter`` is an exact update count. Otherwise it
+        is a maximum and a sparse batch can stop early. The accompanying
+        likelihood is a posterior-mean plug-in score for the supplied document,
+        not a training ELBO or Tomotopy Gibbs likelihood.
         """
         steps = int(iter)
         if steps < 0:
             raise ValueError("iter cannot be negative")
+        if tolerance is not None and (not np.isfinite(tolerance) or tolerance <= 0):
+            raise ValueError("tolerance must be positive")
         single = isinstance(doc, HybridDocument)
         documents = [doc] if single else list(doc)
         if not documents:
@@ -1010,6 +1348,7 @@ class HybridLDAModel:
             matrix,
             documents,
             refinement_steps=steps,
+            tolerance=tolerance,
         )
         for row, document in enumerate(documents):
             document._topic_dist = theta[row]

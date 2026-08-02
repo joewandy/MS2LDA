@@ -5,6 +5,7 @@ from __future__ import annotations
 import subprocess
 import sys
 from dataclasses import replace
+from itertools import combinations
 from pathlib import Path
 
 import numpy as np
@@ -20,8 +21,10 @@ from MS2LDA.dreams_features import (
 from MS2LDA.hybrid_lda import (
     HybridLDAConfig,
     HybridLDAModel,
+    _corpus_elbo_minibatch_scale,
     _expected_log_dirichlet,
     _expected_topic_word_counts,
+    _local_document_elbo,
     _local_vb,
     _make_sparse_batch,
 )
@@ -163,6 +166,80 @@ def test_one_local_vb_step_matches_the_two_lda_equations() -> None:
     )
 
 
+def test_sparse_local_elbo_matches_expanded_responsibility_formula() -> None:
+    matrix = sp.csr_matrix([[2.0, 1.0], [0.0, 3.0]])
+    batch = _make_sparse_batch(matrix, [0, 1], device=torch.device("cpu"))
+    alpha = torch.tensor([0.3, 0.7])
+    gamma = torch.tensor([[2.1, 1.9], [0.8, 3.2]])
+    expected_log_beta = torch.tensor([[-0.2, -2.0], [-1.7, -0.1]])
+
+    expected_log_theta = _expected_log_dirichlet(gamma)
+    word_values = expected_log_beta[:, batch.word_ids].permute(1, 2, 0)
+    logits = expected_log_theta.unsqueeze(1) + word_values
+    phi = torch.softmax(logits, dim=2)
+    counts = batch.word_counts * batch.word_mask
+    categorical = (
+        counts.unsqueeze(-1) * phi * (logits - phi.clamp_min(1e-30).log())
+    ).sum(dim=(1, 2))
+    negative_kl = (
+        torch.lgamma(alpha.sum())
+        - torch.lgamma(alpha).sum()
+        - torch.lgamma(gamma.sum(dim=1))
+        + torch.lgamma(gamma).sum(dim=1)
+        + ((alpha.unsqueeze(0) - gamma) * expected_log_theta).sum(dim=1)
+    )
+
+    collapsed = _local_document_elbo(
+        batch,
+        gamma,
+        alpha,
+        expected_log_beta,
+    )
+    torch.testing.assert_close(collapsed, negative_kl + categorical)
+
+
+def test_document_minibatch_scale_is_unbiased_for_unequal_documents() -> None:
+    document_elbos = np.asarray([-1.0, -5.0, -20.0])
+    corpus_tokens = 26.0
+    expected = float(document_elbos.sum() / corpus_tokens)
+
+    for batch_size in (1, 2):
+        estimates = []
+        for indices in combinations(range(len(document_elbos)), batch_size):
+            scale = _corpus_elbo_minibatch_scale(
+                corpus_documents=len(document_elbos),
+                batch_documents=batch_size,
+                corpus_tokens=corpus_tokens,
+            )
+            estimates.append(float(document_elbos[list(indices)].sum() * scale))
+        assert np.mean(estimates) == pytest.approx(expected)
+
+
+def test_coordinate_refinement_does_not_reduce_local_elbo() -> None:
+    matrix = sp.csr_matrix(
+        [[8.0, 1.0, 0.0, 0.0], [4.0, 3.0, 2.0, 1.0], [0.0, 0.0, 1.0, 8.0]]
+    )
+    batch = _make_sparse_batch(matrix, [0, 1, 2], device=torch.device("cpu"))
+    alpha = torch.tensor([0.2, 0.2])
+    lambda_posterior = torch.tensor([[30.0, 10.0, 1.0, 1.0], [1.0, 1.0, 10.0, 30.0]])
+    expected_log_beta = _expected_log_dirichlet(lambda_posterior)
+    initial = alpha.unsqueeze(0) + batch.totals / 2.0
+    previous = _local_document_elbo(batch, initial, alpha, expected_log_beta)
+
+    for steps in (1, 2, 3, 5, 10):
+        gamma, _ = _local_vb(
+            batch,
+            initial,
+            alpha,
+            expected_log_beta,
+            steps=steps,
+            tolerance=None,
+        )
+        current = _local_document_elbo(batch, gamma, alpha, expected_log_beta)
+        assert bool(torch.all(current >= previous - 1e-5))
+        previous = current
+
+
 def test_local_updates_preserve_dirichlet_mass_and_token_counts() -> None:
     model = prepared_model()
     assert model._matrix is not None and model._core is not None
@@ -189,6 +266,42 @@ def test_local_updates_preserve_dirichlet_mass_and_token_counts() -> None:
         vocab_size=model.num_vocabs,
     )
     assert float(statistics.sum()) == pytest.approx(float(batch.totals.sum()))
+
+
+def test_unrolled_refinement_backpropagates_only_to_encoder() -> None:
+    model = prepared_model()
+    assert model._matrix is not None and model._core is not None
+    core = model._core
+    batch = _make_sparse_batch(model._matrix, [0, 1, 2], device=model.device)
+    expected_log_beta = _expected_log_dirichlet(core.lambda_posterior.detach().clone())
+    word_topic = torch.softmax(expected_log_beta.transpose(0, 1), dim=1).detach()
+    core.zero_grad(set_to_none=True)
+    gamma_zero = core.encode(
+        batch,
+        model._embedding_batch(model.docs, [0, 1, 2]),
+        word_topic,
+    )
+    gamma_refined, _ = _local_vb(
+        batch,
+        gamma_zero,
+        core.alpha,
+        expected_log_beta,
+        steps=2,
+        tolerance=None,
+    )
+    loss = -_local_document_elbo(
+        batch,
+        gamma_refined,
+        core.alpha,
+        expected_log_beta,
+    ).mean()
+    loss.backward()
+
+    final_gradient = core.encoder[-1].weight.grad
+    assert final_gradient is not None
+    assert bool(torch.all(torch.isfinite(final_gradient)))
+    assert float(final_gradient.norm()) > 1e-8
+    assert all(parameter.grad is None for parameter in core.prior_parameters())
 
 
 def test_structured_prior_has_declared_fixed_mass() -> None:
@@ -245,6 +358,7 @@ def test_convergence_starts_only_after_the_prior_is_fixed() -> None:
 def test_training_inference_and_safe_checkpoint_round_trip(tmp_path: Path) -> None:
     model = prepared_model()
     model.train(2)
+    model.fit_inference_network(epochs=1, refinement_steps=1)
     words, embeddings, _ = documents()
     query = model.make_doc(words[0], embedding=embeddings[0])
     original_theta, original_ll = model.infer(query, iter=5)
@@ -286,6 +400,129 @@ def test_document_embedding_affects_zero_step_amortized_inference() -> None:
     second_theta, _ = model.infer(second, iter=0)
 
     assert not np.allclose(first_theta, second_theta)
+
+
+def test_post_discovery_inference_training_cannot_change_topics() -> None:
+    model = prepared_model()
+    model.train(2)
+    assert model._core is not None
+    core = model._core
+    topics_before = core.lambda_posterior.detach().clone()
+    prior_before = [parameter.detach().clone() for parameter in core.prior_parameters()]
+    encoder_before = [
+        parameter.detach().clone() for parameter in core.encoder_parameters()
+    ]
+
+    history = model.fit_inference_network(
+        epochs=2,
+        refinement_steps=1,
+        reset_optimizer=True,
+    )
+
+    assert len(history) == 2
+    assert all(np.isfinite(list(metrics.values())).all() for metrics in history)
+    torch.testing.assert_close(core.lambda_posterior, topics_before, rtol=0, atol=0)
+    for current, previous in zip(core.prior_parameters(), prior_before, strict=True):
+        torch.testing.assert_close(current, previous, rtol=0, atol=0)
+    assert any(
+        not torch.equal(current, previous)
+        for current, previous in zip(
+            core.encoder_parameters(),
+            encoder_before,
+            strict=True,
+        )
+    )
+
+
+def test_inference_phase_rejects_untrained_model_without_preparing_it() -> None:
+    words, embeddings, _ = documents()
+    model = HybridLDAModel(small_config())
+    model.add_doc(words[0], embedding=embeddings[0])
+
+    with pytest.raises(RuntimeError, match="global epoch"):
+        model.fit_inference_network(epochs=1)
+
+    assert model._core is None
+    model.add_doc(words[1], embedding=embeddings[1])
+    assert len(model.docs) == 2
+
+
+def test_inference_objective_skips_inactive_refinement_branches() -> None:
+    distilled = prepared_model(seed=17)
+    distilled.train(1)
+    distilled_history = distilled.fit_inference_network(
+        epochs=1,
+        refinement_steps=0,
+        refined_elbo_weight=0.0,
+        zero_step_elbo_weight=0.0,
+        distillation_weight=1.0,
+        teacher_steps=1,
+    )
+    assert "teacher_mean_kl" in distilled_history[0]
+    assert "refined_elbo_per_token" not in distilled_history[0]
+    assert "zero_step_elbo_per_token" not in distilled_history[0]
+
+    zero_step = prepared_model(seed=19)
+    zero_step.train(1)
+    zero_history = zero_step.fit_inference_network(
+        epochs=1,
+        refinement_steps=0,
+        refined_elbo_weight=0.0,
+        zero_step_elbo_weight=1.0,
+        distillation_weight=0.0,
+        teacher_steps=0,
+    )
+    assert "zero_step_elbo_per_token" in zero_history[0]
+    assert "refined_elbo_per_token" not in zero_history[0]
+    assert "teacher_mean_kl" not in zero_history[0]
+
+
+def test_inference_phase_rejects_nonfinite_objective_weights() -> None:
+    model = prepared_model()
+    model.train(1)
+
+    with pytest.raises(ValueError, match="finite"):
+        model.fit_inference_network(refined_elbo_weight=np.nan)
+
+
+def test_adaptive_inference_can_stop_after_one_exact_update() -> None:
+    model = prepared_model()
+    model.train(2)
+    words, embeddings, _ = documents()
+    fixed = model.make_doc(words[0], embedding=embeddings[0])
+    adaptive = model.make_doc(words[0], embedding=embeddings[0])
+
+    fixed_theta, fixed_ll = model.infer(fixed, iter=1)
+    adaptive_theta, adaptive_ll = model.infer(
+        adaptive,
+        iter=50,
+        tolerance=1e9,
+    )
+
+    np.testing.assert_array_equal(adaptive_theta, fixed_theta)
+    assert adaptive_ll == fixed_ll
+    with pytest.raises(ValueError, match="tolerance"):
+        model.infer(adaptive, iter=5, tolerance=0.0)
+    with pytest.raises(ValueError, match="tolerance"):
+        model.infer(adaptive, iter=5, tolerance=np.nan)
+
+
+def test_training_document_refresh_does_not_use_encoder_or_dreams_embedding() -> None:
+    model = prepared_model()
+    model.train(2)
+    assert model._core is not None
+    model._refresh_training_documents()
+    expected = document_topics(model)
+    with torch.no_grad():
+        for parameter in model._core.encoder_parameters():
+            parameter.add_(torch.randn_like(parameter) * 100.0)
+    for document in model.docs:
+        document.embedding[:] = np.random.default_rng(123).normal(
+            size=document.embedding.shape
+        )
+    model._refresh_training_documents()
+
+    np.testing.assert_array_equal(document_topics(model), expected)
 
 
 def test_tomotopy_shaped_document_and_topic_accessors() -> None:
