@@ -578,31 +578,6 @@ def test_finalization_is_required_and_permanently_freezes_discovery(
         model.finalize_inference()
 
 
-def test_discovery_stops_if_progress_callback_finalizes_inference() -> None:
-    model = prepared_model(seed=21)
-    finalized_topics: list[torch.Tensor] = []
-
-    def finalize_after_first_epoch(_: dict[str, float]) -> None:
-        if model.inference_finalized:
-            return
-        model.finalize_inference()
-        assert model._core is not None
-        finalized_topics.append(model._core.lambda_posterior.detach().clone())
-
-    model.train(3, progress_callback=finalize_after_first_epoch)
-
-    assert model.inference_finalized
-    assert model._epochs == 1
-    assert len(finalized_topics) == 1
-    assert model._core is not None
-    torch.testing.assert_close(
-        model._core.lambda_posterior,
-        finalized_topics[0],
-        rtol=0,
-        atol=0,
-    )
-
-
 def test_same_seed_reproduces_finalized_encoder() -> None:
     first = prepared_model(seed=23)
     second = prepared_model(seed=23)
@@ -622,7 +597,9 @@ def test_same_seed_reproduces_finalized_encoder() -> None:
         torch.testing.assert_close(left, right, rtol=0, atol=0)
 
 
-def test_finalization_callback_failure_rolls_back_and_can_retry() -> None:
+def test_finalization_failure_rolls_back_and_can_retry(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     failed = prepared_model(seed=27)
     control = prepared_model(seed=27)
     failed.train(1)
@@ -632,16 +609,21 @@ def test_finalization_callback_failure_rolls_back_and_can_retry() -> None:
         parameter.detach().clone() for parameter in failed._core.encoder_parameters()
     ]
     module_mode_before = failed._core.training
+    original_step = torch.optim.Adam.step
 
-    def fail_after_first_epoch(_: dict[str, float]) -> None:
-        raise LookupError("intentional callback failure")
+    def fail_after_update(
+        optimizer: torch.optim.Adam,
+        closure=None,
+    ) -> None:
+        original_step(optimizer, closure=closure)
+        raise FloatingPointError("intentional optimizer failure")
 
-    with pytest.raises(LookupError, match="intentional"):
-        failed.finalize_inference(progress_callback=fail_after_first_epoch)
+    with monkeypatch.context() as patch:
+        patch.setattr(torch.optim.Adam, "step", fail_after_update)
+        with pytest.raises(FloatingPointError, match="intentional"):
+            failed.finalize_inference()
 
     assert not failed.inference_finalized
-    assert not failed._finalization_in_progress
-    assert failed.inference_history == []
     assert failed._core.training is module_mode_before
     for current, expected in zip(
         failed._core.encoder_parameters(),
@@ -656,31 +638,6 @@ def test_finalization_callback_failure_rolls_back_and_can_retry() -> None:
     for current, expected in zip(
         failed._core.encoder_parameters(),
         control._core.encoder_parameters(),
-        strict=True,
-    ):
-        torch.testing.assert_close(current, expected, rtol=0, atol=0)
-
-
-def test_finalization_rejects_recursive_callback_and_rolls_back() -> None:
-    model = prepared_model(seed=28)
-    model.train(1)
-    assert model._core is not None
-    encoder_before = [
-        parameter.detach().clone() for parameter in model._core.encoder_parameters()
-    ]
-
-    def recurse(_: dict[str, float]) -> None:
-        model.finalize_inference()
-
-    with pytest.raises(RuntimeError, match="already in progress"):
-        model.finalize_inference(progress_callback=recurse)
-
-    assert not model.inference_finalized
-    assert not model._finalization_in_progress
-    assert model.inference_history == []
-    for current, expected in zip(
-        model._core.encoder_parameters(),
-        encoder_before,
         strict=True,
     ):
         torch.testing.assert_close(current, expected, rtol=0, atol=0)

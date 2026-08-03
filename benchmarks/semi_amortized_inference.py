@@ -15,7 +15,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -356,26 +355,19 @@ def evaluate_model(
     budgets: dict[str, dict[str, float]] = {}
     evaluation_budgets = sorted({0, 1, 2, 5, 20, training_refinement_steps})
     for steps in evaluation_budgets:
-        timings: list[float] = []
-        gamma: torch.Tensor | None = None
-        for _ in range(3):
-            started = time.perf_counter()
-            gamma_zero = core.encode(batch, test_embeddings, word_topic)
-            gamma = (
-                local_vb(
-                    batch,
-                    gamma_zero,
-                    core.alpha,
-                    expected_log_beta,
-                    steps=steps,
-                    tolerance=None,
-                )[0]
-                if steps
-                else gamma_zero
-            )
-            timings.append(time.perf_counter() - started)
-        if gamma is None:
-            raise RuntimeError("inference timing did not run")
+        gamma_zero = core.encode(batch, test_embeddings, word_topic)
+        gamma = (
+            local_vb(
+                batch,
+                gamma_zero,
+                core.alpha,
+                expected_log_beta,
+                steps=steps,
+                tolerance=None,
+            )[0]
+            if steps
+            else gamma_zero
+        )
         elbo = local_document_elbo(batch, gamma, core.alpha, expected_log_beta)
         theta = gamma / gamma.sum(dim=1, keepdim=True)
         posterior_kl = (
@@ -394,8 +386,6 @@ def evaluate_model(
                 theta.cpu().numpy(),
                 beta,
             ),
-            "median_milliseconds_including_encoder": 1_000.0
-            * float(np.median(timings)),
         }
     return {
         "reference_tail_gain_per_token": reference.tail_gain_per_token,
@@ -414,7 +404,7 @@ def run_seed(args: argparse.Namespace, seed: int) -> dict[str, Any]:
     )
     results: dict[str, Any] = {"seed": seed, "methods": {}}
     models: dict[str, HybridLDAModel] = {}
-    training_records: dict[str, tuple[float, list[dict[str, float]]]] = {}
+    training_records: dict[str, list[dict[str, float]]] = {}
     for name in METHODS:
         model = build_frozen_topic_model(
             corpus,
@@ -427,7 +417,6 @@ def run_seed(args: argparse.Namespace, seed: int) -> dict[str, Any]:
         prior_before = [
             parameter.detach().clone() for parameter in model._core.prior_parameters()
         ]
-        started = time.perf_counter()
         if name == "semi_amortized":
             history = model.finalize_inference()
         else:
@@ -436,7 +425,6 @@ def run_seed(args: argparse.Namespace, seed: int) -> dict[str, Any]:
                 epochs=args.encoder_epochs,
                 target_steps=model.config.training_local_steps,
             )
-        training_seconds = time.perf_counter() - started
         if not torch.equal(topics_before, model._core.lambda_posterior):
             raise RuntimeError("an inference objective changed the frozen topics")
         if any(
@@ -449,15 +437,13 @@ def run_seed(args: argparse.Namespace, seed: int) -> dict[str, Any]:
         ):
             raise RuntimeError("an inference objective changed the structured prior")
         models[name] = model
-        training_records[name] = (training_seconds, history)
+        training_records[name] = history
 
     reference = build_common_reference(models, corpus)
     for name in METHODS:
         model = models[name]
-        training_seconds, history = training_records[name]
         results["methods"][name] = {
-            "training_seconds": training_seconds,
-            "final_training_metrics": history[-1],
+            "final_training_metrics": training_records[name][-1],
             **evaluate_model(
                 model,
                 corpus,
@@ -523,8 +509,6 @@ def aggregate(
             "relative_reduction_in_across_seed_mean_gap": gap_reduction,
             "paired_gap_reductions": paired_reductions,
             "fractional_change_in_across_seed_mean_zero_step_nll": zero_nll_change,
-            "passes_exploratory_acceptance_criterion": gap_reduction >= 0.10
-            and zero_nll_change <= 0.05,
         },
     }
 

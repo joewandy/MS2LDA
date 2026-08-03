@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import copy
 from collections import Counter
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
@@ -101,7 +101,6 @@ class HybridLDAModel:
         self.docs: list[HybridDocument] = []
         self.used_vocabs: list[str] = []
         self.history: list[dict[str, float]] = []
-        self.inference_history: list[dict[str, float]] = []
         self._word_embeddings: dict[str, np.ndarray] = {}
         self._vocab_index: dict[str, int] = {}
         self._matrix: sp.csr_matrix | None = None
@@ -114,7 +113,6 @@ class HybridLDAModel:
         self._rng = np.random.default_rng(config.seed)
         self._inference_only = False
         self._inference_finalized = False
-        self._finalization_in_progress = False
 
     @property
     def alpha(self) -> np.ndarray:
@@ -369,9 +367,8 @@ class HybridLDAModel:
         *,
         expected_log_beta: torch.Tensor,
         word_topic: torch.Tensor,
-        progress_callback: Callable[[dict[str, float]], None] | None,
     ) -> list[dict[str, float]]:
-        """Optimize the fixed two-step ELBO while lifecycle state is locked."""
+        """Optimize the fixed two-step ELBO against frozen topics."""
         if self._core is None or self._matrix is None:
             raise RuntimeError("model is not prepared")
         core = self._core
@@ -456,17 +453,10 @@ class HybridLDAModel:
                 "zero_step_elbo_per_token": zero_elbo_sum / max(token_sum, EPSILON),
                 "encoder_gradient_norm": gradient_norm_sum / max(batches, 1),
             }
-            self.inference_history.append(metrics)
-            phase_history.append(dict(metrics))
-            if progress_callback is not None:
-                progress_callback(dict(metrics))
+            phase_history.append(metrics)
         return phase_history
 
-    def finalize_inference(
-        self,
-        *,
-        progress_callback: Callable[[dict[str, float]], None] | None = None,
-    ) -> list[dict[str, float]]:
+    def finalize_inference(self) -> list[dict[str, float]]:
         """Freeze discovery and fit the supported document-inference encoder.
 
         This one-way operation is the second required training stage. A fresh
@@ -481,12 +471,6 @@ class HybridLDAModel:
         responsibilities are never used by the discovery update. Once this
         method succeeds, topic training cannot resume and the model can be
         used for new-document inference or saved as an inference artifact.
-
-        Parameters
-        ----------
-        progress_callback
-            Optional function called after each finalization epoch with a
-            defensive copy of that epoch's scalar diagnostics.
 
         Returns
         -------
@@ -507,13 +491,11 @@ class HybridLDAModel:
         before optimization. Back-propagation therefore follows
         ``encoder -> gamma[0] -> gamma[1] -> gamma[2] -> local ELBO`` but has no
         route into the learned topics or structured word prior. If optimization
-        or a callback raises, encoder parameters, random-generator state,
-        history, and module mode are restored before the exception propagates.
+        fails, encoder parameters, random-generator state, and module mode are
+        restored before the exception propagates.
         """
         if self._inference_only:
             raise RuntimeError("an inference artifact has no training documents")
-        if self._finalization_in_progress:
-            raise RuntimeError("document inference finalization is already in progress")
         if self._inference_finalized:
             raise RuntimeError("document inference has already been finalized")
         if self._epochs < 1:
@@ -531,13 +513,10 @@ class HybridLDAModel:
             parameter.detach().clone() for parameter in core.encoder_parameters()
         ]
         rng_snapshot = copy.deepcopy(self._rng.bit_generator.state)
-        history_length = len(self.inference_history)
         previous_module_mode = core.training
 
-        # The lifecycle lock also prevents callbacks from resuming discovery.
-        # On any failure, the operation restores all state it could have changed
-        # so a later explicit retry starts from the same model and RNG stream.
-        self._finalization_in_progress = True
+        # On failure, restore every state changed by optimization so an explicit
+        # retry starts from the same model and random-number stream.
         try:
             expected_log_beta = _expected_log_dirichlet(lambda_snapshot).detach()
             word_topic = torch.softmax(
@@ -546,7 +525,6 @@ class HybridLDAModel:
             phase_history = self._optimize_inference_encoder(
                 expected_log_beta=expected_log_beta,
                 word_topic=word_topic,
-                progress_callback=progress_callback,
             )
             if not torch.equal(lambda_snapshot, core.lambda_posterior):
                 raise RuntimeError("inference finalization unexpectedly changed topics")
@@ -577,7 +555,6 @@ class HybridLDAModel:
                 ):
                     parameter.copy_(snapshot)
             self._rng.bit_generator.state = copy.deepcopy(rng_snapshot)
-            del self.inference_history[history_length:]
             self._inference_finalized = False
             core.train(previous_module_mode)
             raise
@@ -585,8 +562,6 @@ class HybridLDAModel:
             self._inference_finalized = True
             core.eval()
             return phase_history
-        finally:
-            self._finalization_in_progress = False
 
     def _fit_epoch(self) -> dict[str, float]:
         """Run one classical local-VB and global expected-count cycle."""
@@ -659,12 +634,7 @@ class HybridLDAModel:
         self.history.append(metrics)
         return metrics
 
-    def train(
-        self,
-        iter: int | None = None,
-        *,
-        progress_callback: Callable[[dict[str, float]], None] | None = None,
-    ) -> None:
+    def train(self, iter: int | None = None) -> None:
         """Advance classical topic discovery by at most ``iter`` epochs.
 
         Each epoch refines training-document variational factors, accumulates
@@ -676,10 +646,6 @@ class HybridLDAModel:
         Repeated calls are supported until :meth:`finalize_inference` succeeds.
         Finalization permanently declares the current topics frozen, after
         which this method raises instead of silently making the encoder stale.
-        ``progress_callback`` receives a copy of the three scalar discovery
-        diagnostics from each completed epoch. If the callback finalizes
-        inference from that completed state, discovery stops immediately so
-        the finalized encoder cannot become stale.
 
         Parameters
         ----------
@@ -687,8 +653,6 @@ class HybridLDAModel:
             Maximum additional discovery epochs. ``None`` uses
             ``config.max_epochs``; zero prepares the model but performs no
             global update.
-        progress_callback
-            Optional function called after each completed discovery epoch.
 
         Raises
         ------
@@ -700,8 +664,6 @@ class HybridLDAModel:
         """
         if self._inference_only:
             raise RuntimeError("a loaded inference artifact cannot resume training")
-        if self._finalization_in_progress:
-            raise RuntimeError("topic discovery cannot run during finalization")
         if self._inference_finalized:
             raise RuntimeError("topic discovery cannot resume after finalization")
         epochs = self.config.max_epochs if iter is None else int(iter)
@@ -720,10 +682,6 @@ class HybridLDAModel:
                 self._converged = self._stable_epochs >= self.config.global_patience
             else:
                 self._stable_epochs = 0
-            if progress_callback is not None:
-                progress_callback(dict(metrics))
-                if self._inference_finalized:
-                    break
         self._refresh_training_documents()
 
     @torch.no_grad()

@@ -33,29 +33,6 @@ For more detailed installation options and development setup:
 
 ---
 
-## Experimental hybrid LDA reference
-
-The isolated [`ms2lda_hybrid`](ms2lda_hybrid) package combines classical
-variational LDA topic discovery with frozen DreaMS features and a
-semi-amortized new-document inference stage. It does not change the production
-`MS2LDA` package, CLI, dashboard, or Tomotopy backend.
-
-The exact model, assumptions, limitations, and validation status are specified
-in [`docs/hybrid_lda_method.tex`](docs/hybrid_lda_method.tex). A pinned Python
-3.11 environment is provided in [`environment-hybrid.yml`](environment-hybrid.yml).
-After creating it, install the DreaMS commit named in the method document and
-this checkout with `--no-deps`. The reproducible inference-only experiment is:
-
-```bash
-python -m benchmarks.semi_amortized_inference
-```
-
-That synthetic experiment tests limited-budget inference under fixed oracle
-topics; it is not evidence of improved topic discovery or chemical motif
-quality.
-
----
-
 ## Command Line Tool Usage
 
 MS2LDA provides powerful command-line tools for batch processing and analysis of mass spectrometry data.

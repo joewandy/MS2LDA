@@ -265,13 +265,10 @@ $\boldsymbol\lambda$ and all structured-prior parameters are treated as fixed,
 and a fresh Adam optimizer updates only the document encoder and spectrum
 projector for 12 epochs by default. The implementation snapshots and checks the
 topic posterior and every trainable structured-prior parameter bit-for-bit
-before declaring finalization successful. If optimization or a progress
-callback fails, it restores the encoder, random-generator state, history, and
-module mode. Topic discovery cannot resume after successful finalization, and
-new-document inference and checkpoint saving are unavailable beforehand.
-If a discovery progress callback finalizes the just-completed epoch, the outer
-discovery loop detects the one-way state transition and stops before another
-topic update.
+before declaring finalization successful. If optimization fails, it restores
+the encoder, random-generator state, and module mode. Topic discovery cannot
+resume after successful finalization, and new-document inference and
+checkpoint saving are unavailable beforehand.
 
 For a candidate document posterior $\boldsymbol\gamma_d$, write
 \begin{equation}
@@ -536,14 +533,13 @@ package is pinned at
 the embedding path and prevents DreaMS's moving \code{msml@main} requirement
 from replacing the exact architecture commit.
 
-The reference can be installed and tested with:
+From the repository root, the checkout-local reference can be tested with:
 {\footnotesize
 \begin{verbatim}
 conda env create -f environment-hybrid.yml
 conda activate ms2lda-hybrid
 python -m pip install --no-deps \
   "git+https://github.com/pluskal-lab/DreaMS.git@dbec3a0b514a99e5056cfccde4559fda8cfe8129"
-python -m pip install --no-deps -e .
 python -m pytest -q tests/test_hybrid_lda.py
 python -m benchmarks.semi_amortized_inference
 \end{verbatim}
