@@ -30,6 +30,7 @@ classifiers = [
 
 packages = [
   { include = "MS2LDA" },
+  { include = "ms2lda_hybrid" },
   { include = "App" },
   { include = "scripts" },          # for scripts.ms2lda_runfull
   { include = "massql4motifs" }     # Vendored until merged upstream
@@ -108,8 +109,14 @@ kaleido = { version = "0.2.1", optional = true }
 diskcache = ">=5.6.3"
 dash-extensions = "==1.0.20"
 
+# Isolated Hybrid LDA research API. DreaMS itself remains a separately pinned
+# --no-deps install because its upstream metadata pins moving Git dependencies.
+torch = { version = "2.6.0", optional = true }
+h5py = { version = "3.11.0", optional = true }
+
 [tool.poetry.extras]
 notebook = ["ipython", "jupyterlab", "kaleido"]
+hybrid   = ["torch", "h5py"]
 lite     = []          # enables:  pip install ms2lda[lite] --no-binary rdkit
 
 [tool.poetry.group.dev.dependencies]
