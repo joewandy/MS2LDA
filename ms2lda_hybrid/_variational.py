@@ -8,8 +8,10 @@ from dataclasses import dataclass
 import numpy as np
 import scipy.sparse as sp
 import torch
+from scipy.special import digamma, gammaln, polygamma
 
 EPSILON = 1e-12
+ALPHA_FLOOR = 1e-9
 
 
 @dataclass(frozen=True)
@@ -24,6 +26,89 @@ class SparseBatch:
     word_counts: torch.Tensor
     word_mask: torch.Tensor
     totals: torch.Tensor
+
+
+def dirichlet_prior_objective(
+    alpha: np.ndarray,
+    expected_log_theta_sum: np.ndarray,
+    document_count: int,
+) -> float:
+    """Return the alpha-dependent variational objective for one corpus."""
+    values = np.asarray(alpha, dtype=np.float64)
+    expected_logs = np.asarray(expected_log_theta_sum, dtype=np.float64)
+    if (
+        values.ndim != 1
+        or expected_logs.shape != values.shape
+        or document_count < 1
+        or not np.all(np.isfinite(values))
+        or not np.all(np.isfinite(expected_logs))
+        or np.any(values <= 0)
+    ):
+        raise ValueError("invalid Dirichlet alpha objective inputs")
+    normalizer = document_count * (gammaln(values.sum()) - float(gammaln(values).sum()))
+    return float(normalizer + np.dot(values - 1.0, expected_logs))
+
+
+def estimate_dirichlet_alpha(
+    initial_alpha: np.ndarray,
+    expected_log_theta_sum: np.ndarray,
+    document_count: int,
+    *,
+    max_iterations: int = 100,
+    tolerance: float = 1e-6,
+) -> np.ndarray:
+    """Estimate an asymmetric document-topic prior with guarded Newton steps.
+
+    ``expected_log_theta_sum`` is the training-corpus sum of
+    ``E_q[log(theta_d)]``. Candidate Newton steps are backtracked until they
+    remain positive and do not reduce the alpha-dependent variational
+    objective.
+    """
+    alpha = np.asarray(initial_alpha, dtype=np.float64).copy()
+    expected_logs = np.asarray(expected_log_theta_sum, dtype=np.float64)
+    if max_iterations < 1 or not np.isfinite(tolerance) or tolerance <= 0:
+        raise ValueError("invalid Dirichlet alpha optimizer settings")
+    objective = dirichlet_prior_objective(alpha, expected_logs, document_count)
+    for _ in range(max_iterations):
+        gradient = (
+            document_count * (digamma(alpha.sum()) - digamma(alpha)) + expected_logs
+        )
+        diagonal = -document_count * polygamma(1, alpha)
+        shared = document_count * float(polygamma(1, alpha.sum()))
+        correction = float(
+            np.sum(gradient / diagonal) / (1.0 / shared + np.sum(1.0 / diagonal))
+        )
+        step = -(gradient - correction) / diagonal
+        if not np.all(np.isfinite(step)):
+            raise FloatingPointError("non-finite Dirichlet alpha Newton step")
+
+        scale = 1.0
+        accepted = False
+        while scale >= 2.0**-30:
+            candidate = alpha + scale * step
+            if np.all(candidate >= ALPHA_FLOOR):
+                candidate_objective = dirichlet_prior_objective(
+                    candidate,
+                    expected_logs,
+                    document_count,
+                )
+                if candidate_objective >= objective - 1e-10:
+                    accepted = True
+                    break
+            scale *= 0.5
+        if not accepted:
+            raise FloatingPointError("Dirichlet alpha line search failed")
+
+        relative_change = float(
+            np.max(np.abs(candidate - alpha) / np.maximum(alpha, ALPHA_FLOOR))
+        )
+        alpha = candidate
+        objective = candidate_objective
+        if relative_change < tolerance:
+            break
+    if not np.all(np.isfinite(alpha)) or np.any(alpha < ALPHA_FLOOR):
+        raise FloatingPointError("invalid optimized Dirichlet alpha")
+    return alpha
 
 
 def make_sparse_batch(

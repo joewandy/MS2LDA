@@ -20,6 +20,7 @@ class HybridLDAConfig:
     # LDA and input dimensions.
     num_topics: int
     embedding_dim: int
+    # Initialization for the asymmetric training-only empirical-Bayes update.
     alpha: float | tuple[float, ...] = 0.1
     eta: float = 0.01
 

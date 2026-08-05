@@ -1,0 +1,33 @@
+{
+  "schema_version": "msnlib-validation/output-schema-v1",
+  "artifacts": {
+    "code_manifest.json": "SHA-256 map of every benchmark and Hybrid source file affecting the frozen run.",
+    "completion_manifest.jsonl": "One validation/test row with immutable observed and completion physical-peak indices.",
+    "config.resolved.json": "Canonical frozen scientific configuration.",
+    "core/seed_<seed>/hybrid/checkpoint_resume_audit.json": "Selected or rejected Hybrid checkpoint generations and their frozen context hash.",
+    "core/seed_<seed>/hybrid/checkpoints/checkpoint-*.json": "SHA-256 sidecar for one atomic discovery or encoder epoch checkpoint; only the newest configured generations are retained.",
+    "core/seed_<seed>/hybrid/checkpoints/checkpoint-*.pt": "External weights-only resumable state containing topics, gamma, optimizers, RNG, counters, and histories but no duplicated spectra or feature cache.",
+    "core_artifact_reuse.json": "Hash inventory and source-protocol provenance when a derived execution-only run reuses completed DreaMS and Tomotopy artifacts.",
+    "core/complete.json": "Proof that every required seed and both topic-model methods completed.",
+    "core/seed_<seed>/<method>/complete.json": "Per-method metrics, initial/final alpha summaries, execution settings, and SHA-256 digests for every consumed beta, theta, and finalized model artifact.",
+    "environment.json": "Python, operating-system, hardware, and dependency provenance at freeze time.",
+    "execution_log.jsonl": "Append-only exact stage commands, executables, Conda environments, timestamps, and status.",
+    "features/manifest.json": "DreaMS cache dimensions, provenance, leakage flags, timing, memory, and output hashes.",
+    "freeze_summary.json": "Source parsing, split, vocabulary, document-completion, and zero-leak audit counts.",
+    "input_manifest.json": "Absolute input locations, byte sizes, and SHA-256 digests.",
+    "mag/complete.json": "Proof of all per-seed MAG arms, filtered-index provenance, raw-DreaMS completion, and legacy environment.",
+    "mag/seed_<seed>/<method>/topics.jsonl": "Per-topic MAG retrieval, clustering, SOS, coverage, and error rows whose SHA-256 is declared by the method result.",
+    "model_assignments.json": "Chemistry-free spectrum-ID to partition map consumed by model workers.",
+    "protocol.lock.json": "Self-hashed lock over configuration, manifests, source, command, branch, commit, dirty state, prior test inspection, and any execution-only parent derivation.",
+    "report/mag_agreement.jsonl": "Same-seed matched MACCS consensus agreement; similarity, not correctness.",
+    "report/mag_per_seed.jsonl": "MAG coverage, SOS, failure, runtime, memory, and exclusion audit for every method and seed.",
+    "report/manuscript_results.tex": "Generated seed-median or explicitly single-seed-indicative table for transcription into the method document.",
+    "report/per_seed_metrics.csv": "One row per required seed and inference arm with predictive, convergence, alpha, diversity, timing, and memory metrics.",
+    "report/summary.json": "Complete per-seed and aggregate report including limitations and raw-DreaMS baseline.",
+    "report/topic_similarity.jsonl": "Optimal topic matches within methods across seeds when available and between methods within seeds.",
+    "split_manifest.jsonl": "One source-spectrum row with partition and chemistry fields for independent leakage auditing.",
+    "vocabulary.json": "Sorted vocabulary constructed from training spectra only."
+  },
+  "null_policy": "JSON null denotes an unavailable or inapplicable metric; NaN and infinity are forbidden.",
+  "result_scope": "Generated run artifacts stay outside Git; smoke outputs are software validation only."
+}

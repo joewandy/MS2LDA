@@ -10,6 +10,7 @@ on:
       - "pyproject.toml"
       - "poetry.lock"
       - "tests/test_hybrid_lda.py"
+      - "tests/test_msnlib_validation.py"
   push:
     branches:
       - main
@@ -21,6 +22,7 @@ on:
       - "pyproject.toml"
       - "poetry.lock"
       - "tests/test_hybrid_lda.py"
+      - "tests/test_msnlib_validation.py"
 
 permissions:
   contents: read
@@ -45,13 +47,17 @@ jobs:
       - name: Check formatting
         run: >-
           python -m black --check
-          ms2lda_hybrid benchmarks tests/test_hybrid_lda.py
+          ms2lda_hybrid benchmarks
+          tests/test_hybrid_lda.py tests/test_msnlib_validation.py
       - name: Check imports and runtime errors
         run: >-
           python -m ruff check --select E4,E7,E9,F,I
-          ms2lda_hybrid benchmarks tests/test_hybrid_lda.py
+          ms2lda_hybrid benchmarks
+          tests/test_hybrid_lda.py tests/test_msnlib_validation.py
       - name: Run focused tests
-        run: python -m pytest --noconftest -q tests/test_hybrid_lda.py
+        run: >-
+          python -m pytest --noconftest -q
+          tests/test_hybrid_lda.py tests/test_msnlib_validation.py
       - name: Verify the built wheel contains the Hybrid LDA package
         run: |
           python -m build --wheel

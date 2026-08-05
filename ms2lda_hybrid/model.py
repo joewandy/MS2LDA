@@ -10,8 +10,9 @@ updates. The document encoder never contributes counts to topic discovery.
 from __future__ import annotations
 
 import copy
+import os
 from collections import Counter
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
@@ -23,6 +24,7 @@ from ._core import HybridLDACore as _HybridLDACore
 from ._torch_safety import require_patched_torch
 from ._variational import (
     EPSILON,
+    estimate_dirichlet_alpha,
     observed_token_nll,
 )
 from ._variational import (
@@ -48,9 +50,12 @@ from .dreams_features import parse_spectral_word
 
 CHECKPOINT_FORMAT = "ms2lda-hybrid-reference"
 CHECKPOINT_VERSION = 3
+TRAINING_CHECKPOINT_FORMAT = "ms2lda-hybrid-training-state"
+TRAINING_CHECKPOINT_VERSION = 1
 INFERENCE_REFINEMENT_STEPS = 2
 ZERO_STEP_ELBO_WEIGHT = 0.1
 TopicWord = tuple[str, float]
+TrainingCheckpointCallback = Callable[["HybridLDAModel", str, int], None]
 
 
 @dataclass
@@ -114,6 +119,9 @@ class HybridLDAModel:
         self._rng = np.random.default_rng(config.seed)
         self._inference_only = False
         self._inference_finalized = False
+        self._inference_epochs_completed = 0
+        self._inference_history: list[dict[str, float]] = []
+        self._inference_optimizer_state: dict[str, object] | None = None
 
     @property
     def alpha(self) -> np.ndarray:
@@ -144,7 +152,7 @@ class HybridLDAModel:
 
     @property
     def converged(self) -> bool:
-        """Whether topic discovery met its fixed-prior stopping rule.
+        """Whether topic discovery met its global stopping rule.
 
         This flag does not imply that document inference has been finalized;
         inspect :attr:`inference_finalized` for that separate lifecycle state.
@@ -376,6 +384,7 @@ class HybridLDAModel:
         *,
         expected_log_beta: torch.Tensor,
         word_topic: torch.Tensor,
+        checkpoint_callback: TrainingCheckpointCallback | None = None,
     ) -> list[dict[str, float]]:
         """Optimize the fixed two-step ELBO against frozen topics."""
         if self._core is None or self._matrix is None:
@@ -385,10 +394,15 @@ class HybridLDAModel:
             core.encoder_parameters(),
             lr=self.config.encoder_learning_rate,
         )
+        if self._inference_optimizer_state is not None:
+            optimizer.load_state_dict(self._inference_optimizer_state)
         corpus_tokens = float(self._matrix.sum())
         corpus_documents = len(self.docs)
-        phase_history: list[dict[str, float]] = []
-        for phase_epoch in range(1, self.config.inference_epochs + 1):
+        phase_history = copy.deepcopy(self._inference_history)
+        for phase_epoch in range(
+            self._inference_epochs_completed + 1,
+            self.config.inference_epochs + 1,
+        ):
             core.train()
             shuffled = self._rng.permutation(corpus_documents)
             loss_sum = 0.0
@@ -463,9 +477,18 @@ class HybridLDAModel:
                 "encoder_gradient_norm": gradient_norm_sum / max(batches, 1),
             }
             phase_history.append(metrics)
+            self._inference_epochs_completed = phase_epoch
+            self._inference_history = copy.deepcopy(phase_history)
+            self._inference_optimizer_state = copy.deepcopy(optimizer.state_dict())
+            if checkpoint_callback is not None:
+                checkpoint_callback(self, "encoder", phase_epoch)
         return phase_history
 
-    def finalize_inference(self) -> list[dict[str, float]]:
+    def finalize_inference(
+        self,
+        *,
+        checkpoint_callback: TrainingCheckpointCallback | None = None,
+    ) -> list[dict[str, float]]:
         """Freeze discovery and fit the supported document-inference encoder.
 
         This one-way operation is the second required training stage. A fresh
@@ -515,6 +538,7 @@ class HybridLDAModel:
             raise RuntimeError("model is not prepared")
         core = self._core
         lambda_snapshot = core.lambda_posterior.detach().clone()
+        alpha_snapshot = core.alpha.detach().clone()
         prior_snapshot = [
             parameter.detach().clone() for parameter in core.prior_parameters()
         ]
@@ -522,6 +546,9 @@ class HybridLDAModel:
             parameter.detach().clone() for parameter in core.encoder_parameters()
         ]
         rng_snapshot = copy.deepcopy(self._rng.bit_generator.state)
+        inference_epoch_snapshot = self._inference_epochs_completed
+        inference_history_snapshot = copy.deepcopy(self._inference_history)
+        inference_optimizer_snapshot = copy.deepcopy(self._inference_optimizer_state)
         previous_module_mode = core.training
 
         # On failure, restore every state changed by optimization so an explicit
@@ -534,9 +561,12 @@ class HybridLDAModel:
             phase_history = self._optimize_inference_encoder(
                 expected_log_beta=expected_log_beta,
                 word_topic=word_topic,
+                checkpoint_callback=checkpoint_callback,
             )
             if not torch.equal(lambda_snapshot, core.lambda_posterior):
                 raise RuntimeError("inference finalization unexpectedly changed topics")
+            if not torch.equal(alpha_snapshot, core.alpha):
+                raise RuntimeError("inference finalization unexpectedly changed alpha")
             if any(
                 not torch.equal(previous, current)
                 for previous, current in zip(
@@ -551,6 +581,7 @@ class HybridLDAModel:
         except BaseException:
             with torch.no_grad():
                 core.lambda_posterior.copy_(lambda_snapshot)
+                core.alpha.copy_(alpha_snapshot)
                 for parameter, snapshot in zip(
                     core.prior_parameters(),
                     prior_snapshot,
@@ -564,10 +595,14 @@ class HybridLDAModel:
                 ):
                     parameter.copy_(snapshot)
             self._rng.bit_generator.state = copy.deepcopy(rng_snapshot)
+            self._inference_epochs_completed = inference_epoch_snapshot
+            self._inference_history = inference_history_snapshot
+            self._inference_optimizer_state = inference_optimizer_snapshot
             self._inference_finalized = False
             core.train(previous_module_mode)
             raise
         else:
+            self._inference_history = copy.deepcopy(phase_history)
             self._inference_finalized = True
             core.eval()
             return phase_history
@@ -582,6 +617,7 @@ class HybridLDAModel:
         # neural document encoder is completely absent from topic discovery.
         statistics = torch.zeros_like(core.lambda_posterior)
         updated_gamma = np.empty((len(self.docs), self.k), dtype=np.float32)
+        expected_log_theta_sum = np.zeros(self.k, dtype=np.float64)
         with torch.no_grad():
             expected_log_beta = _expected_log_dirichlet(core.lambda_posterior)
             for start in range(0, len(self.docs), self.config.batch_size):
@@ -600,6 +636,9 @@ class HybridLDAModel:
                     tolerance=self.config.local_tolerance,
                 )
                 updated_gamma[indices] = gamma.cpu().numpy()
+                expected_log_theta_sum += (
+                    _expected_log_dirichlet(gamma.double()).sum(dim=0).cpu().numpy()
+                )
                 statistics += _expected_topic_word_counts(
                     batch,
                     phi,
@@ -607,6 +646,28 @@ class HybridLDAModel:
                     vocab_size=self.num_vocabs,
                 )
         self._gamma = updated_gamma
+
+        # Training-only empirical Bayes update for the document-topic prior.
+        # This is independent of chemical identities and the neural encoder.
+        previous_alpha = core.alpha.detach().clone()
+        optimized_alpha = estimate_dirichlet_alpha(
+            previous_alpha.cpu().numpy(),
+            expected_log_theta_sum,
+            len(self.docs),
+        )
+        core.alpha.copy_(
+            torch.as_tensor(
+                optimized_alpha,
+                device=core.alpha.device,
+                dtype=core.alpha.dtype,
+            )
+        )
+        alpha_denominator = previous_alpha.abs().sum().clamp_min(EPSILON)
+        alpha_change = float(
+            ((core.alpha - previous_alpha).abs().sum() / alpha_denominator)
+            .detach()
+            .cpu()
+        )
 
         # M-step: lambda is exactly structured prior plus expected counts.
         previous = core.lambda_posterior.detach().clone()
@@ -638,12 +699,22 @@ class HybridLDAModel:
         metrics = {
             "epoch": float(epoch),
             "lambda_relative_change": lambda_change,
+            "alpha_relative_change": alpha_change,
+            "alpha_sum": float(core.alpha.sum().detach().cpu()),
+            "alpha_min": float(core.alpha.min().detach().cpu()),
+            "alpha_median": float(np.median(self.alpha)),
+            "alpha_max": float(core.alpha.max().detach().cpu()),
             "prior_loss": prior_loss_value,
         }
         self.history.append(metrics)
         return metrics
 
-    def train(self, iter: int | None = None) -> None:
+    def train(
+        self,
+        iter: int | None = None,
+        *,
+        checkpoint_callback: TrainingCheckpointCallback | None = None,
+    ) -> None:
         """Advance classical topic discovery by at most ``iter`` epochs.
 
         Each epoch refines training-document variational factors, accumulates
@@ -675,6 +746,10 @@ class HybridLDAModel:
             raise RuntimeError("a loaded inference artifact cannot resume training")
         if self._inference_finalized:
             raise RuntimeError("topic discovery cannot resume after finalization")
+        if self._inference_epochs_completed:
+            raise RuntimeError(
+                "topic discovery cannot resume after encoder training has started"
+            )
         epochs = self.config.max_epochs if iter is None else int(iter)
         if epochs < 0:
             raise ValueError("iter cannot be negative")
@@ -686,11 +761,14 @@ class HybridLDAModel:
             if (
                 self._epochs > self.config.prior_training_epochs
                 and metrics["lambda_relative_change"] < self.config.global_tolerance
+                and metrics["alpha_relative_change"] < self.config.global_tolerance
             ):
                 self._stable_epochs += 1
                 self._converged = self._stable_epochs >= self.config.global_patience
             else:
                 self._stable_epochs = 0
+            if checkpoint_callback is not None:
+                checkpoint_callback(self, "discovery", self._epochs)
         self._refresh_training_documents()
 
     @torch.no_grad()
@@ -875,6 +953,183 @@ class HybridLDAModel:
         return [
             (self._vocabulary[index], float(distribution[index])) for index in indices
         ]
+
+    def save_training_checkpoint(
+        self,
+        filename: str | Path,
+        *,
+        context_sha256: str,
+    ) -> None:
+        """Atomically save resumable discovery or encoder-training state.
+
+        This format is intentionally separate from :meth:`save`. It contains
+        the free-topic posterior, retained local variational factors, both
+        optimizer states, random-generator state, convergence counters, and
+        completed histories. Training documents and DreaMS feature arrays are
+        not duplicated; callers must reconstruct those immutable inputs and
+        supply their frozen context hash to :meth:`restore_training_checkpoint`.
+        """
+        if self._inference_only:
+            raise RuntimeError("an inference artifact has no resumable training state")
+        if self._inference_finalized:
+            raise RuntimeError(
+                "finalized inference does not need a training checkpoint"
+            )
+        if (
+            self._core is None
+            or self._matrix is None
+            or self._gamma is None
+            or self._prior_optimizer is None
+        ):
+            raise RuntimeError("fit at least one discovery epoch before checkpointing")
+        context = str(context_sha256)
+        if len(context) != 64 or any(
+            character not in "0123456789abcdef" for character in context
+        ):
+            raise ValueError("context_sha256 must be a lowercase SHA-256 digest")
+        phase = "encoder" if self._inference_epochs_completed else "discovery"
+        phase_epoch = (
+            self._inference_epochs_completed if phase == "encoder" else self._epochs
+        )
+        payload: dict[str, object] = {
+            "format": TRAINING_CHECKPOINT_FORMAT,
+            "version": TRAINING_CHECKPOINT_VERSION,
+            "context_sha256": context,
+            "config": asdict(self.config),
+            "phase": phase,
+            "phase_epoch": phase_epoch,
+            "vocabulary": list(self._vocabulary),
+            "document_count": len(self.docs),
+            "matrix_shape": tuple(int(value) for value in self._matrix.shape),
+            "matrix_nnz": int(self._matrix.nnz),
+            "matrix_token_sum": float(self._matrix.sum()),
+            "core_state_dict": self._core.state_dict(),
+            "prior_optimizer_state_dict": self._prior_optimizer.state_dict(),
+            "gamma": torch.from_numpy(self._gamma.copy()),
+            "discovery_epochs": self._epochs,
+            "discovery_converged": self._converged,
+            "stable_epochs": self._stable_epochs,
+            "discovery_history": copy.deepcopy(self.history),
+            "numpy_rng_state": copy.deepcopy(self._rng.bit_generator.state),
+            "torch_rng_state": torch.get_rng_state(),
+            "inference_epochs_completed": self._inference_epochs_completed,
+            "inference_history": copy.deepcopy(self._inference_history),
+            "inference_optimizer_state_dict": copy.deepcopy(
+                self._inference_optimizer_state
+            ),
+            "module_training": self._core.training,
+        }
+        destination = Path(filename)
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        temporary = destination.with_name(f".{destination.name}.{os.getpid()}.tmp")
+        try:
+            with temporary.open("wb") as handle:
+                torch.save(payload, handle)
+                handle.flush()
+                os.fsync(handle.fileno())
+            os.replace(temporary, destination)
+        finally:
+            temporary.unlink(missing_ok=True)
+
+    def restore_training_checkpoint(
+        self,
+        filename: str | Path,
+        *,
+        context_sha256: str,
+    ) -> dict[str, int | str]:
+        """Restore a safe training checkpoint onto identical attached inputs.
+
+        The caller must first attach the same word embeddings and training
+        documents used by the saved run. The context hash, model configuration,
+        vocabulary, document count, sparse-matrix shape, nonzero count, and
+        token total are checked before any saved optimization state is accepted.
+        """
+        if self._core is not None or self._epochs:
+            raise RuntimeError("restore into a fresh model before calling train")
+        if self._inference_only or self._inference_finalized:
+            raise RuntimeError("cannot restore training state into a finalized model")
+        require_patched_torch(torch, operation="hybrid training checkpoint loading")
+        payload = torch.load(
+            Path(filename),
+            map_location=self.device,
+            weights_only=True,
+        )
+        if payload.get("format") != TRAINING_CHECKPOINT_FORMAT:
+            raise ValueError("not an MS2LDA HybridLDA training checkpoint")
+        if payload.get("version") != TRAINING_CHECKPOINT_VERSION:
+            raise ValueError("unsupported training checkpoint version")
+        if payload.get("context_sha256") != str(context_sha256):
+            raise ValueError("training checkpoint context hash mismatch")
+        if payload.get("config") != asdict(self.config):
+            raise ValueError("training checkpoint configuration mismatch")
+
+        self._prepare()
+        if self._core is None or self._matrix is None or self._prior_optimizer is None:
+            raise RuntimeError("model preparation failed")
+        if list(payload.get("vocabulary", [])) != list(self._vocabulary):
+            raise ValueError("training checkpoint vocabulary mismatch")
+        expected_matrix = {
+            "document_count": len(self.docs),
+            "matrix_shape": tuple(int(value) for value in self._matrix.shape),
+            "matrix_nnz": int(self._matrix.nnz),
+            "matrix_token_sum": float(self._matrix.sum()),
+        }
+        for name, expected in expected_matrix.items():
+            observed = payload.get(name)
+            if observed != expected:
+                raise ValueError(f"training checkpoint {name} mismatch")
+
+        phase = str(payload.get("phase"))
+        if phase not in {"discovery", "encoder"}:
+            raise ValueError("training checkpoint phase is invalid")
+        discovery_epochs = int(payload.get("discovery_epochs", -1))
+        inference_epochs = int(payload.get("inference_epochs_completed", -1))
+        if not 0 <= discovery_epochs <= self.config.max_epochs:
+            raise ValueError("training checkpoint discovery epoch is invalid")
+        if not 0 <= inference_epochs <= self.config.inference_epochs:
+            raise ValueError("training checkpoint inference epoch is invalid")
+        if (phase == "discovery" and inference_epochs) or (
+            phase == "encoder" and inference_epochs < 1
+        ):
+            raise ValueError("training checkpoint phase counters are inconsistent")
+        phase_epoch = inference_epochs if phase == "encoder" else discovery_epochs
+        if int(payload.get("phase_epoch", -1)) != phase_epoch:
+            raise ValueError("training checkpoint phase epoch is inconsistent")
+
+        gamma_value = payload.get("gamma")
+        if not isinstance(gamma_value, torch.Tensor):
+            raise ValueError("training checkpoint gamma is missing")
+        gamma = gamma_value.detach().cpu().numpy().astype(np.float32, copy=True)
+        if gamma.shape != (len(self.docs), self.k):
+            raise ValueError("training checkpoint gamma shape mismatch")
+        if not np.all(np.isfinite(gamma)) or np.any(gamma <= 0):
+            raise ValueError("training checkpoint gamma is invalid")
+
+        self._core.load_state_dict(payload["core_state_dict"], strict=True)
+        self._prior_optimizer.load_state_dict(payload["prior_optimizer_state_dict"])
+        self._gamma = gamma
+        self._epochs = discovery_epochs
+        self._converged = bool(payload.get("discovery_converged"))
+        self._stable_epochs = int(payload.get("stable_epochs", 0))
+        self.history = copy.deepcopy(payload.get("discovery_history", []))
+        self._rng.bit_generator.state = copy.deepcopy(payload["numpy_rng_state"])
+        torch_rng_state = payload.get("torch_rng_state")
+        if not isinstance(torch_rng_state, torch.Tensor):
+            raise ValueError("training checkpoint torch RNG state is missing")
+        torch.set_rng_state(torch_rng_state.detach().cpu())
+        self._inference_epochs_completed = inference_epochs
+        self._inference_history = copy.deepcopy(payload.get("inference_history", []))
+        self._inference_optimizer_state = copy.deepcopy(
+            payload.get("inference_optimizer_state_dict")
+        )
+        self._inference_finalized = False
+        self._core.train(bool(payload.get("module_training", False)))
+        return {
+            "phase": phase,
+            "phase_epoch": phase_epoch,
+            "discovery_epochs": discovery_epochs,
+            "inference_epochs_completed": inference_epochs,
+        }
 
     def save(self, filename: str | Path) -> None:
         """Save the finalized model as a weights-only inference artifact.

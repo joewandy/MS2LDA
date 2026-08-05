@@ -25,6 +25,7 @@ dependencies:
       - wandb==0.16.4
       - pandarallel==1.6.5
       - matchms==0.27.0
+      - tomotopy==0.13.0
       - "pyopenms==3.3.0; sys_platform == 'darwin'"
       - "pyopenms==3.4.0; sys_platform != 'darwin'"
       - igraph==0.11.4
