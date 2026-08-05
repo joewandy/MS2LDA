@@ -67,6 +67,46 @@ def _normalize(values: np.ndarray) -> np.ndarray:
     return np.divide(matrix, norms, out=np.zeros_like(matrix), where=norms > 0)
 
 
+def _exact_nearest_cosine(
+    train_embeddings: np.ndarray,
+    query_embeddings: np.ndarray,
+    *,
+    batch_size: int = 128,
+) -> tuple[np.ndarray, np.ndarray, int]:
+    """Return exact nearest rows with blocked PyTorch matrix products."""
+    import torch
+
+    if batch_size < 1:
+        raise ValueError("raw-DreaMS batch size must be positive")
+    train = np.asarray(train_embeddings, dtype=np.float32)
+    query = np.asarray(query_embeddings, dtype=np.float32)
+    if (
+        train.ndim != 2
+        or query.ndim != 2
+        or train.shape[1] != query.shape[1]
+        or not len(train)
+        or not len(query)
+    ):
+        raise ValueError("raw-DreaMS matrices must be nonempty and dimension-aligned")
+    threads = min(4, max(1, int(os.cpu_count() or 1)))
+    torch.set_num_threads(threads)
+    try:
+        torch.set_num_interop_threads(1)
+    except RuntimeError:
+        if torch.get_num_interop_threads() != 1:
+            raise
+    train_tensor = torch.from_numpy(np.ascontiguousarray(train))
+    similarities = np.empty(len(query), dtype=np.float32)
+    neighbours = np.empty(len(query), dtype=np.int64)
+    for start in range(0, len(query), batch_size):
+        stop = min(start + batch_size, len(query))
+        query_tensor = torch.from_numpy(np.ascontiguousarray(query[start:stop]))
+        values, indices = torch.mm(query_tensor, train_tensor.T).max(dim=1)
+        similarities[start:stop] = values.numpy()
+        neighbours[start:stop] = indices.numpy()
+    return similarities, neighbours, threads
+
+
 def audit_mag_exclusion(
     excluded_connectivity: set[str], retained_connectivity: Iterable[str]
 ) -> dict[str, int]:
@@ -474,7 +514,6 @@ def run_mag_for_model(
 
 def run_raw_dreams_baseline(run_dir: str | Path) -> dict[str, Any]:
     """Evaluate exact DreaMS nearest-neighbour structural similarity."""
-    import faiss
     from rdkit import Chem, DataStructs
     from rdkit.Chem import AllChem
 
@@ -504,10 +543,11 @@ def run_raw_dreams_baseline(run_dir: str | Path) -> dict[str, Any]:
     test_embeddings = _normalize(
         np.asarray(embeddings[[row_by_id[row.spectrum_id] for row in test]])
     )
-    index = faiss.IndexFlatIP(train_embeddings.shape[1])
-    index.add(train_embeddings)
     started = time.perf_counter()
-    similarities, neighbours = index.search(test_embeddings, 1)
+    similarities, neighbours, search_threads = _exact_nearest_cosine(
+        train_embeddings,
+        test_embeddings,
+    )
     search_seconds = time.perf_counter() - started
 
     def fingerprint(smiles: str):
@@ -517,7 +557,7 @@ def run_raw_dreams_baseline(run_dir: str | Path) -> dict[str, Any]:
     train_fps = {}
     test_fps = {}
     rows = []
-    for test_index, neighbour in enumerate(neighbours[:, 0]):
+    for test_index, neighbour in enumerate(neighbours):
         query = test[test_index]
         match = train[int(neighbour)]
         query_fp = test_fps.setdefault(query.smiles, fingerprint(query.smiles))
@@ -526,7 +566,7 @@ def run_raw_dreams_baseline(run_dir: str | Path) -> dict[str, Any]:
             {
                 "spectrum_id": query.spectrum_id,
                 "nearest_train_spectrum_id": match.spectrum_id,
-                "dreams_cosine": float(similarities[test_index, 0]),
+                "dreams_cosine": float(similarities[test_index]),
                 "connectivity_match": query.connectivity_key == match.connectivity_key,
                 "scaffold_match": query.split_group == match.split_group,
                 "morgan_tanimoto": float(
@@ -540,7 +580,9 @@ def run_raw_dreams_baseline(run_dir: str | Path) -> dict[str, Any]:
             handle.write(json.dumps(row, sort_keys=True, separators=(",", ":")) + "\n")
     result = {
         "method": "raw_dreams",
+        "nearest_neighbor_backend": "exact_blocked_pytorch",
         "protocol_sha256": lock["protocol_sha256"],
+        "search_cpu_threads": search_threads,
         "test_spectra": len(rows),
         "search_seconds": search_seconds,
         "peak_rss_bytes": peak_rss_bytes(),
@@ -621,7 +663,7 @@ def run_all_mag(run_dir: str | Path, *, data_root: str | Path) -> dict[str, Any]
             results.append(read_json(result_path))
     dreams_path = directory / "mag" / "raw_dreams" / "complete.json"
     if not dreams_path.exists():
-        worker("_run-raw-dreams")
+        raise RuntimeError("run _run-raw-dreams in ms2lda-hybrid before legacy MAG")
     dreams = read_json(dreams_path)
     manifest = {
         "protocol_sha256": lock["protocol_sha256"],

@@ -49,6 +49,14 @@ def _parser() -> argparse.ArgumentParser:
     freeze_derived.add_argument("--source-run", type=Path, required=True)
     freeze_derived.add_argument("--reason")
 
+    freeze_continuation = commands.add_parser("freeze-continuation")
+    freeze_continuation.add_argument("--config", type=Path, required=True)
+    freeze_continuation.add_argument("--data-root", type=Path, required=True)
+    freeze_continuation.add_argument("--run", type=Path, required=True)
+    freeze_continuation.add_argument("--repo-root", type=Path, default=Path.cwd())
+    freeze_continuation.add_argument("--source-run", type=Path, required=True)
+    freeze_continuation.add_argument("--reason", required=True)
+
     reuse = commands.add_parser("reuse-core-artifacts")
     reuse.add_argument("--run", type=Path, required=True)
     reuse.add_argument("--source-run", type=Path, required=True)
@@ -147,6 +155,27 @@ def _run(args: argparse.Namespace) -> dict[str, Any]:
             test_results_inspected=True,
             derivation=derivation,
         )
+    if args.command == "freeze-continuation":
+        from .protocol import (
+            freeze_protocol,
+            validate_convergence_continuation_derivation,
+        )
+
+        config = load_config(args.config)
+        derivation = validate_convergence_continuation_derivation(
+            args.source_run,
+            config,
+            args.reason,
+        )
+        return freeze_protocol(
+            config,
+            config_path=args.config,
+            data_root=args.data_root,
+            run_dir=args.run,
+            repo_root=args.repo_root,
+            test_results_inspected=True,
+            derivation=derivation,
+        )
     if args.command == "reuse-core-artifacts":
         from .reuse import reuse_core_artifacts
 
@@ -197,12 +226,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     """Dispatch one benchmark stage and emit its JSON result."""
     args = _parser().parse_args(argv)
     run = getattr(args, "run", None)
-    if run is not None and args.command not in {"freeze", "freeze-derived"}:
+    freeze_commands = {"freeze", "freeze-derived", "freeze-continuation"}
+    if run is not None and args.command not in freeze_commands:
         _append_execution(run, status="started")
     try:
         result = _run(args)
     except BaseException:
-        if run is not None and args.command not in {"freeze", "freeze-derived"}:
+        if run is not None and args.command not in freeze_commands:
             _append_execution(run, status="failed")
         raise
     if run is not None:

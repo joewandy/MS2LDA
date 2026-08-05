@@ -35,43 +35,51 @@ The driver sequence is:
    machine-readable and manuscript-ready results.
 
 The active single-seed run uses six Tomotopy workers, four Hybrid training
-threads, one held-out inference thread, at most 50 Hybrid discovery epochs with
-early stopping, and two rotating atomic checkpoints. Re-running `run-core`
-resumes the newest valid checkpoint.
+threads, one held-out inference thread, and two rotating atomic checkpoints.
+Its initial 50-epoch ceiling was reached with the topic-word matrix below the
+frozen tolerance but training-only alpha still changing by 0.0141. No Hybrid
+test result, MAG result, or report was produced. The disclosed continuation
+keeps every stopping criterion unchanged, raises only the safety ceiling to 250
+total epochs, and resumes the verified epoch-50 state. Early stopping remains
+mandatory after five stable epochs.
 
 ## Current full-data indicative run
 
 ```bash
 DATA=/Users/joewandy/Work/data/MS2LDA-msnlib-validation/zenodo/20179680
-RUN=/Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/indicative-msnlib-k1000-seed42
+SOURCE=/Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/indicative-msnlib-k1000-seed42
+RUN="$SOURCE/continuation"
 CONFIG=benchmarks/msnlib_validation/configs/indicative-msnlib-k1000-seed42.json
 
 conda run -n ms2lda-hybrid python -m benchmarks.msnlib_validation \
-  validate-inputs --config "$CONFIG" --data-root "$DATA" \
-  --output "$RUN/input_manifest.json"
+  freeze-continuation --config "$CONFIG" --data-root "$DATA" --run "$RUN" \
+  --repo-root "$PWD" --source-run "$SOURCE" \
+  --reason "epoch 50 retained training-only alpha change above the frozen tolerance"
 conda run -n ms2lda-hybrid python -m benchmarks.msnlib_validation \
-  preflight --config "$CONFIG" --data-root "$DATA" \
-  --output "${RUN}.preflight.json"
-conda run -n ms2lda-hybrid python -m benchmarks.msnlib_validation \
-  freeze --config "$CONFIG" --data-root "$DATA" --run "$RUN" \
-  --repo-root "$PWD" --test-results-inspected
+  reuse-core-artifacts --source-run "$SOURCE" --run "$RUN"
 
 export DATA RUN
-caffeinate -dimsu /bin/zsh -lc '
+/bin/zsh -lc '
   set -e
   cd /Users/joewandy/Work/git/MS2LDA
   conda run --no-capture-output -n ms2lda-hybrid \
     python -m benchmarks.msnlib_validation run-core --run "$RUN"
+  conda run --no-capture-output -n ms2lda-hybrid \
+    python -m benchmarks.msnlib_validation _run-raw-dreams --run "$RUN"
   conda run --no-capture-output -n MS2LDA_v2 \
     python -m benchmarks.msnlib_validation run-mag \
       --run "$RUN" --data-root "$DATA"
   conda run --no-capture-output -n ms2lda-hybrid \
     python -m benchmarks.msnlib_validation report --run "$RUN"
-' > "$RUN/unattended.log" 2>&1
+' >> "$RUN/unattended.log" 2>&1
 ```
 
-The lock deliberately records that earlier test results had already been
-inspected before this scientific correction. No old result artifact is reused.
+The continuation lock records that prior test results had been inspected, that
+the trigger uses training state only, and that every setting except the maximum
+epoch safety ceiling is unchanged. Feature data and the completed Tomotopy arm
+are hash-verified before reuse. The two retained Hybrid checkpoints are
+rebound to the continuation protocol without changing model, optimizer,
+variational, RNG, convergence, or patience state.
 
 ## Software smoke test
 

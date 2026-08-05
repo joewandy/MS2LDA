@@ -702,47 +702,55 @@ There is one active run name, with no result-version suffix:
 {\footnotesize
 \begin{verbatim}
 DATA=/Users/joewandy/Work/data/MS2LDA-msnlib-validation/zenodo/20179680
-RUN=/Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/indicative-msnlib-k1000-seed42
+SOURCE=/Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/indicative-msnlib-k1000-seed42
+RUN="$SOURCE/continuation"
 CFG=benchmarks/msnlib_validation/configs/indicative-msnlib-k1000-seed42.json
 
 conda run -n ms2lda-hybrid python -m benchmarks.msnlib_validation \
-  validate-inputs --config "$CFG" --data-root "$DATA" \
-  --output "$RUN/input_manifest.json"
+  freeze-continuation --config "$CFG" --data-root "$DATA" \
+  --run "$RUN" --repo-root "$PWD" --source-run "$SOURCE" \
+  --reason "epoch 50 retained training-only alpha change above tolerance"
 conda run -n ms2lda-hybrid python -m benchmarks.msnlib_validation \
-  preflight --config "$CFG" --data-root "$DATA" \
-  --output "\${RUN}.preflight.json"
-conda run -n ms2lda-hybrid python -m benchmarks.msnlib_validation \
-  freeze --config "$CFG" --data-root "$DATA" --run "$RUN" \
-  --repo-root "$PWD" --test-results-inspected
+  reuse-core-artifacts --source-run "$SOURCE" --run "$RUN"
 
 export DATA RUN
-caffeinate -dimsu /bin/zsh -lc '
+/bin/zsh -lc '
   set -e
   cd /Users/joewandy/Work/git/MS2LDA
   conda run --no-capture-output -n ms2lda-hybrid \
     python -m benchmarks.msnlib_validation run-core --run "$RUN"
+  conda run --no-capture-output -n ms2lda-hybrid \
+    python -m benchmarks.msnlib_validation _run-raw-dreams --run "$RUN"
   conda run --no-capture-output -n MS2LDA_v2 \
     python -m benchmarks.msnlib_validation run-mag \
       --run "$RUN" --data-root "$DATA"
   conda run --no-capture-output -n ms2lda-hybrid \
     python -m benchmarks.msnlib_validation report --run "$RUN"
-' > "$RUN/unattended.log" 2>&1
+' >> "$RUN/unattended.log" 2>&1
 \end{verbatim}
 }
 The indicative configuration uses six Tomotopy workers in partition mode, four
 PyTorch intra-operation threads for Hybrid discovery and encoder fitting, and
-one thread for all held-out inference and latency measurements. It permits at
-most 50 discovery epochs with early stopping and retains the newest two atomic
-checkpoints. If Hybrid does not satisfy both global convergence criteria, the
-driver retains the latest checkpoint and stops before encoder finalization,
-MAG, or reporting.
+one thread for all held-out inference and latency measurements. The initial
+run reached its 50-epoch safety ceiling: the topic-word relative change was
+$1.99\times10^{-4}$, below the frozen $10^{-3}$ tolerance, while the
+training-only alpha relative change was 0.0141. The driver therefore retained
+the checkpoint and stopped before encoder finalization, MAG, or reporting.
+The disclosed continuation changes only the maximum safety ceiling, from 50 to
+250 total epochs. It preserves the $10^{-3}$ tolerance, five-epoch patience,
+model and optimizer states, variational factors, random-number-generator state,
+and every data and evaluation setting. It resumes epoch 50 and still stops as
+soon as both global criteria remain satisfied for five epochs.
 
 \subsection{Results and discussion}
 
-Corrected real-data results are pending. This section will be populated only
-from the completed, hash-verified report under the active run path above. The
-historical SOS membership threshold remains frozen at 0.5; it will not be
-lowered after inspecting the corrected mixtures.
+Corrected real-data results are pending. Reaching epoch 50 without alpha
+convergence is training-status evidence, not a held-out or chemical result.
+The continuation decision used no Hybrid test mixture, MAG score, or chemical
+annotation. This section will be populated only from the completed,
+hash-verified report under the continuation path above. The historical SOS
+membership threshold remains frozen at 0.5; it will not be lowered after
+inspecting the corrected mixtures.
 
 Until that report completes, the deterministic smoke test, synthetic
 oracle-topic benchmark, checkpoint equivalence tests, alpha-estimation tests,

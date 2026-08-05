@@ -1031,6 +1031,98 @@ class HybridLDAModel:
         finally:
             temporary.unlink(missing_ok=True)
 
+    @staticmethod
+    def extend_training_checkpoint(
+        source: str | Path,
+        destination: str | Path,
+        *,
+        source_context_sha256: str,
+        target_context_sha256: str,
+        target_max_epochs: int,
+    ) -> dict[str, int | str]:
+        """Rebind a stopped discovery checkpoint to a larger epoch ceiling.
+
+        This narrowly scoped migration exists for an audited continuation
+        after a frozen run reaches its maximum discovery epoch without
+        convergence. It preserves every tensor, optimizer state, variational
+        factor, RNG state, stopping tolerance, and patience counter. The only
+        accepted configuration change is a strictly larger ``max_epochs``.
+        Encoder-phase or already-converged checkpoints are rejected.
+        """
+        require_patched_torch(torch, operation="hybrid training checkpoint loading")
+        source_path = Path(source)
+        destination_path = Path(destination)
+        if source_path.resolve() == destination_path.resolve():
+            raise ValueError("checkpoint continuation requires a new destination")
+        for name, value in {
+            "source_context_sha256": source_context_sha256,
+            "target_context_sha256": target_context_sha256,
+        }.items():
+            context = str(value)
+            if len(context) != 64 or any(
+                character not in "0123456789abcdef" for character in context
+            ):
+                raise ValueError(f"{name} must be a lowercase SHA-256 digest")
+        if (
+            isinstance(target_max_epochs, bool)
+            or not isinstance(target_max_epochs, int)
+            or target_max_epochs < 1
+        ):
+            raise ValueError("target_max_epochs must be a positive integer")
+
+        payload = torch.load(source_path, map_location="cpu", weights_only=True)
+        if payload.get("format") != TRAINING_CHECKPOINT_FORMAT:
+            raise ValueError("not an MS2LDA HybridLDA training checkpoint")
+        if payload.get("version") != TRAINING_CHECKPOINT_VERSION:
+            raise ValueError("unsupported training checkpoint version")
+        if payload.get("context_sha256") != str(source_context_sha256):
+            raise ValueError("source training checkpoint context hash mismatch")
+        saved_config = payload.get("config")
+        if not isinstance(saved_config, dict):
+            raise ValueError("training checkpoint configuration is missing")
+        source_max_epochs = saved_config.get("max_epochs")
+        if (
+            isinstance(source_max_epochs, bool)
+            or not isinstance(source_max_epochs, int)
+            or target_max_epochs <= source_max_epochs
+        ):
+            raise ValueError("continuation must strictly increase max_epochs")
+        if payload.get("phase") != "discovery":
+            raise ValueError("only a discovery checkpoint can be continued")
+        discovery_epochs = int(payload.get("discovery_epochs", -1))
+        if not 0 < discovery_epochs <= source_max_epochs:
+            raise ValueError("source checkpoint discovery epoch is invalid")
+        if bool(payload.get("discovery_converged")):
+            raise ValueError("a converged checkpoint does not need continuation")
+        if int(payload.get("inference_epochs_completed", -1)) != 0:
+            raise ValueError("continuation cannot follow encoder training")
+        if int(payload.get("phase_epoch", -1)) != discovery_epochs:
+            raise ValueError("source checkpoint phase epoch is inconsistent")
+
+        rebound_config = dict(saved_config)
+        rebound_config["max_epochs"] = target_max_epochs
+        payload["config"] = rebound_config
+        payload["context_sha256"] = str(target_context_sha256)
+        destination_path.parent.mkdir(parents=True, exist_ok=True)
+        temporary = destination_path.with_name(
+            f".{destination_path.name}.{os.getpid()}.tmp"
+        )
+        try:
+            with temporary.open("wb") as handle:
+                torch.save(payload, handle)
+                handle.flush()
+                os.fsync(handle.fileno())
+            os.replace(temporary, destination_path)
+        finally:
+            temporary.unlink(missing_ok=True)
+        return {
+            "discovery_epochs": discovery_epochs,
+            "source_max_epochs": source_max_epochs,
+            "target_max_epochs": target_max_epochs,
+            "source_context_sha256": str(source_context_sha256),
+            "target_context_sha256": str(target_context_sha256),
+        }
+
     def restore_training_checkpoint(
         self,
         filename: str | Path,

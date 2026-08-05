@@ -708,6 +708,73 @@ def test_training_checkpoint_rejects_wrong_context(tmp_path: Path) -> None:
         )
 
 
+def test_nonconverged_checkpoint_can_only_extend_epoch_ceiling(
+    tmp_path: Path,
+) -> None:
+    source_context = "1" * 64
+    target_context = "2" * 64
+    source = tmp_path / "source.pt"
+    rebound = tmp_path / "rebound.pt"
+    source_config = small_config()
+    model = attached_model(source_config)
+    model.train(source_config.max_epochs)
+    assert model._epochs == source_config.max_epochs
+    assert not model.converged
+    model.save_training_checkpoint(source, context_sha256=source_context)
+
+    migration = HybridLDAModel.extend_training_checkpoint(
+        source,
+        rebound,
+        source_context_sha256=source_context,
+        target_context_sha256=target_context,
+        target_max_epochs=6,
+    )
+    assert migration["discovery_epochs"] == source_config.max_epochs
+    assert migration["source_max_epochs"] == source_config.max_epochs
+    assert migration["target_max_epochs"] == 6
+
+    target_config = replace(source_config, max_epochs=6)
+    restored = attached_model(target_config)
+    progress = restored.restore_training_checkpoint(
+        rebound,
+        context_sha256=target_context,
+    )
+    assert progress["discovery_epochs"] == source_config.max_epochs
+    assert restored.history == model.history
+    assert restored._core is not None and model._core is not None
+    for name, expected in model._core.state_dict().items():
+        torch.testing.assert_close(
+            restored._core.state_dict()[name], expected, rtol=0, atol=0
+        )
+    restored.train(1)
+    assert restored._epochs == source_config.max_epochs + 1
+
+    with pytest.raises(ValueError, match="strictly increase"):
+        HybridLDAModel.extend_training_checkpoint(
+            source,
+            tmp_path / "same-limit.pt",
+            source_context_sha256=source_context,
+            target_context_sha256=target_context,
+            target_max_epochs=source_config.max_epochs,
+        )
+
+    premature = attached_model(replace(source_config, max_epochs=4))
+    premature.train(3)
+    premature_checkpoint = tmp_path / "premature.pt"
+    premature.save_training_checkpoint(
+        premature_checkpoint,
+        context_sha256=source_context,
+    )
+    fallback = HybridLDAModel.extend_training_checkpoint(
+        premature_checkpoint,
+        tmp_path / "fallback-rebound.pt",
+        source_context_sha256=source_context,
+        target_context_sha256=target_context,
+        target_max_epochs=6,
+    )
+    assert fallback["discovery_epochs"] == 3
+
+
 def test_rotating_checkpoints_fall_back_from_corrupt_latest(tmp_path: Path) -> None:
     context_sha256 = "e" * 64
     output = tmp_path / "hybrid"

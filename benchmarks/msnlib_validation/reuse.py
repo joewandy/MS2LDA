@@ -10,7 +10,11 @@ from pathlib import Path
 from typing import Any
 
 from .config import file_sha256, load_config, read_json, write_json
-from .protocol import validate_execution_only_derivation, verify_protocol
+from .protocol import (
+    validate_convergence_continuation_derivation,
+    validate_execution_only_derivation,
+    verify_protocol,
+)
 
 IDENTICAL_FROZEN_ARTIFACTS = (
     "split_manifest.jsonl",
@@ -18,6 +22,26 @@ IDENTICAL_FROZEN_ARTIFACTS = (
     "completion_manifest.jsonl",
     "vocabulary.json",
 )
+
+
+def _validate_target_derivation(
+    source_directory: Path,
+    target_config: Any,
+    recorded: dict[str, Any],
+) -> dict[str, Any]:
+    """Recompute the recorded derivation with its matching strict validator."""
+    reason = recorded.get("reason")
+    if recorded.get("kind") == "training_convergence_continuation":
+        return validate_convergence_continuation_derivation(
+            source_directory,
+            target_config,
+            reason,
+        )
+    return validate_execution_only_derivation(
+        source_directory,
+        target_config,
+        reason,
+    )
 
 
 def _inventory(directory: Path) -> dict[str, dict[str, int | str]]:
@@ -140,6 +164,151 @@ def _verify_hybrid_source(
     return result_dir, result, _inventory(result_dir)
 
 
+def _verify_hybrid_continuation_source(
+    source_directory: Path,
+    *,
+    seed: int,
+    source_max_epochs: int,
+    checkpoint_keep: int,
+    training_threads: int,
+) -> tuple[Path, list[tuple[Path, dict[str, Any]]]]:
+    """Verify the retained nonconverged checkpoints selected for continuation."""
+    result_dir = source_directory / "core" / f"seed_{seed}" / "hybrid"
+    if (result_dir / "complete.json").exists():
+        raise ValueError("a completed Hybrid result does not need continuation")
+    checkpoint_dir = result_dir / "checkpoints"
+    candidates = sorted(checkpoint_dir.glob("checkpoint-*.json"), reverse=True)
+    required = min(2, checkpoint_keep)
+    if len(candidates) < required:
+        raise ValueError("source continuation lacks two checkpoint generations")
+    selected: list[tuple[Path, dict[str, Any]]] = []
+    for sidecar in candidates[:checkpoint_keep]:
+        metadata = read_json(sidecar)
+        filename = str(metadata.get("file", ""))
+        binary = (checkpoint_dir / filename).resolve()
+        if not filename or binary.parent != checkpoint_dir.resolve():
+            raise ValueError("source checkpoint filename escapes its directory")
+        if not binary.is_file():
+            raise FileNotFoundError(f"source checkpoint is missing: {binary}")
+        if binary.stat().st_size != int(metadata.get("bytes", -1)):
+            raise ValueError("source checkpoint byte size mismatch")
+        if file_sha256(binary) != metadata.get("sha256"):
+            raise ValueError("source checkpoint SHA-256 mismatch")
+        if metadata.get("phase") != "discovery":
+            raise ValueError("source continuation checkpoint is not discovery state")
+        if int(metadata.get("training_cpu_threads", -1)) != training_threads:
+            raise ValueError("source checkpoint training thread count mismatch")
+        selected.append((sidecar, metadata))
+    latest = read_json(checkpoint_dir / "latest.json")
+    if latest != selected[0][1]:
+        raise ValueError("source latest checkpoint does not match newest sidecar")
+    if int(latest.get("phase_epoch", -1)) != source_max_epochs:
+        raise ValueError("source checkpoint did not reach its frozen maximum")
+    contexts = {str(metadata.get("context_sha256")) for _, metadata in selected}
+    if len(contexts) != 1:
+        raise ValueError("source checkpoint generations have different contexts")
+    return result_dir, list(reversed(selected))
+
+
+def _import_hybrid_continuation(
+    *,
+    source_directory: Path,
+    target_directory: Path,
+    source_config: Any,
+    target_config: Any,
+    target_lock: dict[str, Any],
+    seed: int,
+    checkpoints: list[tuple[Path, dict[str, Any]]],
+    common_provenance: dict[str, Any],
+) -> dict[str, Any]:
+    """Rebind verified source checkpoints to the derived protocol context."""
+    from ms2lda_hybrid import HybridLDAModel
+
+    from .models import _hybrid_checkpoint_context, prepare_documents
+    from .runtime import load_feature_cache
+
+    target_result_dir = target_directory / "core" / f"seed_{seed}" / "hybrid"
+    if target_result_dir.exists():
+        manifest = read_json(target_result_dir / "continuation_import.json")
+        if manifest.get("source_protocol_sha256") != common_provenance.get(
+            "source_protocol_sha256"
+        ):
+            raise FileExistsError("target Hybrid continuation has different provenance")
+        return manifest
+
+    data = prepare_documents(target_directory)
+    _, _, _, feature_manifest = load_feature_cache(target_directory)
+    target_context = _hybrid_checkpoint_context(
+        directory=target_directory,
+        lock=target_lock,
+        config=target_config,
+        seed=seed,
+        data=data,
+        feature_manifest=feature_manifest,
+    )
+    temporary = (
+        target_result_dir.parent / f".{target_result_dir.name}.import-{os.getpid()}"
+    )
+    if temporary.exists():
+        raise FileExistsError(f"reuse staging directory already exists: {temporary}")
+    checkpoint_dir = temporary / "checkpoints"
+    checkpoint_dir.mkdir(parents=True)
+    imported = []
+    try:
+        for source_sidecar, source_metadata in checkpoints:
+            source_binary = source_sidecar.parent / str(source_metadata["file"])
+            target_binary = checkpoint_dir / source_binary.name
+            migration = HybridLDAModel.extend_training_checkpoint(
+                source_binary,
+                target_binary,
+                source_context_sha256=str(source_metadata["context_sha256"]),
+                target_context_sha256=target_context,
+                target_max_epochs=target_config.hybrid_max_epochs,
+            )
+            metadata = copy.deepcopy(source_metadata)
+            metadata.update(
+                {
+                    "bytes": target_binary.stat().st_size,
+                    "context_sha256": target_context,
+                    "continuation_import": True,
+                    "sha256": file_sha256(target_binary),
+                    "source_checkpoint_sha256": source_metadata["sha256"],
+                    "source_sidecar_sha256": file_sha256(source_sidecar),
+                }
+            )
+            target_sidecar = checkpoint_dir / source_sidecar.name
+            write_json(target_sidecar, metadata)
+            imported.append({"metadata": metadata, "migration": migration})
+        newest = imported[-1]["metadata"]
+        write_json(checkpoint_dir / "latest.json", newest)
+        with (checkpoint_dir / "events.jsonl").open("w", encoding="utf-8") as handle:
+            import json
+
+            for row in imported:
+                handle.write(
+                    json.dumps(row["metadata"], sort_keys=True, separators=(",", ":"))
+                    + "\n"
+                )
+        manifest = {
+            **common_provenance,
+            "all_other_settings_unchanged": True,
+            "imported_checkpoints": imported,
+            "seed": seed,
+            "source_max_epochs": source_config.hybrid_max_epochs,
+            "stopping_rule_unchanged": True,
+            "target_context_sha256": target_context,
+            "target_max_epochs": target_config.hybrid_max_epochs,
+            "trigger_uses_training_state_only": True,
+        }
+        write_json(temporary / "continuation_import.json", manifest)
+        os.replace(temporary, target_result_dir)
+        return manifest
+    except BaseException:
+        if temporary.exists():
+            shutil.rmtree(temporary)
+        raise
+
+
 def reuse_core_artifacts(
     source_run: str | Path,
     target_run: str | Path,
@@ -149,13 +318,15 @@ def reuse_core_artifacts(
     target_directory = Path(target_run).expanduser().resolve()
     source_lock = verify_protocol(source_directory, verify_code=False)
     target_lock = verify_protocol(target_directory)
+    source_config = load_config(source_directory / "config.resolved.json")
     target_config = load_config(target_directory / "config.resolved.json")
-    derivation = validate_execution_only_derivation(
+    recorded_derivation = target_lock.get("derivation", {})
+    derivation = _validate_target_derivation(
         source_directory,
         target_config,
-        target_lock.get("derivation", {}).get("reason"),
+        recorded_derivation,
     )
-    if target_lock.get("derivation") != derivation:
+    if recorded_derivation != derivation:
         raise ValueError("target lock does not contain the validated derivation")
     if target_lock.get("test_results_inspected") is not True:
         raise ValueError("derived lock must disclose prior test-result inspection")
@@ -174,6 +345,8 @@ def reuse_core_artifacts(
     )
     tomotopy_sources = {}
     hybrid_sources = {}
+    continuation_sources = {}
+    is_continuation = derivation.get("kind") == "training_convergence_continuation"
     for seed in target_config.seeds:
         tomotopy_sources[seed] = _verify_tomotopy_source(
             source_directory,
@@ -189,6 +362,14 @@ def reuse_core_artifacts(
             training_threads=target_config.hybrid_training_cpu_threads,
             inference_threads=target_config.hybrid_inference_cpu_threads,
         )
+        if is_continuation:
+            _, continuation_sources[seed] = _verify_hybrid_continuation_source(
+                source_directory,
+                seed=seed,
+                source_max_epochs=source_config.hybrid_max_epochs,
+                checkpoint_keep=source_config.hybrid_checkpoint_keep,
+                training_threads=source_config.hybrid_training_cpu_threads,
+            )
 
     created_utc = datetime.now(timezone.utc).isoformat()
     common_provenance = {
@@ -279,12 +460,26 @@ def reuse_core_artifacts(
             "result_sha256": file_sha256(target_result_dir / "complete.json"),
         }
 
+    continued_hybrid = {}
+    for seed, checkpoints in continuation_sources.items():
+        continued_hybrid[str(seed)] = _import_hybrid_continuation(
+            source_directory=source_directory,
+            target_directory=target_directory,
+            source_config=source_config,
+            target_config=target_config,
+            target_lock=target_lock,
+            seed=seed,
+            checkpoints=checkpoints,
+            common_provenance=common_provenance,
+        )
+
     summary = {
         "chemical_evidence": False,
         "created_utc": created_utc,
         "derivation": derivation,
         "feature_source_inventory": source_feature_inventory,
         "reused": {
+            "continued_hybrid": continued_hybrid,
             "features": True,
             "hybrid": reused_hybrid,
             "tomotopy": reused_tomotopy,

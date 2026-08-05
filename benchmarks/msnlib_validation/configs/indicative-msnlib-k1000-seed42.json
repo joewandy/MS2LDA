@@ -12,7 +12,7 @@
   "hybrid_global_patience": 5,
   "hybrid_inference_cpu_threads": 1,
   "hybrid_inference_epochs": 12,
-  "hybrid_max_epochs": 50,
+  "hybrid_max_epochs": 250,
   "hybrid_reference_extension_steps": 100,
   "hybrid_reference_steps": 50,
   "hybrid_training_cpu_threads": 4,

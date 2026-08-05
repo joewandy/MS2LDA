@@ -15,6 +15,7 @@ import benchmarks.msnlib_validation.features as validation_features
 import benchmarks.msnlib_validation.models as validation_models
 import benchmarks.msnlib_validation.protocol as validation_protocol
 import benchmarks.msnlib_validation.reuse as validation_reuse
+import benchmarks.msnlib_validation.runtime as validation_runtime
 from benchmarks.msnlib_validation.config import (
     BenchmarkConfig,
     file_sha256,
@@ -34,6 +35,7 @@ from benchmarks.msnlib_validation.data import (
     renormalize_peak_groups,
 )
 from benchmarks.msnlib_validation.mag import (
+    _exact_nearest_cosine,
     _require_frozen_data_root,
     audit_mag_exclusion,
 )
@@ -48,6 +50,7 @@ from benchmarks.msnlib_validation.metrics import (
     word_cooccurrence_npmi,
 )
 from benchmarks.msnlib_validation.smoke import run_smoke
+from ms2lda_hybrid import HybridLDAConfig, HybridLDAModel
 
 
 def _config(*, expected_spectra: int = 1) -> BenchmarkConfig:
@@ -374,7 +377,7 @@ def test_indicative_configuration_changes_only_scope_seed_and_parallelism() -> N
     assert indicative.seeds == (42,)
     assert indicative.num_topics == 1_000
     assert indicative.expected_spectra == 41_568
-    assert indicative.hybrid_max_epochs == 50
+    assert indicative.hybrid_max_epochs == 250
     assert indicative.hybrid_training_cpu_threads == 4
     assert indicative.hybrid_inference_cpu_threads == 1
     assert indicative.tomotopy_training_parallel == 3
@@ -606,6 +609,199 @@ def test_derived_protocol_rejects_scientific_changes(
         )
 
 
+def test_convergence_continuation_only_increases_epoch_ceiling(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    source = load_config(
+        "benchmarks/msnlib_validation/configs/indicative-msnlib-k1000-seed42.json"
+    )
+    source = replace(source, hybrid_max_epochs=50)
+    target = replace(source, hybrid_max_epochs=250)
+    monkeypatch.setattr(
+        validation_protocol,
+        "verify_protocol",
+        lambda *_args, **_kwargs: {"protocol_sha256": "a" * 64},
+    )
+    monkeypatch.setattr(validation_protocol, "load_config", lambda _: source)
+
+    derivation = validation_protocol.validate_convergence_continuation_derivation(
+        "/source",
+        target,
+        "epoch 50 retained training-only alpha change above the frozen tolerance",
+    )
+    assert derivation["kind"] == "training_convergence_continuation"
+    assert derivation["execution_only"] is False
+    assert derivation["stopping_rule_unchanged"] is True
+    assert derivation["trigger_uses_training_state_only"] is True
+    assert set(derivation["differences"]) == {"hybrid_max_epochs"}
+
+    with pytest.raises(ValueError, match="must increase"):
+        validation_protocol.validate_convergence_continuation_derivation(
+            "/source",
+            source,
+            "no increase",
+        )
+    with pytest.raises(ValueError, match="only hybrid_max_epochs"):
+        validation_protocol.validate_convergence_continuation_derivation(
+            "/source",
+            replace(target, membership_threshold=0.4),
+            "invalid post-inspection threshold change",
+        )
+    with pytest.raises(ValueError, match="explicit reason"):
+        validation_protocol.validate_convergence_continuation_derivation(
+            "/source",
+            target,
+        )
+
+
+def test_continuation_source_requires_two_verified_generations(
+    tmp_path: Path,
+) -> None:
+    checkpoint_dir = tmp_path / "core" / "seed_42" / "hybrid" / "checkpoints"
+    checkpoint_dir.mkdir(parents=True)
+    rows = []
+    for epoch in (49, 50):
+        binary = checkpoint_dir / f"checkpoint-{epoch:04d}-discovery-{epoch:04d}.pt"
+        binary.write_bytes(f"checkpoint-{epoch}".encode())
+        row = {
+            "bytes": binary.stat().st_size,
+            "context_sha256": "a" * 64,
+            "file": binary.name,
+            "phase": "discovery",
+            "phase_epoch": epoch,
+            "sequence": epoch,
+            "sha256": file_sha256(binary),
+            "training_cpu_threads": 4,
+        }
+        write_json(binary.with_suffix(".json"), row)
+        rows.append(row)
+    write_json(checkpoint_dir / "latest.json", rows[-1])
+
+    _, selected = validation_reuse._verify_hybrid_continuation_source(
+        tmp_path,
+        seed=42,
+        source_max_epochs=50,
+        checkpoint_keep=2,
+        training_threads=4,
+    )
+    assert [row[1]["phase_epoch"] for row in selected] == [49, 50]
+
+    (checkpoint_dir / rows[-1]["file"]).write_bytes(b"changed")
+    with pytest.raises(ValueError, match="byte size|SHA-256"):
+        validation_reuse._verify_hybrid_continuation_source(
+            tmp_path,
+            seed=42,
+            source_max_epochs=50,
+            checkpoint_keep=2,
+            training_threads=4,
+        )
+
+
+def test_continuation_import_rebinds_latest_and_fallback_checkpoints(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    source_context = "a" * 64
+    target_context = "b" * 64
+    source = tmp_path / "source"
+    target = tmp_path / "target"
+    checkpoint_dir = source / "core" / "seed_42" / "hybrid" / "checkpoints"
+    checkpoint_dir.mkdir(parents=True)
+    config = HybridLDAConfig(
+        num_topics=2,
+        embedding_dim=2,
+        hidden_size=4,
+        feature_projection_dim=2,
+        training_local_steps=2,
+        batch_size=2,
+        inference_epochs=1,
+        prior_warmup_epochs=1,
+        prior_training_epochs=1,
+        global_patience=10,
+        max_epochs=3,
+        seed=42,
+    )
+
+    def attached(model_config: HybridLDAConfig) -> HybridLDAModel:
+        model = HybridLDAModel(model_config)
+        model.set_word_embeddings(
+            {
+                "frag@100.00": np.asarray([1.0, 0.0], dtype=np.float32),
+                "loss@50.00": np.asarray([0.0, 1.0], dtype=np.float32),
+            }
+        )
+        model.add_doc(
+            ["frag@100.00", "loss@50.00"],
+            embedding=np.asarray([1.0, 0.0], dtype=np.float32),
+        )
+        model.add_doc(
+            ["loss@50.00", "loss@50.00"],
+            embedding=np.asarray([0.0, 1.0], dtype=np.float32),
+        )
+        return model
+
+    model = attached(config)
+    checkpoints = []
+    for epoch in (2, 3):
+        model.train(epoch - model._epochs)
+        binary = checkpoint_dir / f"checkpoint-{epoch:04d}-discovery-{epoch:04d}.pt"
+        model.save_training_checkpoint(binary, context_sha256=source_context)
+        metadata = {
+            "bytes": binary.stat().st_size,
+            "context_sha256": source_context,
+            "cumulative_discovery_seconds": float(epoch),
+            "cumulative_finalization_seconds": 0.0,
+            "file": binary.name,
+            "phase": "discovery",
+            "phase_epoch": epoch,
+            "sequence": epoch,
+            "sha256": file_sha256(binary),
+            "training_cpu_threads": 4,
+        }
+        sidecar = binary.with_suffix(".json")
+        write_json(sidecar, metadata)
+        checkpoints.append((sidecar, metadata))
+
+    monkeypatch.setattr(validation_models, "prepare_documents", lambda _: object())
+    monkeypatch.setattr(
+        validation_models,
+        "_hybrid_checkpoint_context",
+        lambda **_: target_context,
+    )
+    monkeypatch.setattr(
+        validation_runtime,
+        "load_feature_cache",
+        lambda _: ([], np.empty((0, 2)), np.empty((0, 2)), {}),
+    )
+    manifest = validation_reuse._import_hybrid_continuation(
+        source_directory=source,
+        target_directory=target,
+        source_config=SimpleNamespace(hybrid_max_epochs=3),
+        target_config=SimpleNamespace(hybrid_max_epochs=6),
+        target_lock={"protocol_sha256": "c" * 64},
+        seed=42,
+        checkpoints=checkpoints,
+        common_provenance={
+            "source_protocol_sha256": "d" * 64,
+            "source_run": str(source),
+            "target_protocol_sha256": "c" * 64,
+            "target_run": str(target),
+        },
+    )
+    assert [
+        row["migration"]["discovery_epochs"] for row in manifest["imported_checkpoints"]
+    ] == [2, 3]
+    imported = target / "core" / "seed_42" / "hybrid" / "checkpoints"
+    target_config = replace(config, max_epochs=6)
+    for epoch in (2, 3):
+        restored = attached(target_config)
+        progress = restored.restore_training_checkpoint(
+            imported / f"checkpoint-{epoch:04d}-discovery-{epoch:04d}.pt",
+            context_sha256=target_context,
+        )
+        assert progress["discovery_epochs"] == epoch
+
+
 def test_completed_core_artifact_reuse_is_hashed_and_idempotent(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
@@ -771,3 +967,23 @@ import benchmarks.msnlib_validation.mag
         text=True,
     )
     assert completed.returncode == 0, completed.stderr
+
+
+def test_raw_dreams_exact_blocked_search_matches_dense_cosine() -> None:
+    train = np.asarray(
+        [[1.0, 0.0], [0.0, 1.0], [2**-0.5, 2**-0.5]],
+        dtype=np.float32,
+    )
+    query = np.asarray(
+        [[0.9, 0.1], [0.1, 0.9], [2**-0.5, 2**-0.5]],
+        dtype=np.float32,
+    )
+    similarities, neighbours, threads = _exact_nearest_cosine(
+        train,
+        query,
+        batch_size=1,
+    )
+    dense = query @ train.T
+    np.testing.assert_array_equal(neighbours, dense.argmax(axis=1))
+    np.testing.assert_allclose(similarities, dense.max(axis=1), rtol=0, atol=0)
+    assert 1 <= threads <= 4

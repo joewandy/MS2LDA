@@ -33,6 +33,7 @@ LOCK_FILENAME = "protocol.lock.json"
 EXECUTION_ONLY_DERIVATION_FIELDS = frozenset(
     {"protocol_name", "hybrid_training_cpu_threads"}
 )
+CONVERGENCE_CONTINUATION_FIELDS = frozenset({"hybrid_max_epochs"})
 
 
 def _source_files(repo_root: Path) -> list[Path]:
@@ -323,6 +324,45 @@ def validate_execution_only_derivation(
     if normalized_reason:
         result["reason"] = normalized_reason
     return result
+
+
+def validate_convergence_continuation_derivation(
+    source_run: str | Path,
+    target_config: BenchmarkConfig,
+    reason: str | None = None,
+) -> dict[str, Any]:
+    """Freeze a training-only continuation without changing its stop rule."""
+    source_directory = Path(source_run).expanduser().resolve()
+    source_lock = verify_protocol(source_directory, verify_code=False)
+    source_config = load_config(source_directory / "config.resolved.json")
+    source_values = source_config.as_dict()
+    target_values = target_config.as_dict()
+    differences = {
+        key: {"source": source_values.get(key), "target": target_values.get(key)}
+        for key in sorted(set(source_values) | set(target_values))
+        if source_values.get(key) != target_values.get(key)
+    }
+    if target_config.hybrid_max_epochs <= source_config.hybrid_max_epochs:
+        raise ValueError("convergence continuation must increase hybrid_max_epochs")
+    if set(differences) != CONVERGENCE_CONTINUATION_FIELDS:
+        raise ValueError("convergence continuation may change only hybrid_max_epochs")
+    normalized_reason = str(reason).strip() if reason is not None else ""
+    if not normalized_reason:
+        raise ValueError("convergence continuation requires an explicit reason")
+    return {
+        "all_other_settings_frozen_by_source": True,
+        "created_after_source_test_results_inspected": True,
+        "differences": differences,
+        "execution_only": False,
+        "kind": "training_convergence_continuation",
+        "reason": normalized_reason,
+        "source_config_sha256": object_sha256(source_values),
+        "source_protocol_sha256": source_lock["protocol_sha256"],
+        "source_run": str(source_directory),
+        "stopping_rule_unchanged": True,
+        "target_config_sha256": object_sha256(target_values),
+        "trigger_uses_training_state_only": True,
+    }
 
 
 def verify_protocol(run_dir: str | Path, *, verify_code: bool = True) -> dict[str, Any]:
