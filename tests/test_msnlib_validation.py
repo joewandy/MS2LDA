@@ -383,6 +383,10 @@ def test_manuscript_sos_handles_unavailable_values_and_labels_scope() -> None:
         "nll_per_token": {"median": 1.0},
         "active_topics_corpus": {"median": 2.0},
         "cached_seconds_per_spectrum_median": {"median": 0.001},
+        "convergence_cosine_mean": {"median": 0.98},
+        "convergence_cosine_median": {"median": 0.99},
+        "convergence_cosine_p05": {"median": 0.90},
+        "convergence_js_mean": {"median": 0.01},
         "end_to_end_seconds_per_spectrum_median": {"median": 0.002},
     }
     summary = {
@@ -412,9 +416,17 @@ def test_manuscript_sos_handles_unavailable_values_and_labels_scope() -> None:
     }
     manuscript = validation_report._manuscript_text(summary)
     assert "Post-hoc corrected single-seed" in manuscript
+    assert "0.9800 & 0.9900 & 0.9000 & 0.0100" in manuscript
     assert "0 & 0 & -- & --" in manuscript
 
+    summary["evaluation_timing"] = "posthoc_implementation_correction"
+    summary["protocol_derivation"] = {"kind": "implementation_correction"}
+    assert "Post-hoc implementation-corrected" in validation_report._manuscript_text(
+        summary
+    )
+
     summary["evidence_scope"] = "confirmatory"
+    summary["evaluation_timing"] = "prespecified"
     summary["protocol_derivation"] = None
     assert "Five-seed confirmatory SOS" in validation_report._manuscript_text(summary)
 

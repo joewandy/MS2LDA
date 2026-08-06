@@ -1,0 +1,82 @@
+{
+  "alpha": 0.6,
+  "completion_observed_fraction": 0.5,
+  "completion_seed": 42,
+  "corpus_active_threshold": 0.001,
+  "document_active_threshold": 0.01,
+  "eta": 0.1,
+  "evaluation_timing": "posthoc_implementation_correction",
+  "evidence_scope": "indicative_single_seed",
+  "expected_spectra": 41568,
+  "hybrid_batch_size": 32,
+  "hybrid_checkpoint_keep": 2,
+  "hybrid_global_patience": 5,
+  "hybrid_inference_cpu_threads": 1,
+  "hybrid_inference_epochs": 12,
+  "hybrid_max_epochs": 250,
+  "hybrid_reference_extension_steps": 100,
+  "hybrid_reference_steps": 50,
+  "hybrid_training_cpu_threads": 4,
+  "input_files": {
+    "mgf": {
+      "bytes": 88159030,
+      "relative_path": "extracted/Data/Benchmark_MSn_Lib/Corinna_Library_filtered_positive.mgf",
+      "sha256": "c1a2389754e630590111bde8f50403c9d90081d3f3427bc63defef0b9714682f"
+    },
+    "published_motifset": {
+      "bytes": 1537391,
+      "relative_path": "extracted/Data/Benchmark_MSn_Lib/CaseStudy_Corinna_Library_filtered_1000motifs_output_100625/motifset.json",
+      "sha256": "76cc12fc12b9160a5871d4bf1f5c373d6ca5b520bbafcd078ae0d1b5e542587d"
+    },
+    "spec2vec_db": {
+      "bytes": 4372279296,
+      "relative_path": "extracted/model_positive_mode/positive_train_data/150225_CombLibraries_spectra.db",
+      "sha256": "f4d8c6af067479f1082cad8c4fa8958d975506eed89d6026fa10ee89121912f1"
+    },
+    "spec2vec_embeddings": {
+      "bytes": 1023072128,
+      "relative_path": "extracted/model_positive_mode/positive_train_data/150225_CleanedLibraries_Spec2Vec_pos_embeddings.npy",
+      "sha256": "30ac8b287b02e53cd3e72bcfc2083e608aa0dcfcda8f73f5e237dfd40754b4d3"
+    },
+    "spec2vec_model": {
+      "bytes": 9943191,
+      "relative_path": "extracted/model_positive_mode/positive_train_data/150225_Spec2Vec_pos_CleanedLibraries.model",
+      "sha256": "322a81fcd4f1f77a12007735d71f0a4f509f87c76703e2fef8f954eb909a2b82"
+    }
+  },
+  "latency_repeats": 5,
+  "latency_subset_size": 128,
+  "mag_cluster_cosine": 0.9,
+  "mag_fingerprint_threshold": 0.8,
+  "mag_search_k": 1000,
+  "mag_unique_molecules": 10,
+  "max_fragments": 1000,
+  "max_intensity": 1.0,
+  "max_mz": 2000.0,
+  "membership_threshold": 0.5,
+  "min_cf": 0,
+  "min_df": 3,
+  "min_fragments": 5,
+  "min_intensity": 0.01,
+  "min_mz": 0.0,
+  "motif_spectrum_top_n": 20,
+  "num_topics": 1000,
+  "prior_test_results_inspected": true,
+  "protocol_name": "indicative-msnlib-k1000-seed42-peak-pooling-correction",
+  "reference_fifth_percentile_cosine": 0.99,
+  "reference_median_cosine": 0.999,
+  "rm_top": 0,
+  "schema_version": "msnlib-validation/v1",
+  "seeds": [42],
+  "significant_digits": 2,
+  "split_fractions": [0.7, 0.1, 0.2],
+  "split_seed": 42,
+  "tomotopy_convergence_threshold": 0.005,
+  "tomotopy_convergence_window": 10,
+  "tomotopy_inference_iterations": 100,
+  "tomotopy_max_iterations": 5000,
+  "tomotopy_step_size": 50,
+  "tomotopy_training_parallel": 3,
+  "tomotopy_training_workers": 6,
+  "topic_top_n": 10
+}

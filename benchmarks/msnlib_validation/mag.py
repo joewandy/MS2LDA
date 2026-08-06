@@ -215,7 +215,13 @@ def build_filtered_mag_index(
     return manifest
 
 
-def _topic_spectra(beta: np.ndarray, vocabulary: Sequence[str], top_n: int):
+def _topic_spectra(
+    beta: np.ndarray,
+    vocabulary: Sequence[str],
+    top_n: int,
+    *,
+    significant_digits: int,
+):
     from MS2LDA.utils import create_spectrum
 
     spectra = []
@@ -229,7 +235,7 @@ def _topic_spectra(beta: np.ndarray, vocabulary: Sequence[str], top_n: int):
                 topic_id,
                 charge=1,
                 motifset="msnlib_validation",
-                significant_digits=2,
+                significant_digits=significant_digits,
             )
         )
     return spectra
@@ -426,6 +432,110 @@ def _score_mag_topic(
     }
 
 
+def _mag_input_bindings(
+    directory: Path,
+    *,
+    seed: int,
+    method: str,
+    protocol_sha256: str,
+) -> dict[str, Any]:
+    """Hash every model/configuration artifact that determines one MAG result."""
+    config_path = directory / "config.resolved.json"
+    core_dir = directory / "core" / f"seed_{seed}" / method
+    core_complete_path = core_dir / "complete.json"
+    core = read_json(core_complete_path)
+    if (
+        core.get("method") != method
+        or core.get("seed") != seed
+        or core.get("topic_count") != load_config(config_path).num_topics
+    ):
+        raise ValueError("MAG core result identity does not match its frozen model")
+    beta_path = core_dir / "beta.npy"
+    if file_sha256(beta_path) != core.get("beta_sha256"):
+        raise ValueError("core topic matrix changed before MAG evaluation")
+    core_theta_sha256 = core.get("theta_sha256")
+    if method == "tomotopy":
+        core_theta_paths = {"test_theta.npy": str(core_theta_sha256)}
+    else:
+        if not isinstance(core_theta_sha256, dict):
+            raise ValueError("Hybrid core result has invalid theta bindings")
+        core_theta_paths = {
+            f"test_theta_{steps}.npy": str(digest)
+            for steps, digest in core_theta_sha256.items()
+        }
+    for name, digest in core_theta_paths.items():
+        if file_sha256(core_dir / name) != digest:
+            raise ValueError(f"core topic mixtures changed before MAG: {name}")
+
+    chemical_dir = directory / "chemical_inference" / f"seed_{seed}" / method
+    chemical_complete_path = chemical_dir / "complete.json"
+    chemical = read_json(chemical_complete_path)
+    if chemical.get("protocol_sha256") != protocol_sha256:
+        raise ValueError("chemical inference belongs to another protocol")
+    chemical_theta = chemical.get("theta_sha256")
+    if not isinstance(chemical_theta, dict) or not chemical_theta:
+        raise ValueError("chemical inference has invalid theta bindings")
+    for name, digest in chemical_theta.items():
+        if file_sha256(chemical_dir / name) != digest:
+            raise ValueError(f"chemical test mixtures changed: {name}")
+    return {
+        "config_resolved_sha256": file_sha256(config_path),
+        "core_complete_sha256": file_sha256(core_complete_path),
+        "core_beta_sha256": str(core["beta_sha256"]),
+        "core_theta_sha256": core_theta_paths,
+        "chemical_complete_sha256": file_sha256(chemical_complete_path),
+        "chemical_theta_sha256": {
+            str(name): str(digest) for name, digest in chemical_theta.items()
+        },
+    }
+
+
+def _verify_completed_mag_result(
+    directory: Path,
+    *,
+    seed: int,
+    method: str,
+    protocol_sha256: str,
+) -> dict[str, Any]:
+    """Verify completed MAG rows and all inputs to which they are bound."""
+    output = directory / "mag" / f"seed_{seed}" / method
+    result = read_json(output / "complete.json")
+    expected = {
+        "protocol_sha256": protocol_sha256,
+        "method": method,
+        "seed": seed,
+    }
+    for name, value in expected.items():
+        if result.get(name) != value:
+            raise ValueError(f"completed MAG result has changed field: {name}")
+    if file_sha256(output / "topics.jsonl") != result.get("topics_sha256"):
+        raise ValueError("MAG topic rows changed after completion")
+    current_bindings = _mag_input_bindings(
+        directory,
+        seed=seed,
+        method=method,
+        protocol_sha256=protocol_sha256,
+    )
+    if result.get("input_bindings") != current_bindings:
+        raise ValueError("MAG result inputs changed after completion")
+    if result.get("motif_optimization_loss_err") != 1:
+        raise ValueError("MAG motif optimization setting changed")
+    return result
+
+
+def _verify_raw_dreams_result(
+    directory: Path, *, protocol_sha256: str
+) -> dict[str, Any]:
+    """Verify an existing raw-DreaMS completion before aggregate reuse."""
+    output = directory / "mag" / "raw_dreams"
+    result = read_json(output / "complete.json")
+    if result.get("protocol_sha256") != protocol_sha256:
+        raise ValueError("raw-DreaMS result belongs to another frozen protocol")
+    if file_sha256(output / "nearest_neighbors.jsonl") != result.get("rows_sha256"):
+        raise ValueError("raw-DreaMS rows changed after completion")
+    return result
+
+
 def run_mag_for_model(
     run_dir: str | Path,
     *,
@@ -458,12 +568,12 @@ def run_mag_for_model(
     output = directory / "mag" / f"seed_{seed}" / method
     complete_path = output / "complete.json"
     if complete_path.exists():
-        result = read_json(complete_path)
-        if result.get("protocol_sha256") != lock["protocol_sha256"]:
-            raise ValueError("MAG result belongs to another frozen protocol")
-        if file_sha256(output / "topics.jsonl") != result["topics_sha256"]:
-            raise ValueError("MAG topic rows changed after completion")
-        return result
+        return _verify_completed_mag_result(
+            directory,
+            seed=seed,
+            method=method,
+            protocol_sha256=lock["protocol_sha256"],
+        )
     output.mkdir(parents=True, exist_ok=True)
     index_manifest = build_filtered_mag_index(directory, data_root=data_root)
     inputs = resolve_input_paths(config, frozen_data_root)
@@ -474,7 +584,12 @@ def run_mag_for_model(
         raise ValueError("core topic matrix changed before MAG evaluation")
     beta = np.load(beta_path, mmap_mode="r")
     vocabulary = load_vocabulary(directory)
-    motif_spectra = _topic_spectra(beta, vocabulary, config.motif_spectrum_top_n)
+    motif_spectra = _topic_spectra(
+        beta,
+        vocabulary,
+        config.motif_spectrum_top_n,
+        significant_digits=config.significant_digits,
+    )
     spec2vec = load_s2v_model(str(inputs["spec2vec_model"]))
     query_embeddings = calc_embeddings(spec2vec, motif_spectra).astype(np.float32)
     index_dir = directory / "mag" / "index"
@@ -529,6 +644,9 @@ def run_mag_for_model(
             optimization_errors.append("")
             continue
         try:
+            # Keep the frozen Nature Methods-compatible one-Dalton neutral-loss
+            # optimization tolerance. Changing this is a scientific protocol
+            # change, not an implementation detail.
             optimized = motif_optimization([motif], [spectra], [smiles], loss_err=1)
             optimized_feature_counts.append(
                 _optimized_feature_count(optimized[0] if optimized else None)
@@ -732,6 +850,7 @@ def run_mag_for_model(
         "optimization_failures": sum(bool(value) for value in optimization_errors),
         "primary_association_mode": "dominant_topic",
         "historical_threshold_association_role": "sensitivity_only",
+        "motif_optimization_loss_err": 1,
         "association_results": association_results,
         "sos_definitions": {
             "primary_reported_arithmetic": "compound_balanced_notebook_annotation_containment",
@@ -742,6 +861,12 @@ def run_mag_for_model(
         },
         "chemical_inference_complete_sha256": file_sha256(
             chemical_dir / "complete.json"
+        ),
+        "input_bindings": _mag_input_bindings(
+            directory,
+            seed=seed,
+            method=method,
+            protocol_sha256=lock["protocol_sha256"],
         ),
         "index_exclusion_audit": index_manifest,
         "topics_sha256": file_sha256(rows_path),
@@ -910,7 +1035,9 @@ def run_all_mag(run_dir: str | Path, *, data_root: str | Path) -> dict[str, Any]
     index_path = directory / "mag" / "index" / "manifest.json"
     if not index_path.exists():
         worker("_build-mag-index", "--data-root", str(data_root))
-    index_manifest = read_json(index_path)
+    # This validates protocol identity and every index artifact even when an
+    # existing index means no worker needs to run.
+    index_manifest = build_filtered_mag_index(directory, data_root=data_root)
     results = []
     for seed in config.seeds:
         for method in ("tomotopy", "hybrid"):
@@ -925,11 +1052,20 @@ def run_all_mag(run_dir: str | Path, *, data_root: str | Path) -> dict[str, Any]
                     "--seed",
                     str(seed),
                 )
-            results.append(read_json(result_path))
+            results.append(
+                _verify_completed_mag_result(
+                    directory,
+                    seed=seed,
+                    method=method,
+                    protocol_sha256=lock["protocol_sha256"],
+                )
+            )
     dreams_path = directory / "mag" / "raw_dreams" / "complete.json"
     if not dreams_path.exists():
         raise RuntimeError("run _run-raw-dreams in ms2lda-hybrid before legacy MAG")
-    dreams = read_json(dreams_path)
+    dreams = _verify_raw_dreams_result(
+        directory, protocol_sha256=lock["protocol_sha256"]
+    )
     manifest = {
         "protocol_sha256": lock["protocol_sha256"],
         "environment": environment_manifest(),

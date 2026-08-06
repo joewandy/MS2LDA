@@ -118,6 +118,8 @@ class BenchmarkConfig:
     latency_repeats: int
     expected_spectra: int
     input_files: dict[str, dict[str, Any]]
+    prior_test_results_inspected: bool = False
+    evaluation_timing: str = "prespecified"
 
     def __post_init__(self) -> None:
         """Reject incomplete or scientifically inconsistent configurations."""
@@ -125,6 +127,18 @@ class BenchmarkConfig:
             raise ValueError("protocol_name cannot be empty")
         if self.evidence_scope not in {"confirmatory", "indicative_single_seed"}:
             raise ValueError("unsupported evidence_scope")
+        if self.evaluation_timing not in {
+            "prespecified",
+            "posthoc_implementation_correction",
+        }:
+            raise ValueError("unsupported evaluation_timing")
+        if not isinstance(self.prior_test_results_inspected, bool):
+            raise ValueError("prior_test_results_inspected must be boolean")
+        expected_prior_inspection = self.evaluation_timing != "prespecified"
+        if self.prior_test_results_inspected != expected_prior_inspection:
+            raise ValueError(
+                "evaluation_timing and prior_test_results_inspected are inconsistent"
+            )
         if not self.seeds or len(set(self.seeds)) != len(self.seeds):
             raise ValueError("seeds must be a non-empty unique sequence")
         if any(seed < 0 for seed in self.seeds):
@@ -275,6 +289,10 @@ def load_config(path: str | Path) -> BenchmarkConfig:
     payload.setdefault("hybrid_training_cpu_threads", 1)
     payload.setdefault("hybrid_inference_cpu_threads", 1)
     payload.setdefault("hybrid_checkpoint_keep", 2)
+    # Historical frozen configurations predate an immutable timing label. They
+    # remain readable and retain their original prespecified interpretation.
+    payload.setdefault("prior_test_results_inspected", False)
+    payload.setdefault("evaluation_timing", "prespecified")
     payload["seeds"] = tuple(int(seed) for seed in payload["seeds"])
     payload["split_fractions"] = tuple(
         float(value) for value in payload["split_fractions"]

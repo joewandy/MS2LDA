@@ -31,12 +31,14 @@ supplement's smaller-fingerprint denominator because those sources disagree.
 No private repository metadata, generated result, absolute archive path, model,
 or data artifact was copied. Both preserved branches remain unmodified.
 
-The resumable Hybrid training format, two-generation fallback, four-thread
-training/one-thread evaluation boundary, derived-protocol audit, and
-hash-audited reuse support are new code written for this validation. They were
-not copied from either archive. The corrected chemical child run starts from an
-empty run directory and hash-reuses only the completed corrected-alpha feature
-cache and core models; it does not reuse the removed fixed-alpha artifacts or
-the superseded half-spectrum chemical outputs. The raw-DreaMS worker remains
-isolated from the legacy environment's duplicate OpenMP runtime; no unsafe
-duplicate-runtime override is used.
+The resumable Hybrid and Tomotopy training formats, atomic feature-pool
+generations, four-thread training/one-thread evaluation boundary,
+derived-protocol audit, and hash-audited reuse support are new code written for
+this validation. They were not copied from either archive. Independent review
+found that the first corrected-alpha run collapsed distinct physical peaks
+sharing a rounded word into one DreaMS contextual state. The post-review run
+therefore starts Hybrid and its feature pool from an empty target and imports
+only the unchanged, hash-verified Tomotopy core model. No earlier DreaMS pool,
+Hybrid checkpoint, Hybrid model, chemical mixture, MAG result, or SOS result is
+reused. The raw-DreaMS worker remains isolated from the legacy environment's
+duplicate OpenMP runtime; no unsafe duplicate-runtime override is used.
