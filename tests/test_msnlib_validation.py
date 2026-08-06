@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import hashlib
 import subprocess
 import sys
+import zipfile
 from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
@@ -58,6 +60,11 @@ from benchmarks.msnlib_validation.metrics import (
 )
 from benchmarks.msnlib_validation.smoke import run_smoke
 from ms2lda_hybrid import HybridLDAConfig, HybridLDAModel
+from scripts.download_msnlib_validation_assets import (
+    RequiredFile,
+    safe_zip_members,
+    validate_extracted,
+)
 
 
 def _config(*, expected_spectra: int = 1) -> BenchmarkConfig:
@@ -1147,3 +1154,36 @@ def test_raw_dreams_exact_blocked_search_matches_dense_cosine() -> None:
     np.testing.assert_array_equal(neighbours, dense.argmax(axis=1))
     np.testing.assert_allclose(similarities, dense.max(axis=1), rtol=0, atol=0)
     assert 1 <= threads <= 4
+
+
+def test_asset_archive_rejects_parent_path(tmp_path: Path) -> None:
+    archive_path = tmp_path / "unsafe.zip"
+    with zipfile.ZipFile(archive_path, "w") as archive:
+        archive.writestr("../escape.txt", "not allowed")
+
+    with zipfile.ZipFile(archive_path) as archive:
+        with pytest.raises(ValueError, match="unsafe path"):
+            safe_zip_members(archive)
+
+
+def test_asset_extraction_validation_checks_size_and_hash(tmp_path: Path) -> None:
+    content = b"frozen public fixture"
+    relative_path = "Data/fixture.bin"
+    fixture = tmp_path / relative_path
+    fixture.parent.mkdir(parents=True)
+    fixture.write_bytes(content)
+    required = RequiredFile(
+        relative_path=relative_path,
+        size_bytes=len(content),
+        sha256=hashlib.sha256(content).hexdigest(),
+    )
+
+    verified = validate_extracted(tmp_path, required_files=(required,))
+    assert verified[relative_path] == {
+        "bytes": len(content),
+        "sha256": hashlib.sha256(content).hexdigest(),
+    }
+
+    fixture.write_bytes(content + b"corrupt")
+    with pytest.raises(ValueError, match="size mismatch"):
+        validate_extracted(tmp_path, required_files=(required,))

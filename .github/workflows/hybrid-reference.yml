@@ -5,10 +5,13 @@ on:
     paths:
       - ".github/workflows/hybrid-reference.yml"
       - "benchmarks/**"
+      - "docs/hybrid_lda_method.tex"
       - "environment-hybrid.yml"
+      - "environment-msnlib-mag.yml"
       - "ms2lda_hybrid/**"
       - "pyproject.toml"
       - "poetry.lock"
+      - "scripts/download_msnlib_validation_assets.py"
       - "tests/test_hybrid_lda.py"
       - "tests/test_msnlib_validation.py"
   push:
@@ -17,10 +20,13 @@ on:
     paths:
       - ".github/workflows/hybrid-reference.yml"
       - "benchmarks/**"
+      - "docs/hybrid_lda_method.tex"
       - "environment-hybrid.yml"
+      - "environment-msnlib-mag.yml"
       - "ms2lda_hybrid/**"
       - "pyproject.toml"
       - "poetry.lock"
+      - "scripts/download_msnlib_validation_assets.py"
       - "tests/test_hybrid_lda.py"
       - "tests/test_msnlib_validation.py"
 
@@ -48,11 +54,13 @@ jobs:
         run: >-
           python -m black --check
           ms2lda_hybrid benchmarks
+          scripts/download_msnlib_validation_assets.py
           tests/test_hybrid_lda.py tests/test_msnlib_validation.py
       - name: Check imports and runtime errors
         run: >-
           python -m ruff check --select E4,E7,E9,F,I
           ms2lda_hybrid benchmarks
+          scripts/download_msnlib_validation_assets.py
           tests/test_hybrid_lda.py tests/test_msnlib_validation.py
       - name: Run focused tests
         run: >-
