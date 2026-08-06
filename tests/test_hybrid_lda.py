@@ -14,13 +14,27 @@ import numpy as np
 import pytest
 import scipy.sparse as sp
 import torch
+from scipy.special import digamma
 
+import ms2lda_hybrid._variational as variational_module
 import ms2lda_hybrid.dreams_features as dreams_features_module
+import ms2lda_hybrid.model as hybrid_model_module
 from benchmarks.inference_baselines import fit_posterior_regression_baseline
+from benchmarks.msnlib_validation.config import read_json
+from benchmarks.msnlib_validation.models import (
+    _restore_hybrid_checkpoint,
+    _save_hybrid_checkpoint,
+)
 from benchmarks.semi_amortized_inference import METHODS, run_seed
 from ms2lda_hybrid import HybridLDAConfig, HybridLDAModel
 from ms2lda_hybrid._variational import (
     corpus_elbo_minibatch_scale as _corpus_elbo_minibatch_scale,
+)
+from ms2lda_hybrid._variational import (
+    dirichlet_prior_objective as _dirichlet_prior_objective,
+)
+from ms2lda_hybrid._variational import (
+    estimate_dirichlet_alpha as _estimate_dirichlet_alpha,
 )
 from ms2lda_hybrid._variational import (
     expected_log_dirichlet as _expected_log_dirichlet,
@@ -105,7 +119,7 @@ def documents() -> tuple[list[list[str]], np.ndarray, dict[str, np.ndarray]]:
     return words, embeddings, word_embeddings
 
 
-def prepared_model(
+def attached_model(
     config: HybridLDAConfig | None = None,
     *,
     seed: int = 7,
@@ -115,6 +129,15 @@ def prepared_model(
     model.set_word_embeddings(word_embeddings)
     for document, embedding in zip(words, embeddings, strict=True):
         model.add_doc(document, embedding=embedding)
+    return model
+
+
+def prepared_model(
+    config: HybridLDAConfig | None = None,
+    *,
+    seed: int = 7,
+) -> HybridLDAModel:
+    model = attached_model(config, seed=seed)
     model.train(0)
     return model
 
@@ -157,6 +180,77 @@ def test_config_rejects_invalid_invariants() -> None:
         HybridLDAConfig(num_topics=3, embedding_dim=4, seed=-1)
     with pytest.raises(ValueError, match="seed"):
         HybridLDAConfig(num_topics=3, embedding_dim=4, seed=2**64)
+
+
+def test_asymmetric_alpha_estimation_improves_objective_and_recovers_optimum() -> None:
+    expected = np.asarray([0.05, 0.2, 0.8], dtype=np.float64)
+    initial = np.full(3, 0.6, dtype=np.float64)
+    document_count = 1000
+    expected_log_sum = document_count * (digamma(expected) - digamma(expected.sum()))
+
+    observed = _estimate_dirichlet_alpha(
+        initial,
+        expected_log_sum,
+        document_count,
+    )
+
+    np.testing.assert_allclose(observed, expected, rtol=1e-6, atol=1e-8)
+    assert _dirichlet_prior_objective(
+        observed, expected_log_sum, document_count
+    ) > _dirichlet_prior_objective(initial, expected_log_sum, document_count)
+
+
+def test_failed_alpha_line_search_raises_instead_of_faking_convergence(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls = 0
+
+    def decreasing_objective(*_args, **_kwargs) -> float:
+        nonlocal calls
+        calls += 1
+        return 0.0 if calls == 1 else -1.0
+
+    monkeypatch.setattr(
+        variational_module,
+        "dirichlet_prior_objective",
+        decreasing_objective,
+    )
+    with pytest.raises(FloatingPointError, match="line search failed"):
+        _estimate_dirichlet_alpha(
+            np.full(3, 0.6),
+            np.asarray([-10.0, -20.0, -30.0]),
+            10,
+        )
+
+
+def test_alpha_optimizer_failure_cannot_finalize_discovery(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    model = prepared_model()
+
+    def fail_alpha(*_args, **_kwargs) -> np.ndarray:
+        raise FloatingPointError("planned alpha failure")
+
+    monkeypatch.setattr(hybrid_model_module, "estimate_dirichlet_alpha", fail_alpha)
+    with pytest.raises(FloatingPointError, match="planned alpha failure"):
+        model.train(1)
+    assert not model.converged
+    assert not model.inference_finalized
+
+
+def test_discovery_reestimates_positive_asymmetric_alpha_from_training_only() -> None:
+    model = prepared_model()
+    initial = model.alpha
+
+    model.train(1)
+
+    assert np.all(np.isfinite(model.alpha))
+    assert np.all(model.alpha > 0)
+    assert not np.array_equal(model.alpha, initial)
+    assert np.ptp(model.alpha) > 0
+    assert model.history[-1]["alpha_relative_change"] > 0
+    assert model.history[-1]["alpha_min"] == pytest.approx(model.alpha.min())
+    assert model.history[-1]["alpha_max"] == pytest.approx(model.alpha.max())
 
 
 def test_sparse_batch_preserves_counts_without_dense_vocabulary_tensor() -> None:
@@ -434,6 +528,42 @@ def test_convergence_starts_only_after_the_prior_is_fixed() -> None:
     assert model.converged
 
 
+def test_convergence_requires_alpha_and_topics_to_stabilize(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    config = replace(
+        small_config(),
+        prior_training_epochs=1,
+        global_tolerance=0.1,
+        global_patience=1,
+        max_epochs=4,
+    )
+    model = attached_model(config)
+
+    alpha_changes = iter((1.0, 0.0))
+
+    def fake_epoch() -> dict[str, float]:
+        model._epochs += 1
+        metrics = {
+            "epoch": float(model._epochs),
+            "lambda_relative_change": 0.0,
+            "alpha_relative_change": next(alpha_changes),
+            "alpha_sum": 1.0,
+            "alpha_min": 0.1,
+            "alpha_median": 0.2,
+            "alpha_max": 0.7,
+            "prior_loss": 0.0,
+        }
+        model.history.append(metrics)
+        return metrics
+
+    monkeypatch.setattr(model, "_fit_epoch", fake_epoch)
+    model.train(1)
+    assert not model.converged
+    model.train(1)
+    assert model.converged
+
+
 def test_training_inference_and_safe_checkpoint_round_trip(tmp_path: Path) -> None:
     config = replace(
         small_config(),
@@ -469,6 +599,235 @@ def test_training_inference_and_safe_checkpoint_round_trip(tmp_path: Path) -> No
     assert all(type(value) is float for value in restored.config.alpha)
     with pytest.raises(RuntimeError, match="cannot resume"):
         restored.train(1)
+
+
+def test_discovery_training_checkpoint_resumes_exactly(tmp_path: Path) -> None:
+    context_sha256 = "a" * 64
+    checkpoint = tmp_path / "discovery.pt"
+    control = prepared_model()
+    control.train(3)
+    interrupted = prepared_model()
+
+    def stop_after_first_epoch(
+        model: HybridLDAModel,
+        phase: str,
+        epoch: int,
+    ) -> None:
+        assert phase == "discovery"
+        model.save_training_checkpoint(
+            checkpoint,
+            context_sha256=context_sha256,
+        )
+        if epoch == 1:
+            raise InterruptedError("planned interruption")
+
+    with pytest.raises(InterruptedError, match="planned"):
+        interrupted.train(3, checkpoint_callback=stop_after_first_epoch)
+
+    resumed = attached_model()
+    progress = resumed.restore_training_checkpoint(
+        checkpoint,
+        context_sha256=context_sha256,
+    )
+    assert progress == {
+        "phase": "discovery",
+        "phase_epoch": 1,
+        "discovery_epochs": 1,
+        "inference_epochs_completed": 0,
+    }
+    resumed.train(3)
+
+    assert resumed.history == control.history
+    assert resumed._core is not None and control._core is not None
+    assert resumed._gamma is not None and control._gamma is not None
+    np.testing.assert_array_equal(resumed._gamma, control._gamma)
+    for name, expected in control._core.state_dict().items():
+        torch.testing.assert_close(
+            resumed._core.state_dict()[name], expected, rtol=0, atol=0
+        )
+
+
+def test_encoder_training_checkpoint_resumes_exactly(tmp_path: Path) -> None:
+    context_sha256 = "b" * 64
+    checkpoint = tmp_path / "encoder.pt"
+    control = prepared_model()
+    control.train(2)
+    expected_history = control.finalize_inference()
+    interrupted = prepared_model()
+    interrupted.train(2)
+
+    def stop_after_first_epoch(
+        model: HybridLDAModel,
+        phase: str,
+        epoch: int,
+    ) -> None:
+        assert phase == "encoder"
+        model.save_training_checkpoint(
+            checkpoint,
+            context_sha256=context_sha256,
+        )
+        if epoch == 1:
+            raise InterruptedError("planned interruption")
+
+    with pytest.raises(InterruptedError, match="planned"):
+        interrupted.finalize_inference(checkpoint_callback=stop_after_first_epoch)
+
+    resumed = attached_model()
+    progress = resumed.restore_training_checkpoint(
+        checkpoint,
+        context_sha256=context_sha256,
+    )
+    assert progress == {
+        "phase": "encoder",
+        "phase_epoch": 1,
+        "discovery_epochs": 2,
+        "inference_epochs_completed": 1,
+    }
+    with pytest.raises(RuntimeError, match="encoder training has started"):
+        resumed.train(1)
+    observed_history = resumed.finalize_inference()
+
+    assert observed_history == expected_history
+    assert resumed._core is not None and control._core is not None
+    for name, expected in control._core.state_dict().items():
+        torch.testing.assert_close(
+            resumed._core.state_dict()[name], expected, rtol=0, atol=0
+        )
+
+
+def test_training_checkpoint_rejects_wrong_context(tmp_path: Path) -> None:
+    model = prepared_model()
+    model.train(1)
+    checkpoint = tmp_path / "training.pt"
+    model.save_training_checkpoint(checkpoint, context_sha256="c" * 64)
+
+    with pytest.raises(ValueError, match="context hash"):
+        attached_model().restore_training_checkpoint(
+            checkpoint,
+            context_sha256="d" * 64,
+        )
+
+
+def test_nonconverged_checkpoint_can_only_extend_epoch_ceiling(
+    tmp_path: Path,
+) -> None:
+    source_context = "1" * 64
+    target_context = "2" * 64
+    source = tmp_path / "source.pt"
+    rebound = tmp_path / "rebound.pt"
+    source_config = small_config()
+    model = attached_model(source_config)
+    model.train(source_config.max_epochs)
+    assert model._epochs == source_config.max_epochs
+    assert not model.converged
+    model.save_training_checkpoint(source, context_sha256=source_context)
+
+    migration = HybridLDAModel.extend_training_checkpoint(
+        source,
+        rebound,
+        source_context_sha256=source_context,
+        target_context_sha256=target_context,
+        target_max_epochs=6,
+    )
+    assert migration["discovery_epochs"] == source_config.max_epochs
+    assert migration["source_max_epochs"] == source_config.max_epochs
+    assert migration["target_max_epochs"] == 6
+
+    target_config = replace(source_config, max_epochs=6)
+    restored = attached_model(target_config)
+    progress = restored.restore_training_checkpoint(
+        rebound,
+        context_sha256=target_context,
+    )
+    assert progress["discovery_epochs"] == source_config.max_epochs
+    assert restored.history == model.history
+    assert restored._core is not None and model._core is not None
+    for name, expected in model._core.state_dict().items():
+        torch.testing.assert_close(
+            restored._core.state_dict()[name], expected, rtol=0, atol=0
+        )
+    restored.train(1)
+    assert restored._epochs == source_config.max_epochs + 1
+
+    with pytest.raises(ValueError, match="strictly increase"):
+        HybridLDAModel.extend_training_checkpoint(
+            source,
+            tmp_path / "same-limit.pt",
+            source_context_sha256=source_context,
+            target_context_sha256=target_context,
+            target_max_epochs=source_config.max_epochs,
+        )
+
+    premature = attached_model(replace(source_config, max_epochs=4))
+    premature.train(3)
+    premature_checkpoint = tmp_path / "premature.pt"
+    premature.save_training_checkpoint(
+        premature_checkpoint,
+        context_sha256=source_context,
+    )
+    fallback = HybridLDAModel.extend_training_checkpoint(
+        premature_checkpoint,
+        tmp_path / "fallback-rebound.pt",
+        source_context_sha256=source_context,
+        target_context_sha256=target_context,
+        target_max_epochs=6,
+    )
+    assert fallback["discovery_epochs"] == 3
+
+
+def test_rotating_checkpoints_fall_back_from_corrupt_latest(tmp_path: Path) -> None:
+    context_sha256 = "e" * 64
+    output = tmp_path / "hybrid"
+    config = replace(small_config(), max_epochs=4)
+    model = prepared_model(config)
+    for epoch in range(1, 4):
+        model.train(1)
+        _save_hybrid_checkpoint(
+            model,
+            output=output,
+            context_sha256=context_sha256,
+            phase="discovery",
+            phase_epoch=epoch,
+            keep=2,
+            training_cpu_threads=4,
+            cumulative_discovery_seconds=float(epoch),
+            cumulative_finalization_seconds=0.0,
+        )
+
+    sidecars = sorted((output / "checkpoints").glob("checkpoint-*.json"))
+    assert len(sidecars) == 2
+    assert len(list((output / "checkpoints").glob("checkpoint-*.pt"))) == 2
+    newest = read_json(sidecars[-1])
+    (output / "checkpoints" / newest["file"]).write_bytes(b"corrupt")
+
+    restored, audit = _restore_hybrid_checkpoint(
+        factory=lambda: attached_model(config),
+        output=output,
+        context_sha256=context_sha256,
+    )
+    assert audit["resumed"] is True
+    assert len(audit["rejected_newer_checkpoints"]) == 1
+    assert audit["selected_progress"]["phase_epoch"] == 2
+    assert len(restored.history) == 2
+
+    # A subsequent save must retain the new generation plus a verified fallback;
+    # the corrupt payload cannot consume one of the two retention slots.
+    restored.train(2)
+    _save_hybrid_checkpoint(
+        restored,
+        output=output,
+        context_sha256=context_sha256,
+        phase="discovery",
+        phase_epoch=4,
+        keep=2,
+        training_cpu_threads=4,
+        cumulative_discovery_seconds=4.0,
+        cumulative_finalization_seconds=0.0,
+    )
+    retained = sorted((output / "checkpoints").glob("checkpoint-*.json"))
+    assert len(retained) == 2
+    assert [read_json(path)["phase_epoch"] for path in retained] == [2, 4]
+    assert len(list((output / "checkpoints").glob("checkpoint-*.pt"))) == 2
 
 
 @pytest.mark.parametrize("torch_version", ["2.5.1", "2.6.0a0"])
@@ -513,6 +872,7 @@ def test_post_discovery_inference_training_cannot_change_topics() -> None:
     assert model._core is not None
     core = model._core
     topics_before = core.lambda_posterior.detach().clone()
+    alpha_before = core.alpha.detach().clone()
     prior_before = [parameter.detach().clone() for parameter in core.prior_parameters()]
     encoder_before = [
         parameter.detach().clone() for parameter in core.encoder_parameters()
@@ -530,6 +890,7 @@ def test_post_discovery_inference_training_cannot_change_topics() -> None:
         "encoder_gradient_norm",
     }
     torch.testing.assert_close(core.lambda_posterior, topics_before, rtol=0, atol=0)
+    torch.testing.assert_close(core.alpha, alpha_before, rtol=0, atol=0)
     for current, previous in zip(core.prior_parameters(), prior_before, strict=True):
         torch.testing.assert_close(current, previous, rtol=0, atol=0)
     assert any(

@@ -1,0 +1,228 @@
+{
+  "artifact_hashes": {
+    "chemical_inference_complete.json": "ce6ad9db845d7ce1394a5ed6a1e101562931bf3558ca1882730df296655fe11f",
+    "code_manifest.json": "58329691fb5a75a0a64d68bea06fa0064fc41b2a2a35f40c3483f413622e52b8",
+    "config.resolved.json": "d821322bb95c3276fcc68d5014e6b73adb35f6473d0d8656cf4103b9e57c4c92",
+    "freeze_summary.json": "173e43ec67dbfef6cfbd155a3ccbe49cfee811e7ea3fc14411e6c1b129b95222",
+    "mag_complete.json": "ee91e8e6428af1429f2d0fa12197c44f09bb81098ad3350ab610ddabeccf3d37",
+    "mag_per_seed.jsonl": "fbd1c8ba13a51aeba23a1c0d77a74604e35e621dd2f5cda7712b027c7b7a19ed",
+    "report_complete.json": "1bf205d7ea546719e788dd9e4cb52a40bfd186c3cc8d4c1111f3a844b852ae42",
+    "summary.json": "5aac605ff6b28681b2a7a8aebe30a09904c40c32d525311f1e1ab103a9491a2b"
+  },
+  "claim_boundary": {
+    "chemical_evidence": true,
+    "manual_motif_spectrum_annotations_available": false,
+    "posthoc_chemical_correction": true,
+    "research_project_not_production_system": true,
+    "supports": "HybridLDA chemical coherence comparable to Tomotopy in this stricter held-out seed-42 evaluation",
+    "unsupported": "universal or statistically established chemical superiority"
+  },
+  "core_results": {
+    "common": {
+      "completion_eligible_documents": 7776,
+      "completion_in_vocabulary_tokens": 2534703,
+      "completion_oov_fraction": 0.026880442765611186,
+      "latency_repeats": 5,
+      "latency_subset_spectra": 128,
+      "test_spectra": 7777
+    },
+    "inference_arms": [
+      {
+        "active_topics_corpus": 363,
+        "cached_seconds_per_spectrum_median": 0.05863288216369256,
+        "end_to_end_seconds_per_spectrum_median": 0.05874306120313122,
+        "inference": "standard",
+        "inference_seconds_all_test_spectra": 449.96642045804765,
+        "method": "tomotopy",
+        "nll_per_token": 9.756948033041319
+      },
+      {
+        "active_topics_corpus": 361,
+        "cached_seconds_per_spectrum_median": 0.0018772636717585556,
+        "convergence_cosine_median_to_long": 0.9501103588385141,
+        "end_to_end_seconds_per_spectrum_median": 0.03308388703908349,
+        "inference": "encoder",
+        "inference_seconds_all_test_spectra": 1.9462258749990724,
+        "method": "hybrid",
+        "nll_per_token": 9.757675461497916
+      },
+      {
+        "active_topics_corpus": 356,
+        "cached_seconds_per_spectrum_median": 0.0029598678438560455,
+        "convergence_cosine_median_to_long": 0.9995515342256911,
+        "end_to_end_seconds_per_spectrum_median": 0.034193416335710936,
+        "inference": "encoder_plus_2_vb",
+        "inference_seconds_all_test_spectra": 11.63724250002997,
+        "method": "hybrid",
+        "nll_per_token": 10.076645117198895
+      },
+      {
+        "active_topics_corpus": 357,
+        "cached_seconds_per_spectrum_median": 0.0191423359374312,
+        "end_to_end_seconds_per_spectrum_median": 0.050831467773605254,
+        "inference": "long_vb_50",
+        "inference_seconds_all_test_spectra": 169.23360912501812,
+        "method": "hybrid",
+        "nll_per_token": 10.191467278321326
+      }
+    ],
+    "method_level": {
+      "hybrid": {
+        "alpha_final_sum": 9.11173385893926,
+        "peak_rss_bytes": 3435872256,
+        "top_word_diversity": 0.8387,
+        "training_seconds": 65680.41581712599,
+        "word_cooccurrence_npmi_mean": -0.4743907237736967
+      },
+      "tomotopy": {
+        "alpha_final_sum": 6.806488275091397,
+        "peak_rss_bytes": 1710325760,
+        "top_word_diversity": 0.8148,
+        "training_seconds": 2426.524195373233,
+        "word_cooccurrence_npmi_mean": -0.2996613500619827
+      }
+    },
+    "raw_dreams": {
+      "connectivity_match_fraction": 0.0,
+      "mean_morgan_tanimoto": 0.2207001770534328,
+      "median_morgan_tanimoto": 0.17073170731707318,
+      "scaffold_match_fraction": 0.0
+    },
+    "topic_stability": {
+      "cross_seed_available": false,
+      "same_seed_matched_cosine_mean": 0.4768497232033897,
+      "same_seed_top_word_jaccard_mean": 0.08161531983668205,
+      "same_seed_values_are_similarity_not_correctness": true
+    }
+  },
+  "dataset": {
+    "eligible_spectra": 38888,
+    "input_spectra": 41568,
+    "input_mgf_sha256": "c1a2389754e630590111bde8f50403c9d90081d3f3427bc63defef0b9714682f",
+    "spec2vec_database_rows": 426280,
+    "zenodo_doi": "10.5281/zenodo.20179680",
+    "zenodo_record": 20179680
+  },
+  "executed_source": {
+    "checkpoint_commit": "88b47d51b1f045e95810aeafafa042834d63372b",
+    "note": "This commit reproduces every path and SHA-256 entry in the frozen code_manifest.json. The original protocol lock records commit 92dfee16 with the same benchmark files present as an explicitly captured dirty tree.",
+    "protocol_lock_git_commit": "92dfee16ae0c573691c7ba76fdb90f27e8b59b7e"
+  },
+  "mag_exclusion": {
+    "excluded_connectivity_keys": 11549,
+    "excluded_reference_rows": 53426,
+    "original_reference_rows": 426280,
+    "retained_heldout_rows": 0,
+    "retained_reference_rows": 372854
+  },
+  "mixture_diagnostics": [
+    {
+      "dominant_topics_used": 987,
+      "inference": "standard",
+      "median_maximum_probability": 0.3098787,
+      "method": "tomotopy",
+      "spectra_crossing_0.5": 961,
+      "topics_crossing_0.5": 519
+    },
+    {
+      "dominant_topics_used": 932,
+      "inference": "encoder",
+      "median_maximum_probability": 0.243744,
+      "method": "hybrid",
+      "spectra_crossing_0.5": 522,
+      "topics_crossing_0.5": 255
+    },
+    {
+      "dominant_topics_used": 977,
+      "inference": "encoder_plus_2_vb",
+      "median_maximum_probability": 0.212465,
+      "method": "hybrid",
+      "spectra_crossing_0.5": 101,
+      "topics_crossing_0.5": 76
+    },
+    {
+      "dominant_topics_used": 988,
+      "inference": "long_vb_50",
+      "median_maximum_probability": 0.215168,
+      "method": "hybrid",
+      "spectra_crossing_0.5": 114,
+      "topics_crossing_0.5": 90
+    }
+  ],
+  "protocol": {
+    "corrected_protocol_sha256": "855abc25bcdef08a8bd0958f9985cd1c40c088009ad841b38dfd767eabf65435",
+    "core_models_changed_by_chemical_correction": false,
+    "source_protocol_sha256": "6c223207d7199d1467cb96fbe5d90f1b82cf88abd9a2a005433524747c4080a7",
+    "test_results_inspected_before_correction": true
+  },
+  "schema_version": "hybrid-lda-seed42-checkpoint/v1",
+  "sos_results": [
+    {
+      "inference": "standard",
+      "mag_annotatable_topics": 607,
+      "mean_annotation_containment_sos": 0.6232036795665264,
+      "mean_smaller_fingerprint_sos": 0.661683061325264,
+      "method": "tomotopy",
+      "rank_sos_evaluable_topics": 598,
+      "threshold_0.5_sos_evaluable_topics": 333
+    },
+    {
+      "inference": "encoder",
+      "mag_annotatable_topics": 632,
+      "mean_annotation_containment_sos": 0.6332510536762616,
+      "mean_smaller_fingerprint_sos": 0.6664531218141239,
+      "method": "hybrid",
+      "rank_sos_evaluable_topics": 602,
+      "threshold_0.5_sos_evaluable_topics": 191
+    },
+    {
+      "inference": "encoder_plus_2_vb",
+      "mag_annotatable_topics": 632,
+      "mean_annotation_containment_sos": 0.629762287513036,
+      "mean_smaller_fingerprint_sos": 0.6607377149496063,
+      "method": "hybrid",
+      "rank_sos_evaluable_topics": 621,
+      "threshold_0.5_sos_evaluable_topics": 57
+    },
+    {
+      "inference": "long_vb_50",
+      "mag_annotatable_topics": 632,
+      "mean_annotation_containment_sos": 0.6292614499968044,
+      "mean_smaller_fingerprint_sos": 0.6602777874741995,
+      "method": "hybrid",
+      "rank_sos_evaluable_topics": 627,
+      "threshold_0.5_sos_evaluable_topics": 64
+    }
+  ],
+  "split": {
+    "algorithm": "descending-group-size deterministic deficit minimization",
+    "fractions": {
+      "test": 0.2,
+      "train": 0.7,
+      "validation": 0.1
+    },
+    "seed": 42,
+    "test": {
+      "connectivity_identities": 7695,
+      "split_groups": 5702,
+      "spectra": 7777
+    },
+    "train": {
+      "connectivity_identities": 26916,
+      "split_groups": 20014,
+      "spectra": 27222
+    },
+    "validation": {
+      "connectivity_identities": 3854,
+      "split_groups": 2856,
+      "spectra": 3889
+    }
+  },
+  "vocabulary": {
+    "min_cf": 0,
+    "min_df": 3,
+    "rm_top": 0,
+    "source_split": "train",
+    "words": 21233
+  }
+}
