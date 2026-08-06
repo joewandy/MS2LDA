@@ -257,12 +257,26 @@ def convergence_metrics(
 
 
 def calculate_sos(annotation_fp: np.ndarray, molecule_fp: np.ndarray) -> float:
-    """Return historical substructure-overlap arithmetic for one molecule."""
+    """Return the paper notebook's annotation-containment SOS."""
     annotation = np.asarray(annotation_fp, dtype=bool)
     molecule = np.asarray(molecule_fp, dtype=bool)
     if annotation.shape != molecule.shape:
         raise ValueError("fingerprints must have identical shapes")
     denominator = int(annotation.sum())
+    if denominator == 0:
+        return 0.0
+    return float(np.logical_and(annotation, molecule).sum() / denominator)
+
+
+def calculate_sos_smaller_fingerprint(
+    annotation_fp: np.ndarray, molecule_fp: np.ndarray
+) -> float:
+    """Return SOS as described in the supplement: overlap over smaller FP."""
+    annotation = np.asarray(annotation_fp, dtype=bool)
+    molecule = np.asarray(molecule_fp, dtype=bool)
+    if annotation.shape != molecule.shape:
+        raise ValueError("fingerprints must have identical shapes")
+    denominator = min(int(annotation.sum()), int(molecule.sum()))
     if denominator == 0:
         return 0.0
     return float(np.logical_and(annotation, molecule).sum() / denominator)

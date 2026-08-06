@@ -11,6 +11,7 @@ from typing import Any
 
 from .config import file_sha256, load_config, read_json, write_json
 from .protocol import (
+    validate_chemical_evaluation_correction_derivation,
     validate_convergence_continuation_derivation,
     validate_execution_only_derivation,
     verify_protocol,
@@ -33,6 +34,12 @@ def _validate_target_derivation(
     reason = recorded.get("reason")
     if recorded.get("kind") == "training_convergence_continuation":
         return validate_convergence_continuation_derivation(
+            source_directory,
+            target_config,
+            reason,
+        )
+    if recorded.get("kind") == "chemical_evaluation_correction":
+        return validate_chemical_evaluation_correction_derivation(
             source_directory,
             target_config,
             reason,

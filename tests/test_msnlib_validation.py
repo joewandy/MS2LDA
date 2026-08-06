@@ -12,10 +12,16 @@ import numpy as np
 import pytest
 
 import benchmarks.msnlib_validation.features as validation_features
+import benchmarks.msnlib_validation.mag as validation_mag
 import benchmarks.msnlib_validation.models as validation_models
 import benchmarks.msnlib_validation.protocol as validation_protocol
+import benchmarks.msnlib_validation.report as validation_report
 import benchmarks.msnlib_validation.reuse as validation_reuse
 import benchmarks.msnlib_validation.runtime as validation_runtime
+from benchmarks.msnlib_validation.chemical import (
+    associated_record_indices,
+    full_spectrum_documents,
+)
 from benchmarks.msnlib_validation.config import (
     BenchmarkConfig,
     file_sha256,
@@ -42,6 +48,7 @@ from benchmarks.msnlib_validation.mag import (
 from benchmarks.msnlib_validation.metrics import (
     active_topic_metrics,
     calculate_sos,
+    calculate_sos_smaller_fingerprint,
     convergence_metrics,
     document_completion_nll,
     normalize_rows,
@@ -274,6 +281,12 @@ def test_metric_sanity_for_identity_permutation_and_known_sos() -> None:
     assert matching["matched_cosine_mean"] == pytest.approx(1.0)
     assert matching["top_word_jaccard_mean"] == pytest.approx(1.0)
     assert calculate_sos(np.asarray([1, 1, 0]), np.asarray([1, 0, 1])) == 0.5
+    assert (
+        calculate_sos_smaller_fingerprint(
+            np.asarray([1, 1, 1, 0]), np.asarray([1, 0, 0, 0])
+        )
+        == 1.0
+    )
     assert 0 <= top_word_diversity(beta, top_n=2) <= 1
     assert (
         active_topic_metrics(theta, document_threshold=0.1, corpus_threshold=0.1)[
@@ -281,6 +294,122 @@ def test_metric_sanity_for_identity_permutation_and_known_sos() -> None:
         ]
         == 2
     )
+
+
+def test_chemical_documents_use_all_peak_groups_and_no_labels() -> None:
+    record = _record("full", connectivity="compound", group="scaffold")
+    documents, summary = full_spectrum_documents([record], ["frag@100.0"])
+    assert documents == [record.words]
+    assert "frag@120.0" in documents[0]
+    assert "loss@30.0" in documents[0]
+    assert summary["documents"] == 1
+    assert summary["tokens"] == len(record.words)
+
+
+def test_dominant_topic_association_is_scale_safe_and_deterministic() -> None:
+    theta = np.asarray(
+        [
+            [0.37, 0.33, 0.30],
+            [0.20, 0.39, 0.41],
+            [0.34, 0.33, 0.33],
+        ]
+    )
+    assert associated_record_indices(theta, mode="dominant_topic", threshold=0.5) == {
+        0: [0, 2],
+        2: [1],
+    }
+    assert (
+        associated_record_indices(
+            theta, mode="probability_ge_frozen_threshold", threshold=0.5
+        )
+        == {}
+    )
+    with pytest.raises(ValueError, match="finite and nonnegative"):
+        associated_record_indices(
+            np.asarray([[np.nan, 1.0]]), mode="dominant_topic", threshold=0.5
+        )
+
+
+def test_mag_optimization_eligibility_is_separate_from_association(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        validation_mag,
+        "_maccs_fingerprint",
+        lambda _smiles: np.asarray([1, 1, 0], dtype=bool),
+    )
+    associated = [
+        _record("repeat-a", connectivity="compound", group="scaffold"),
+        _record("repeat-b", connectivity="compound", group="scaffold"),
+    ]
+    unavailable = validation_mag._score_mag_topic(
+        topic_id=0,
+        clustered_smiles=["C"],
+        associated_records=associated,
+        optimized_feature_count=0,
+        fingerprint_threshold=0.8,
+        calculate_notebook_sos_fn=calculate_sos,
+        calculate_supplement_sos_fn=calculate_sos_smaller_fingerprint,
+    )
+    assert unavailable["associated_test_spectra"] == 2
+    assert unavailable["associated_unique_test_molecules"] == 1
+    assert unavailable["mag_annotation_available"] is False
+    assert unavailable["eligible"] is False
+
+    available = validation_mag._score_mag_topic(
+        topic_id=0,
+        clustered_smiles=["C"],
+        associated_records=associated,
+        optimized_feature_count=1,
+        fingerprint_threshold=0.8,
+        calculate_notebook_sos_fn=calculate_sos,
+        calculate_supplement_sos_fn=calculate_sos_smaller_fingerprint,
+    )
+    assert available["mag_annotation_available"] is True
+    assert available["eligible"] is True
+    assert available["sos"] == 1.0
+    assert available["sos_notebook_annotation_containment_spectrum_weighted"] == 1.0
+
+
+def test_manuscript_sos_handles_unavailable_values_and_labels_scope() -> None:
+    metric = {
+        "nll_per_token": {"median": 1.0},
+        "active_topics_corpus": {"median": 2.0},
+        "cached_seconds_per_spectrum_median": {"median": 0.001},
+        "end_to_end_seconds_per_spectrum_median": {"median": 0.002},
+    }
+    summary = {
+        "aggregate_core": {
+            key: metric
+            for key in (
+                "tomotopy:standard",
+                "hybrid:iter_0",
+                "hybrid:iter_2",
+                "hybrid:long",
+            )
+        },
+        "evidence_scope": "indicative_single_seed",
+        "protocol_derivation": {"kind": "chemical_evaluation_correction"},
+        "mag_per_seed": [
+            {
+                "association_mode": "dominant_topic",
+                "method": "hybrid",
+                "inference_arm": "long",
+                "seed": 42,
+                "mag_annotation_available_topics": 0,
+                "eligible_topics": 0,
+                "mean_sos_notebook_annotation_containment": None,
+                "mean_sos_supplement_smaller_fingerprint": None,
+            }
+        ],
+    }
+    manuscript = validation_report._manuscript_text(summary)
+    assert "Post-hoc corrected single-seed" in manuscript
+    assert "0 & 0 & -- & --" in manuscript
+
+    summary["evidence_scope"] = "confirmatory"
+    summary["protocol_derivation"] = None
+    assert "Five-seed confirmatory SOS" in validation_report._manuscript_text(summary)
 
 
 def test_npmi_handles_always_cooccurring_words_and_negative_values_fail() -> None:
@@ -651,6 +780,37 @@ def test_convergence_continuation_only_increases_epoch_ceiling(
         validation_protocol.validate_convergence_continuation_derivation(
             "/source",
             target,
+        )
+
+
+def test_chemical_correction_discloses_posthoc_metric_change(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    source = load_config(
+        "benchmarks/msnlib_validation/configs/indicative-msnlib-k1000-seed42.json"
+    )
+    target = replace(source, protocol_name="chemical-correction")
+    monkeypatch.setattr(
+        validation_protocol,
+        "verify_protocol",
+        lambda *_args, **_kwargs: {"protocol_sha256": "a" * 64},
+    )
+    monkeypatch.setattr(validation_protocol, "load_config", lambda _: source)
+
+    derivation = validation_protocol.validate_chemical_evaluation_correction_derivation(
+        "/source",
+        target,
+        "full-spectrum SOS and scale-safe association after diagnosing cutoff bias",
+    )
+    assert derivation["kind"] == "chemical_evaluation_correction"
+    assert derivation["confirmatory"] is False
+    assert derivation["core_model_artifacts_unchanged"] is True
+    assert set(derivation["differences"]) == {"protocol_name"}
+    with pytest.raises(ValueError, match="only protocol_name"):
+        validation_protocol.validate_chemical_evaluation_correction_derivation(
+            "/source",
+            replace(target, membership_threshold=0.4),
+            "invalid threshold tuning",
         )
 
 

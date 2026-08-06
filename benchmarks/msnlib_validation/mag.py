@@ -9,13 +9,13 @@ import sqlite3
 import subprocess
 import sys
 import time
-from collections import defaultdict
 from importlib import import_module
 from pathlib import Path
 from typing import Any, Callable, Iterable, Sequence
 
 import numpy as np
 
+from .chemical import ASSOCIATION_MODES, associated_record_indices
 from .config import (
     environment_manifest,
     file_sha256,
@@ -307,40 +307,86 @@ def _consensus_fingerprint(
     return np.mean(np.asarray(fingerprints, dtype=np.float32), axis=0) >= threshold
 
 
-def _associated_smiles(
+def _associated_records(
     theta: np.ndarray,
     records: Sequence[SpectrumRecord],
+    *,
+    mode: str,
     threshold: float,
-) -> dict[int, list[str]]:
+) -> dict[int, list[SpectrumRecord]]:
     if theta.shape[0] != len(records):
         raise ValueError("topic memberships and test records differ")
-    associated: dict[int, list[str]] = defaultdict(list)
-    rows, topics = np.where(theta >= threshold)
-    for row, topic in zip(rows, topics, strict=True):
-        associated[int(topic)].append(records[int(row)].smiles)
-    return associated
+    indices = associated_record_indices(theta, mode=mode, threshold=threshold)
+    return {topic: [records[row] for row in rows] for topic, rows in indices.items()}
+
+
+def _optimized_feature_count(spectrum: Any | None) -> int:
+    """Count fragments and losses retained by MAG motif optimization."""
+    if spectrum is None:
+        return 0
+    peaks = getattr(getattr(spectrum, "peaks", None), "mz", ())
+    losses = getattr(getattr(spectrum, "losses", None), "mz", ())
+    return len(peaks) + len(losses)
 
 
 def _score_mag_topic(
     *,
     topic_id: int,
     clustered_smiles: Sequence[str],
-    associated_smiles: Sequence[str],
+    associated_records: Sequence[SpectrumRecord],
+    optimized_feature_count: int,
     fingerprint_threshold: float,
-    calculate_sos_fn: Callable[[np.ndarray, np.ndarray], float],
+    calculate_notebook_sos_fn: Callable[[np.ndarray, np.ndarray], float],
+    calculate_supplement_sos_fn: Callable[[np.ndarray, np.ndarray], float],
 ) -> dict[str, Any]:
-    annotation = _consensus_fingerprint(clustered_smiles, fingerprint_threshold)
-    molecule_fps = [
-        fingerprint
-        for smiles in associated_smiles
-        if (fingerprint := _maccs_fingerprint(smiles)) is not None
+    annotation = (
+        _consensus_fingerprint(clustered_smiles, fingerprint_threshold)
+        if optimized_feature_count > 0
+        else None
+    )
+    spectrum_fps = [
+        (record, fingerprint)
+        for record in associated_records
+        if (fingerprint := _maccs_fingerprint(record.smiles)) is not None
     ]
-    scores = (
-        [calculate_sos_fn(annotation, fingerprint) for fingerprint in molecule_fps]
+    compound_fps: dict[str, np.ndarray] = {}
+    for record, fingerprint in spectrum_fps:
+        compound_fps.setdefault(record.connectivity_key, fingerprint)
+    spectrum_notebook_scores = (
+        [
+            calculate_notebook_sos_fn(annotation, fingerprint)
+            for _, fingerprint in spectrum_fps
+        ]
         if annotation is not None
         else []
     )
-    mean_sos = float(np.mean(scores)) if scores else None
+    compound_notebook_scores = (
+        [
+            calculate_notebook_sos_fn(annotation, fingerprint)
+            for fingerprint in compound_fps.values()
+        ]
+        if annotation is not None
+        else []
+    )
+    spectrum_supplement_scores = (
+        [
+            calculate_supplement_sos_fn(annotation, fingerprint)
+            for _, fingerprint in spectrum_fps
+        ]
+        if annotation is not None
+        else []
+    )
+    compound_supplement_scores = (
+        [
+            calculate_supplement_sos_fn(annotation, fingerprint)
+            for fingerprint in compound_fps.values()
+        ]
+        if annotation is not None
+        else []
+    )
+    mean_sos = (
+        float(np.mean(compound_notebook_scores)) if compound_notebook_scores else None
+    )
     if mean_sos is None:
         quality = "unavailable"
     elif mean_sos > 0.8:
@@ -353,10 +399,30 @@ def _score_mag_topic(
         "topic_id": topic_id,
         "clustered_smiles": list(clustered_smiles),
         "cluster_size": len(clustered_smiles),
-        "associated_test_molecules": len(molecule_fps),
+        "optimized_feature_count": optimized_feature_count,
+        "mag_annotation_available": annotation is not None,
+        "associated_test_spectra": len(spectrum_fps),
+        "associated_test_molecules": len(compound_fps),
+        "associated_unique_test_molecules": len(compound_fps),
         "sos": mean_sos,
+        "sos_notebook_annotation_containment": mean_sos,
+        "sos_notebook_annotation_containment_spectrum_weighted": (
+            float(np.mean(spectrum_notebook_scores))
+            if spectrum_notebook_scores
+            else None
+        ),
+        "sos_supplement_smaller_fingerprint": (
+            float(np.mean(compound_supplement_scores))
+            if compound_supplement_scores
+            else None
+        ),
+        "sos_supplement_smaller_fingerprint_spectrum_weighted": (
+            float(np.mean(spectrum_supplement_scores))
+            if spectrum_supplement_scores
+            else None
+        ),
         "quality_bin": quality,
-        "eligible": bool(scores),
+        "eligible": bool(compound_notebook_scores),
     }
 
 
@@ -371,12 +437,17 @@ def run_mag_for_model(
     # SciPy's optimizer stack and FAISS ship separate OpenMP runtimes in the
     # legacy environment. MAG needs both, so retain its historically working
     # import order here while keeping the raw-DreaMS worker free of SciPy.
-    calculate_sos = import_module(f"{__package__}.metrics").calculate_sos
+    metrics_module = import_module(f"{__package__}.metrics")
+    calculate_sos = metrics_module.calculate_sos
+    calculate_sos_smaller = metrics_module.calculate_sos_smaller_fingerprint
 
     import faiss
 
     from MS2LDA.Add_On.Spec2Vec.annotation import calc_embeddings, load_s2v_model
-    from MS2LDA.Add_On.Spec2Vec.annotation_refined import hit_clustering
+    from MS2LDA.Add_On.Spec2Vec.annotation_refined import (
+        hit_clustering,
+        motif_optimization,
+    )
 
     directory = Path(run_dir).expanduser().resolve()
     lock = verify_protocol(directory)
@@ -430,81 +501,248 @@ def run_mag_for_model(
         excluded_connectivity=excluded_connectivity,
     )
     clustered = []
+    clustered_spectra = []
     cluster_errors = []
     for topic_id, (motif, match) in enumerate(zip(motif_spectra, matches, strict=True)):
         try:
-            _, smiles, _ = hit_clustering(
+            spectra, smiles, _ = hit_clustering(
                 s2v_similarity=spec2vec,
                 motif_spectra=[motif],
                 library_matches=[match],
                 criterium="best",
                 cosine_similarity=config.mag_cluster_cosine,
             )
+            clustered_spectra.append(spectra[0] if spectra else [])
             clustered.append(smiles[0] if smiles else [])
             cluster_errors.append("")
         except Exception as exc:  # record per-topic failure; never omit it
+            clustered_spectra.append([])
             clustered.append([])
             cluster_errors.append(f"{type(exc).__name__}: {exc}")
+    optimized_feature_counts = []
+    optimization_errors = []
+    for motif, spectra, smiles in zip(
+        motif_spectra, clustered_spectra, clustered, strict=True
+    ):
+        if not spectra or not smiles:
+            optimized_feature_counts.append(0)
+            optimization_errors.append("")
+            continue
+        try:
+            optimized = motif_optimization([motif], [spectra], [smiles], loss_err=1)
+            optimized_feature_counts.append(
+                _optimized_feature_count(optimized[0] if optimized else None)
+            )
+            optimization_errors.append("")
+        except Exception as exc:
+            optimized_feature_counts.append(0)
+            optimization_errors.append(f"{type(exc).__name__}: {exc}")
     mag_seconds = time.perf_counter() - started
     mgf_path = Path(lock["data_root"]) / config.input_files["mgf"]["relative_path"]
     records, _ = load_records(mgf_path, config)
     assignments = load_assignments(directory)
     test_records = split_records(records, assignments, "test")
+    chemical_dir = directory / "chemical_inference" / f"seed_{seed}" / method
+    chemical_result = read_json(chemical_dir / "complete.json")
+    if chemical_result.get("protocol_sha256") != lock["protocol_sha256"]:
+        raise ValueError("chemical inference belongs to another protocol")
+    if chemical_result.get("full_spectrum_peak_groups") is not True:
+        raise ValueError("SOS chemical inference did not use full spectra")
+    if chemical_result.get("chemical_labels_used_for_inference") is not False:
+        raise ValueError("chemical labels were not withheld from model inference")
+    theta_paths = {
+        path.name: path for path in chemical_dir.glob("test_full_theta_*.npy")
+    }
+    for name, digest in chemical_result["theta_sha256"].items():
+        if name not in theta_paths or file_sha256(theta_paths[name]) != digest:
+            raise ValueError(f"chemical test mixtures changed: {name}")
     if method == "tomotopy":
-        theta_path = core_dir / "test_theta.npy"
-        expected_theta_sha256 = core_result["theta_sha256"]
+        arm_paths = {"standard": theta_paths["test_full_theta_standard.npy"]}
     else:
-        reference_steps = str(core_result["reference_steps"])
-        theta_path = core_dir / f"test_theta_{reference_steps}.npy"
-        expected_theta_sha256 = core_result["theta_sha256"][reference_steps]
-    if file_sha256(theta_path) != expected_theta_sha256:
-        raise ValueError("core test mixtures changed before MAG evaluation")
-    theta = np.load(theta_path, mmap_mode="r")
-    associated = _associated_smiles(theta, test_records, config.membership_threshold)
+        arm_paths = {
+            arm: theta_paths[f"test_full_theta_{arm}.npy"]
+            for arm in ("encoder", "two_step", "long")
+        }
     rows = []
-    for topic_id in range(config.num_topics):
-        row = _score_mag_topic(
-            topic_id=topic_id,
-            clustered_smiles=clustered[topic_id],
-            associated_smiles=associated.get(topic_id, []),
-            fingerprint_threshold=config.mag_fingerprint_threshold,
-            calculate_sos_fn=calculate_sos,
-        )
-        row.update(
-            {
-                "seed": seed,
-                "method": method,
-                "cluster_error": cluster_errors[topic_id],
-                "retrieved_smiles": matches[topic_id][0],
-                "retrieved_scores": matches[topic_id][2],
-            }
-        )
-        rows.append(row)
+    association_results = []
+    for arm, theta_path in arm_paths.items():
+        theta = np.load(theta_path, mmap_mode="r")
+        for mode in ASSOCIATION_MODES:
+            associated = _associated_records(
+                theta,
+                test_records,
+                mode=mode,
+                threshold=config.membership_threshold,
+            )
+            mode_rows = []
+            for topic_id in range(config.num_topics):
+                row = _score_mag_topic(
+                    topic_id=topic_id,
+                    clustered_smiles=clustered[topic_id],
+                    associated_records=associated.get(topic_id, []),
+                    optimized_feature_count=optimized_feature_counts[topic_id],
+                    fingerprint_threshold=config.mag_fingerprint_threshold,
+                    calculate_notebook_sos_fn=calculate_sos,
+                    calculate_supplement_sos_fn=calculate_sos_smaller,
+                )
+                row.update(
+                    {
+                        "seed": seed,
+                        "method": method,
+                        "inference_arm": arm,
+                        "association_mode": mode,
+                        "membership_threshold": (
+                            config.membership_threshold
+                            if mode == "probability_ge_frozen_threshold"
+                            else None
+                        ),
+                        "association_interpretation": (
+                            "primary_rank_based_without_absolute_cutoff"
+                            if mode == "dominant_topic"
+                            else "historical_threshold_sensitivity"
+                        ),
+                        "chemical_inference_representation": "full_test_spectrum",
+                        "cluster_error": cluster_errors[topic_id],
+                        "optimization_error": optimization_errors[topic_id],
+                        "retrieved_smiles": matches[topic_id][0],
+                        "retrieved_scores": matches[topic_id][2],
+                    }
+                )
+                rows.append(row)
+                mode_rows.append(row)
+            eligible = [row for row in mode_rows if row["eligible"]]
+            notebook_sos = [
+                float(row["sos_notebook_annotation_containment"]) for row in eligible
+            ]
+            supplement_sos = [
+                float(row["sos_supplement_smaller_fingerprint"]) for row in eligible
+            ]
+            spectrum_notebook_sos = [
+                float(row["sos_notebook_annotation_containment_spectrum_weighted"])
+                for row in eligible
+            ]
+            spectrum_supplement_sos = [
+                float(row["sos_supplement_smaller_fingerprint_spectrum_weighted"])
+                for row in eligible
+            ]
+            association_results.append(
+                {
+                    "method": method,
+                    "seed": seed,
+                    "inference_arm": arm,
+                    "association_mode": mode,
+                    "association_interpretation": mode_rows[0][
+                        "association_interpretation"
+                    ],
+                    "membership_threshold": mode_rows[0]["membership_threshold"],
+                    "eligible_topics": len(eligible),
+                    "sos_evaluable_coverage": len(eligible) / config.num_topics,
+                    "associated_test_spectra": sum(
+                        row["associated_test_spectra"] for row in mode_rows
+                    ),
+                    "topic_compound_associations": sum(
+                        row["associated_unique_test_molecules"] for row in mode_rows
+                    ),
+                    "mean_sos": (
+                        float(np.mean(notebook_sos)) if notebook_sos else None
+                    ),
+                    "median_sos": (
+                        float(np.median(notebook_sos)) if notebook_sos else None
+                    ),
+                    "mean_sos_notebook_annotation_containment": (
+                        float(np.mean(notebook_sos)) if notebook_sos else None
+                    ),
+                    "median_sos_notebook_annotation_containment": (
+                        float(np.median(notebook_sos)) if notebook_sos else None
+                    ),
+                    "mean_sos_supplement_smaller_fingerprint": (
+                        float(np.mean(supplement_sos)) if supplement_sos else None
+                    ),
+                    "median_sos_supplement_smaller_fingerprint": (
+                        float(np.median(supplement_sos)) if supplement_sos else None
+                    ),
+                    "mean_sos_notebook_annotation_containment_spectrum_weighted": (
+                        float(np.mean(spectrum_notebook_sos))
+                        if spectrum_notebook_sos
+                        else None
+                    ),
+                    "mean_sos_supplement_smaller_fingerprint_spectrum_weighted": (
+                        float(np.mean(spectrum_supplement_sos))
+                        if spectrum_supplement_sos
+                        else None
+                    ),
+                    "quality_counts": {
+                        quality: sum(row["quality_bin"] == quality for row in mode_rows)
+                        for quality in (
+                            "high",
+                            "intermediate",
+                            "low",
+                            "unavailable",
+                        )
+                    },
+                    "eligible_topic_compound_count_bins": {
+                        label: sum(
+                            predicate(row["associated_unique_test_molecules"])
+                            for row in eligible
+                        )
+                        for label, predicate in (
+                            ("1", lambda value: value == 1),
+                            ("2_to_4", lambda value: 2 <= value <= 4),
+                            ("5_to_7", lambda value: 5 <= value <= 7),
+                            ("8_to_10", lambda value: 8 <= value <= 10),
+                            ("11_plus", lambda value: value >= 11),
+                        )
+                    },
+                    "eligible_topic_spectrum_count_bins": {
+                        label: sum(
+                            predicate(row["associated_test_spectra"])
+                            for row in eligible
+                        )
+                        for label, predicate in (
+                            ("1", lambda value: value == 1),
+                            ("2_to_4", lambda value: 2 <= value <= 4),
+                            ("5_to_7", lambda value: 5 <= value <= 7),
+                            ("8_to_10", lambda value: 8 <= value <= 10),
+                            ("11_plus", lambda value: value >= 11),
+                        )
+                    },
+                }
+            )
     rows_path = output / "topics.jsonl"
     with rows_path.open("w", encoding="utf-8") as handle:
         for row in rows:
             handle.write(json.dumps(row, sort_keys=True, separators=(",", ":")) + "\n")
-    eligible = [row for row in rows if row["eligible"]]
-    sos_values = [float(row["sos"]) for row in eligible]
     clustered_topics = sum(bool(row["clustered_smiles"]) for row in rows)
+    # Annotation fields repeat across inference arms and association modes.
+    repetition = len(arm_paths) * len(ASSOCIATION_MODES)
+    clustered_topics //= repetition
+    optimized_topics = sum(value > 0 for value in optimized_feature_counts)
     result = {
         "method": method,
         "protocol_sha256": lock["protocol_sha256"],
         "seed": seed,
         "topics": config.num_topics,
+        "topic_rows": len(rows),
         "mag_seconds": mag_seconds,
         "peak_rss_bytes": peak_rss_bytes(),
-        "annotation_coverage": clustered_topics / config.num_topics,
-        "sos_evaluable_coverage": len(eligible) / config.num_topics,
-        "eligible_topics": len(eligible),
+        "annotation_coverage": optimized_topics / config.num_topics,
+        "mag_annotation_available_topics": optimized_topics,
         "clustered_topics": clustered_topics,
-        "cluster_failures": sum(bool(row["cluster_error"]) for row in rows),
-        "mean_sos": float(np.mean(sos_values)) if sos_values else None,
-        "median_sos": float(np.median(sos_values)) if sos_values else None,
-        "quality_counts": {
-            quality: sum(row["quality_bin"] == quality for row in rows)
-            for quality in ("high", "intermediate", "low", "unavailable")
+        "cluster_failures": sum(bool(value) for value in cluster_errors),
+        "optimization_failures": sum(bool(value) for value in optimization_errors),
+        "primary_association_mode": "dominant_topic",
+        "historical_threshold_association_role": "sensitivity_only",
+        "association_results": association_results,
+        "sos_definitions": {
+            "primary_reported_arithmetic": "compound_balanced_notebook_annotation_containment",
+            "primary_weighting": "each connectivity identity once within each topic, then each eligible topic once",
+            "notebook_annotation_containment": "intersection_bits / annotation_bits",
+            "supplement_smaller_fingerprint": "intersection_bits / min(annotation_bits, molecule_bits)",
+            "spectrum_weighted_sensitivity": "repeated spectra are retained and explicitly labelled",
         },
+        "chemical_inference_complete_sha256": file_sha256(
+            chemical_dir / "complete.json"
+        ),
         "index_exclusion_audit": index_manifest,
         "topics_sha256": file_sha256(rows_path),
     }
@@ -540,9 +778,27 @@ def run_raw_dreams_baseline(run_dir: str | Path) -> dict[str, Any]:
     train_embeddings = _normalize(
         np.asarray(embeddings[[row_by_id[row.spectrum_id] for row in train]])
     )
-    test_embeddings = _normalize(
-        np.asarray(embeddings[[row_by_id[row.spectrum_id] for row in test]])
+    chemical_feature_dir = directory / "chemical_inference" / "features"
+    chemical_manifest = read_json(chemical_feature_dir / "manifest.json")
+    if chemical_manifest.get("protocol_sha256") != lock["protocol_sha256"]:
+        raise ValueError("raw-DreaMS chemical features belong to another protocol")
+    for name, digest in chemical_manifest["output_sha256"].items():
+        if file_sha256(chemical_feature_dir / name) != digest:
+            raise ValueError(f"raw-DreaMS chemical feature changed: {name}")
+    if chemical_manifest.get("full_spectrum_peak_groups") is not True:
+        raise ValueError("raw-DreaMS chemical baseline requires full test spectra")
+    chemical_ids = list(
+        map(
+            str,
+            read_json(chemical_feature_dir / "identifiers.json")["identifiers"],
+        )
     )
+    if chemical_ids != [record.spectrum_id for record in test]:
+        raise ValueError("raw-DreaMS full-test features are not row aligned")
+    full_test_embeddings = np.load(
+        chemical_feature_dir / "full_test_embeddings.npy", mmap_mode="r"
+    )
+    test_embeddings = _normalize(np.asarray(full_test_embeddings, dtype=np.float32))
     started = time.perf_counter()
     similarities, neighbours, search_threads = _exact_nearest_cosine(
         train_embeddings,
@@ -581,6 +837,7 @@ def run_raw_dreams_baseline(run_dir: str | Path) -> dict[str, Any]:
     result = {
         "method": "raw_dreams",
         "nearest_neighbor_backend": "exact_blocked_pytorch",
+        "test_representation": "full_spectrum",
         "protocol_sha256": lock["protocol_sha256"],
         "search_cpu_threads": search_threads,
         "test_spectra": len(rows),
@@ -616,6 +873,14 @@ def run_all_mag(run_dir: str | Path, *, data_root: str | Path) -> dict[str, Any]
     )
     if not (directory / "core" / "complete.json").is_file():
         raise RuntimeError("all core models must complete before MAG")
+    chemical_path = directory / "chemical_inference" / "complete.json"
+    if not chemical_path.is_file():
+        raise RuntimeError("full-spectrum chemical inference must complete before MAG")
+    chemical_manifest = read_json(chemical_path)
+    if chemical_manifest.get("protocol_sha256") != lock["protocol_sha256"]:
+        raise ValueError("chemical inference aggregate belongs to another protocol")
+    if chemical_manifest.get("full_spectrum_peak_groups") is not True:
+        raise ValueError("chemical inference aggregate did not use full spectra")
     config = load_config(directory / "config.resolved.json")
     environment = dict(os.environ)
     environment.update(

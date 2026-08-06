@@ -34,6 +34,7 @@ EXECUTION_ONLY_DERIVATION_FIELDS = frozenset(
     {"protocol_name", "hybrid_training_cpu_threads"}
 )
 CONVERGENCE_CONTINUATION_FIELDS = frozenset({"hybrid_max_epochs"})
+CHEMICAL_CORRECTION_FIELDS = frozenset({"protocol_name"})
 
 
 def _source_files(repo_root: Path) -> list[Path]:
@@ -362,6 +363,42 @@ def validate_convergence_continuation_derivation(
         "stopping_rule_unchanged": True,
         "target_config_sha256": object_sha256(target_values),
         "trigger_uses_training_state_only": True,
+    }
+
+
+def validate_chemical_evaluation_correction_derivation(
+    source_run: str | Path,
+    target_config: BenchmarkConfig,
+    reason: str | None = None,
+) -> dict[str, Any]:
+    """Disclose a post-inspection correction to the chemical endpoint only."""
+    source_directory = Path(source_run).expanduser().resolve()
+    source_lock = verify_protocol(source_directory, verify_code=False)
+    source_config = load_config(source_directory / "config.resolved.json")
+    source_values = source_config.as_dict()
+    target_values = target_config.as_dict()
+    differences = {
+        key: {"source": source_values.get(key), "target": target_values.get(key)}
+        for key in sorted(set(source_values) | set(target_values))
+        if source_values.get(key) != target_values.get(key)
+    }
+    if set(differences) != CHEMICAL_CORRECTION_FIELDS:
+        raise ValueError("chemical evaluation correction may change only protocol_name")
+    normalized_reason = str(reason).strip() if reason is not None else ""
+    if not normalized_reason:
+        raise ValueError("chemical evaluation correction requires an explicit reason")
+    return {
+        "confirmatory": False,
+        "core_model_artifacts_unchanged": True,
+        "created_after_source_test_results_inspected": True,
+        "differences": differences,
+        "execution_only": False,
+        "kind": "chemical_evaluation_correction",
+        "reason": normalized_reason,
+        "source_config_sha256": object_sha256(source_values),
+        "source_protocol_sha256": source_lock["protocol_sha256"],
+        "source_run": str(source_directory),
+        "target_config_sha256": object_sha256(target_values),
     }
 
 

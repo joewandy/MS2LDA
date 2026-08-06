@@ -39,6 +39,8 @@ def _require_completed_runs(directory: Path, seeds: Sequence[int]) -> None:
         raise RuntimeError("core benchmark is incomplete")
     if not (directory / "mag" / "complete.json").is_file():
         raise RuntimeError("MAG benchmark is incomplete")
+    if not (directory / "chemical_inference" / "complete.json").is_file():
+        raise RuntimeError("full-spectrum chemical inference is incomplete")
     missing = []
     for seed in seeds:
         for method in ("tomotopy", "hybrid"):
@@ -240,29 +242,79 @@ def _mag_summary(
         for method in ("tomotopy", "hybrid"):
             path = directory / "mag" / f"seed_{seed}" / method
             model_rows[method] = read_json(path / "complete.json")
+            chemical_complete = (
+                directory
+                / "chemical_inference"
+                / f"seed_{seed}"
+                / method
+                / "complete.json"
+            )
+            if (
+                file_sha256(chemical_complete)
+                != model_rows[method]["chemical_inference_complete_sha256"]
+            ):
+                raise ValueError(
+                    f"chemical inference changed after MAG for {method} seed {seed}"
+                )
             if (
                 file_sha256(path / "topics.jsonl")
                 != model_rows[method]["topics_sha256"]
             ):
                 raise ValueError(f"MAG topic rows changed for {method} seed {seed}")
-            topic_rows[method] = _jsonl_rows(path / "topics.jsonl")
-            if len(topic_rows[method]) != config.num_topics:
+            all_topic_rows = _jsonl_rows(path / "topics.jsonl")
+            if len(all_topic_rows) != model_rows[method]["topic_rows"]:
                 raise RuntimeError(
                     f"incomplete MAG topic rows for {method} seed {seed}"
                 )
-            per_seed.append(model_rows[method])
+            comparison_arm = "standard" if method == "tomotopy" else "long"
+            topic_rows[method] = [
+                row
+                for row in all_topic_rows
+                if row["inference_arm"] == comparison_arm
+                and row["association_mode"] == "dominant_topic"
+            ]
+            if len(topic_rows[method]) != config.num_topics:
+                raise RuntimeError(
+                    f"incomplete primary MAG rows for {method} seed {seed}"
+                )
+            common = {
+                key: model_rows[method][key]
+                for key in (
+                    "annotation_coverage",
+                    "cluster_failures",
+                    "clustered_topics",
+                    "chemical_inference_complete_sha256",
+                    "index_exclusion_audit",
+                    "mag_annotation_available_topics",
+                    "mag_seconds",
+                    "optimization_failures",
+                    "peak_rss_bytes",
+                    "sos_definitions",
+                )
+            }
+            per_seed.extend(
+                {**common, **association}
+                for association in model_rows[method]["association_results"]
+            )
         matched = matching_by_seed[int(seed)]
         values = []
         both_annotated = 0
         for left_topic, right_topic in zip(
             matched["left_topic_ids"], matched["right_topic_ids"], strict=True
         ):
+            left_row = topic_rows["tomotopy"][int(left_topic)]
+            right_row = topic_rows["hybrid"][int(right_topic)]
+            if (
+                not left_row["mag_annotation_available"]
+                or not right_row["mag_annotation_available"]
+            ):
+                continue
             left = _consensus_fingerprint(
-                topic_rows["tomotopy"][int(left_topic)]["clustered_smiles"],
+                left_row["clustered_smiles"],
                 config.mag_fingerprint_threshold,
             )
             right = _consensus_fingerprint(
-                topic_rows["hybrid"][int(right_topic)]["clustered_smiles"],
+                right_row["clustered_smiles"],
                 config.mag_fingerprint_threshold,
             )
             if left is None or right is None:
@@ -420,6 +472,70 @@ def _manuscript_text(summary: dict[str, Any]) -> str:
             "",
         ]
     )
+    sos_rows = [
+        row
+        for row in summary["mag_per_seed"]
+        if row["association_mode"] == "dominant_topic"
+    ]
+    derivation_kind = (summary.get("protocol_derivation") or {}).get("kind")
+    if derivation_kind == "chemical_evaluation_correction":
+        sos_caption = (
+            "Post-hoc corrected single-seed SOS diagnostic using full held-out "
+            "spectra and dominant-topic association. This is not confirmatory."
+        )
+    elif summary["evidence_scope"] == "indicative_single_seed":
+        sos_caption = (
+            "Prespecified single-seed indicative SOS using full held-out spectra "
+            "and dominant-topic association. This is not confirmatory."
+        )
+    else:
+        sos_caption = (
+            "Five-seed confirmatory SOS using full held-out spectra and "
+            "dominant-topic association; every seed is reported."
+        )
+    sos_caption += (
+        " Means are compound-balanced within topic. The annotation-containment "
+        "and smaller-fingerprint denominators are both shown. Fingerprint "
+        "settings are frozen equally across methods and do not reproduce the "
+        "paper's downstream RDKit/0.9 analysis."
+    )
+
+    def optional(value: float | None) -> str:
+        return "--" if value is None else f"{value:.4f}"
+
+    labels = {
+        ("tomotopy", "standard"): ("Tomotopy", "standard"),
+        ("hybrid", "encoder"): ("HybridLDA", "encoder"),
+        ("hybrid", "two_step"): ("HybridLDA", "encoder + 2 VB"),
+        ("hybrid", "long"): ("HybridLDA", "long VB"),
+    }
+    lines.extend(
+        [
+            "\\begin{table}[ht]",
+            "\\centering",
+            "\\small",
+            "\\begin{tabular}{rllrrrr}",
+            "Seed & Method & inference & MAG topics & SOS topics & containment SOS & smaller-FP SOS \\\\",
+            "\\hline",
+        ]
+    )
+    for row in sos_rows:
+        method, arm = labels[(row["method"], row["inference_arm"])]
+        lines.append(
+            f"{row['seed']} & {method} & {arm} & "
+            f"{row['mag_annotation_available_topics']} & "
+            f"{row['eligible_topics']} & "
+            f"{optional(row['mean_sos_notebook_annotation_containment'])} & "
+            f"{optional(row['mean_sos_supplement_smaller_fingerprint'])} \\\\"
+        )
+    lines.extend(
+        [
+            "\\end{tabular}",
+            f"\\caption{{{sos_caption}}}",
+            "\\end{table}",
+            "",
+        ]
+    )
     return "\n".join(lines)
 
 
@@ -471,7 +587,7 @@ def build_report(run_dir: str | Path) -> dict[str, Any]:
     ):
         raise ValueError("raw-DreaMS result rows changed before reporting")
     summary = {
-        "schema_version": "msnlib-validation/report-v1",
+        "schema_version": "msnlib-validation/report-v2",
         "protocol_sha256": lock["protocol_sha256"],
         "protocol_derivation": lock.get("derivation"),
         "evidence_scope": config.evidence_scope,
@@ -515,6 +631,16 @@ def build_report(run_dir: str | Path) -> dict[str, Any]:
             "hybrid_training_cpu_threads": config.hybrid_training_cpu_threads,
             "hybrid_inference_cpu_threads": config.hybrid_inference_cpu_threads,
             "prior_test_results_inspected": bool(lock.get("test_results_inspected")),
+            "chemical_evaluation_posthoc_correction": bool(
+                (lock.get("derivation") or {}).get("kind")
+                == "chemical_evaluation_correction"
+            ),
+            "dominant_topic_sos_uses_no_absolute_probability_cutoff": True,
+            "dominant_topic_sos_is_invariant_to_all_calibration_changes": False,
+            "primary_sos_is_compound_balanced": True,
+            "probability_ge_frozen_threshold_is_sensitivity_only": True,
+            "chemical_association_uses_full_test_spectra": True,
+            "document_completion_uses_observed_peak_groups_only": True,
             "software_validation_is_chemical_evidence": False,
             "msnlib_peaks_are_ground_truth_fragment_assignments": False,
             "background_component_is_proven_experimental_background": False,
@@ -542,7 +668,7 @@ def build_report(run_dir: str | Path) -> dict[str, Any]:
         manuscript_path,
     )
     result = {
-        "schema_version": "msnlib-validation/report-complete-v1",
+        "schema_version": "msnlib-validation/report-complete-v2",
         "protocol_sha256": lock["protocol_sha256"],
         "output_sha256": {path.name: file_sha256(path) for path in outputs},
     }

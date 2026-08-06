@@ -16,6 +16,18 @@ were selectively reimplemented against the current APIs:
   and molecule divided by annotation bits. The current implementation adds
   shape/empty guards and tests.
 
+The paper repository's deposited `Benchmark_MAG_MSn.ipynb` and
+`Analysis_MSnLib.ipynb` were inspected as primary methodology sources. They
+establish that the published analysis used full fitted documents, a 0.5
+membership heuristic, and MAG-optimized motifs. No notebook code was copied.
+The current driver adapts those steps to held-out full spectra and additionally
+reports a rank-based dominant-topic diagnostic without an absolute cutoff. It
+uses the benchmark's frozen MACCS/0.8 setting equally for both methods, whereas
+the downstream paper analysis notebook recomputed RDKit fingerprints at 0.9.
+Accordingly, paper SOS values are contextual, not directly comparable. The
+driver reports both the notebook's annotation-containment denominator and the
+supplement's smaller-fingerprint denominator because those sources disagree.
+
 No private repository metadata, generated result, absolute archive path, model,
 or data artifact was copied. Both preserved branches remain unmodified.
 

@@ -57,11 +57,19 @@ def _parser() -> argparse.ArgumentParser:
     freeze_continuation.add_argument("--source-run", type=Path, required=True)
     freeze_continuation.add_argument("--reason", required=True)
 
+    freeze_chemical = commands.add_parser("freeze-chemical-correction")
+    freeze_chemical.add_argument("--config", type=Path, required=True)
+    freeze_chemical.add_argument("--data-root", type=Path, required=True)
+    freeze_chemical.add_argument("--run", type=Path, required=True)
+    freeze_chemical.add_argument("--repo-root", type=Path, default=Path.cwd())
+    freeze_chemical.add_argument("--source-run", type=Path, required=True)
+    freeze_chemical.add_argument("--reason", required=True)
+
     reuse = commands.add_parser("reuse-core-artifacts")
     reuse.add_argument("--run", type=Path, required=True)
     reuse.add_argument("--source-run", type=Path, required=True)
 
-    for name in ("run-core", "run-mag", "report"):
+    for name in ("run-core", "run-chemical-inference", "run-mag", "report"):
         command = commands.add_parser(name)
         command.add_argument("--run", type=Path, required=True)
         if name == "run-mag":
@@ -84,6 +92,13 @@ def _parser() -> argparse.ArgumentParser:
 
     raw_dreams = commands.add_parser("_run-raw-dreams")
     raw_dreams.add_argument("--run", type=Path, required=True)
+
+    chemical_worker = commands.add_parser("_run-chemical-model")
+    chemical_worker.add_argument("--run", type=Path, required=True)
+    chemical_worker.add_argument(
+        "--method", choices=("tomotopy", "hybrid"), required=True
+    )
+    chemical_worker.add_argument("--seed", type=int, required=True)
 
     smoke = commands.add_parser("smoke")
     smoke.add_argument("--output", type=Path)
@@ -176,6 +191,27 @@ def _run(args: argparse.Namespace) -> dict[str, Any]:
             test_results_inspected=True,
             derivation=derivation,
         )
+    if args.command == "freeze-chemical-correction":
+        from .protocol import (
+            freeze_protocol,
+            validate_chemical_evaluation_correction_derivation,
+        )
+
+        config = load_config(args.config)
+        derivation = validate_chemical_evaluation_correction_derivation(
+            args.source_run,
+            config,
+            args.reason,
+        )
+        return freeze_protocol(
+            config,
+            config_path=args.config,
+            data_root=args.data_root,
+            run_dir=args.run,
+            repo_root=args.repo_root,
+            test_results_inspected=True,
+            derivation=derivation,
+        )
     if args.command == "reuse-core-artifacts":
         from .reuse import reuse_core_artifacts
 
@@ -184,6 +220,10 @@ def _run(args: argparse.Namespace) -> dict[str, Any]:
         from .models import run_all_core_models
 
         return run_all_core_models(args.run)
+    if args.command == "run-chemical-inference":
+        from .chemical import run_all_chemical_inference
+
+        return run_all_chemical_inference(args.run)
     if args.command == "_run-model":
         from .models import run_hybrid_seed, run_tomotopy_seed
 
@@ -211,6 +251,14 @@ def _run(args: argparse.Namespace) -> dict[str, Any]:
         from .mag import run_raw_dreams_baseline
 
         return run_raw_dreams_baseline(args.run)
+    if args.command == "_run-chemical-model":
+        from .chemical import run_full_spectrum_inference_for_model
+
+        return run_full_spectrum_inference_for_model(
+            args.run,
+            seed=args.seed,
+            method=args.method,
+        )
     if args.command == "report":
         from .report import build_report
 
@@ -226,7 +274,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     """Dispatch one benchmark stage and emit its JSON result."""
     args = _parser().parse_args(argv)
     run = getattr(args, "run", None)
-    freeze_commands = {"freeze", "freeze-derived", "freeze-continuation"}
+    freeze_commands = {
+        "freeze",
+        "freeze-derived",
+        "freeze-continuation",
+        "freeze-chemical-correction",
+    }
     if run is not None and args.command not in freeze_commands:
         _append_execution(run, status="started")
     try:
