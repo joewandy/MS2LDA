@@ -1,8 +1,14 @@
-# Leakage-safe MSnLib validation
+# MSnLib validation on genuinely unseen compounds
 
 This package is the reproducible full-scale comparison of ordinary Tomotopy
-LDA and the isolated ms2lda_hybrid research implementation. It does not change
-the production MS2LDA backend.
+LDA and the isolated ms2lda_hybrid research implementation. It does not alter
+the ordinary MS2LDA code paths.
+
+The test compounds must remain genuinely unseen until final evaluation.
+"Information leakage" is the technical name for accidentally letting knowledge
+of a test compound influence training, feature construction, parameter
+selection, or the MAG search library. The benchmark prevents those routes so
+the test compounds are genuinely new to the benchmark-fitted models.
 
 The active correction uses all 38,888 eligible positive-mode spectra, 1,000
 topics and seed 42. Complete Bemis–Murcko scaffold groups define train,
@@ -25,11 +31,17 @@ unchanged Tomotopy core model may be imported through reuse-tomotopy.
 A later audit found that this first peak-aware correction still matched every
 physical group independently to the nearest retained DreaMS peak. Because
 DreaMS keeps only 100 peaks, a discarded group could borrow a nearby retained
-state. The affected Hybrid checkpoint, tables and numerical conclusions are
+state. The affected Hybrid checkpoint, tables and numerical conclusions were
 removed. The replacement requires exact retained float32 m/z identity, rejects
 ambiguous identities, authenticates every completed embedding chunk before
-resume and rebuilds every Hybrid-dependent artifact. Its real-data run is
-pending; no current Hybrid chemical result should be quoted.
+resume and rebuilds every Hybrid-dependent artifact.
+
+That replacement completed under protocol
+e57f289c691f94edf86e9d8b53e284233862014dd980da82e7f5f272b7f2ec45.
+The committed compact checkpoint, generated LaTeX tables and publication
+manifest are the only current numerical Hybrid result. It is a post-hoc
+implementation-corrected, single-seed indicative study, not confirmatory
+evidence. See docs/hybrid_lda_method.tex for the results and claim boundaries.
 
 The older configurations remain audit records:
 
@@ -72,7 +84,8 @@ exist or must be empty.
     DATA=/path/to/ms2lda-msnlib-validation/zenodo/20179680
     SOURCE=/path/to/ms2lda-msnlib-validation/runs/indicative-msnlib-k1000-seed42/continuation/chemical-correction
     RUN=/path/to/ms2lda-msnlib-validation/runs/indicative-msnlib-k1000-seed42-peak-pooling-correction
-    CONFIG=benchmarks/msnlib_validation/configs/indicative-msnlib-k1000-seed42-peak-pooling-correction.json
+    CONFIG=benchmarks/msnlib_validation/configs/\
+    indicative-msnlib-k1000-seed42-peak-pooling-correction.json
 
     cd "$REPO"
     conda run -n ms2lda-hybrid python -m benchmarks.msnlib_validation \
@@ -113,7 +126,11 @@ scientifically equivalent but not bitwise identical to the retained model.
 
     git clone https://github.com/joewandy/MS2LDA.git
     cd MS2LDA
-    git checkout <source commit recorded in protocol.lock.json>
+    SOURCE_COMMIT=2608b55524b20d3767a6a793a01dcc4b7b88f7af
+    DATA=/path/to/ms2lda-msnlib-validation/zenodo/20179680
+    RUN=/path/to/ms2lda-msnlib-validation/runs/fresh-seed42
+    CONFIG=benchmarks/msnlib_validation/configs/indicative-msnlib-k1000-seed42-peak-pooling-correction.json
+    git checkout "$SOURCE_COMMIT"
     conda run -n ms2lda-hybrid python -m benchmarks.msnlib_validation \
       freeze --config "$CONFIG" --data-root "$DATA" --run "$RUN" \
       --repo-root "$PWD"
@@ -149,8 +166,8 @@ Fast software validation:
     conda run -n ms2lda-hybrid \
       python -m benchmarks.msnlib_validation smoke
 
-Smoke and synthetic outputs are software evidence only. Genuine chemical
-evidence begins only when the exact-identity real-data report, full-spectrum SOS
-and zero-leak MAG audit all complete. Those gates are pending. One seed cannot
-estimate cross-seed stability, and the Zenodo assets contain no independent
-manual motif–spectrum-annotation endpoint.
+Smoke and synthetic outputs are software evidence only. The exact-identity
+real-data report, full-spectrum SOS and MAG exclusion audit completed for seed
+42. Those outputs are genuine but indirect, post-hoc single-seed chemical
+evidence. They cannot estimate cross-seed stability, and the Zenodo assets
+contain no independent manual motif–spectrum-annotation endpoint.

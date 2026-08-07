@@ -523,7 +523,13 @@ def pool_word_embeddings(
     document_identifiers: Sequence[str],
     mz_tolerance: float = 0.02,
 ) -> dict[str, np.ndarray]:
-    """Pool train-only contextual peak states into spectral-word features.
+    """Approximately pool contextual peak states from rounded word tokens.
+
+    This legacy convenience helper cannot recover exact physical-peak identity
+    after tokenization. It is therefore outside the MSnLib exact-identity
+    protocol and must not be used where discarded peaks or rounded-word
+    collisions need to remain distinguishable. The benchmark uses its
+    peak-group-aware feature builder instead.
 
     The vocabulary is the first-occurrence order of words in ``documents``,
     matching :class:`HybridLDAModel`. A ``frag@m`` word maps to the nearest
@@ -531,7 +537,8 @@ def pool_word_embeddings(
     ``precursor_mz - l``. Matches must fall within ``mz_tolerance``. Repeated
     words are count-weighted and unmatched words are omitted from the result.
     Documents and feature rows must describe the same spectra in the same
-    order; callers should pass training rows only to avoid leakage.
+    order. Callers should pass training rows only, so test spectra cannot
+    influence the fitted word features.
     """
 
     identifiers = tuple(str(identifier) for identifier in document_identifiers)
