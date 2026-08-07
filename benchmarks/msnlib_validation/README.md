@@ -22,16 +22,14 @@ post-review configuration. It explicitly records that earlier test results were
 inspected. Hybrid features and models must be rebuilt from scratch; only the
 unchanged Tomotopy core model may be imported through reuse-tomotopy.
 
-That correction completed under protocol
-`3b2a07029b22c51c682cf11e0756bcdd2f6092878e67cd2db34df82caced5b7b`
-from source commit `98601867ec3ace2fb3c51ec50ed2f2305eba608b`. Hybrid
-converged after 149 discovery epochs. The primary compound-balanced,
-dominant-topic SOS diagnostic found 598 evaluable Tomotopy topics (mean
-0.6232) and 608, 619 and 625 Hybrid topics for encoder, two-step and long
-inference (means 0.6300, 0.6307 and 0.6293). These are post-hoc single-seed
-chemical diagnostics, not confirmatory evidence. The unchanged probability
-`>=0.5` association remains a sensitivity analysis and is not calibrated
-across inference methods.
+A later audit found that this first peak-aware correction still matched every
+physical group independently to the nearest retained DreaMS peak. Because
+DreaMS keeps only 100 peaks, a discarded group could borrow a nearby retained
+state. The affected Hybrid checkpoint, tables and numerical conclusions are
+removed. The replacement requires exact retained float32 m/z identity, rejects
+ambiguous identities, authenticates every completed embedding chunk before
+resume and rebuilds every Hybrid-dependent artifact. Its real-data run is
+pending; no current Hybrid chemical result should be quoted.
 
 The older configurations remain audit records:
 
@@ -85,7 +83,7 @@ exist or must be empty.
       freeze-implementation-correction \
         --config "$CONFIG" --data-root "$DATA" --run "$RUN" \
         --repo-root "$PWD" --source-run "$SOURCE" \
-        --reason "pool each physical peak into its own DreaMS contextual state"
+        --reason "require exact retained DreaMS peak identity; never borrow a state"
     conda run -n ms2lda-hybrid python -m benchmarks.msnlib_validation \
       reuse-tomotopy --source-run "$SOURCE" --run "$RUN"
 
@@ -93,10 +91,11 @@ Launch the complete resumable pipeline without caffeinate. It uses four Hybrid
 training threads, one inference thread and the frozen 250-epoch safety ceiling
 with mandatory early stopping after five stable epochs.
 
-    nohup conda run --no-capture-output -n ms2lda-hybrid \
-      python -m benchmarks.msnlib_validation run-pipeline \
-        --run "$RUN" --data-root "$DATA" --mag-environment MS2LDA_v2 \
-      >> "$RUN/unattended.log" 2>&1 &
+    screen -dmS msnlib_peak_identity /bin/zsh -lc \
+      "cd \"$REPO\" && exec conda run --no-capture-output \
+      -n ms2lda-hybrid python -m benchmarks.msnlib_validation run-pipeline \
+      --run \"$RUN\" --data-root \"$DATA\" --mag-environment MS2LDA_v2 \
+      >> \"$RUN/unattended.log\" 2>&1"
 
 Reissuing run-pipeline is safe: each stage verifies completed artifacts and
 resumes its own atomic checkpoints. If Hybrid reaches the safety ceiling
@@ -114,7 +113,7 @@ scientifically equivalent but not bitwise identical to the retained model.
 
     git clone https://github.com/joewandy/MS2LDA.git
     cd MS2LDA
-    git checkout 98601867ec3ace2fb3c51ec50ed2f2305eba608b
+    git checkout <source commit recorded in protocol.lock.json>
     conda run -n ms2lda-hybrid python -m benchmarks.msnlib_validation \
       freeze --config "$CONFIG" --data-root "$DATA" --run "$RUN" \
       --repo-root "$PWD"
@@ -124,8 +123,8 @@ scientifically equivalent but not bitwise identical to the retained model.
 
 ## Publication evidence and tests
 
-The completed report was exported to the committed checkpoint and LaTeX
-fragment rather than transcribing values:
+After the replacement report completes, export it to the compact checkpoint and
+LaTeX fragment rather than transcribing values:
 
     conda run -n ms2lda-hybrid python -m benchmarks.msnlib_validation \
       export-publication --run "$RUN" \
@@ -151,7 +150,7 @@ Fast software validation:
       python -m benchmarks.msnlib_validation smoke
 
 Smoke and synthetic outputs are software evidence only. Genuine chemical
-evidence begins only when the peak-aware real-data report, full-spectrum SOS
-and zero-leak MAG audit all complete; those gates passed for this correction.
-One seed cannot estimate cross-seed stability, and the Zenodo assets contain no
-independent manual motif–spectrum-annotation endpoint.
+evidence begins only when the exact-identity real-data report, full-spectrum SOS
+and zero-leak MAG audit all complete. Those gates are pending. One seed cannot
+estimate cross-seed stability, and the Zenodo assets contain no independent
+manual motif–spectrum-annotation endpoint.

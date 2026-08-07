@@ -18,6 +18,7 @@ from ms2lda_hybrid.dreams_features import (
     parse_spectral_word,
 )
 
+from .checkpoint_hashes import extend_row_hash_ledger, validate_row_hash_ledger
 from .config import file_sha256, load_config, read_json, resolve_input_paths, write_json
 from .data import (
     SpectrumRecord,
@@ -35,9 +36,9 @@ from .protocol import (
 )
 from .runtime import peak_rss_bytes
 
-_WORD_POOL_STRATEGY = "physical_peak_group_v2"
-_FEATURE_CHECKPOINT_SCHEMA = "msnlib-feature-checkpoint/v2"
-_FEATURE_CHECKPOINT_FORMAT = "atomic-generations-v2"
+_WORD_POOL_STRATEGY = "physical_peak_identity_v3"
+_FEATURE_CHECKPOINT_SCHEMA = "msnlib-feature-checkpoint/v3"
+_FEATURE_CHECKPOINT_FORMAT = "atomic-generations-v3"
 _CHECKPOINT_ARRAY_NAMES = ("sums.npy", "weights.npy", "completed.npy")
 
 
@@ -49,6 +50,7 @@ def _empty_word_pool_counters() -> dict[str, int]:
         "unmatched_peak_groups": 0,
         "matched_token_occurrences": 0,
         "unmatched_token_occurrences": 0,
+        "retained_dreams_peak_states": 0,
         "fragment_collision_documents": 0,
         "fragment_collision_words": 0,
         "fragment_collision_extra_peak_groups": 0,
@@ -56,6 +58,14 @@ def _empty_word_pool_counters() -> dict[str, int]:
         "neutral_loss_collision_words": 0,
         "neutral_loss_collision_extra_peak_groups": 0,
     }
+
+
+def _peak_identity_key(value: float) -> int:
+    """Return the exact float32 m/z identity used by pinned DreaMS."""
+    converted = np.asarray(value, dtype=np.float32)
+    if converted.ndim != 0 or not np.isfinite(converted) or converted <= 0:
+        raise ValueError("peak identity requires a finite positive m/z")
+    return int(converted.view(np.uint32))
 
 
 def _validated_pool_counters(value: Any) -> dict[str, int]:
@@ -104,7 +114,6 @@ def _update_word_pool(
     sums: np.ndarray,
     weights: np.ndarray,
     counters: dict[str, int] | None = None,
-    mz_tolerance: float = 0.02,
 ) -> dict[str, int]:
     """Pool each physical peak's words against that peak's contextual state.
 
@@ -124,8 +133,25 @@ def _update_word_pool(
         mask = feature_batch.peak_mask[row]
         peak_mz = feature_batch.peak_mz[row, mask]
         states = feature_batch.peak_embeddings[row, mask].astype(np.float32)
-        if not len(peak_mz):
-            continue
+        group_keys = [_peak_identity_key(group.mz) for group in record.peak_groups]
+        if len(set(group_keys)) != len(group_keys):
+            raise ValueError(
+                f"physical peak identity is ambiguous after float32 conversion: "
+                f"{record.spectrum_id}"
+            )
+        state_keys = [_peak_identity_key(value) for value in peak_mz]
+        if len(set(state_keys)) != len(state_keys):
+            raise ValueError(
+                f"DreaMS retained duplicate peak identities: {record.spectrum_id}"
+            )
+        unknown_states = set(state_keys) - set(group_keys)
+        if unknown_states:
+            raise ValueError(
+                f"DreaMS peak identities do not match their source record: "
+                f"{record.spectrum_id}"
+            )
+        state_by_identity = dict(zip(state_keys, states, strict=True))
+        counters["retained_dreams_peak_states"] += len(state_by_identity)
         word_peak_groups: Counter[str] = Counter()
         for group in record.peak_groups:
             for word in set(group.tokens):
@@ -145,7 +171,7 @@ def _update_word_pool(
         for prefix in collision_kinds:
             counters[f"{prefix}_collision_documents"] += 1
 
-        for group in record.peak_groups:
+        for group, identity in zip(record.peak_groups, group_keys, strict=True):
             eligible = [
                 (word, count)
                 for word, count in Counter(group.tokens).items()
@@ -154,10 +180,9 @@ def _update_word_pool(
             if not eligible:
                 continue
             counters["training_peak_groups"] += 1
-            peak = int(np.argmin(np.abs(peak_mz - group.mz)))
-            matched = abs(float(peak_mz[peak]) - group.mz) <= mz_tolerance
             token_occurrences = sum(count for _, count in eligible)
-            if not matched:
+            state = state_by_identity.get(identity)
+            if state is None:
                 counters["unmatched_peak_groups"] += 1
                 counters["unmatched_token_occurrences"] += token_occurrences
                 continue
@@ -165,7 +190,7 @@ def _update_word_pool(
             counters["matched_token_occurrences"] += token_occurrences
             for word, count in eligible:
                 column = vocabulary_index[word]
-                sums[column] += float(count) * states[peak]
+                sums[column] += float(count) * state
                 weights[column] += float(count)
     return counters
 
@@ -205,6 +230,8 @@ def _read_feature_checkpoint_generation(
     total_rows: int,
     vocabulary_size: int,
     embedding_dim: int,
+    global_embeddings: np.ndarray,
+    identifiers_sha256: str,
 ) -> dict[str, Any]:
     """Read and fully verify one atomic feature-checkpoint generation."""
     state = read_json(path / "state.json")
@@ -220,6 +247,8 @@ def _read_feature_checkpoint_generation(
         raise ValueError("feature checkpoint vocabulary size mismatch")
     if int(state.get("embedding_dim", -1)) != embedding_dim:
         raise ValueError("feature checkpoint embedding dimension mismatch")
+    if state.get("identifiers_sha256") != identifiers_sha256:
+        raise ValueError("feature checkpoint identifiers changed")
     try:
         expected_generation = int(path.name.removeprefix("generation-"))
     except ValueError as exc:
@@ -247,11 +276,21 @@ def _read_feature_checkpoint_generation(
         raise ValueError("feature checkpoint arrays contain non-finite values")
     if np.any(weights < 0):
         raise ValueError("feature checkpoint weights cannot be negative")
+    if (
+        global_embeddings.shape != (total_rows, embedding_dim)
+        or global_embeddings.dtype != np.float32
+    ):
+        raise ValueError("global embedding checkpoint has invalid shape or dtype")
     completed_rows = int(state.get("completed_rows", -1))
     if completed_rows < 0 or completed_rows > total_rows:
         raise ValueError("feature checkpoint completed row count is invalid")
     if not np.all(completed[:completed_rows]) or np.any(completed[completed_rows:]):
         raise ValueError("feature checkpoint completion mask is non-contiguous")
+    global_embedding_chunks = validate_row_hash_ledger(
+        global_embeddings,
+        state.get("global_embedding_chunks"),
+        completed_rows=completed_rows,
+    )
     cumulative_seconds = float(state.get("cumulative_extraction_seconds", -1.0))
     if not np.isfinite(cumulative_seconds) or cumulative_seconds < 0:
         raise ValueError("feature checkpoint extraction time is invalid")
@@ -261,6 +300,7 @@ def _read_feature_checkpoint_generation(
         "weights": weights,
         "completed": completed,
         "counters": _validated_pool_counters(state.get("word_pool_counters")),
+        "global_embedding_chunks": global_embedding_chunks,
     }
 
 
@@ -271,6 +311,8 @@ def _load_latest_feature_checkpoint(
     total_rows: int,
     vocabulary_size: int,
     embedding_dim: int,
+    global_embeddings: np.ndarray,
+    identifiers_sha256: str,
 ) -> dict[str, Any] | None:
     """Restore the newest valid generation, falling back from corrupt ones."""
     candidates = _checkpoint_generation_directories(checkpoint_dir)
@@ -283,6 +325,8 @@ def _load_latest_feature_checkpoint(
                 total_rows=total_rows,
                 vocabulary_size=vocabulary_size,
                 embedding_dim=embedding_dim,
+                global_embeddings=global_embeddings,
+                identifiers_sha256=identifiers_sha256,
             )
         except (KeyError, OSError, TypeError, ValueError) as exc:
             rejected.append({"generation": path.name, "reason": str(exc)})
@@ -307,6 +351,11 @@ def _write_feature_checkpoint_generation(
     weights: np.ndarray,
     cumulative_extraction_seconds: float,
     word_pool_counters: dict[str, int],
+    global_embeddings: np.ndarray,
+    global_embedding_chunks: Sequence[dict[str, Any]],
+    checkpoint_start: int,
+    checkpoint_end: int,
+    identifiers_sha256: str,
     keep: int = 2,
     fault_hook: Callable[[str], None] | None = None,
 ) -> dict[str, Any]:
@@ -321,6 +370,11 @@ def _write_feature_checkpoint_generation(
         raise ValueError("feature checkpoint weights must align with sums")
     if completed.ndim != 1 or completed.dtype != np.bool_:
         raise ValueError("feature checkpoint completed mask must be boolean")
+    if (
+        global_embeddings.shape != (len(completed), sums.shape[1])
+        or global_embeddings.dtype != np.float32
+    ):
+        raise ValueError("global embeddings must align with feature checkpoint")
     if (
         not np.isfinite(cumulative_extraction_seconds)
         or cumulative_extraction_seconds < 0
@@ -354,6 +408,14 @@ def _write_feature_checkpoint_generation(
         completed_rows = int(false_rows[0]) if len(false_rows) else len(completed_array)
         if np.any(completed_array[completed_rows:]):
             raise ValueError("feature checkpoint completion mask is non-contiguous")
+        if checkpoint_end != completed_rows or checkpoint_start >= checkpoint_end:
+            raise ValueError("feature checkpoint row interval is invalid")
+        updated_embedding_chunks = extend_row_hash_ledger(
+            global_embedding_chunks,
+            global_embeddings,
+            start=checkpoint_start,
+            end=checkpoint_end,
+        )
         state = {
             "schema": _FEATURE_CHECKPOINT_SCHEMA,
             "generation": generation,
@@ -363,6 +425,8 @@ def _write_feature_checkpoint_generation(
             "completed_rows": completed_rows,
             "vocabulary_size": int(np.asarray(weights).shape[0]),
             "embedding_dim": int(np.asarray(sums).shape[1]),
+            "identifiers_sha256": identifiers_sha256,
+            "global_embedding_chunks": updated_embedding_chunks,
             "cumulative_extraction_seconds": float(cumulative_extraction_seconds),
             "word_pool_counters": counters,
             "output_sha256": {
@@ -389,6 +453,8 @@ def _write_feature_checkpoint_generation(
                 total_rows=len(completed),
                 vocabulary_size=len(weights),
                 embedding_dim=sums.shape[1],
+                global_embeddings=global_embeddings,
+                identifiers_sha256=identifiers_sha256,
             )
         except (KeyError, OSError, TypeError, ValueError):
             continue
@@ -404,8 +470,9 @@ def _ensure_feature_checkpoint_format(
     protocol_sha256: str,
     rows: int,
     vocabulary_size: int,
+    identifiers_sha256: str,
 ) -> None:
-    """Initialize v2 state or reject ambiguous legacy additive checkpoints."""
+    """Initialize v3 state or reject ambiguous legacy additive checkpoints."""
     format_path = feature_dir / "checkpoint_format.json"
     legacy_paths = tuple(
         feature_dir / name
@@ -431,6 +498,7 @@ def _ensure_feature_checkpoint_format(
                 "vocabulary_size": vocabulary_size,
                 "embedding_dim": DREAMS_EMBEDDING_DIM,
                 "word_pool_strategy": _WORD_POOL_STRATEGY,
+                "identifiers_sha256": identifiers_sha256,
             },
         )
         return
@@ -442,6 +510,7 @@ def _ensure_feature_checkpoint_format(
         "vocabulary_size": vocabulary_size,
         "embedding_dim": DREAMS_EMBEDDING_DIM,
         "word_pool_strategy": _WORD_POOL_STRATEGY,
+        "identifiers_sha256": identifiers_sha256,
     }
     if state != expected:
         raise ValueError("feature checkpoint format does not match this run")
@@ -466,7 +535,7 @@ def prepare_features(
             raise ValueError("feature cache belongs to another frozen protocol")
         if manifest.get("word_pool_strategy") != _WORD_POOL_STRATEGY:
             raise RuntimeError(
-                "legacy feature cache uses document-level rounded-word pooling; "
+                "feature cache uses an incompatible or unsafe word-pooling strategy; "
                 "use a new feature directory and rebuild Hybrid features"
             )
         for name, digest in manifest["output_sha256"].items():
@@ -486,8 +555,13 @@ def prepare_features(
 
     identifiers = [record.spectrum_id for record in records]
     identifiers_path = feature_dir / "identifiers.json"
-    if not identifiers_path.exists():
-        write_json(identifiers_path, {"identifiers": identifiers})
+    identifiers_payload = {"identifiers": identifiers}
+    if identifiers_path.exists():
+        if read_json(identifiers_path) != identifiers_payload:
+            raise ValueError("feature identifiers changed")
+    else:
+        write_json(identifiers_path, identifiers_payload)
+    identifiers_sha256 = file_sha256(identifiers_path)
     global_path = feature_dir / "global_embeddings.npy"
     completed_path = feature_dir / "completed.npy"
     checkpoint_dir = feature_dir / "checkpoint_generations"
@@ -497,6 +571,19 @@ def prepare_features(
         protocol_sha256=lock["protocol_sha256"],
         rows=len(records),
         vocabulary_size=len(vocabulary),
+        identifiers_sha256=identifiers_sha256,
+    )
+    checkpoint_candidates = _checkpoint_generation_directories(checkpoint_dir)
+    if checkpoint_candidates and not global_path.exists():
+        raise RuntimeError(
+            "feature checkpoint exists but global embeddings are missing"
+        )
+    had_global_embeddings = global_path.exists()
+    global_embeddings = np.lib.format.open_memmap(
+        global_path,
+        mode="r+" if had_global_embeddings else "w+",
+        dtype=np.float32,
+        shape=shape,
     )
     restored = _load_latest_feature_checkpoint(
         checkpoint_dir,
@@ -504,19 +591,15 @@ def prepare_features(
         total_rows=len(records),
         vocabulary_size=len(vocabulary),
         embedding_dim=DREAMS_EMBEDDING_DIM,
+        global_embeddings=global_embeddings,
+        identifiers_sha256=identifiers_sha256,
     )
     if restored is not None:
-        if not global_path.exists():
-            raise RuntimeError(
-                "feature checkpoint exists but global embeddings are missing"
-            )
-        global_embeddings = np.lib.format.open_memmap(
-            global_path, mode="r+", dtype=np.float32, shape=shape
-        )
         completed = restored["completed"]
         sums = restored["sums"]
         weights = restored["weights"]
         pool_counters = restored["counters"]
+        global_embedding_chunks = restored["global_embedding_chunks"]
         previous_extraction_seconds = float(
             restored["state"]["cumulative_extraction_seconds"]
         )
@@ -529,13 +612,16 @@ def prepare_features(
     else:
         # If this is a pre-first-checkpoint interruption, ``w+`` safely
         # overwrites any global rows because no additive state was published.
-        global_embeddings = np.lib.format.open_memmap(
-            global_path, mode="w+", dtype=np.float32, shape=shape
-        )
+        if had_global_embeddings:
+            del global_embeddings
+            global_embeddings = np.lib.format.open_memmap(
+                global_path, mode="w+", dtype=np.float32, shape=shape
+            )
         completed = np.zeros(len(records), dtype=np.bool_)
         sums = np.zeros((len(vocabulary), DREAMS_EMBEDDING_DIM), dtype=np.float32)
         weights = np.zeros(len(vocabulary), dtype=np.float64)
         pool_counters = _empty_word_pool_counters()
+        global_embedding_chunks = []
         previous_extraction_seconds = 0.0
         checkpoint_generation = 0
         last_valid_checkpoint_generation = 0
@@ -605,7 +691,7 @@ def prepare_features(
         if chunks % checkpoint_every_chunks == 0 or end == len(records):
             completed[checkpoint_start:end] = True
             checkpoint_generation += 1
-            _write_feature_checkpoint_generation(
+            checkpoint_state = _write_feature_checkpoint_generation(
                 checkpoint_dir,
                 generation=checkpoint_generation,
                 protocol_sha256=lock["protocol_sha256"],
@@ -616,12 +702,23 @@ def prepare_features(
                     previous_extraction_seconds + extraction_seconds
                 ),
                 word_pool_counters=pool_counters,
+                global_embeddings=global_embeddings,
+                global_embedding_chunks=global_embedding_chunks,
+                checkpoint_start=checkpoint_start,
+                checkpoint_end=end,
+                identifiers_sha256=identifiers_sha256,
             )
+            global_embedding_chunks = checkpoint_state["global_embedding_chunks"]
             last_valid_checkpoint_generation = checkpoint_generation
             checkpoint_start = end
 
     if not bool(np.all(completed)):
         raise RuntimeError("feature extraction ended with incomplete rows")
+    if (
+        pool_counters["matched_peak_groups"] + pool_counters["unmatched_peak_groups"]
+        != pool_counters["training_peak_groups"]
+    ):
+        raise RuntimeError("peak identity assignment counts do not reconcile")
 
     word_embeddings = np.divide(
         sums,
@@ -645,12 +742,15 @@ def prepare_features(
         "embedding_dim": DREAMS_EMBEDDING_DIM,
         "training_only_word_pool": True,
         "word_pool_strategy": _WORD_POOL_STRATEGY,
+        "peak_identity_mapping": "exact_float32_source_mz",
+        "discarded_peak_state_policy": "unmatched",
         "word_pool_counters": pool_counters,
         "nontraining_features_use_observed_peak_groups_only": True,
         "nontraining_observed_intensity_renormalized_after_split": True,
         "matched_word_embeddings": int((weights > 0).sum()),
         "unmatched_word_embeddings": int((weights == 0).sum()),
         "last_checkpoint_generation": last_valid_checkpoint_generation,
+        "global_embedding_chunks": len(global_embedding_chunks),
         "rejected_newer_checkpoint_generations": rejected_checkpoint_generations,
         "extractor_initialization_seconds": initialization_seconds,
         "extraction_seconds_this_process": extraction_seconds,

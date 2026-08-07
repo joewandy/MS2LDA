@@ -37,9 +37,12 @@ generations, four-thread training/one-thread evaluation boundary,
 derived-protocol audit, and hash-audited reuse support are new code written for
 this validation. They were not copied from either archive. Independent review
 found that the first corrected-alpha run collapsed distinct physical peaks
-sharing a rounded word into one DreaMS contextual state. The post-review run
-therefore starts Hybrid and its feature pool from an empty target and imports
-only the unchanged, hash-verified Tomotopy core model. No earlier DreaMS pool,
-Hybrid checkpoint, Hybrid model, chemical mixture, MAG result, or SOS result is
-reused. The raw-DreaMS worker remains isolated from the legacy environment's
-duplicate OpenMP runtime; no unsafe duplicate-runtime override is used.
+sharing a rounded word into one DreaMS contextual state. A later audit found
+that the attempted physical-group correction still allowed a peak discarded by
+DreaMS's top-100 truncation to borrow a nearby retained state. The replacement
+requires exact retained peak identity and starts Hybrid and its feature pool
+from an empty target, importing only the unchanged, hash-verified Tomotopy core
+model. No earlier DreaMS pool, Hybrid checkpoint, Hybrid model, chemical
+mixture, MAG result, or SOS result is reused. The raw-DreaMS worker remains
+isolated from the legacy environment's duplicate OpenMP runtime; no unsafe
+duplicate-runtime override is used.
