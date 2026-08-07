@@ -6,10 +6,11 @@ were selectively reimplemented against the current APIs:
 - `archive/msn-evaluation:scripts/msn_benchmark_pipeline.py` supplied the
   precedent for deterministic Tomotopy construction and
   `model.train(..., workers=1, parallel=1)`. The historical confirmatory
-  profile retains that setting. The separately labelled indicative profile
-  deliberately uses the published notebook's `workers=0, parallel=3` training
-  setting and records that the resulting Tomotopy fit is not bitwise
-  reproducible. The current driver rewrites the orchestration, split
+  profile retains that setting. The published notebook used
+  `workers=0, parallel=3`; the separately labelled indicative laptop profile
+  preserves partition parallelism but caps the requested workers at six and
+  records that the resulting Tomotopy fit is not bitwise reproducible. The
+  current driver rewrites the orchestration, split
   discipline, metrics, manifests, and checkpointing.
 - `archive/private-msn-eval:scripts/evaluate_motif_substructure_quality.py`
   supplied the historical SOS arithmetic: MACCS bits shared by the annotation

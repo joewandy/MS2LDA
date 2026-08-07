@@ -22,6 +22,17 @@ post-review configuration. It explicitly records that earlier test results were
 inspected. Hybrid features and models must be rebuilt from scratch; only the
 unchanged Tomotopy core model may be imported through reuse-tomotopy.
 
+That correction completed under protocol
+`3b2a07029b22c51c682cf11e0756bcdd2f6092878e67cd2db34df82caced5b7b`
+from source commit `98601867ec3ace2fb3c51ec50ed2f2305eba608b`. Hybrid
+converged after 149 discovery epochs. The primary compound-balanced,
+dominant-topic SOS diagnostic found 598 evaluable Tomotopy topics (mean
+0.6232) and 608, 619 and 625 Hybrid topics for encoder, two-step and long
+inference (means 0.6300, 0.6307 and 0.6293). These are post-hoc single-seed
+chemical diagnostics, not confirmatory evidence. The unchanged probability
+`>=0.5` association remains a sensitivity analysis and is not calibrated
+across inference methods.
+
 The older configurations remain audit records:
 
 - full-msnlib-k1000.json: historical seeds 42–46 design; it cannot now create
@@ -103,7 +114,7 @@ scientifically equivalent but not bitwise identical to the retained model.
 
     git clone https://github.com/joewandy/MS2LDA.git
     cd MS2LDA
-    git checkout <executed-source-commit-from-checkpoint>
+    git checkout 98601867ec3ace2fb3c51ec50ed2f2305eba608b
     conda run -n ms2lda-hybrid python -m benchmarks.msnlib_validation \
       freeze --config "$CONFIG" --data-root "$DATA" --run "$RUN" \
       --repo-root "$PWD"
@@ -113,11 +124,19 @@ scientifically equivalent but not bitwise identical to the retained model.
 
 ## Publication evidence and tests
 
-After a real report completes, export the committed checkpoint and LaTeX
-fragment from that report rather than transcribing values:
+The completed report was exported to the committed checkpoint and LaTeX
+fragment rather than transcribing values:
 
     conda run -n ms2lda-hybrid python -m benchmarks.msnlib_validation \
       export-publication --run "$RUN" \
+      --checkpoint docs/hybrid_lda_seed42_checkpoint.json \
+      --latex docs/hybrid_lda_seed42_results.tex \
+      --manifest docs/hybrid_lda_seed42_publication_manifest.json
+
+Verify the compact evidence without access to the large external run:
+
+    conda run -n ms2lda-hybrid python -m benchmarks.msnlib_validation \
+      verify-publication \
       --checkpoint docs/hybrid_lda_seed42_checkpoint.json \
       --latex docs/hybrid_lda_seed42_results.tex \
       --manifest docs/hybrid_lda_seed42_publication_manifest.json
@@ -133,6 +152,6 @@ Fast software validation:
 
 Smoke and synthetic outputs are software evidence only. Genuine chemical
 evidence begins only when the peak-aware real-data report, full-spectrum SOS
-and zero-leak MAG audit all complete. One seed cannot estimate cross-seed
-stability, and the Zenodo assets contain no independent manual
-motif–spectrum-annotation endpoint.
+and zero-leak MAG audit all complete; those gates passed for this correction.
+One seed cannot estimate cross-seed stability, and the Zenodo assets contain no
+independent manual motif–spectrum-annotation endpoint.
