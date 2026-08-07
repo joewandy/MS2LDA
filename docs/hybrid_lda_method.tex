@@ -47,14 +47,14 @@ seed-42 MSnLib evaluation is used for the chemical comparison. Independent
 review found that its first Hybrid execution pooled separate physical peaks
 sharing a rounded spectral word into one contextual DreaMS state. Tomotopy and
 the leakage controls are unaffected, but all Hybrid-dependent numerical
-results from that execution were superseded. The peak-aware rerun converged and
-completed every frozen evaluation stage. In this post-hoc single-seed result,
-two-step inference closely approached long local refinement, and the
-compound-balanced SOS diagnostic was comparable between HybridLDA and
-Tomotopy. Word co-occurrence and likelihood results were mixed, so the result
-does not establish general superiority. MS2LDA is a research project at this
-stage; software validation is not presented as chemical evidence or as a
-production-system migration decision.
+results from that execution were superseded. A later audit found that the first
+peak-aware correction could still lend one retained DreaMS state to a nearby
+peak discarded by DreaMS's top-100 preprocessing. Those Hybrid-dependent
+results are also superseded. The implementation now requires exact retained
+peak identity and authenticated resumable feature caches; its replacement
+full-data run is pending. MS2LDA is a research project at this stage; software
+validation is not presented as chemical evidence or as a production-system
+migration decision.
 \end{abstract}
 
 \section{Introduction}
@@ -83,10 +83,11 @@ separated: pooled peak features can bias the bounded word prior during
 discovery, whereas global spectrum embeddings train only the final local
 inference network. The scientific question is whether these features add
 useful chemical structure without replacing LDA's auditable topic update. A
-full-data seed-42 benchmark tests fast local inference and chemically coherent
-topic discovery on benchmark-unseen compounds. This document reports the
-complete design, the result-changing peak-pooling defect found during review,
-and the frozen corrective rerun without selecting favourable arms. The
+full-data seed-42 benchmark is designed to test fast local inference and
+chemically coherent topic discovery on benchmark-unseen compounds. This
+document reports the complete design, both result-changing peak-pooling defects
+found during review, and the frozen replacement protocol without selecting
+favourable arms. The
 one-seed scope matches the published MSnLib Tomotopy/SOS precedent, while a
 five-seed extension remains useful for robustness rather than as an asymmetric
 requirement imposed only on HybridLDA.
@@ -182,12 +183,15 @@ $\mathbf h_{dp}\in\mathbb R^{1024}$ for each retained peak $p$. The extractor
 uses the official DreaMS preprocessor and its top 100 peaks.
 
 Contextual word features are constructed from training spectra only. For a
-fragment word at mass $m_v$, we pool the state of the nearest peak within
-0.02 Da. For a neutral-loss word at loss $\ell_v$, we pool the nearest peak to
-precursor mass minus $\ell_v$. Repeated occurrences contribute according to
-their counts. This gives a mean contextual vector $\bar{\mathbf h}_v$.
-Unmatched words receive a zero contextual vector but retain their mass and
-word-type features.
+physical peak, the implementation accepts a contextual state only when the
+state's float32 m/z identity exactly equals that source peak's identity. The
+fragment and neutral-loss words originating from that peak receive the same
+state, while repeated occurrences contribute according to their counts. A
+source peak discarded by DreaMS's top-100 preprocessing remains unmatched and
+cannot borrow a nearby retained peak's state. Duplicate float32 source or
+retained identities fail closed. Pooling these exact assignments gives a mean
+contextual vector $\bar{\mathbf h}_v$ for each word. Unmatched words receive a
+zero contextual vector but retain their mass and word-type features.
 
 \subsection{Chemically structured topic--word prior}
 
@@ -529,15 +533,15 @@ bitwise reproducible, like the paper's automatic multicore run.
 \subsection{Frozen seed-42 parameter snapshot}
 
 Table~\ref{tab:executed-parameters} is the complete reader-facing parameter
-snapshot for the corrective run. The authoritative machine-readable values
-remain the committed seed-42 configuration and the frozen protocol lock; no
-parameter below was selected from chemical labels.
+snapshot for the replacement run. The authoritative machine-readable values
+remain the committed seed-42 configuration and the protocol lock created before
+execution; no parameter below is selected from chemical labels.
 
 \begin{table}[ht]
 \centering
 \small
 \begin{tabular}{L{0.29\linewidth}L{0.63\linewidth}}
-Component & Executed value \\
+Component & Frozen value \\
 \hline
 Data and words & positive mode; 0--2000 Da; 5--1000 retained peaks; relative
 intensity 0.01--1.0; two decimal places; fragment plus positive neutral-loss
@@ -555,11 +559,12 @@ tolerance 0.005; stopped after 750 iterations \\
 Tomotopy inference & 100 local iterations; one inference thread \\
 Hybrid discovery & seed 42; batch size 32; 4 PyTorch intra-operation threads;
 maximum 250 epochs; tolerance $10^{-3}$ for both topic and alpha relative
-change; patience 5; stopped after 149 discovery epochs \\
+change; patience 5; run must stop only after satisfying patience \\
 Hybrid finalization & 12 encoder epochs; two unrolled local-VB updates in the
 training objective; two retained rotating checkpoints \\
 Held-out Hybrid arms & encoder only (0 updates), encoder plus 2 updates, and
-long refinement of 50 updates; one inference thread \\
+long refinement of 50 updates or a validation-triggered extension to 100; one
+inference thread \\
 Topic diagnostics & top 10 words per topic; corpus-active threshold 0.001;
 document-active threshold 0.01; training-document co-occurrence NPMI \\
 MAG and SOS & top 20 motif words; search $k=1000$; 10 unique molecules;
@@ -568,9 +573,9 @@ compound-balanced primary SOS; probability $\geq0.5$ sensitivity \\
 Latency & 128 frozen test spectra; five repeats; cached-feature and end-to-end
 scopes reported separately \\
 \end{tabular}
-\caption{Complete parameter snapshot for the frozen seed-42 corrective run. The
-250-epoch ceiling was a safety limit; training stopped when both frozen global
-criteria satisfied patience.}
+\caption{Complete parameter snapshot for the frozen seed-42 replacement run.
+The 250-epoch ceiling is a safety limit; a run that reaches it without satisfying
+both global criteria is rejected.}
 \label{tab:executed-parameters}
 \end{table}
 
@@ -643,10 +648,10 @@ percentile at least 0.99; otherwise the frozen maximum of 100 is checked against
 50. The run fails instead of calling the result ``near-converged'' if the
 maximum misses either threshold. The chosen 50- or 100-step budget is then
 applied unchanged to test spectra. Hybrid discovery permits at most 30 global
-epochs in the original five-seed profile. The completed seed-42 continuation
-raises only that safety ceiling to 250 and stops after 149 discovery epochs,
-followed by 12 inference-encoder epochs. All convergence decisions use training
-or validation quantities, never chemical labels or test likelihood.
+epochs in the original five-seed profile. The seed-42 replacement raises only
+that safety ceiling to 250 and, after discovery convergence, runs 12
+inference-encoder epochs. All convergence decisions use training or validation
+quantities, never chemical labels or test likelihood.
 
 A raw global-DreaMS nearest-neighbour analysis is included as a non-topic-model
 baseline. It searches the training partition only and reports DreaMS cosine and
@@ -748,8 +753,8 @@ separates exact carryovers from deliberate changes.
 \small
 \begin{longtable}{L{0.18\linewidth}L{0.35\linewidth}L{0.37\linewidth}}
 \caption{Relationship to the deposited Nature Communications MS2LDA 2.0
-methods. ``This benchmark'' refers to the frozen seed-42 correction; numerical
-claims come from its completed generated report.}\label{tab:nature-comparison}\\
+methods. ``This benchmark'' refers to the frozen seed-42 replacement design;
+Hybrid numerical claims remain pending.}\label{tab:nature-comparison}\\
 Dimension & Nature-paper MSnLib analysis & This benchmark \\
 \hline
 \endfirsthead
@@ -805,10 +810,10 @@ held-out design and MAG exclusion audit, not a larger seed count. On the SOS
 criterion used to compare topic methods, the corrective one-seed protocol has
 the same replication depth as the publication while evaluating the harder
 question of benchmark-unseen compounds. A comparability claim was withheld
-until the corrected generated report was complete. That gate is now satisfied;
-its within-benchmark SOS comparison is reported below, while the difference in
-fingerprints and thresholds prevents direct numerical comparison with the
-paper's deposited SOS values.
+after defects were found in both earlier Hybrid feature pools. The replacement
+must complete before any within-benchmark SOS comparison is reported. Even
+then, the difference in fingerprints and thresholds prevents direct numerical
+comparison with the paper's deposited SOS values.
 
 \subsection{Protocol freeze, execution, and output schema}
 
@@ -893,23 +898,30 @@ $\boldsymbol\lambda$ and $\boldsymbol\alpha$ to satisfy the frozen relative
 change threshold. The learned vector is then frozen with the topics before
 encoder fitting and held-out inference.
 
-Independent review of the completed run found a second, result-changing defect.
-The training-only word pool iterated over a document-level token counter. When
-two separate physical peaks rounded to the same fragment or neutral-loss word,
-their total multiplicity was assigned to the DreaMS state of only the nearest
-peak. Among 27,222 training spectra, 5,339 contained at least one fragment-bin
-collision and 5,529 contained at least one loss-bin collision. Tomotopy does not
-consume these contextual states and is unaffected. Hybrid's structured prior,
-topics, inference, MAG, and SOS do consume them, so every previous Hybrid number
-is superseded rather than interpreted.
+Independent review first found that the training-only word pool iterated over a
+document-level token counter. When separate physical peaks rounded to the same
+fragment or neutral-loss word, their combined multiplicity was assigned to only
+one contextual state. An attempted correction iterated over physical peak
+groups, but matched each group independently to the nearest retained DreaMS
+peak within 0.02 Da. Because the frozen DreaMS model retains only 100 peaks, a
+discarded group could still borrow the state of a nearby retained group.
 
-The corrective implementation pools each physical \code{PeakGroup} against
-its own actual-m/z DreaMS state before accumulating its fragment and loss
-tokens. Its feature state is saved in two hash-verified atomic generations, so
-a crash cannot apply an additive contribution twice. The new run starts Hybrid
-training from epoch zero and reuses only the byte-verified Tomotopy core model.
-The correction is explicitly post-hoc because previous seed-42 results were
-inspected before it was designed:
+A read-only audit of all 27,222 training spectra found 158 spectra with this
+state aliasing, comprising 708 reused states and 743 extra physical groups. In
+53 spectra, 115 extra groups also shared the retained group's rounded word.
+These groups change the pooled word vectors used by Hybrid's structured prior,
+so every Hybrid-dependent result from that execution is superseded. Tomotopy,
+the split, vocabulary, and leakage audits do not consume these states and remain
+valid.
+
+The replacement implementation accepts a contextual state only when its
+float32 m/z identity exactly equals the source physical peak. A peak discarded
+by DreaMS is unmatched rather than assigned a neighbour's state, and ambiguous
+duplicate identities fail closed. Both training and full-test embedding caches
+authenticate identifiers and every completed row chunk before resuming. The
+replacement starts Hybrid from epoch zero and reuses only the byte-verified
+Tomotopy core model. It remains explicitly post-hoc because previous seed-42
+results were inspected before the correction was designed:
 {\footnotesize
 \begin{verbatim}
 REPO=/path/to/MS2LDA
@@ -926,97 +938,38 @@ cd "$REPO"
 conda run -n ms2lda-hybrid python -m benchmarks.msnlib_validation \
   freeze-implementation-correction --config "$CFG" --data-root "$DATA" \
   --run "$RUN" --repo-root "$PWD" --source-run "$SOURCE" \
-  --reason "pool each physical peak into its own DreaMS contextual state"
+  --reason "require exact retained DreaMS peak identity; never borrow a state"
 conda run -n ms2lda-hybrid python -m benchmarks.msnlib_validation \
   reuse-tomotopy --source-run "$SOURCE" --run "$RUN"
 
-nohup conda run --no-capture-output -n ms2lda-hybrid \
-  python -m benchmarks.msnlib_validation run-pipeline \
-    --run "$RUN" --data-root "$DATA" --mag-environment MS2LDA_v2 \
-  >> "$RUN/unattended.log" 2>&1 &
+screen -dmS msnlib_peak_identity /bin/zsh -lc \
+  "cd \"$REPO\" && exec conda run --no-capture-output \
+  -n ms2lda-hybrid python -m benchmarks.msnlib_validation run-pipeline \
+  --run \"$RUN\" --data-root \"$DATA\" --mag-environment MS2LDA_v2 \
+  >> \"$RUN/unattended.log\" 2>&1"
 \end{verbatim}
 }
 The indicative configuration uses six Tomotopy workers in partition mode, four
 PyTorch intra-operation threads for Hybrid discovery and encoder fitting, and
-one thread for all held-out inference and latency measurements. The corrective
-Hybrid fit started from epoch zero and satisfied the unchanged joint
-topic-word/alpha convergence rule after 149 discovery epochs, within the frozen
-250-epoch safety ceiling. Discovery took 34,600.9 seconds and finalization
-827.3 seconds. The asymmetric alpha concentration fell from its initialization
-sum of 600 to 9.1117 using training documents only. No older Hybrid feature,
-checkpoint, model, chemical mixture, or MAG output was imported.
+one thread for all held-out inference and latency measurements. The replacement
+run is pending. No earlier DreaMS feature pool, Hybrid checkpoint, Hybrid model,
+chemical mixture, MAG result, or SOS result is eligible for import.
 
-\subsection{Results and discussion}
+\subsection{Results status}
 
-The first peak-pooling execution is not a valid Hybrid chemical result. Its
-numbers have been removed from this document rather than retained as an
-alternative analysis. The hash-verified Tomotopy fit, frozen scaffold split,
-training-only vocabulary, raw-DreaMS baseline, and MAG exclusion construction
-remain valid inputs to the correction, but they cannot make the affected Hybrid
-topics valid retrospectively.
+No Hybrid chemical result is currently reported. The nearest-state correction
+did complete, but its top-100 aliasing defect changes the structured prior and
+therefore every Hybrid-derived result. Its checkpoint, tables, and numerical
+interpretation have been removed rather than retained as an alternative
+analysis. The hash-verified Tomotopy fit, frozen scaffold split, training-only
+vocabulary, and leakage controls remain eligible inputs to the replacement,
+but they cannot validate the affected Hybrid topics retrospectively.
 
-The replacement passed every acceptance gate: peak-aware features were
-rebuilt; Hybrid converged from epoch zero; all inference arms completed;
-chemical inference used full held-out spectra after labels had been withheld
-from fitting; and the MAG index excluded 53,426 of 426,280 reference rows with
-zero held-out rows retained. Independent recalculation also found zero
-split-group and compound-identity leakage, verified that all four
-$7777\times1000$ test-mixture matrices were finite and normalized, and
-reproduced the per-topic SOS summaries below.
+Results will be exported only after exact peak-identity pooling reconciles all
+eligible groups as matched or unmatched, all Hybrid stages rebuild from epoch
+zero, and the full publication and leakage audits pass. Until then, smoke tests
+and synthetic benchmarks are software validation only, not chemical evidence.
 
-The main semi-amortized result is positive but qualified. Encoder-only
-inference reached mean/median cosine 0.9270/0.9533 against the validated
-long-refinement mixture, but its fifth percentile was only 0.7740. Two local
-VB steps raised these values to 0.9893/0.9996 with a fifth percentile of
-0.9420 and mean Jensen--Shannon divergence 0.0119. Thus two steps remove most
-of the tail error that remains in the pure encoder. Cached inference took
-1.888 ms per spectrum for the encoder and 2.937 ms for two steps, versus
-19.375 ms for long refinement and 58.633 ms for Tomotopy. Including DreaMS
-extraction reduces the advantage: encoder and two-step end-to-end times were
-32.839 and 33.935 ms, versus 51.004 ms for long refinement and 58.743 ms for
-Tomotopy.
-
-Predictive likelihood does not improve monotonically with refinement. The
-encoder's held-out NLL was 9.7655 per in-vocabulary token, close to Tomotopy's
-9.7569, whereas two-step and long refinement gave 10.0788 and 10.1882.
-Local VB optimizes the observed completion half rather than its unobserved
-partner, so convergence toward the long reference is not equivalent to better
-document-completion prediction. The benchmark therefore supports the claim
-that two-step inference approximates the chosen long-inference procedure; it
-does not support a claim that refinement improves held-out likelihood.
-
-The primary compound-balanced SOS diagnostic used every held-out spectrum once
-through dominant-topic association. Tomotopy had 598 evaluable topics with
-mean SOS 0.6232. Hybrid had 608, 619, and 625 evaluable topics for encoder,
-two-step, and long inference, with means 0.6300, 0.6307, and 0.6293. These small
-differences are descriptive, not evidence of superiority from one seed. The
-unchanged probability-$\geq0.5$ sensitivity associated only 961 Tomotopy test
-spectra and 472, 97, and 115 Hybrid spectra, producing 333, 181, 55, and 65
-evaluable topics respectively. That sensitivity confirms that the absolute
-cutoff is not calibrated across inference algorithms; it is not the primary
-chemical comparison.
-
-Other diagnostics prevent a one-sided interpretation. Hybrid had slightly
-higher top-word diversity (0.8387 versus 0.8148) but worse mean word
-co-occurrence NPMI ($-0.4744$ versus $-0.2997$). Of the 45,000 top-word pairs
-scored for each method, 25,599 Hybrid pairs and 20,537 Tomotopy pairs never
-co-occurred and therefore received the frozen $-1$ score. Thus, the NPMI gap
-partly reflects more disconnected Hybrid top-word pairs; it is not merely a
-difference among pairs with observed co-occurrence. Optimally matched
-Tomotopy--Hybrid topics had mean cosine 0.4768 and mean top-word Jaccard 0.0816,
-showing that comparable aggregate SOS does not imply that the methods discovered
-the same motifs. MAG annotations were available for 607 Tomotopy and 631
-Hybrid topics; among the 475 matched pairs annotated by both methods, mean
-MACCS-consensus Jaccard was 0.5483. Raw DreaMS nearest neighbours had mean
-Morgan similarity 0.2207 and no exact connectivity or scaffold matches under
-the held-out split. These are similarity and coherence diagnostics, not
-fragment-assignment correctness.
-
-The final tables below are generated directly from the hash-verified report;
-they are not manually transcribed.
-
-\input{hybrid_lda_seed42_results.tex}
-\clearpage
 \section{Limitations}
 
 The hybrid retains LDA's non-convex, label-invariant topic discovery, so
@@ -1053,8 +1006,8 @@ an end-to-end neural topic model, and it intentionally exposes only a focused
 research interface. Finally, a passing software test suite and frozen-topic
 inference improvement cannot replace external chemical validation. SOS and MAG
 provide real but indirect chemical evidence; they do not replace the unavailable
-independent manual motif--spectrum endpoint. The completed correction supports
-only the stated single-seed, post-hoc comparison, and production-readiness
+independent manual motif--spectrum endpoint. The replacement must remain
+uninterpreted until every frozen stage completes, and production-readiness
 criteria are outside this research project.
 
 \section{Reproducibility}
@@ -1073,27 +1026,25 @@ result copied.
 
 Commit \hash{88b47d51b1f045e95810aeafafa042834d63372b} remains the exact
 source of the superseded peak-collapsing Hybrid result; it is retained only to
-explain provenance, not as chemical evidence. The executed corrective protocol
-is \hash{3b2a07029b22c51c682cf11e0756bcdd2f6092878e67cd2db34df82caced5b7b}
-at source commit
-\hash{98601867ec3ace2fb3c51ec50ed2f2305eba608b}. It hashes the benchmark,
-Hybrid implementation, and the exact local MS2LDA modules used by MAG. Its
-compact checkpoint and LaTeX fragment are exported mechanically
-from the verified report, with a committed publication manifest tying both
-files to the frozen protocol and report hashes. Large models, DreaMS caches,
-FAISS indices, and complete generated reports remain outside Git. The selected
-compact-Git handoff records their hashes and exact reconstruction commands but
-does not claim a durable public URI for the multi-gigabyte artifacts.
+explain provenance, not as chemical evidence. Source commit
+\hash{98601867ec3ace2fb3c51ec50ed2f2305eba608b} and protocol
+\hash{3b2a07029b22c51c682cf11e0756bcdd2f6092878e67cd2db34df82caced5b7b}
+identify the superseded nearest-state correction. Its publication checkpoint,
+generated tables, and manifest have been removed. The replacement protocol
+will record the immutable corrected source, benchmark code, and exact local
+MS2LDA modules used by MAG before execution. Large models, DreaMS caches, FAISS
+indices, and complete generated reports remain outside Git.
 
 The public inputs can be reconstructed without local history using the
-standard-library, resumable downloader. A fresh corrective seed-42 run starts
-from the immutable executed-source commit recorded in the final compact
-checkpoint and uses an empty output directory:
+standard-library, resumable downloader. A fresh replacement seed-42 run starts
+from the immutable implementation commit shown below and uses an empty output
+directory. The final protocol lock independently records the executing
+checkout and the hashes of all executable sources:
 {\footnotesize
 \begin{verbatim}
 git clone https://github.com/joewandy/MS2LDA.git
 cd MS2LDA
-git checkout 98601867ec3ace2fb3c51ec50ed2f2305eba608b
+git checkout eba1ac9a9f4b89c1f35b4f66a57e3f8590f2abb8
 
 DATA=/path/to/ms2lda-msnlib-validation/zenodo/20179680
 RUN=/path/to/ms2lda-msnlib-validation/runs/\
@@ -1123,9 +1074,9 @@ conda run --no-capture-output -n ms2lda-hybrid \
 \end{verbatim}
 }
 The fresh run will not be bitwise identical to the retained Tomotopy model
-because multicore partition training is nondeterministic. The executed
-correction therefore reuses that model only through its strict hash-audited
-Tomotopy-only import; a completely fresh reconstruction preserves the
+because multicore partition training is nondeterministic. The replacement
+therefore reuses that model only through its strict hash-audited Tomotopy-only
+import; a completely fresh reconstruction preserves the
 scientific design but can produce a different valid seed-42 Tomotopy fit.
 
 The environment uses Python 3.11 and pins NumPy 1.25.0, patched PyTorch 2.6.0,
@@ -1174,19 +1125,16 @@ training-only empirical-Bayes update estimates the asymmetric document-topic
 prior, and only after those quantities are frozen does the document encoder
 learn through the local LDA ELBO. Independent review invalidated the first
 Hybrid chemical result because rounded-word collisions collapsed distinct
-physical peak contexts in its structured prior. That result has been removed.
-The corrective full-data seed-42 protocol preserves the stricter scaffold split,
-MAG exclusion, full corpus and $K=1000$, but rebuilds Hybrid from peak-aware
-features. Its completed post-hoc run shows that two local VB steps approximate
-the long-refinement mixtures much more closely than encoder-only inference at
-near-encoder latency. Under the compound-balanced dominant-topic SOS
-diagnostic, all Hybrid inference arms have coverage and mean coherence
-comparable to Tomotopy; however, Hybrid has worse word-co-occurrence NPMI, the
-methods' matched topics overlap only modestly, and refinement worsens held-out
-document-completion NLL. The result is therefore indicative evidence that the
-semi-amortized speed/coherence trade-off is scientifically promising, not a
-universal ranking, proof of individual fragment assignments, substitute for
-independent manual validation, or production-backend decision.
+physical peak contexts in its structured prior. A subsequent audit invalidated
+the nearest-state correction because peaks discarded by DreaMS could borrow a
+nearby retained state. Both results have been removed. The replacement
+full-data seed-42 protocol preserves the stricter scaffold split, MAG exclusion,
+full corpus and $K=1000$, but requires exact retained peak identity and rebuilds
+every Hybrid-dependent artifact. No chemical or speed/coherence conclusion is
+reported until that run and its independent audits complete. Any eventual
+single-seed result will remain post-hoc indicative evidence, not a universal
+ranking, proof of individual fragment assignments, substitute for independent
+manual validation, or production-backend decision.
 
 {\small
 \begin{thebibliography}{10}
