@@ -472,13 +472,53 @@ def _manuscript_text(summary: dict[str, Any]) -> str:
             "",
         ]
     )
+    lines.extend(
+        [
+            "\\begin{table}[ht]",
+            "\\centering",
+            "\\small",
+            "\\begin{tabular}{lrrrr}",
+            "Hybrid inference & cosine mean & cosine median & cosine p05 & JS mean \\\\",
+            "\\hline",
+        ]
+    )
+    for key, arm in (
+        ("hybrid:iter_0", "encoder"),
+        ("hybrid:iter_2", "encoder + 2 VB"),
+    ):
+        values = aggregate[key]
+        lines.append(
+            f"{arm} & "
+            f"{values['convergence_cosine_mean']['median']:.4f} & "
+            f"{values['convergence_cosine_median']['median']:.4f} & "
+            f"{values['convergence_cosine_p05']['median']:.4f} & "
+            f"{values['convergence_js_mean']['median']:.4f} \\\\"
+        )
+    lines.extend(
+        [
+            "\\end{tabular}",
+            "\\caption{Convergence toward the validated long-refinement reference. The mean and fifth percentile expose tail behaviour that a median alone can hide.}",  # noqa: E501
+            "\\end{table}",
+            "",
+        ]
+    )
     sos_rows = [
         row
         for row in summary["mag_per_seed"]
         if row["association_mode"] == "dominant_topic"
     ]
     derivation_kind = (summary.get("protocol_derivation") or {}).get("kind")
-    if derivation_kind == "chemical_evaluation_correction":
+    evaluation_timing = summary.get("evaluation_timing", "prespecified")
+    if (
+        derivation_kind == "implementation_correction"
+        or evaluation_timing == "posthoc_implementation_correction"
+    ):
+        sos_caption = (
+            "Post-hoc implementation-corrected single-seed SOS diagnostic "
+            "using full held-out spectra and dominant-topic association. "
+            "This is not confirmatory."
+        )
+    elif derivation_kind == "chemical_evaluation_correction":
         sos_caption = (
             "Post-hoc corrected single-seed SOS diagnostic using full held-out "
             "spectra and dominant-topic association. This is not confirmatory."
@@ -572,7 +612,10 @@ def build_report(run_dir: str | Path) -> dict[str, Any]:
             "active_topics_corpus",
             "top_word_diversity",
             "word_cooccurrence_npmi_mean",
+            "convergence_cosine_mean",
             "convergence_cosine_median",
+            "convergence_cosine_p05",
+            "convergence_js_mean",
             "nll_gap_fraction_to_long",
             "training_seconds",
             "peak_rss_bytes",
@@ -591,6 +634,7 @@ def build_report(run_dir: str | Path) -> dict[str, Any]:
         "protocol_sha256": lock["protocol_sha256"],
         "protocol_derivation": lock.get("derivation"),
         "evidence_scope": config.evidence_scope,
+        "evaluation_timing": config.evaluation_timing,
         "required_seeds": list(config.seeds),
         "all_required_seeds_reported": True,
         "cross_seed_topic_stability_available": len(config.seeds) > 1,
@@ -634,6 +678,12 @@ def build_report(run_dir: str | Path) -> dict[str, Any]:
             "chemical_evaluation_posthoc_correction": bool(
                 (lock.get("derivation") or {}).get("kind")
                 == "chemical_evaluation_correction"
+                or config.evaluation_timing == "posthoc_implementation_correction"
+            ),
+            "implementation_posthoc_correction": bool(
+                (lock.get("derivation") or {}).get("kind")
+                == "implementation_correction"
+                or config.evaluation_timing == "posthoc_implementation_correction"
             ),
             "dominant_topic_sos_uses_no_absolute_probability_cutoff": True,
             "dominant_topic_sos_is_invariant_to_all_calibration_changes": False,

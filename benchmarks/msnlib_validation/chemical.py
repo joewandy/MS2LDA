@@ -10,15 +10,17 @@ provenance-wise separate.
 from __future__ import annotations
 
 import os
+import shutil
 import subprocess
 import sys
 import time
 from collections import defaultdict
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any, Callable, Sequence
 
 import numpy as np
 
+from .checkpoint_hashes import extend_row_hash_ledger, validate_row_hash_ledger
 from .config import file_sha256, load_config, read_json, resolve_input_paths, write_json
 from .data import SpectrumRecord, load_records, split_records, to_matchms_spectrum
 from .protocol import (
@@ -30,6 +32,169 @@ from .protocol import (
 from .runtime import peak_rss_bytes
 
 ASSOCIATION_MODES = ("dominant_topic", "probability_ge_frozen_threshold")
+_CHEMICAL_FEATURE_CHECKPOINT_SCHEMA = "msnlib-chemical-feature-checkpoint/v2"
+_CHEMICAL_FEATURE_CHECKPOINT_FORMAT = "atomic-generations-v2"
+
+
+def _chemical_checkpoint_directories(checkpoint_dir: Path) -> list[Path]:
+    if not checkpoint_dir.exists():
+        return []
+    candidates = []
+    for path in checkpoint_dir.iterdir():
+        if not path.is_dir() or not path.name.startswith("generation-"):
+            continue
+        try:
+            generation = int(path.name.removeprefix("generation-"))
+        except ValueError:
+            continue
+        candidates.append((generation, path))
+    return [path for _, path in sorted(candidates, reverse=True)]
+
+
+def _fsync_checkpoint_path(path: Path) -> None:
+    flags = os.O_RDONLY
+    if path.is_dir() and hasattr(os, "O_DIRECTORY"):
+        flags |= os.O_DIRECTORY
+    descriptor = os.open(path, flags)
+    try:
+        os.fsync(descriptor)
+    finally:
+        os.close(descriptor)
+
+
+def _read_chemical_feature_checkpoint(
+    path: Path,
+    *,
+    protocol_sha256: str,
+    identifiers_sha256: str,
+    embeddings: np.ndarray,
+) -> dict[str, Any]:
+    state = read_json(path / "state.json")
+    expected_generation = int(path.name.removeprefix("generation-"))
+    if state.get("schema") != _CHEMICAL_FEATURE_CHECKPOINT_SCHEMA:
+        raise ValueError("chemical feature checkpoint schema mismatch")
+    if state.get("protocol_sha256") != protocol_sha256:
+        raise ValueError("chemical feature checkpoint protocol mismatch")
+    if state.get("identifiers_sha256") != identifiers_sha256:
+        raise ValueError("chemical feature checkpoint identifiers changed")
+    if int(state.get("generation", -1)) != expected_generation:
+        raise ValueError("chemical feature checkpoint generation mismatch")
+    if int(state.get("rows", -1)) != len(embeddings):
+        raise ValueError("chemical feature checkpoint row count mismatch")
+    if int(state.get("embedding_dim", -1)) != embeddings.shape[1]:
+        raise ValueError("chemical feature checkpoint dimension mismatch")
+    completed_rows = int(state.get("completed_rows", -1))
+    chunks = validate_row_hash_ledger(
+        embeddings,
+        state.get("embedding_chunks"),
+        completed_rows=completed_rows,
+    )
+    cumulative_seconds = float(state.get("cumulative_extraction_seconds", -1.0))
+    if not np.isfinite(cumulative_seconds) or cumulative_seconds < 0:
+        raise ValueError("chemical feature checkpoint time is invalid")
+    return {**state, "embedding_chunks": chunks}
+
+
+def _load_chemical_feature_checkpoint(
+    checkpoint_dir: Path,
+    *,
+    protocol_sha256: str,
+    identifiers_sha256: str,
+    embeddings: np.ndarray,
+) -> dict[str, Any] | None:
+    candidates = _chemical_checkpoint_directories(checkpoint_dir)
+    rejected = []
+    for path in candidates:
+        try:
+            state = _read_chemical_feature_checkpoint(
+                path,
+                protocol_sha256=protocol_sha256,
+                identifiers_sha256=identifiers_sha256,
+                embeddings=embeddings,
+            )
+        except (KeyError, OSError, TypeError, ValueError) as exc:
+            rejected.append({"generation": path.name, "reason": str(exc)})
+            continue
+        state["rejected_newer_generations"] = rejected
+        return state
+    if candidates:
+        raise RuntimeError(
+            "no valid chemical feature checkpoint remains; use a clean cache"
+        )
+    return None
+
+
+def _write_chemical_feature_checkpoint(
+    checkpoint_dir: Path,
+    *,
+    generation: int,
+    protocol_sha256: str,
+    identifiers_sha256: str,
+    embeddings: np.ndarray,
+    embedding_chunks: Sequence[dict[str, Any]],
+    start: int,
+    end: int,
+    cumulative_extraction_seconds: float,
+    keep: int = 2,
+    fault_hook: Callable[[str], None] | None = None,
+) -> dict[str, Any]:
+    if generation < 1 or keep < 2:
+        raise ValueError("chemical checkpoint generation or retention is invalid")
+    if (
+        not np.isfinite(cumulative_extraction_seconds)
+        or cumulative_extraction_seconds < 0
+    ):
+        raise ValueError("chemical checkpoint extraction time is invalid")
+    updated_chunks = extend_row_hash_ledger(
+        embedding_chunks, embeddings, start=start, end=end
+    )
+    state = {
+        "schema": _CHEMICAL_FEATURE_CHECKPOINT_SCHEMA,
+        "generation": generation,
+        "protocol_sha256": protocol_sha256,
+        "identifiers_sha256": identifiers_sha256,
+        "rows": len(embeddings),
+        "embedding_dim": embeddings.shape[1],
+        "completed_rows": end,
+        "embedding_chunks": updated_chunks,
+        "cumulative_extraction_seconds": cumulative_extraction_seconds,
+    }
+    checkpoint_dir.mkdir(parents=True, exist_ok=True)
+    stem = f"generation-{generation:08d}"
+    destination = checkpoint_dir / stem
+    if destination.exists():
+        raise FileExistsError(f"chemical checkpoint already exists: {destination}")
+    temporary = checkpoint_dir / f".{stem}.{os.getpid()}.{time.time_ns()}.tmp"
+    temporary.mkdir()
+    try:
+        write_json(temporary / "state.json", state)
+        _fsync_checkpoint_path(temporary / "state.json")
+        _fsync_checkpoint_path(temporary)
+        if fault_hook is not None:
+            fault_hook("after_state")
+        os.replace(temporary, destination)
+        _fsync_checkpoint_path(checkpoint_dir)
+        if fault_hook is not None:
+            fault_hook("after_publish")
+    finally:
+        if temporary.exists():
+            shutil.rmtree(temporary)
+
+    retained = 0
+    for path in _chemical_checkpoint_directories(checkpoint_dir):
+        try:
+            _read_chemical_feature_checkpoint(
+                path,
+                protocol_sha256=protocol_sha256,
+                identifiers_sha256=identifiers_sha256,
+                embeddings=embeddings,
+            )
+        except (KeyError, OSError, TypeError, ValueError):
+            continue
+        retained += 1
+        if retained > keep:
+            shutil.rmtree(path)
+    return state
 
 
 def full_spectrum_documents(
@@ -124,46 +289,76 @@ def prepare_full_test_features(
     identifiers_path = output / "identifiers.json"
     embeddings_path = output / "full_test_embeddings.npy"
     completed_path = output / "completed.npy"
-    progress_path = output / "progress.json"
+    format_path = output / "checkpoint_format.json"
+    checkpoint_dir = output / "checkpoint_generations"
     expected_shape = (len(test_records), DREAMS_EMBEDDING_DIM)
-    partial = [
-        path.exists() for path in (embeddings_path, completed_path, progress_path)
-    ]
-    if any(partial) and not all(partial):
-        raise RuntimeError("chemical feature checkpoint is incomplete")
+    identifiers_payload = {"identifiers": identifiers}
     if identifiers_path.exists():
-        if read_json(identifiers_path).get("identifiers") != identifiers:
+        if read_json(identifiers_path) != identifiers_payload:
             raise ValueError("chemical feature identifiers changed")
     else:
-        write_json(identifiers_path, {"identifiers": identifiers})
-
-    if all(partial):
-        embeddings = np.lib.format.open_memmap(
-            embeddings_path, mode="r+", dtype=np.float32, shape=expected_shape
-        )
-        completed = np.lib.format.open_memmap(
-            completed_path, mode="r+", dtype=np.bool_, shape=(len(test_records),)
-        )
-        progress = read_json(progress_path)
-        previous_seconds = float(progress.get("cumulative_extraction_seconds", 0.0))
+        write_json(identifiers_path, identifiers_payload)
+    identifiers_sha256 = file_sha256(identifiers_path)
+    expected_format = {
+        "format": _CHEMICAL_FEATURE_CHECKPOINT_FORMAT,
+        "protocol_sha256": lock["protocol_sha256"],
+        "identifiers_sha256": identifiers_sha256,
+        "rows": len(test_records),
+        "embedding_dim": DREAMS_EMBEDDING_DIM,
+    }
+    if format_path.exists():
+        if read_json(format_path) != expected_format:
+            raise ValueError("chemical feature checkpoint format changed")
     else:
-        embeddings = np.lib.format.open_memmap(
-            embeddings_path, mode="w+", dtype=np.float32, shape=expected_shape
+        legacy = (output / "progress.json").exists() or completed_path.exists()
+        if legacy:
+            raise RuntimeError(
+                "legacy chemical feature checkpoint cannot be authenticated; "
+                "use a clean feature directory"
+            )
+        write_json(format_path, expected_format)
+
+    candidates = _chemical_checkpoint_directories(checkpoint_dir)
+    if candidates and not embeddings_path.exists():
+        raise RuntimeError(
+            "chemical feature checkpoint exists but embeddings are missing"
         )
-        completed = np.lib.format.open_memmap(
-            completed_path, mode="w+", dtype=np.bool_, shape=(len(test_records),)
-        )
-        completed[:] = False
-        completed.flush()
+    had_embeddings = embeddings_path.exists()
+    embeddings = np.lib.format.open_memmap(
+        embeddings_path,
+        mode="r+" if had_embeddings else "w+",
+        dtype=np.float32,
+        shape=expected_shape,
+    )
+    restored = _load_chemical_feature_checkpoint(
+        checkpoint_dir,
+        protocol_sha256=lock["protocol_sha256"],
+        identifiers_sha256=identifiers_sha256,
+        embeddings=embeddings,
+    )
+    if restored is None:
+        if had_embeddings:
+            del embeddings
+            embeddings = np.lib.format.open_memmap(
+                embeddings_path, mode="w+", dtype=np.float32, shape=expected_shape
+            )
+        start_row = 0
         previous_seconds = 0.0
-        write_json(
-            progress_path,
-            {"completed_rows": 0, "cumulative_extraction_seconds": 0.0},
+        embedding_chunks: list[dict[str, Any]] = []
+        rejected_generations: list[dict[str, Any]] = []
+        checkpoint_generation = 0
+        last_checkpoint_generation = 0
+    else:
+        start_row = int(restored["completed_rows"])
+        previous_seconds = float(restored["cumulative_extraction_seconds"])
+        embedding_chunks = restored["embedding_chunks"]
+        rejected_generations = restored["rejected_newer_generations"]
+        checkpoint_generation = max(
+            int(path.name.removeprefix("generation-")) for path in candidates
         )
-    incomplete = np.flatnonzero(~np.asarray(completed))
-    start_row = int(incomplete[0]) if len(incomplete) else len(test_records)
-    if np.any(np.asarray(completed)[start_row:]):
-        raise ValueError("chemical feature progress is non-contiguous")
+        last_checkpoint_generation = int(restored["generation"])
+    if start_row < 0 or start_row > len(test_records):
+        raise ValueError("chemical feature checkpoint row count is invalid")
 
     initialized = time.perf_counter()
     extractor = DreaMSFeatureExtractor(device="cpu")
@@ -187,22 +382,24 @@ def prepare_full_test_features(
         embeddings.flush()
         chunks += 1
         if chunks % checkpoint_every_chunks == 0 or stop == len(test_records):
-            completed[checkpoint_start:stop] = True
-            completed.flush()
-            checkpoint_start = stop
-            write_json(
-                progress_path,
-                {
-                    "completed_rows": stop,
-                    "total_rows": len(test_records),
-                    "cumulative_extraction_seconds": previous_seconds
-                    + extraction_seconds,
-                    "extraction_seconds_this_process": extraction_seconds,
-                    "peak_rss_bytes": peak_rss_bytes(),
-                },
+            checkpoint_generation += 1
+            state = _write_chemical_feature_checkpoint(
+                checkpoint_dir,
+                generation=checkpoint_generation,
+                protocol_sha256=lock["protocol_sha256"],
+                identifiers_sha256=identifiers_sha256,
+                embeddings=embeddings,
+                embedding_chunks=embedding_chunks,
+                start=checkpoint_start,
+                end=stop,
+                cumulative_extraction_seconds=previous_seconds + extraction_seconds,
             )
-    if not bool(np.all(np.asarray(completed))):
+            embedding_chunks = state["embedding_chunks"]
+            checkpoint_start = stop
+            last_checkpoint_generation = checkpoint_generation
+    if checkpoint_start != len(test_records):
         raise RuntimeError("chemical feature extraction ended with incomplete rows")
+    np.save(completed_path, np.ones(len(test_records), dtype=np.bool_))
     outputs = (identifiers_path, embeddings_path, completed_path)
     manifest = {
         "protocol_sha256": lock["protocol_sha256"],
@@ -212,6 +409,10 @@ def prepare_full_test_features(
         "full_spectrum_peak_groups": True,
         "document_completion_representation_used": False,
         "chemical_labels_used_for_extraction": False,
+        "checkpoint_format": _CHEMICAL_FEATURE_CHECKPOINT_FORMAT,
+        "last_checkpoint_generation": last_checkpoint_generation,
+        "rejected_newer_checkpoint_generations": rejected_generations,
+        "embedding_chunks": len(embedding_chunks),
         "extraction_cpu_threads": config.hybrid_inference_cpu_threads,
         "extractor_initialization_seconds": initialization_seconds,
         "extraction_seconds_this_process": extraction_seconds,

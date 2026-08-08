@@ -321,6 +321,139 @@ def _common_metrics(
     }
 
 
+def _tomotopy_checkpoint_sidecars(output: Path) -> list[Path]:
+    """Return Tomotopy checkpoint generations newest first."""
+    return sorted((output / "checkpoints").glob("checkpoint-*.json"), reverse=True)
+
+
+def _verified_tomotopy_checkpoint(
+    sidecar: Path, *, context_sha256: str
+) -> dict[str, Any]:
+    """Verify one self-contained Tomotopy checkpoint generation."""
+    metadata = read_json(sidecar)
+    if metadata.get("context_sha256") != context_sha256:
+        raise ValueError("Tomotopy checkpoint context hash mismatch")
+    binary = sidecar.parent / str(metadata.get("file", ""))
+    if binary.parent != sidecar.parent or binary.suffix != ".bin":
+        raise ValueError("Tomotopy checkpoint filename escapes its directory")
+    if not binary.is_file():
+        raise FileNotFoundError(f"Tomotopy checkpoint payload is missing: {binary}")
+    if binary.stat().st_size != metadata.get("bytes"):
+        raise ValueError("Tomotopy checkpoint byte size mismatch")
+    if file_sha256(binary) != metadata.get("sha256"):
+        raise ValueError("Tomotopy checkpoint SHA-256 mismatch")
+    history = metadata.get("history")
+    if not isinstance(history, list) or not history:
+        raise ValueError("Tomotopy checkpoint history is empty")
+    if int(history[-1].get("iteration", -1)) != int(metadata.get("iteration", -2)):
+        raise ValueError("Tomotopy checkpoint history iteration mismatch")
+    return metadata
+
+
+def _save_tomotopy_checkpoint(
+    model: Any,
+    output: Path,
+    *,
+    context_sha256: str,
+    history: Sequence[dict[str, Any]],
+    keep: int = 2,
+) -> dict[str, Any]:
+    """Publish one atomic, hash-verified Tomotopy checkpoint generation."""
+    checkpoint_dir = output / "checkpoints"
+    checkpoint_dir.mkdir(parents=True, exist_ok=True)
+    sequences = []
+    for path in _tomotopy_checkpoint_sidecars(output):
+        try:
+            sequences.append(int(path.stem.split("-")[1]))
+        except (IndexError, ValueError):
+            continue
+    sequence = max(sequences, default=0) + 1
+    stem = f"checkpoint-{sequence:06d}"
+    binary = checkpoint_dir / f"{stem}.bin"
+    temporary = checkpoint_dir / f".{stem}.{os.getpid()}.tmp"
+    try:
+        model.save(str(temporary))
+        os.replace(temporary, binary)
+    finally:
+        temporary.unlink(missing_ok=True)
+    metadata = {
+        "schema_version": "tomotopy-checkpoint/v1",
+        "sequence": sequence,
+        "created_at_utc": datetime.now(timezone.utc).isoformat(),
+        "context_sha256": context_sha256,
+        "file": binary.name,
+        "bytes": binary.stat().st_size,
+        "sha256": file_sha256(binary),
+        "iteration": int(history[-1]["iteration"]),
+        "cumulative_training_seconds": float(
+            history[-1]["cumulative_training_seconds"]
+        ),
+        "history": list(history),
+    }
+    sidecar = checkpoint_dir / f"{stem}.json"
+    write_json(sidecar, metadata)
+    write_json(checkpoint_dir / "latest.json", metadata)
+
+    valid: list[tuple[Path, dict[str, Any]]] = []
+    for candidate in _tomotopy_checkpoint_sidecars(output):
+        try:
+            candidate_metadata = _verified_tomotopy_checkpoint(
+                candidate, context_sha256=context_sha256
+            )
+        except (FileNotFoundError, KeyError, TypeError, ValueError):
+            continue
+        valid.append((candidate, candidate_metadata))
+    for obsolete, obsolete_metadata in valid[keep:]:
+        (obsolete.parent / obsolete_metadata["file"]).unlink(missing_ok=True)
+        obsolete.unlink(missing_ok=True)
+    return metadata
+
+
+def _restore_tomotopy_checkpoint(
+    tp: Any, output: Path, *, context_sha256: str
+) -> tuple[Any | None, list[dict[str, Any]], dict[str, Any]]:
+    """Load the newest valid generation, falling back after corruption."""
+    candidates = _tomotopy_checkpoint_sidecars(output)
+    rejected = []
+    for sidecar in candidates:
+        try:
+            metadata = _verified_tomotopy_checkpoint(
+                sidecar, context_sha256=context_sha256
+            )
+            model = tp.LDAModel.load(str(sidecar.parent / metadata["file"]))
+        except (
+            FileNotFoundError,
+            KeyError,
+            OSError,
+            RuntimeError,
+            TypeError,
+            ValueError,
+        ) as exc:
+            rejected.append(
+                {"sidecar": sidecar.name, "reason": f"{type(exc).__name__}: {exc}"}
+            )
+            continue
+        audit = {
+            "selected_checkpoint": metadata,
+            "rejected_newer_checkpoints": rejected,
+        }
+        write_json(output / "checkpoint_resume_audit.json", audit)
+        return model, list(metadata["history"]), audit
+    if candidates:
+        raise RuntimeError(
+            "no valid Tomotopy checkpoint remains: "
+            + "; ".join(row["reason"] for row in rejected)
+        )
+    legacy = (output / "model.bin.partial", output / "history.json")
+    if any(path.exists() for path in legacy):
+        raise RuntimeError(
+            "legacy Tomotopy checkpoint cannot be resumed safely; remove it and restart"
+        )
+    audit = {"selected_checkpoint": None, "rejected_newer_checkpoints": []}
+    write_json(output / "checkpoint_resume_audit.json", audit)
+    return None, [], audit
+
+
 def run_tomotopy_seed(run_dir: str | Path, seed: int) -> dict[str, Any]:
     """Train and evaluate one deterministic ordinary Tomotopy LDA seed."""
     try:
@@ -328,7 +461,7 @@ def run_tomotopy_seed(run_dir: str | Path, seed: int) -> dict[str, Any]:
     except ImportError as exc:  # pragma: no cover - environment validation
         raise ImportError("tomotopy==0.13.0 is required in ms2lda-hybrid") from exc
     directory = Path(run_dir).expanduser().resolve()
-    verify_protocol(directory)
+    lock = verify_protocol(directory)
     config = load_config(directory / "config.resolved.json")
     if seed not in config.seeds:
         raise ValueError(f"seed {seed} is not frozen")
@@ -344,17 +477,25 @@ def run_tomotopy_seed(run_dir: str | Path, seed: int) -> dict[str, Any]:
     output.mkdir(parents=True, exist_ok=True)
     data = prepare_documents(directory)
     vocabulary = load_vocabulary(directory)
-    model_path = output / "model.bin.partial"
-    history_path = output / "history.json"
-    if model_path.exists() != history_path.exists():
-        raise RuntimeError("Tomotopy checkpoint is missing its atomic history pair")
-    if model_path.exists() and history_path.exists():
-        model = tp.LDAModel.load(str(model_path))
-        history = read_json(history_path)
-        if not history or history[-1].get("model_sha256") != file_sha256(model_path):
-            raise RuntimeError("Tomotopy checkpoint and history are not atomic")
-        trained = int(history[-1]["iteration"]) if history else 0
-    else:
+    checkpoint_context = object_sha256(
+        {
+            "protocol_sha256": lock["protocol_sha256"],
+            "method": "tomotopy",
+            "seed": seed,
+            "topic_count": config.num_topics,
+            "alpha": config.alpha,
+            "eta": config.eta,
+            "step_size": config.tomotopy_step_size,
+            "training_workers": config.tomotopy_training_workers,
+            "training_parallel": config.tomotopy_training_parallel,
+            "train_ids": list(data.train_ids),
+            "vocabulary": list(vocabulary),
+        }
+    )
+    model, history, checkpoint_audit = _restore_tomotopy_checkpoint(
+        tp, output, context_sha256=checkpoint_context
+    )
+    if model is None:
         model = tp.LDAModel(
             k=config.num_topics,
             min_df=1,
@@ -368,6 +509,8 @@ def run_tomotopy_seed(run_dir: str | Path, seed: int) -> dict[str, Any]:
             model.add_doc(words)
         history = []
         trained = 0
+    else:
+        trained = int(history[-1]["iteration"])
     training_started = time.perf_counter()
     previous_training_seconds = (
         float(history[-1].get("cumulative_training_seconds", 0.0)) if history else 0.0
@@ -382,19 +525,20 @@ def run_tomotopy_seed(run_dir: str | Path, seed: int) -> dict[str, Any]:
         )
         previous_training_seconds += time.perf_counter() - step_started
         trained += step
-        temporary_model = model_path.with_name(f".{model_path.name}.{os.getpid()}.tmp")
-        model.save(str(temporary_model))
-        os.replace(temporary_model, model_path)
         history.append(
             {
                 "iteration": trained,
                 "ll_per_word": float(model.ll_per_word),
                 "perplexity": float(model.perplexity),
                 "cumulative_training_seconds": previous_training_seconds,
-                "model_sha256": file_sha256(model_path),
             }
         )
-        write_json(history_path, history)
+        _save_tomotopy_checkpoint(
+            model,
+            output,
+            context_sha256=checkpoint_context,
+            history=history,
+        )
         if _converged(
             history,
             window=config.tomotopy_convergence_window,
@@ -492,12 +636,20 @@ def run_tomotopy_seed(run_dir: str | Path, seed: int) -> dict[str, Any]:
         "cached_latency": _latency_summary(cached_durations, latency_count),
         "end_to_end_latency": _latency_summary(end_to_end_durations, latency_count),
         "metrics": metrics,
+        "checkpointing": {
+            "schema_version": "tomotopy-checkpoint/v1",
+            "keep": 2,
+            "context_sha256": checkpoint_context,
+            "resume_audit": checkpoint_audit,
+            "retained": [
+                path.name for path in _tomotopy_checkpoint_sidecars(output)[:2]
+            ],
+        },
         "beta_sha256": file_sha256(output / "beta.npy"),
         "theta_sha256": file_sha256(output / "test_theta.npy"),
         "model_sha256": file_sha256(final_model_path),
     }
     write_json(complete_path, result)
-    model_path.unlink(missing_ok=True)
     return result
 
 

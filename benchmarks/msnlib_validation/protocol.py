@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import json
 import shlex
 import sys
@@ -35,6 +36,80 @@ EXECUTION_ONLY_DERIVATION_FIELDS = frozenset(
 )
 CONVERGENCE_CONTINUATION_FIELDS = frozenset({"hybrid_max_epochs"})
 CHEMICAL_CORRECTION_FIELDS = frozenset({"protocol_name"})
+IMPLEMENTATION_CORRECTION_FIELDS = frozenset(
+    {"protocol_name", "prior_test_results_inspected", "evaluation_timing"}
+)
+MAG_IMPORT_ROOTS = (
+    "MS2LDA.utils",
+    "MS2LDA.Add_On.Spec2Vec.annotation",
+    "MS2LDA.Add_On.Spec2Vec.annotation_refined",
+)
+
+
+def _module_path(repo_root: Path, module: str) -> Path | None:
+    """Resolve one local Python module without importing production code."""
+    stem = repo_root.joinpath(*module.split("."))
+    module_path = stem.with_suffix(".py")
+    if module_path.is_file():
+        return module_path
+    package_path = stem / "__init__.py"
+    return package_path if package_path.is_file() else None
+
+
+def _local_imports(path: Path, module: str) -> set[str]:
+    """Return statically declared local MS2LDA imports from one source file."""
+    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    imports: set[str] = set()
+    is_package = path.name == "__init__.py"
+    package = module.split(".") if is_package else module.split(".")[:-1]
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            imports.update(
+                alias.name
+                for alias in node.names
+                if alias.name == "MS2LDA" or alias.name.startswith("MS2LDA.")
+            )
+            continue
+        if not isinstance(node, ast.ImportFrom):
+            continue
+        if node.level:
+            keep = len(package) - (node.level - 1)
+            if keep < 0:
+                continue
+            pieces = package[:keep]
+            if node.module:
+                pieces.extend(node.module.split("."))
+            base = ".".join(pieces)
+        else:
+            base = node.module or ""
+        if base != "MS2LDA" and not base.startswith("MS2LDA."):
+            continue
+        imports.add(base)
+        imports.update(
+            f"{base}.{alias.name}" for alias in node.names if alias.name != "*"
+        )
+    return imports
+
+
+def _mag_source_files(repo_root: Path) -> set[Path]:
+    """Find the local production-source closure imported by MAG."""
+    pending = list(MAG_IMPORT_ROOTS)
+    visited_modules: set[str] = set()
+    files: set[Path] = set()
+    while pending:
+        module = pending.pop()
+        if module in visited_modules:
+            continue
+        visited_modules.add(module)
+        path = _module_path(repo_root, module)
+        if path is None:
+            continue
+        files.add(path)
+        # Python executes every package initializer on the module path.
+        pieces = module.split(".")
+        pending.extend(".".join(pieces[:index]) for index in range(1, len(pieces)))
+        pending.extend(_local_imports(path, module))
+    return files
 
 
 def _source_files(repo_root: Path) -> list[Path]:
@@ -51,7 +126,8 @@ def _source_files(repo_root: Path) -> list[Path]:
             and "__pycache__" not in path.parts
             and path.suffix in {".py", ".json", ".md"}
         )
-    return sorted(files)
+    files.extend(_mag_source_files(repo_root))
+    return sorted(set(files))
 
 
 def code_manifest(repo_root: str | Path) -> dict[str, str]:
@@ -180,6 +256,14 @@ def freeze_protocol(
     derivation: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Create exact manifests and an immutable lock before test evaluation."""
+    if (
+        derivation is None
+        and test_results_inspected
+        and not config.prior_test_results_inspected
+    ):
+        raise ValueError(
+            "direct freeze cannot add mutable prior-result inspection; encode it in config"
+        )
     destination = Path(run_dir).expanduser().resolve()
     destination.mkdir(parents=True, exist_ok=True)
     lock_path = destination / LOCK_FILENAME
@@ -272,7 +356,10 @@ def freeze_protocol(
         "git": git_state(root),
         "artifacts": artifacts,
         "source_manifest_sha256": object_sha256(sources),
-        "test_results_inspected": bool(test_results_inspected),
+        "test_results_inspected": bool(
+            test_results_inspected or config.prior_test_results_inspected
+        ),
+        "evaluation_timing": config.evaluation_timing,
     }
     if derivation is not None:
         lock["derivation"] = derivation
@@ -399,6 +486,52 @@ def validate_chemical_evaluation_correction_derivation(
         "source_protocol_sha256": source_lock["protocol_sha256"],
         "source_run": str(source_directory),
         "target_config_sha256": object_sha256(target_values),
+    }
+
+
+def validate_implementation_correction_derivation(
+    source_run: str | Path,
+    target_config: BenchmarkConfig,
+    reason: str | None = None,
+) -> dict[str, Any]:
+    """Disclose a post-review implementation correction and safe reuse boundary."""
+    source_directory = Path(source_run).expanduser().resolve()
+    source_lock = verify_protocol(source_directory, verify_code=False)
+    source_config = load_config(source_directory / "config.resolved.json")
+    source_values = source_config.as_dict()
+    target_values = target_config.as_dict()
+    differences = {
+        key: {"source": source_values.get(key), "target": target_values.get(key)}
+        for key in sorted(set(source_values) | set(target_values))
+        if source_values.get(key) != target_values.get(key)
+    }
+    if set(differences) != IMPLEMENTATION_CORRECTION_FIELDS:
+        raise ValueError(
+            "implementation correction may change only protocol_name, "
+            "prior_test_results_inspected, and evaluation_timing"
+        )
+    if target_config.evaluation_timing != "posthoc_implementation_correction":
+        raise ValueError("implementation correction requires a post-hoc timing label")
+    if not target_config.prior_test_results_inspected:
+        raise ValueError("implementation correction must disclose prior results")
+    normalized_reason = str(reason).strip() if reason is not None else ""
+    if not normalized_reason:
+        raise ValueError("implementation correction requires an explicit reason")
+    return {
+        "confirmatory": False,
+        "created_after_source_test_results_inspected": True,
+        "differences": differences,
+        "execution_only": False,
+        "feature_cache_reusable": False,
+        "hybrid_artifacts_reusable": False,
+        "kind": "implementation_correction",
+        "reason": normalized_reason,
+        "scientific_settings_unchanged": True,
+        "source_config_sha256": object_sha256(source_values),
+        "source_protocol_sha256": source_lock["protocol_sha256"],
+        "source_run": str(source_directory),
+        "target_config_sha256": object_sha256(target_values),
+        "tomotopy_core_reusable": True,
     }
 
 

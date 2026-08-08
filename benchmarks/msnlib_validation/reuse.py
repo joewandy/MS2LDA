@@ -14,6 +14,7 @@ from .protocol import (
     validate_chemical_evaluation_correction_derivation,
     validate_convergence_continuation_derivation,
     validate_execution_only_derivation,
+    validate_implementation_correction_derivation,
     verify_protocol,
 )
 
@@ -328,6 +329,10 @@ def reuse_core_artifacts(
     source_config = load_config(source_directory / "config.resolved.json")
     target_config = load_config(target_directory / "config.resolved.json")
     recorded_derivation = target_lock.get("derivation", {})
+    if recorded_derivation.get("kind") == "implementation_correction":
+        raise ValueError(
+            "implementation corrections may reuse Tomotopy only; use reuse-tomotopy"
+        )
     derivation = _validate_target_derivation(
         source_directory,
         target_config,
@@ -495,4 +500,109 @@ def reuse_core_artifacts(
         "source_test_results_already_inspected": True,
     }
     write_json(target_directory / "core_artifact_reuse.json", summary)
+    return summary
+
+
+def reuse_tomotopy_artifacts(
+    source_run: str | Path,
+    target_run: str | Path,
+) -> dict[str, Any]:
+    """Import only hash-verified Tomotopy models into an implementation correction."""
+    source_directory = Path(source_run).expanduser().resolve()
+    target_directory = Path(target_run).expanduser().resolve()
+    source_lock = verify_protocol(source_directory, verify_code=False)
+    target_lock = verify_protocol(target_directory)
+    source_config = load_config(source_directory / "config.resolved.json")
+    target_config = load_config(target_directory / "config.resolved.json")
+    recorded = target_lock.get("derivation", {})
+    derivation = validate_implementation_correction_derivation(
+        source_directory,
+        target_config,
+        recorded.get("reason"),
+    )
+    if recorded != derivation:
+        raise ValueError("target lock does not contain the validated derivation")
+    if target_lock.get("test_results_inspected") is not True:
+        raise ValueError("implementation correction must disclose prior results")
+
+    source_inputs = read_json(source_directory / "input_manifest.json")["files"]
+    target_inputs = read_json(target_directory / "input_manifest.json")["files"]
+    if source_inputs != target_inputs:
+        raise ValueError("source and target input manifests differ")
+    for name in IDENTICAL_FROZEN_ARTIFACTS:
+        if source_lock["artifacts"].get(name) != target_lock["artifacts"].get(name):
+            raise ValueError(f"source and target frozen artifacts differ: {name}")
+
+    allowed_config_differences = {
+        "protocol_name",
+        "prior_test_results_inspected",
+        "evaluation_timing",
+    }
+    source_values = source_config.as_dict()
+    target_values = target_config.as_dict()
+    differing = {
+        key
+        for key in set(source_values) | set(target_values)
+        if source_values.get(key) != target_values.get(key)
+    }
+    if differing != allowed_config_differences:
+        raise ValueError(
+            "Tomotopy reuse requires identical scientific and execution configuration"
+        )
+
+    created_utc = datetime.now(timezone.utc).isoformat()
+    common = {
+        "source_protocol_sha256": source_lock["protocol_sha256"],
+        "source_run": str(source_directory),
+        "target_protocol_sha256": target_lock["protocol_sha256"],
+        "target_run": str(target_directory),
+    }
+    reused: dict[str, Any] = {}
+    for seed in target_config.seeds:
+        source_result_dir, result, inventory = _verify_tomotopy_source(
+            source_directory,
+            seed=seed,
+            topic_count=target_config.num_topics,
+            workers=target_config.tomotopy_training_workers,
+            parallel=target_config.tomotopy_training_parallel,
+        )
+        target_result_dir = target_directory / "core" / f"seed_{seed}" / "tomotopy"
+        provenance = {
+            **common,
+            "reuse_scope": "tomotopy_core_only",
+            "source_inventory": inventory,
+            "source_result_sha256": file_sha256(source_result_dir / "complete.json"),
+        }
+        if target_result_dir.exists():
+            if read_json(target_result_dir / "reuse_provenance.json") != provenance:
+                raise FileExistsError(
+                    f"target Tomotopy seed {seed} has different provenance"
+                )
+            target_inventory = _inventory(target_result_dir)
+            target_inventory.pop("reuse_provenance.json", None)
+            if target_inventory != inventory:
+                raise ValueError(
+                    f"target reused Tomotopy seed {seed} changed after import"
+                )
+        else:
+            temporary = _copytree_atomic(source_result_dir, target_result_dir)
+            write_json(temporary / "reuse_provenance.json", provenance)
+            os.replace(temporary, target_result_dir)
+        reused[str(seed)] = {
+            "inventory": inventory,
+            "result_sha256": file_sha256(target_result_dir / "complete.json"),
+            "training_iterations": result["training_iterations"],
+        }
+
+    summary = {
+        "chemical_evidence": False,
+        "created_utc": created_utc,
+        "derivation": derivation,
+        "forbidden_reuse": ["features", "hybrid"],
+        "reuse_scope": "tomotopy_core_only",
+        "reused": {"tomotopy": reused},
+        "software_provenance_only": True,
+        "source_test_results_already_inspected": True,
+    }
+    write_json(target_directory / "tomotopy_artifact_reuse.json", summary)
     return summary

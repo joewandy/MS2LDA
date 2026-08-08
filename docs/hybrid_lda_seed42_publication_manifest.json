@@ -1,0 +1,16 @@
+{
+  "protocol_sha256": "e57f289c691f94edf86e9d8b53e284233862014dd980da82e7f5f272b7f2ec45",
+  "published": {
+    "hybrid_lda_seed42_checkpoint.json": "c20a9d71ba1d0f6ea2c0bbd08d85e9f6026576de24d9e3e8f7a3a21c9612817b",
+    "hybrid_lda_seed42_results.tex": "1a238d346ad1e25c0cd96f3078e6cf8536eaa026c43f3cd94131b4469a6bb884"
+  },
+  "schema_version": "msnlib-validation/publication-manifest-v1",
+  "source_report_outputs": {
+    "mag_agreement.jsonl": "0a98acfa7a8535bffc12baeb82f435cf36afacdfbdd18b9e1a20df72065a5e76",
+    "mag_per_seed.jsonl": "973e931512f32bb3a748a447d3f11546f62ab0ce02f0dfcc327972db9cc87dd5",
+    "manuscript_results.tex": "1a238d346ad1e25c0cd96f3078e6cf8536eaa026c43f3cd94131b4469a6bb884",
+    "per_seed_metrics.csv": "9a1ab96399daecd2d44929a28d7b82f014661cfa15eb401dfee58eba714ca986",
+    "summary.json": "ed632477023851d3f7ae636fa96bd89c1eba68f847bf7af91225d38ee7bba3f0",
+    "topic_similarity.jsonl": "b331e1bb3a964f79aa8aa55dc7d446fcbfd1d4dfb006357cce31df991c099177"
+  }
+}

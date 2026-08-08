@@ -13,8 +13,6 @@ from typing import Any, Sequence
 
 from .config import load_config
 
-DEFAULT_CONFIG = Path(__file__).with_name("configs") / "full-msnlib-k1000.json"
-
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
@@ -24,22 +22,21 @@ def _parser() -> argparse.ArgumentParser:
     commands = parser.add_subparsers(dest="command", required=True)
 
     validate = commands.add_parser("validate-inputs")
-    validate.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
+    validate.add_argument("--config", type=Path, required=True)
     validate.add_argument("--data-root", type=Path, required=True)
     validate.add_argument("--output", type=Path)
 
     preflight = commands.add_parser("preflight")
-    preflight.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
+    preflight.add_argument("--config", type=Path, required=True)
     preflight.add_argument("--data-root", type=Path, required=True)
     preflight.add_argument("--output", type=Path)
     preflight.add_argument("--no-allocation-probe", action="store_true")
 
     freeze = commands.add_parser("freeze")
-    freeze.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
+    freeze.add_argument("--config", type=Path, required=True)
     freeze.add_argument("--data-root", type=Path, required=True)
     freeze.add_argument("--run", type=Path, required=True)
     freeze.add_argument("--repo-root", type=Path, default=Path.cwd())
-    freeze.add_argument("--test-results-inspected", action="store_true")
 
     freeze_derived = commands.add_parser("freeze-derived")
     freeze_derived.add_argument("--config", type=Path, required=True)
@@ -65,9 +62,37 @@ def _parser() -> argparse.ArgumentParser:
     freeze_chemical.add_argument("--source-run", type=Path, required=True)
     freeze_chemical.add_argument("--reason", required=True)
 
+    freeze_implementation = commands.add_parser("freeze-implementation-correction")
+    freeze_implementation.add_argument("--config", type=Path, required=True)
+    freeze_implementation.add_argument("--data-root", type=Path, required=True)
+    freeze_implementation.add_argument("--run", type=Path, required=True)
+    freeze_implementation.add_argument("--repo-root", type=Path, default=Path.cwd())
+    freeze_implementation.add_argument("--source-run", type=Path, required=True)
+    freeze_implementation.add_argument("--reason", required=True)
+
     reuse = commands.add_parser("reuse-core-artifacts")
     reuse.add_argument("--run", type=Path, required=True)
     reuse.add_argument("--source-run", type=Path, required=True)
+
+    reuse_tomotopy = commands.add_parser("reuse-tomotopy")
+    reuse_tomotopy.add_argument("--run", type=Path, required=True)
+    reuse_tomotopy.add_argument("--source-run", type=Path, required=True)
+
+    pipeline = commands.add_parser("run-pipeline")
+    pipeline.add_argument("--run", type=Path, required=True)
+    pipeline.add_argument("--data-root", type=Path, required=True)
+    pipeline.add_argument("--mag-environment", default="ms2lda-msnlib-mag")
+
+    export = commands.add_parser("export-publication")
+    export.add_argument("--run", type=Path, required=True)
+    export.add_argument("--checkpoint", type=Path, required=True)
+    export.add_argument("--latex", type=Path, required=True)
+    export.add_argument("--manifest", type=Path, required=True)
+
+    verify_publication = commands.add_parser("verify-publication")
+    verify_publication.add_argument("--checkpoint", type=Path, required=True)
+    verify_publication.add_argument("--latex", type=Path, required=True)
+    verify_publication.add_argument("--manifest", type=Path, required=True)
 
     for name in ("run-core", "run-chemical-inference", "run-mag", "report"):
         command = commands.add_parser(name)
@@ -147,7 +172,6 @@ def _run(args: argparse.Namespace) -> dict[str, Any]:
             data_root=args.data_root,
             run_dir=args.run,
             repo_root=args.repo_root,
-            test_results_inspected=args.test_results_inspected,
         )
     if args.command == "freeze-derived":
         from .protocol import (
@@ -212,10 +236,60 @@ def _run(args: argparse.Namespace) -> dict[str, Any]:
             test_results_inspected=True,
             derivation=derivation,
         )
+    if args.command == "freeze-implementation-correction":
+        from .protocol import (
+            freeze_protocol,
+            validate_implementation_correction_derivation,
+        )
+
+        config = load_config(args.config)
+        derivation = validate_implementation_correction_derivation(
+            args.source_run,
+            config,
+            args.reason,
+        )
+        return freeze_protocol(
+            config,
+            config_path=args.config,
+            data_root=args.data_root,
+            run_dir=args.run,
+            repo_root=args.repo_root,
+            test_results_inspected=True,
+            derivation=derivation,
+        )
     if args.command == "reuse-core-artifacts":
         from .reuse import reuse_core_artifacts
 
         return reuse_core_artifacts(args.source_run, args.run)
+    if args.command == "reuse-tomotopy":
+        from .reuse import reuse_tomotopy_artifacts
+
+        return reuse_tomotopy_artifacts(args.source_run, args.run)
+    if args.command == "run-pipeline":
+        from .pipeline import run_pipeline
+
+        return run_pipeline(
+            args.run,
+            data_root=args.data_root,
+            mag_environment=args.mag_environment,
+        )
+    if args.command == "export-publication":
+        from .publication import export_publication_artifacts
+
+        return export_publication_artifacts(
+            args.run,
+            checkpoint_path=args.checkpoint,
+            latex_path=args.latex,
+            manifest_path=args.manifest,
+        )
+    if args.command == "verify-publication":
+        from .publication import verify_publication_artifacts
+
+        return verify_publication_artifacts(
+            checkpoint_path=args.checkpoint,
+            latex_path=args.latex,
+            manifest_path=args.manifest,
+        )
     if args.command == "run-core":
         from .models import run_all_core_models
 
@@ -279,6 +353,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "freeze-derived",
         "freeze-continuation",
         "freeze-chemical-correction",
+        "freeze-implementation-correction",
     }
     if run is not None and args.command not in freeze_commands:
         _append_execution(run, status="started")
