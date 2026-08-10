@@ -1,0 +1,42 @@
+{
+  "batch_size": 32,
+  "bootstrap_replicates": 2000,
+  "budgets": [
+    0,
+    1,
+    2,
+    50
+  ],
+  "checkpoint_keep": 2,
+  "cosine_p05_margin": 0.02,
+  "coverage_fraction": 0.9,
+  "direct_target_steps": 50,
+  "discoveries": [
+    "dreams_prior",
+    "symmetric_prior"
+  ],
+  "evaluation_cpu_threads": 1,
+  "global_patience": 5,
+  "heartbeat_seconds": 300,
+  "inference_epochs": 12,
+  "inference_modes": [
+    "dreams_semi",
+    "dreams_direct",
+    "topic_semi",
+    "topic_direct",
+    "analytic"
+  ],
+  "membership_threshold": 0.5,
+  "minimum_free_disk_gib": 20,
+  "nll_relative_margin": 0.02,
+  "npmi_margin": 0.02,
+  "num_topics": 1000,
+  "schema_version": "msnlib-hybrid-simplification/v1",
+  "seed": 42,
+  "semi_refinement_steps": 2,
+  "sos_margin": 0.02,
+  "study_name": "hybrid-lda-simplification-seed42",
+  "symmetric_max_epochs": 250,
+  "symmetric_min_epochs": 20,
+  "training_cpu_threads": 4
+}

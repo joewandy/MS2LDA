@@ -1,0 +1,306 @@
+{
+  "code_manifest": {
+    "benchmarks/inference_baselines.py": "6711d83aa47bf5c4d53e3d8d467c924909e795f5850cf76cb481d4a2c222d0a8",
+    "benchmarks/msnlib_simplification/README.md": "71e025ff8811a666c0d141035be95ba8908147cdfcc5b2e450b9b961bc6b1dbe",
+    "benchmarks/msnlib_simplification/__init__.py": "232a1c62efde5ac0f7d8e2abfc03fefc30ae59efb32cb63c4334592e52710f47",
+    "benchmarks/msnlib_simplification/__main__.py": "a9a3bfb0baf682c46ff3cb8093855aaf4e386bfba420db36f9f084bf2e9826b8",
+    "benchmarks/msnlib_simplification/chemical.py": "e9d73e81efa8f98ae9c336ef43bce26d9548321b3ebc4882ff584c4e755d71ec",
+    "benchmarks/msnlib_simplification/cli.py": "921bb15c91b371647bce91400bd5941e3980beb837db822d550f59bc4a03ae28",
+    "benchmarks/msnlib_simplification/data.py": "e19b14102bbe986a64edfc17acbb9130dd262f0f358acf6dbe388ddb18c6c4b1",
+    "benchmarks/msnlib_simplification/discovery.py": "75b06e1df64d2f77d707c9918139cbc8b414ca2573f75c389dd26f03626ccce5",
+    "benchmarks/msnlib_simplification/encoders.py": "bba520f9c5e97e7816ccd7a894ea9895b4db80dc60c525887257729304e709c7",
+    "benchmarks/msnlib_simplification/evaluation.py": "e502f64628284836ba8f9bb10fb0be6453c618f9cd429a226baf7869e5ef9264",
+    "benchmarks/msnlib_simplification/orchestrator.py": "8231323d06764e6f2c7e0265148947c27494d7f68dd209370bc45d8d04c230e6",
+    "benchmarks/msnlib_simplification/protocol.json": "1d9199f029bc50908601354568ccdb52e6ebb05bd2fd02985fff3afdefc04281",
+    "benchmarks/msnlib_simplification/report.py": "f8371e9c0829c15dd429b7176bb66271cbac9d9edf59ca14e35a9606fc8c67a0",
+    "benchmarks/msnlib_simplification/runtime.py": "5661e2c1e76d61d067ca680db0745c98a5666a92b14a47d58d63431b765e7512",
+    "benchmarks/msnlib_simplification/spec.py": "1a7a9f396977c3464f35d45534d4bcdf1f58429a247c68d798e3c2c595c5d0d6",
+    "benchmarks/msnlib_validation/PROVENANCE.md": "73ca8c227e2ce8384ef8a2f52b36ab3edba480ae2fb5f51910d94056a2bf9086",
+    "benchmarks/msnlib_validation/README.md": "481067de8830d7af041734cb13a2bfcaba027133193c124bacb071c37ac60592",
+    "benchmarks/msnlib_validation/__init__.py": "685382e1d69d97cac230cc11d8ccdbf241dcd12047c4554018747485ae3a1d91",
+    "benchmarks/msnlib_validation/__main__.py": "43c2901831a67190e0fc10757ad0184ba0c7b3d30c85f3b78fa7643c46ec8225",
+    "benchmarks/msnlib_validation/checkpoint_hashes.py": "1a79cd9c95fb666c18fc952e6e6415f6aebb288888e48af05ca92705ae8371da",
+    "benchmarks/msnlib_validation/chemical.py": "a58bd5cb318f89f19f177075855cb94961f052636350f6ab69c3d88e9796cbc9",
+    "benchmarks/msnlib_validation/cli.py": "d5c612568f9a9f15f146c464b47f4d9f5056e66eb92e8c2a89fe49229feae363",
+    "benchmarks/msnlib_validation/config.py": "e9d6e73ef8dae83d9a7847c07a9a0e4fcb6368a71de3a5c29584d7068ce5fa9c",
+    "benchmarks/msnlib_validation/configs/full-msnlib-k1000.json": "ed9d6c82d0cb7c284cafd6961505b86b0c2d31fdd2e552fb036b52cd87223a6b",
+    "benchmarks/msnlib_validation/configs/indicative-msnlib-k1000-seed42-chemical-correction.json": "59ece9e68e54edbd4eef25928146c23b1956383e2b58c684fc9c6d5776e9c453",
+    "benchmarks/msnlib_validation/configs/indicative-msnlib-k1000-seed42-peak-pooling-correction.json": "b9a8731d4693ecacb784767e56c2d7a5fdbb95f52b286618b8fa441e38fd5156",
+    "benchmarks/msnlib_validation/configs/indicative-msnlib-k1000-seed42.json": "c772bf473070e406299222ae4fa24adb005a9c7c339cb1baf33f21f0978860ad",
+    "benchmarks/msnlib_validation/data.py": "01850e23b2bef4e0cbab99a28d9f1a61bb94418d467d166871e76e17873770e3",
+    "benchmarks/msnlib_validation/features.py": "3c4340f386bc7c658011a2fde6cf880387f8af027db3f02dee0c79f4be1a7204",
+    "benchmarks/msnlib_validation/mag.py": "dc9d8ccc7b8426286f26a0e0a9fc7fdde33df4d4f0de32cc064ebf847097f8cc",
+    "benchmarks/msnlib_validation/metrics.py": "b2106f798792348619940fcc9a5fcc68d4f81327141e16f2d0776c86e63b33e8",
+    "benchmarks/msnlib_validation/models.py": "0bed30d3f74ad5d06ada3cc809fa31f81b1e4e7c511a57c838ecd871f0d817ca",
+    "benchmarks/msnlib_validation/output-schema.json": "3082c72deb7082d8005923df5d10f17f18d1403a155a54985af7f1c2553ca168",
+    "benchmarks/msnlib_validation/pipeline.py": "f133d81a0b89be4963c59a47fec1f1fd5df6e4195562d70a4d2adb3c096b9a71",
+    "benchmarks/msnlib_validation/preflight.py": "b5a8a968323ae20a5fc8fe2d1f2686b7a21d0e73f9a11db3fe983b1d44f03cd0",
+    "benchmarks/msnlib_validation/protocol.py": "16b57a2025d9b5e91862c1640ac6ed4dcc14c845360b92ddb8b62d4dea4e3a1f",
+    "benchmarks/msnlib_validation/publication.py": "a8547bcaa048501eaaef6b3745935b1061bc887e534ec865f3394a5d128d14e8",
+    "benchmarks/msnlib_validation/report.py": "2bd6009ae04f409a05edc2b69768e38d6f98f88b10c200030b2758631e608242",
+    "benchmarks/msnlib_validation/reuse.py": "46a64d4eb97de946c35ffb988b827a75ba4aa863205893936493813629f4bb5c",
+    "benchmarks/msnlib_validation/runtime.py": "acd5a1f962b173e3fc0df629561858272241533e05dd9a39a288afac2b83a3f2",
+    "benchmarks/msnlib_validation/smoke.py": "0050c2895838b1127d6a83a6d7dc462776019464b77b7b1c2309833143b28a46",
+    "environment-hybrid.yml": "6b4b2da21d90371f1c8dfbd69f506e9f30a2671bd1f0b62a62f02d1e883cc19d",
+    "environment-msnlib-mag.yml": "f7483fbb95baa47ea28d7abd0f087b7e94c2104fc2c89d19fceca7e4646b6ee7",
+    "ms2lda_hybrid/__init__.py": "72225dd8800f4aa2e06363792502e13afdef85a1143391b90a481f92ea5847e1",
+    "ms2lda_hybrid/_core.py": "cbf01288c364507c58cd6bfacf1ec543ac7eb56f4394a1488b9e273233f9f91d",
+    "ms2lda_hybrid/_torch_safety.py": "7149f57a2b8819151822f26c97fae4154b48f38bec915e486bc5471cc2119d19",
+    "ms2lda_hybrid/_variational.py": "c454eb96b6867f0339314bd672a003b165704deefefe01b88047adbb8dbaf667",
+    "ms2lda_hybrid/config.py": "a59494ce29ee9f57cdd6f36f875c9bcd9b16c71bdca0acb5d3b33238be566c5b",
+    "ms2lda_hybrid/dreams_features.py": "6a2601e4aa6ea06a8e7e2fa4b6becaef0a9ebc7581e8d0bd960ce3d03874d279",
+    "ms2lda_hybrid/model.py": "481a0b976dca5f5f140c464de52a4e46dded2e98f251d50bd69f0be1a689b287",
+    "poetry.lock": "8333302bc9fa3a0bbde25802c8cc39a335171bf80135a92a4a00e7c1994ce4a6",
+    "pyproject.toml": "d2b68689b3d280049e3fcd4aec144b4c7fde1c0c858c573a52bb8cb8efb82ec8",
+    "scripts/run_hybrid_simplification_overnight.sh": "7fe492a8a75e82ddde9af92e1f4c4cc8310081fc5d47178555264c9d3a25f395"
+  },
+  "code_manifest_sha256": "4df24fb9f8f43f3e7acb4c5b93364d1172fd79d31316c8d45865e3d5d874f4f1",
+  "created_utc": "2026-08-09T04:30:27.248277+00:00",
+  "git": {
+    "branch": "hybrid-lda-simplification",
+    "commit": "a7c12e63c028cbb4bdcf9f2750c63a2d551975a0",
+    "status_porcelain": "?? benchmarks/msnlib_simplification/\n?? scripts/run_hybrid_simplification_overnight.sh\n?? tests/test_msnlib_simplification.py\n"
+  },
+  "lock_sha256": "87d7573d5fd84ff24f9c5e09c923af36b3b2703056848d39b311d35c8fca1e14",
+  "repo_root": "/Users/joewandy/Work/git/MS2LDA-hybrid-simplification",
+  "schema_version": "msnlib-hybrid-simplification/v1",
+  "scientific_status": "posthoc_single_seed_simplification_experiment",
+  "selection_or_adoption_authorized": false,
+  "source_code_drift_audit": {
+    "allowed_changes": [
+      "benchmarks/msnlib_validation/README.md",
+      "ms2lda_hybrid/dreams_features.py"
+    ],
+    "changed_files": [
+      "benchmarks/msnlib_validation/README.md",
+      "ms2lda_hybrid/dreams_features.py"
+    ],
+    "current_manifest_sha256": "67f2131573b25d560c011add839f32911e9969fb9f637c928c0cd3ec3c95701c",
+    "historical_manifest_sha256": "ed5ea4ad26a805c7349610035a27adadebe6017fa4939cf0008a352afc13130c",
+    "python_change_is_docstring_only": true,
+    "source_commit": "2608b55524b20d3767a6a793a01dcc4b7b88f7af"
+  },
+  "source_external_inputs": {
+    "mgf": {
+      "bytes": 88159030,
+      "path": "/Users/joewandy/Work/data/MS2LDA-msnlib-validation/zenodo/20179680/extracted/Data/Benchmark_MSn_Lib/Corinna_Library_filtered_positive.mgf",
+      "sha256": "c1a2389754e630590111bde8f50403c9d90081d3f3427bc63defef0b9714682f"
+    },
+    "published_motifset": {
+      "bytes": 1537391,
+      "path": "/Users/joewandy/Work/data/MS2LDA-msnlib-validation/zenodo/20179680/extracted/Data/Benchmark_MSn_Lib/CaseStudy_Corinna_Library_filtered_1000motifs_output_100625/motifset.json",
+      "sha256": "76cc12fc12b9160a5871d4bf1f5c373d6ca5b520bbafcd078ae0d1b5e542587d"
+    },
+    "spec2vec_db": {
+      "bytes": 4372279296,
+      "path": "/Users/joewandy/Work/data/MS2LDA-msnlib-validation/zenodo/20179680/extracted/model_positive_mode/positive_train_data/150225_CombLibraries_spectra.db",
+      "sha256": "f4d8c6af067479f1082cad8c4fa8958d975506eed89d6026fa10ee89121912f1"
+    },
+    "spec2vec_embeddings": {
+      "bytes": 1023072128,
+      "path": "/Users/joewandy/Work/data/MS2LDA-msnlib-validation/zenodo/20179680/extracted/model_positive_mode/positive_train_data/150225_CleanedLibraries_Spec2Vec_pos_embeddings.npy",
+      "sha256": "30ac8b287b02e53cd3e72bcfc2083e608aa0dcfcda8f73f5e237dfd40754b4d3"
+    },
+    "spec2vec_model": {
+      "bytes": 9943191,
+      "path": "/Users/joewandy/Work/data/MS2LDA-msnlib-validation/zenodo/20179680/extracted/model_positive_mode/positive_train_data/150225_Spec2Vec_pos_CleanedLibraries.model",
+      "sha256": "322a81fcd4f1f77a12007735d71f0a4f509f87c76703e2fef8f954eb909a2b82"
+    }
+  },
+  "source_files": {
+    "chemical_inference/features/full_test_embeddings.npy": {
+      "bytes": 31854720,
+      "sha256": "562abc580a030fef22067a4dc1d48cc0e8645b42a152b68b11e59136611e88c8"
+    },
+    "chemical_inference/features/identifiers.json": {
+      "bytes": 769073,
+      "sha256": "17aa42d51293812a48a5539d3dc017231bc8e6676cd025ca7f4550ec445932db"
+    },
+    "chemical_inference/features/manifest.json": {
+      "bytes": 1693,
+      "sha256": "9e1b5a66c2e95e60126550d1cb37aa551dd712bb44338dc34137a78bfa1546e8"
+    },
+    "chemical_inference/seed_42/hybrid/complete.json": {
+      "bytes": 2483,
+      "sha256": "1fb71e7bc2b5b64c3b652467bcc7fe6b90520db18ddbb183a041d60a55f238a1"
+    },
+    "chemical_inference/seed_42/hybrid/test_full_theta_encoder.npy": {
+      "bytes": 31108128,
+      "sha256": "728b8902f4a360f7c23c124be851f07efef0ca90e3e117fc760fbf09ddb62262"
+    },
+    "chemical_inference/seed_42/hybrid/test_full_theta_long.npy": {
+      "bytes": 31108128,
+      "sha256": "29a44dc0db97e9ec3091f466042b83fe97eb1a1669d54c1fae597a41cd2760f1"
+    },
+    "chemical_inference/seed_42/hybrid/test_full_theta_two_step.npy": {
+      "bytes": 31108128,
+      "sha256": "e93831b74818aa827781bfcec5168281ba01d11eef89bf6095e719d717170eae"
+    },
+    "code_manifest.json": {
+      "bytes": 6475,
+      "sha256": "21519cfa2f49ad643b37fc4472fa5c2aecb530d25b0d643eeab8915a0f526832"
+    },
+    "completion_manifest.jsonl": {
+      "bytes": 3235043,
+      "sha256": "8732052b0ddc1b147c861ecdf34855b4351d8f9cf22f404c2b6a95931daf4bbc"
+    },
+    "config.resolved.json": {
+      "bytes": 2978,
+      "sha256": "fa128a66bd3cdb66891b0d196cabc5162fcd57e765ee696822a44bd160b8251e"
+    },
+    "core/seed_42/hybrid/beta.npy": {
+      "bytes": 84932128,
+      "sha256": "b08c6066f4db169f34d7d25fed7fa8788ce39dd71556d08e01a9f5088f8fb5b6"
+    },
+    "core/seed_42/hybrid/complete.json": {
+      "bytes": 6699,
+      "sha256": "264f64c4548b1e7245d83333094a70a00663e443168b1bd6fcca370dc5f32a9c"
+    },
+    "core/seed_42/hybrid/discovery_history.json": {
+      "bytes": 46370,
+      "sha256": "4aef538fe1d188230793612c13ea4153ef5147b25b55944fe603f147bfea5bfe"
+    },
+    "core/seed_42/hybrid/inference_history.json": {
+      "bytes": 2638,
+      "sha256": "13d0e3f0f987f1769b94feee1d73825cfe584118b4e6ac95cea923e09a1a1ea4"
+    },
+    "core/seed_42/hybrid/model.pt": {
+      "bytes": 176727111,
+      "sha256": "09367515374ec2d0777d419f2693942c428c5f6d5fcf6dfeb0a31dbce0894fbe"
+    },
+    "core/seed_42/hybrid/test_theta_0.npy": {
+      "bytes": 31108128,
+      "sha256": "92e86fd0f5d7cfe3a9572a70b4c9582c135387988c0cb93e5cd8dfbd8eee9bd1"
+    },
+    "core/seed_42/hybrid/test_theta_2.npy": {
+      "bytes": 31108128,
+      "sha256": "7038647ecfa1cfebdcbba9de32b38605e31486a5b2a5cd48a8a1f9af55d3ec86"
+    },
+    "core/seed_42/hybrid/test_theta_50.npy": {
+      "bytes": 31108128,
+      "sha256": "853ea5b569e4559739d28569596a84631de44cd289a5c6354d71aabf901dca06"
+    },
+    "core/seed_42/tomotopy/beta.npy": {
+      "bytes": 84932128,
+      "sha256": "066aeace4b0c2c251cddb4350e656a12b7ec4eee5c4d491f4ac0e55dd145af1d"
+    },
+    "core/seed_42/tomotopy/complete.json": {
+      "bytes": 2203,
+      "sha256": "5fea109376a911eeb6c943a3836b537913f0efa10a1d94adca49dfb04cb11019"
+    },
+    "core/seed_42/tomotopy/model.bin": {
+      "bytes": 274547245,
+      "sha256": "2b6abbc2eaa27b87d1eefc8ee1a5f2abc5c05f2fa4b61856f7d31a885779926e"
+    },
+    "core/seed_42/tomotopy/test_theta.npy": {
+      "bytes": 31108128,
+      "sha256": "2646c9432f264b77f22665954839cba997566d65813b725542649ee2177ba856"
+    },
+    "environment.json": {
+      "bytes": 573,
+      "sha256": "1bfc4358bed72b370d967fd0544323d2de7aaa1d4a93c9680dd4b4a4133fa1ab"
+    },
+    "features/global_embeddings.npy": {
+      "bytes": 159285376,
+      "sha256": "53a58752d3f66de171b8f54f3cb32d62e75b6a0399647af81067b9c9068faaf0"
+    },
+    "features/identifiers.json": {
+      "bytes": 3869164,
+      "sha256": "a45acff941d1fff0c1ff7c599e80e40b0fcba20c6b6fde736a5005f963baccfa"
+    },
+    "features/manifest.json": {
+      "bytes": 2504,
+      "sha256": "40f013353bdff8015ddaeab4f51fb5d93a22c3c425a6ccef52b2c1c94167a10c"
+    },
+    "features/word_embeddings.npy": {
+      "bytes": 86970496,
+      "sha256": "53d49b6a1d9799c4b463aa2e76f12c4ceea1e7328adcdfa2277cc9984cfa8038"
+    },
+    "input_manifest.json": {
+      "bytes": 1814,
+      "sha256": "e9a18bc999e797c7c4bafcbdcceeb3e84820a6c576042a7a9342b39cd042a8f3"
+    },
+    "mag/index/excluded_connectivity_keys.json": {
+      "bytes": 254110,
+      "sha256": "36ad6649271965ddc88e8c5c7484362e121887f204bbf8c5bf3fd27f6c624a70"
+    },
+    "mag/index/kept_original_ids.npy": {
+      "bytes": 2982960,
+      "sha256": "97c63d3da5e77877a7786993a0b5bc123f3e37161febf8b006628194c9f3485b"
+    },
+    "mag/index/manifest.json": {
+      "bytes": 658,
+      "sha256": "2a09f85c9bb72cea0f0837e961d3c1adae91cf2a3dcab658ac3de0ba538a98d2"
+    },
+    "mag/index/spec2vec_filtered.faiss": {
+      "bytes": 447424845,
+      "sha256": "845408fe7338135cb23cbe9023f5805c11dafcb8d028ca631fb1968292aef300"
+    },
+    "mag/seed_42/hybrid/complete.json": {
+      "bytes": 11365,
+      "sha256": "c8c1cefe8e7466bfc1321fcb1ef5cc4e46396fc4123ba6940960d0324ce4c7c6"
+    },
+    "mag/seed_42/hybrid/topics.jsonl": {
+      "bytes": 9586581,
+      "sha256": "3f4f782bff38744349413dbc2bb6f3d2a539e88f75331f0b40b95d6b6236efac"
+    },
+    "protocol.lock.json": {
+      "bytes": 3680,
+      "sha256": "cef69ae216405514a0a11703ba9c80ccc9c6a9596bb124376a3b3e9f7551a02a"
+    },
+    "split_manifest.jsonl": {
+      "bytes": 14761810,
+      "sha256": "6915dddcd0ed9324ff968bb55970a264290e1dc8b53ae52750ea0eb06919fdf0"
+    },
+    "vocabulary.json": {
+      "bytes": 399318,
+      "sha256": "35eef6d57efd824588525782d5b8f6e7d213c1666b245ba32418ea9b4f93c2fb"
+    }
+  },
+  "source_protocol_sha256": "e57f289c691f94edf86e9d8b53e284233862014dd980da82e7f5f272b7f2ec45",
+  "source_run": "/Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/indicative-msnlib-k1000-seed42-peak-pooling-correction",
+  "spec": {
+    "batch_size": 32,
+    "bootstrap_replicates": 2000,
+    "budgets": [
+      0,
+      1,
+      2,
+      50
+    ],
+    "checkpoint_keep": 2,
+    "cosine_p05_margin": 0.02,
+    "coverage_fraction": 0.9,
+    "direct_target_steps": 50,
+    "discoveries": [
+      "dreams_prior",
+      "symmetric_prior"
+    ],
+    "evaluation_cpu_threads": 1,
+    "global_patience": 5,
+    "heartbeat_seconds": 300,
+    "inference_epochs": 12,
+    "inference_modes": [
+      "dreams_semi",
+      "dreams_direct",
+      "topic_semi",
+      "topic_direct",
+      "analytic"
+    ],
+    "membership_threshold": 0.5,
+    "minimum_free_disk_gib": 20,
+    "nll_relative_margin": 0.02,
+    "npmi_margin": 0.02,
+    "num_topics": 1000,
+    "schema_version": "msnlib-hybrid-simplification/v1",
+    "seed": 42,
+    "semi_refinement_steps": 2,
+    "sos_margin": 0.02,
+    "study_name": "hybrid-lda-simplification-seed42",
+    "symmetric_max_epochs": 250,
+    "symmetric_min_epochs": 20,
+    "training_cpu_threads": 4
+  },
+  "spec_sha256": "be95c09193c957b74ef7f7196356cc5dbcf18c1388e9651f3e1e3f126e6a17ad",
+  "test_results_previously_inspected": true
+}

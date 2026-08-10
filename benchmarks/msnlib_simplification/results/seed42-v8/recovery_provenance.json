@@ -1,0 +1,36 @@
+{
+  "schema_version": "msnlib-simplification/recovery-provenance-v1",
+  "created_utc": "2026-08-10T02:25:31.002710+00:00",
+  "failed_task": "chemical_scores",
+  "original_failure": "ModuleNotFoundError: No module named 'faiss'",
+  "root_cause": "completed symmetric annotations were re-entered through build-only imports before their completion manifest was checked",
+  "retraining_performed": false,
+  "inference_repeated": false,
+  "completed_attempt": 5,
+  "completed_environment": "ms2lda-hybrid",
+  "aborted_attempts": {
+    "2": "stopped before completion because ms2lda-msnlib-mag used a newer RDKit version than the frozen scoring environment",
+    "3": "recovery driver lacked the frozen repository on PYTHONPATH",
+    "4": "stopped before completion after confirming exact fingerprint caching could avoid repeated deterministic RDKit work"
+  },
+  "recovery_driver": {
+    "path": "recover_chemical_scores.py",
+    "sha256": "2b5d12e8bfad83fed422a1a2da6e346678376367d70d4d622eb9fbe2b53fc606"
+  },
+  "recovery_runner": {
+    "path": "recover_after_chemical_environment_failure.sh",
+    "sha256": "17d5766bdba2f3209200f9207bcdfa8f61d68e5ce5c9679a3b69d3dbf69b2499"
+  },
+  "chemical_output_sha256": {
+    "summaries.jsonl": "6116da9328c067b235d52bc77c23842f0791dd205a6e637f8a6c1c58c487272b",
+    "topics.jsonl": "4e79f87b4295a78cc34ef8755252675fb56fd14a45c7f432f57e343b5a312e81",
+    "compound_scores.jsonl": "069772c0a8c9bfffe124262aa3463386590fedf0b4c187eb1c5b95b4dc784cc5"
+  },
+  "final_verification_sha256": "7ce1bc7db4f41d4df48a38a38b08a67eb5461da0a17816a9cd82c98ac3cba216",
+  "frozen_source": {
+    "path": "frozen_source",
+    "files_verified": 53,
+    "code_manifest_sha256": "4df24fb9f8f43f3e7acb4c5b93364d1172fd79d31316c8d45865e3d5d874f4f1",
+    "all_files_match_frozen_manifest": true
+  }
+}

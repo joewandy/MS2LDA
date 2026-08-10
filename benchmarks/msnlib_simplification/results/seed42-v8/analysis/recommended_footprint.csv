@@ -1,0 +1,5 @@
+measure,current,recommended,relative_change
+Learned inference parameters,745320.0,579048.0,-0.22308806955401705
+Checkpoint bytes,2985394.0,2318728.0,-0.22330921814675053
+"Validation warm model-only latency, ms/spectrum",0.9853395149548,0.6728675080012,-0.3171211569323229
+"Test warm model-only latency, ms/spectrum",1.5921070935291,1.0150957032236998,-0.3624199607241143

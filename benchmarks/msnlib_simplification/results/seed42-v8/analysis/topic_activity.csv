@@ -1,0 +1,13 @@
+form,split,corpus_active_topics,document_active_mean,document_active_median,document_active_p95
+Current Hybrid,validation,354,13.134996142967344,12.0,25.0
+Current Hybrid,test,354,12.920663494920921,12.0,26.0
+Recommended: topic-direct + 1 VB,validation,351,13.337618925173567,12.0,25.0
+Recommended: topic-direct + 1 VB,test,352,13.13102738845313,12.0,26.0
+Zero-encoder: analytic + 2 VB,validation,352,13.31396245821548,12.0,26.0
+Zero-encoder: analytic + 2 VB,test,357,13.080622347949081,12.0,26.0
+"Neural, no VB: topic-direct",validation,350,12.471072255078427,12.0,23.0
+"Neural, no VB: topic-direct",test,351,12.367879645107369,12.0,23.0
+"Neural, no VB: DreaMS-direct",validation,354,13.478014913859605,13.0,24.0
+"Neural, no VB: DreaMS-direct",test,345,13.428442844284428,13.0,25.0
+No DreaMS anywhere,validation,366,13.228079197737207,12.0,26.0
+No DreaMS anywhere,test,362,12.947151858042947,12.0,26.0

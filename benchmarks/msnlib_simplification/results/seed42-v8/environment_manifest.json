@@ -1,0 +1,37 @@
+{
+  "ms2lda-hybrid": {
+    "available": true,
+    "returncode": 0,
+    "snapshot": {
+      "packages": {
+        "dreams": "1.0.0",
+        "matchms": "0.27.0",
+        "ms2lda": "2.0.1",
+        "numpy": "1.25.0",
+        "rdkit": "2023.9.6",
+        "scipy": "1.13.1",
+        "torch": "2.6.0"
+      },
+      "platform": "macOS-26.5.2-arm64-arm-64bit",
+      "python": "3.11.15 | packaged by conda-forge | (main, Jun 11 2026, 03:29:05) [Clang 19.1.7 ]"
+    },
+    "stderr": ""
+  },
+  "ms2lda-msnlib-mag": {
+    "available": true,
+    "returncode": 0,
+    "snapshot": {
+      "packages": {
+        "faiss-cpu": "1.10.0",
+        "matchms": "0.29.0",
+        "numpy": "1.26.4",
+        "rdkit": "2024.9.6",
+        "scipy": "1.17.0",
+        "torch": "2.10.0"
+      },
+      "platform": "macOS-26.5.2-arm64-arm-64bit",
+      "python": "3.12.12 | packaged by conda-forge | (main, Jan 27 2026, 00:01:15) [Clang 19.1.7 ]"
+    },
+    "stderr": ""
+  }
+}

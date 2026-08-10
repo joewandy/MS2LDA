@@ -1,0 +1,9 @@
+{
+  "chemical_compound_scores_available_for_later_grouped_analysis": true,
+  "replicates": 2000,
+  "resampling_unit": "structural_scaffold_group",
+  "rows": 480,
+  "rows_sha256": "7a1cc88c2a1463228823d3ffcfdf60f80938aa1db68b1bec46a97b7752683249",
+  "same_draws_used_for_paired_contrasts": true,
+  "schema_version": "msnlib-simplification/bootstrap-v1"
+}
