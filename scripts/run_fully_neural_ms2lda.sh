@@ -9,6 +9,8 @@ RUN_DIR="${FULLY_NEURAL_RUN_DIR:-${DEFAULT_DATA_ROOT}/fully-neural-ms2lda-seed42
 SESSION_NAME="fully-neural-ms2lda-seed42-v1"
 LOG_DIR="${RUN_DIR}/logs"
 LOG_FILE="${LOG_DIR}/runner.log"
+LAUNCH_MARKER="${LOG_DIR}/launch.marker"
+FOREGROUND_MARKER="${LOG_DIR}/foreground.started"
 
 export OMP_NUM_THREADS=4
 export MKL_NUM_THREADS=4
@@ -18,6 +20,9 @@ export NUMEXPR_NUM_THREADS=4
 
 foreground() {
   mkdir -p "${LOG_DIR}"
+  if [[ -n "${FULLY_NEURAL_LAUNCH_TOKEN:-}" ]]; then
+    printf '%s\n' "${FULLY_NEURAL_LAUNCH_TOKEN}" >"${FOREGROUND_MARKER}"
+  fi
   cd "${REPO_ROOT}"
   exec caffeinate -dimsu conda run --no-capture-output -n ms2lda-hybrid \
     python -m benchmarks.fully_neural_ms2lda run \
@@ -40,25 +45,32 @@ start_background() {
       exit 1
     fi
   done
+  if [[ -f "${RUN_DIR}/complete.json" ]]; then
+    echo "Study is already complete. Log: ${LOG_FILE}"
+    return
+  fi
   if screen -list | grep -q "[.]${SESSION_NAME}"; then
     echo "Session ${SESSION_NAME} is already running."
     exit 1
   fi
-  touch "${LOG_DIR}/launch.marker"
-  screen -dmS "${SESSION_NAME}" /bin/bash "$0" foreground
-  for _ in {1..30}; do
+  local launch_token
+  launch_token="$(date -u +%Y%m%dT%H%M%SZ)-$$"
+  printf '%s\n' "${launch_token}" >"${LAUNCH_MARKER}"
+  screen -dmS "${SESSION_NAME}" env \
+    FULLY_NEURAL_LAUNCH_TOKEN="${launch_token}" /bin/bash "$0" foreground
+  for _ in {1..15}; do
     if [[ -f "${RUN_DIR}/complete.json" ]]; then
-      echo "Study is already complete. Log: ${LOG_FILE}"
+      echo "Study completed during launch. Log: ${LOG_FILE}"
       return
     fi
-    if [[ "${RUN_DIR}/heartbeat.json" -nt "${LOG_DIR}/launch.marker" ]] && \
+    if cmp -s "${LAUNCH_MARKER}" "${FOREGROUND_MARKER}" && \
        screen -list | grep -q "[.]${SESSION_NAME}"; then
       echo "Started ${SESSION_NAME}. Log: ${LOG_FILE}"
       return
     fi
     sleep 1
   done
-  echo "Runner did not publish a fresh heartbeat within 30 seconds."
+  echo "Runner did not enter its foreground command within 15 seconds."
   [[ -f "${LOG_FILE}" ]] && tail -n 80 "${LOG_FILE}"
   exit 1
 }

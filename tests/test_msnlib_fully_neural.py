@@ -272,3 +272,6 @@ def test_durable_runner_has_valid_bash_syntax() -> None:
     assert "OMP_NUM_THREADS=4" in source
     assert "screen -dmS" in source
     assert "caffeinate -dimsu" in source
+    assert "FULLY_NEURAL_LAUNCH_TOKEN" in source
+    assert 'cmp -s "${LAUNCH_MARKER}" "${FOREGROUND_MARKER}"' in source
+    assert "heartbeat.json" not in source
