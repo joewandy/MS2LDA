@@ -1,0 +1,17 @@
+{
+  "bootstrap_replicates": 2000,
+  "budgets": [0, 1, 2, 50],
+  "discoveries": ["dreams_prior", "symmetric_prior"],
+  "inference_modes": [
+    "dreams_semi",
+    "dreams_direct",
+    "topic_semi",
+    "topic_direct",
+    "analytic"
+  ],
+  "num_topics": 1000,
+  "training_cpu_threads": 4,
+  "evaluation_cpu_threads": 1,
+  "seed": 42,
+  "selection_policy": "collect_and_freeze_only"
+}

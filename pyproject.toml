@@ -141,11 +141,15 @@ exclude = [
   "build",
   "dist",
   ".ipynb_checkpoints",
+  "benchmarks/msnlib_simplification/results",
   "MS2LDA/Add_On/Fingerprints/FP_calculation/*"
 ]
 unsafe-fixes = true
 select = ["ALL"]
 ignore = ["D", "ANN"]
+
+[tool.black]
+extend-exclude = "benchmarks/msnlib_simplification/results"
 
 [tool.poetry.scripts]
 ms2lda      = "scripts.ms2lda_runfull:main"
