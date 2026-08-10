@@ -1,0 +1,40 @@
+{
+  "checks": {
+    "corpus_active_topics": {
+      "actual": 54,
+      "minimum": 254.1,
+      "pass": false,
+      "reference": 363
+    },
+    "fully_neural_audit": {
+      "actual": true,
+      "pass": true,
+      "required": true
+    },
+    "heldout_nll": {
+      "actual": 8.647959936799152,
+      "maximum": 10.732642836345452,
+      "pass": true,
+      "reference": 9.756948033041319
+    },
+    "median_effective_topics": {
+      "actual": 62.37760976111063,
+      "maximum": 36.469180727588494,
+      "minimum": 2.279323795474281,
+      "pass": false,
+      "reference": 9.117295181897124
+    },
+    "stable": {
+      "actual": true,
+      "pass": true,
+      "required": true
+    },
+    "top_word_diversity": {
+      "actual": 0.7331,
+      "minimum": 0.6648,
+      "pass": true,
+      "reference": 0.8148
+    }
+  },
+  "pass": false
+}

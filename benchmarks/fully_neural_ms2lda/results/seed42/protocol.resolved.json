@@ -1,0 +1,99 @@
+{
+  "competitive_scorecard": {
+    "chemical_coverage_reference_fraction": 0.9,
+    "diversity_absolute_drop": 0.05,
+    "dominant_sos_absolute_drop": 0.02,
+    "inference_speedup_minimum": 2.0,
+    "inference_speedup_stretch": 5.0,
+    "nll_reference_maximum_fraction": 1.02,
+    "npmi_absolute_drop": 0.05
+  },
+  "evaluation": {
+    "corpus_active_threshold": 0.001,
+    "document_active_threshold": 0.01,
+    "latency_repeats": 5,
+    "latency_subset_size": 128,
+    "mag_fingerprint_threshold": 0.8,
+    "membership_threshold": 0.5,
+    "topic_top_n": 10
+  },
+  "evaluation_cpu_threads": 1,
+  "evidence_scope": "corrected_fixed_split_seed_42",
+  "forbidden_candidate_dependencies": [
+    "dreams",
+    "tomotopy",
+    "ms2lda_hybrid._variational",
+    "sklearn.decomposition"
+  ],
+  "hard_viability_gates": {
+    "active_topics_reference_fraction": 0.7,
+    "dominant_sos_absolute_drop": 0.1,
+    "effective_topics_reference_maximum_multiple": 4.0,
+    "effective_topics_reference_minimum_fraction": 0.25,
+    "high_confidence_chemical_coverage_reference_fraction": 0.5,
+    "nll_reference_maximum_fraction": 1.1,
+    "top_word_diversity_absolute_drop": 0.15
+  },
+  "model": {
+    "dropout": 0.1,
+    "ecr_epsilon": 0.05,
+    "ecr_iterations": 20,
+    "ecr_vocabulary_block": 4096,
+    "ecr_weight": 5.0,
+    "embedding_dimensions": 64,
+    "gradient_clip_norm": 5.0,
+    "hidden_dimensions": 256,
+    "kl_warmup_epochs": 20,
+    "topic_word_temperature": 0.2
+  },
+  "num_topics": 1000,
+  "rescue": {
+    "eligible_only_for_collapse": true,
+    "same_initialization": true,
+    "sparsity_guard_weight": 0.05,
+    "target_effective_topics": 9.0,
+    "usage_guard_weight": 0.25
+  },
+  "schema_version": "fully-neural-ms2lda/protocol-v1",
+  "seed": 42,
+  "sgns": {
+    "batch_size": 8192,
+    "dimensions": 48,
+    "epochs": 5,
+    "learning_rate": 0.01,
+    "negative_power": 0.75,
+    "negative_samples": 5,
+    "positive_pairs_per_document": 8
+  },
+  "token_features": {
+    "fourier_frequencies": [
+      1,
+      2,
+      4,
+      8,
+      16,
+      32,
+      64
+    ],
+    "mass_scale": 1000.0,
+    "output_dimensions": 64,
+    "type_dimensions": 2
+  },
+  "tracking_issue": "https://github.com/joewandy/MS2LDA/issues/6",
+  "training": {
+    "batch_size": 128,
+    "early_stopping_patience": 15,
+    "learning_rate": 0.001,
+    "maximum_epochs": 160,
+    "maximum_hours_per_attempt": 12.0,
+    "minimum_epochs": 40,
+    "minimum_nll_improvement": 0.0001,
+    "selection_minimum_active_topics": 182,
+    "selection_minimum_diversity": 0.55,
+    "topic_update_batch_size": 512,
+    "topic_updates_per_epoch": 1,
+    "validation_interval": 2,
+    "weight_decay": 0.0001
+  },
+  "training_cpu_threads": 4
+}

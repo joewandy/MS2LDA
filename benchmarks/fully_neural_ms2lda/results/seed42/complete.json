@@ -1,0 +1,10 @@
+{
+  "attempts": [
+    "primary",
+    "rescue"
+  ],
+  "decision": "redirect_neural_work_to_motif_annotation",
+  "report": "report/report.json",
+  "schema_version": "fully-neural-ms2lda/study-complete-v1",
+  "selected_attempt": null
+}

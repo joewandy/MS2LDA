@@ -1,0 +1,31 @@
+{
+  "candidate_audit_sha256": "aa8b9686a82a55c2983569de0d7d07c836960b8412e796852892da906f28de6e",
+  "code_manifest_sha256": "e228bb0a22d82472fa92fadb5b9230569b3f7afee9f9efd44477d18b18c11a9b",
+  "count_inputs": {
+    "complete.json": "d9f85bb02e2c7dc79d15999b2fb7a4468af711e06594c8799973b7017448da0e",
+    "heldout_records.jsonl": "4ccd247698e652a5ce871f829619c6af58b52fb5c5639880dbae6565a68bdab7",
+    "identifiers.json": "b112d462878554b51f000fdc25922d7c35cdf0ead8b545890d597d04965bc40e",
+    "test_completion.npz": "328f5970632ee03877c0151846db6034d98d0041f4012f9603d6519552553c45",
+    "test_full.npz": "45b931c5c5a56d8a4f86ca0d19942d09089056c815a41210aae55c12e692cd01",
+    "test_observed.npz": "855154fb1ee2c72f8dc56bef5258de997e951075042b458cbafe7877ab355f33",
+    "train.npz": "b4808f341864ba1df246a5093992f52397c2f96e0b48b23245b9b17e30aa5b52",
+    "validation_completion.npz": "f75245b599bc3c087aad97ff7247112d422ec0ab87418c5f96b0a889b2f661f0",
+    "validation_full.npz": "51888951815f448d0527a6a876be345cfe76ab346d9e97bada9a186e8857fab2",
+    "validation_observed.npz": "76afa43a3540d91edd4dd7e851afe10c65e3d67bcf06007c83eac1d9b6e15bff",
+    "vocabulary.json": "4788c206cb116cf007a88ee151e4a0df3056306206b61d92df2fde88a54600da"
+  },
+  "git_revision": "de3a497b04682809d96cd7a795f6c743a6bd28bd",
+  "lock_sha256": "75018b46c74cc0edf414f443058105c160289d03b6e69c53edbba4ad85a6aa25",
+  "protocol_sha256": "9f63adf02bdfa307d29b3c153462ef19ffad33f3985cd8f67ded74defc797cde",
+  "reference_inputs": {
+    "chemical_inference/seed_42/tomotopy/complete.json": "2681e1b45637bff4f81c3168aa991608185fa4c43e7d39b362bbaaf1c2acb3db",
+    "config.resolved.json": "fa128a66bd3cdb66891b0d196cabc5162fcd57e765ee696822a44bd160b8251e",
+    "core/seed_42/tomotopy/beta.npy": "066aeace4b0c2c251cddb4350e656a12b7ec4eee5c4d491f4ac0e55dd145af1d",
+    "core/seed_42/tomotopy/complete.json": "5fea109376a911eeb6c943a3836b537913f0efa10a1d94adca49dfb04cb11019",
+    "mag/seed_42/tomotopy/complete.json": "a83e29812ef813fa8809884809b034ffcf04ee414961f3cd6c5a9825ab2c56bc"
+  },
+  "reference_run": "/Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/indicative-msnlib-k1000-seed42-peak-pooling-correction",
+  "repo_root": "/Users/joewandy/Work/git/MS2LDA",
+  "schema_version": "fully-neural-ms2lda/run-lock-v1",
+  "source_run": "/Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/hybrid-lda-simplification-seed42-v8"
+}
