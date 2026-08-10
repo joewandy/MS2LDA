@@ -1,0 +1,199 @@
+{
+  "attempts": [
+    {
+      "attempt": "primary",
+      "competitive_scorecard": {
+        "all_pass": false,
+        "checks": {
+          "dominant_topic_sos": {
+            "pass": false,
+            "status": "not_run"
+          },
+          "heldout_nll": {
+            "actual": 8.625050617197916,
+            "maximum": 9.952086993702146,
+            "pass": true,
+            "reference": 9.756948033041319
+          },
+          "high_confidence_chemical_coverage": {
+            "pass": false,
+            "status": "not_run"
+          },
+          "inference_speedup": {
+            "actual": 10761.148899464793,
+            "candidate_seconds_per_spectrum": 5.4485708460561e-06,
+            "minimum": 2.0,
+            "pass": true,
+            "reference_seconds_per_spectrum": 0.05863288216369256,
+            "stretch": 5.0,
+            "stretch_pass": true
+          },
+          "top_word_diversity": {
+            "actual": 0.7413,
+            "minimum": 0.7647999999999999,
+            "pass": false,
+            "reference": 0.8148
+          },
+          "word_cooccurrence_npmi": {
+            "actual": -0.7027393438068061,
+            "minimum": -0.3496613500619827,
+            "pass": false,
+            "reference": -0.2996613500619827
+          }
+        },
+        "passed": 2,
+        "role": "nonfatal_scorecard",
+        "total": 6
+      },
+      "hard_viability": {
+        "checks": {
+          "corpus_active_topics": {
+            "actual": 45,
+            "minimum": 254.1,
+            "pass": false,
+            "reference": 363
+          },
+          "dominant_topic_sos": {
+            "pass": false,
+            "status": "not_run_because_nonchemical_hard_gate_failed"
+          },
+          "fully_neural_audit": {
+            "actual": true,
+            "pass": true,
+            "required": true
+          },
+          "heldout_nll": {
+            "actual": 8.625050617197916,
+            "maximum": 10.732642836345452,
+            "pass": true,
+            "reference": 9.756948033041319
+          },
+          "high_confidence_chemical_coverage": {
+            "pass": false,
+            "status": "not_run_because_nonchemical_hard_gate_failed"
+          },
+          "median_effective_topics": {
+            "actual": 30.994548115843067,
+            "maximum": 36.469180727588494,
+            "minimum": 2.279323795474281,
+            "pass": true,
+            "reference": 9.117295181897124
+          },
+          "stable": {
+            "actual": true,
+            "pass": true,
+            "required": true
+          },
+          "top_word_diversity": {
+            "actual": 0.7413,
+            "minimum": 0.6648,
+            "pass": true,
+            "reference": 0.8148
+          }
+        },
+        "pass": false
+      }
+    },
+    {
+      "attempt": "rescue",
+      "competitive_scorecard": {
+        "all_pass": false,
+        "checks": {
+          "dominant_topic_sos": {
+            "pass": false,
+            "status": "not_run"
+          },
+          "heldout_nll": {
+            "actual": 8.647959936799152,
+            "maximum": 9.952086993702146,
+            "pass": true,
+            "reference": 9.756948033041319
+          },
+          "high_confidence_chemical_coverage": {
+            "pass": false,
+            "status": "not_run"
+          },
+          "inference_speedup": {
+            "actual": 9911.409750758567,
+            "candidate_seconds_per_spectrum": 5.915695510338992e-06,
+            "minimum": 2.0,
+            "pass": true,
+            "reference_seconds_per_spectrum": 0.05863288216369256,
+            "stretch": 5.0,
+            "stretch_pass": true
+          },
+          "top_word_diversity": {
+            "actual": 0.7331,
+            "minimum": 0.7647999999999999,
+            "pass": false,
+            "reference": 0.8148
+          },
+          "word_cooccurrence_npmi": {
+            "actual": -0.6978947196427032,
+            "minimum": -0.3496613500619827,
+            "pass": false,
+            "reference": -0.2996613500619827
+          }
+        },
+        "passed": 2,
+        "role": "nonfatal_scorecard",
+        "total": 6
+      },
+      "hard_viability": {
+        "checks": {
+          "corpus_active_topics": {
+            "actual": 54,
+            "minimum": 254.1,
+            "pass": false,
+            "reference": 363
+          },
+          "dominant_topic_sos": {
+            "pass": false,
+            "status": "not_run_because_nonchemical_hard_gate_failed"
+          },
+          "fully_neural_audit": {
+            "actual": true,
+            "pass": true,
+            "required": true
+          },
+          "heldout_nll": {
+            "actual": 8.647959936799152,
+            "maximum": 10.732642836345452,
+            "pass": true,
+            "reference": 9.756948033041319
+          },
+          "high_confidence_chemical_coverage": {
+            "pass": false,
+            "status": "not_run_because_nonchemical_hard_gate_failed"
+          },
+          "median_effective_topics": {
+            "actual": 62.37760976111063,
+            "maximum": 36.469180727588494,
+            "minimum": 2.279323795474281,
+            "pass": false,
+            "reference": 9.117295181897124
+          },
+          "stable": {
+            "actual": true,
+            "pass": true,
+            "required": true
+          },
+          "top_word_diversity": {
+            "actual": 0.7331,
+            "minimum": 0.6648,
+            "pass": true,
+            "reference": 0.8148
+          }
+        },
+        "pass": false
+      }
+    }
+  ],
+  "competitive_scorecard_is_nonfatal": true,
+  "decision": "redirect_neural_work_to_motif_annotation",
+  "evidence_scope": "corrected_fixed_split_seed_42",
+  "fallback_triggered": true,
+  "schema_version": "fully-neural-ms2lda/final-report-v1",
+  "selected_attempt": null,
+  "tracking_issue": "https://github.com/joewandy/MS2LDA/issues/6"
+}

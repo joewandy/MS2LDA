@@ -1,0 +1,13 @@
+{
+  "dimensions": 48,
+  "documents": 27222,
+  "elapsed_seconds": 5.423622624948621,
+  "embeddings_sha256": "8446cd2fa50c73d7da1519ee3833275ed046f07ccb7d0aeee7d32f95fc62ecd9",
+  "epochs": 5,
+  "negative_power": 0.75,
+  "negative_samples": 5,
+  "positive_pairs_per_document_per_epoch": 8,
+  "schema_version": "fully-neural-ms2lda/sgns-v1",
+  "training_split_only": true,
+  "vocabulary_size": 21233
+}

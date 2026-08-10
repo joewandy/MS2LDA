@@ -1,0 +1,57 @@
+{
+  "active_topics": {
+    "corpus_active_topics": 363,
+    "document_active_mean": 10.394882345377395,
+    "document_active_median": 9.0,
+    "document_active_p95": 22.0
+  },
+  "cached_latency": {
+    "documents": 128,
+    "median_seconds_per_spectrum": 0.05863288216369256,
+    "median_spectra_per_second": 17.055276205051257,
+    "p95_seconds_per_spectrum": 0.05867455234356385,
+    "repeats": 5
+  },
+  "document_completion": {
+    "eligible_documents": 7776,
+    "in_vocabulary_tokens": 2534703,
+    "nll_per_token": 9.756948033041319,
+    "oov_fraction": 0.026880442765611186,
+    "out_of_vocabulary_tokens": 70016,
+    "total_documents": 7777
+  },
+  "dominant_topic_chemistry": {
+    "mean_sos": 0.6232036795665264,
+    "sos_evaluable_coverage": 0.598
+  },
+  "full_spectrum_mixture": {
+    "dominant_topics_used": 987,
+    "effective_topic_count_median": 9.117295181897124,
+    "frozen_threshold": 0.5,
+    "maximum_topic_probability_maximum": 0.9779409170150757,
+    "maximum_topic_probability_median": 0.3098786771297455,
+    "maximum_topic_probability_p95": 0.6669586420059203,
+    "spectra_crossing_frozen_threshold": 961,
+    "topics_crossing_frozen_threshold": 519
+  },
+  "high_confidence_chemistry": {
+    "association_mode": "probability_ge_frozen_threshold",
+    "mean_sos": 0.6365941479961461,
+    "membership_threshold": 0.5,
+    "sos_evaluable_coverage": 0.333
+  },
+  "method": "tomotopy",
+  "schema_version": "fully-neural-ms2lda/reference-summary-v1",
+  "source_files": {
+    "chemical_inference": "/Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/indicative-msnlib-k1000-seed42-peak-pooling-correction/chemical_inference/seed_42/tomotopy/complete.json",
+    "core": "/Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/indicative-msnlib-k1000-seed42-peak-pooling-correction/core/seed_42/tomotopy/complete.json",
+    "mag": "/Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/indicative-msnlib-k1000-seed42-peak-pooling-correction/mag/seed_42/tomotopy/complete.json"
+  },
+  "top_word_diversity": 0.8148,
+  "topic_count": 1000,
+  "word_cooccurrence_npmi": {
+    "mean_npmi": -0.2996613500619827,
+    "median_topic_npmi": -0.3881153500597564,
+    "undefined_pairs_scored_as_minus_one": 20537
+  }
+}

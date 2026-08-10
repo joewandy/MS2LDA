@@ -1,0 +1,43 @@
+{
+  "attempt": "primary",
+  "elapsed_seconds": 935.9766827089479,
+  "epochs_completed": 124,
+  "four_training_threads": true,
+  "global_steps": 26536,
+  "maximum_hours": 12.0,
+  "model_sha256": "7213678daf5ea64fa8a28060b8bfeb7b8736d6dc4deabb0b9b659e2e8497c630",
+  "peak_rss_bytes": 1706557440,
+  "rescue_guards": {
+    "sparsity_weight": 0.0,
+    "usage_weight": 0.0
+  },
+  "schema_version": "fully-neural-ms2lda/training-complete-v1",
+  "selected_epoch": 94,
+  "selected_validation": {
+    "active_topics": {
+      "corpus_active_topics": 45,
+      "document_active_mean": 7.628182051941373,
+      "document_active_median": 7.0,
+      "document_active_p95": 13.0
+    },
+    "document_completion": {
+      "eligible_documents": 3888,
+      "in_vocabulary_tokens": 1277983,
+      "nll_per_token": 8.624169551749821,
+      "oov_fraction": 0.031355544236867795,
+      "out_of_vocabulary_tokens": 41369,
+      "total_documents": 3889
+    },
+    "mixture_diagnostics": {
+      "effective_topic_count_mean": 84.53975115475926,
+      "effective_topic_count_median": 39.23493998536706,
+      "effective_topic_count_p95": 327.90994073042873,
+      "maximum_topic_probability_maximum": 0.9291149452431072,
+      "maximum_topic_probability_median": 0.3141065509371104,
+      "maximum_topic_probability_p95": 0.6908975755260859
+    },
+    "top_word_diversity": 0.7413
+  },
+  "stable": true,
+  "stop_reason": "early_stopping"
+}

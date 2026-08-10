@@ -1,0 +1,73 @@
+{
+  "candidate_modules": [
+    "data.py",
+    "embeddings.py",
+    "model.py",
+    "training.py"
+  ],
+  "conjugate_updates_used": false,
+  "dreams_used": false,
+  "forbidden_dependencies": [
+    "dreams",
+    "tomotopy",
+    "ms2lda_hybrid._variational",
+    "sklearn.decomposition"
+  ],
+  "fully_neural": true,
+  "imports": {
+    "data.py": [
+      "__future__",
+      "collections.abc",
+      "dataclasses",
+      "json",
+      "math",
+      "numpy",
+      "numpy.typing",
+      "pathlib",
+      "scipy.sparse",
+      "torch",
+      "typing"
+    ],
+    "embeddings.py": [
+      "__future__",
+      "data",
+      "numpy",
+      "pathlib",
+      "scipy.sparse",
+      "time",
+      "torch",
+      "torch.nn",
+      "typing",
+      "utils"
+    ],
+    "model.py": [
+      "__future__",
+      "data",
+      "dataclasses",
+      "math",
+      "torch",
+      "torch.nn",
+      "typing"
+    ],
+    "training.py": [
+      "__future__",
+      "data",
+      "math",
+      "metrics",
+      "model",
+      "numpy",
+      "os",
+      "pathlib",
+      "scipy.sparse",
+      "time",
+      "torch",
+      "typing",
+      "utils"
+    ]
+  },
+  "iterative_test_inference_steps": 0,
+  "local_vb_steps": 0,
+  "schema_version": "fully-neural-ms2lda/candidate-audit-v1",
+  "tomotopy_or_nmf_initialization_used": false,
+  "violations": []
+}

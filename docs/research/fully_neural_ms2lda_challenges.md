@@ -109,10 +109,10 @@ matrices in this run (mean matched cosine 0.9992 and mean top-word Jaccard
 about 3.1–3.3%. This is useful simplification evidence, but it does not provide
 a compelling fully neural discovery result.
 
-## The bounded next attempt
+## The bounded attempt
 
-The next model will preserve the admixture likelihood while making both topic
-discovery and spectrum inference gradient-based. It will use:
+The bounded model preserved the admixture likelihood while making both topic
+discovery and spectrum inference gradient-based. It used:
 
 - training-only fragment/loss co-occurrence embeddings augmented by m/z and
   token type;
@@ -123,12 +123,12 @@ discovery and spectrum inference gradient-based. It will use:
 
 The anti-collapse mechanism follows the motivation of
 [ECRTM](https://arxiv.org/abs/2306.04217), adapted to sparse MS/MS and an
-LDA-like mixture decoder. It will be implemented independently from the paper,
+LDA-like mixture decoder. It was implemented independently from the paper,
 without copying its reference repository.
 
-There will be one primary configuration and one predeclared rescue that adds
-bounded corpus-usage and document-sparsity guards. The rescue is eligible only
-after genuine collapse; it is not a route to open-ended tuning.
+There was one primary configuration and one predeclared rescue that added
+bounded corpus-usage and document-sparsity guards. The rescue was eligible only
+after genuine collapse; it was not a route to open-ended tuning.
 
 ## Decision boundary
 
@@ -143,6 +143,35 @@ will be reported as a competitive scorecard. Missing one of those targets will
 not erase a viable neural result. If neither the primary nor the eligible
 rescue passes the viability gates, neural work will move from motif discovery
 to Mass2Motif annotation, cross-dataset matching, and substructure retrieval.
+
+## Outcome of the bounded attempt
+
+The K=1000 attempt was completed from reviewed fork revision `de3a497`. Both the
+primary and the predeclared rescue were numerically stable and substantially
+outperformed Tomotopy on held-out completion NLL. One-pass inference also
+passed the speed target by a very wide margin. These successes did not produce
+a viable topic model.
+
+The primary used 45 corpus-active topics and the rescue used 54, versus 363 for
+Tomotopy and a hard minimum of 254.1. Their mean NPMI values were -0.703 and
+-0.698, versus -0.300 for Tomotopy. The rescue's median full-spectrum mixture
+also became too diffuse at 62.4 effective topics, compared with 9.1 for the
+reference and a hard maximum of 36.5.
+
+This result strengthens the central diagnosis: spectral prediction and fast
+amortized inference are not the difficult parts. The unresolved problem is
+learning and using a large set of coherent reusable motifs. Embedding-clustering
+regularization maintained reasonable global top-word diversity, while the
+encoder still concentrated corpus usage into a small subset. The usage and
+sparsity rescue changed the balance but did not prevent collapse.
+
+Under the frozen decision rule, MAG/SOS was skipped because both candidates had
+already failed non-chemical hard gates. The discovery attempt is therefore
+closed as a preserved negative result. Applied neural work should now use
+Tomotopy topics as stable inputs and focus on motif annotation, cross-dataset
+matching, and substructure retrieval. The exact compact evidence is retained in
+`benchmarks/fully_neural_ms2lda/results/seed42/`; the downstream research scope
+is tracked in [issue #8](https://github.com/joewandy/MS2LDA/issues/8).
 
 ## Relevant primary references
 

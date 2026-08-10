@@ -1,0 +1,19 @@
+{
+  "benchmarks/fully_neural_ms2lda/__init__.py": "14fac5e44cc93e0969418d426e31c7369229abaf90b1bd5cf7437cc4bb69d617",
+  "benchmarks/fully_neural_ms2lda/__main__.py": "070b72a61059a44870a55b127147d5e8df0bd2842c2fea72b32c71e5271baced",
+  "benchmarks/fully_neural_ms2lda/chemical.py": "17ffae5b9bb425f3f4fc0292318bcc9de8e02af1263cf76a5ada8506d971f073",
+  "benchmarks/fully_neural_ms2lda/cli.py": "7147665c2fa8fc1bfb5f3d4e40016806ec4011d6c4b999bdd52235f6b81da207",
+  "benchmarks/fully_neural_ms2lda/config.py": "51cdf08c7458b3193c748e568da1ec17ed7042d102923be69e9dbe156a6dadfe",
+  "benchmarks/fully_neural_ms2lda/data.py": "b56234d97dd8a1cee519778c48424db584d0ecd00ab3be6a4e12fceb29db5ff5",
+  "benchmarks/fully_neural_ms2lda/embeddings.py": "90d7dd938a0424a37c6ec801caa6e20c4bccc4c5424f7dd7ed065dffd26923e7",
+  "benchmarks/fully_neural_ms2lda/evaluation.py": "8e8db42200e6a82b2df94255cf528473c2b0caccc332c2191050684cb38deb85",
+  "benchmarks/fully_neural_ms2lda/metrics.py": "434f801ce5d3f1d05d294f291f3de84858107d94d5b4684dc500d5b5f63f272c",
+  "benchmarks/fully_neural_ms2lda/model.py": "d546871893a603b9ea6a1758d4d3a3e7d3a78bc71571413d81e385c9d7464e05",
+  "benchmarks/fully_neural_ms2lda/orchestrator.py": "fabc750076e035cbbc89cc6df930190874d1bf6a591f57b29a102e0617d6b4f5",
+  "benchmarks/fully_neural_ms2lda/protocol.json": "a570fe4b8c586fbf31df6289d5a452b98400f3a03d446e4de68bc5128a7695c2",
+  "benchmarks/fully_neural_ms2lda/report.py": "68dafcdb3f53d778b89a1a1676138bcfdc2f343a689f5ee8ddf068836b1f541b",
+  "benchmarks/fully_neural_ms2lda/smoke.py": "4276bf7aebf3163cfe537c61083dbec47991b188851b9f4b44bc508f174397dd",
+  "benchmarks/fully_neural_ms2lda/training.py": "08328920e5b3af5d51a520a52a5d52f718ae56a1e07fbb05a3108285711ea215",
+  "benchmarks/fully_neural_ms2lda/utils.py": "c512bce8b86437063e545e81ef74037479de536f9856670f8a79bcb61bc288e9",
+  "scripts/run_fully_neural_ms2lda.sh": "bcf8b7d0795f9a2a47e241ecf52f57b5811fc93b800330dee2c85ffc996226cf"
+}

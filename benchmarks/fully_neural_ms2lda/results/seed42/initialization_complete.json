@@ -1,0 +1,14 @@
+{
+  "data_only_random_token_centers": true,
+  "features": [
+    21233,
+    64
+  ],
+  "output_sha256": {
+    "model_initialization.pt": "561c6568ed36925b2f69738dd1195263f699050054fe5bf1d6ddd89bbc6b81a4",
+    "token_features.npy": "4d6f7fac13b56d3e619a96059a0ee8229c7bb6278458f1cdf6df75d12291fe93"
+  },
+  "schema_version": "fully-neural-ms2lda/initialization-complete-v1",
+  "shared_by_primary_and_rescue": true,
+  "topics": 1000
+}

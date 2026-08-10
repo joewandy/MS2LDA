@@ -1,0 +1,11 @@
+{
+  "collapse_reasons": [
+    "corpus_active_topics",
+    "median_effective_topics"
+  ],
+  "made_before_test_evaluation": true,
+  "primary_collapsed": true,
+  "rescue_eligible": true,
+  "same_initialization_required": true,
+  "schema_version": "fully-neural-ms2lda/rescue-decision-v1"
+}

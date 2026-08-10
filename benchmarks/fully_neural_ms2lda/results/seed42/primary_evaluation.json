@@ -1,0 +1,140 @@
+{
+  "attempt": "primary",
+  "encoder_passes_per_representation": 1,
+  "evaluation_cpu_threads": 1,
+  "evaluation_seconds": 5.165964958956465,
+  "fully_neural_audit": {
+    "candidate_modules": [
+      "data.py",
+      "embeddings.py",
+      "model.py",
+      "training.py"
+    ],
+    "conjugate_updates_used": false,
+    "dreams_used": false,
+    "forbidden_dependencies": [
+      "dreams",
+      "tomotopy",
+      "ms2lda_hybrid._variational",
+      "sklearn.decomposition"
+    ],
+    "fully_neural": true,
+    "imports": {
+      "data.py": [
+        "__future__",
+        "collections.abc",
+        "dataclasses",
+        "json",
+        "math",
+        "numpy",
+        "numpy.typing",
+        "pathlib",
+        "scipy.sparse",
+        "torch",
+        "typing"
+      ],
+      "embeddings.py": [
+        "__future__",
+        "data",
+        "numpy",
+        "pathlib",
+        "scipy.sparse",
+        "time",
+        "torch",
+        "torch.nn",
+        "typing",
+        "utils"
+      ],
+      "model.py": [
+        "__future__",
+        "data",
+        "dataclasses",
+        "math",
+        "torch",
+        "torch.nn",
+        "typing"
+      ],
+      "training.py": [
+        "__future__",
+        "data",
+        "math",
+        "metrics",
+        "model",
+        "numpy",
+        "os",
+        "pathlib",
+        "scipy.sparse",
+        "time",
+        "torch",
+        "typing",
+        "utils"
+      ]
+    },
+    "iterative_test_inference_steps": 0,
+    "local_vb_steps": 0,
+    "schema_version": "fully-neural-ms2lda/candidate-audit-v1",
+    "tomotopy_or_nmf_initialization_used": false,
+    "violations": []
+  },
+  "iterative_test_inference_steps": 0,
+  "local_vb_steps": 0,
+  "metrics": {
+    "active_topics": {
+      "corpus_active_topics": 45,
+      "document_active_mean": 7.616304487591616,
+      "document_active_median": 7.0,
+      "document_active_p95": 13.0
+    },
+    "cached_latency": {
+      "cached_projected_token_table": true,
+      "documents": 128,
+      "encoder_passes_per_representation": 1,
+      "local_vb_steps": 0,
+      "median_seconds_per_spectrum": 5.4485708460561e-06,
+      "median_spectra_per_second": 183534.36676405542,
+      "p95_seconds_per_spectrum": 5.712762140319683e-06,
+      "repeats": 5
+    },
+    "full_spectrum_mixture": {
+      "effective_topic_count_mean": 68.18914018358649,
+      "effective_topic_count_median": 30.994548115843067,
+      "effective_topic_count_p95": 269.00715769791174,
+      "maximum_topic_probability_maximum": 0.9545126297087437,
+      "maximum_topic_probability_median": 0.33364374737302077,
+      "maximum_topic_probability_p95": 0.7092580716297674
+    },
+    "test_document_completion": {
+      "eligible_documents": 7776,
+      "in_vocabulary_tokens": 2534703,
+      "nll_per_token": 8.625050617197916,
+      "oov_fraction": 0.026880442765611186,
+      "out_of_vocabulary_tokens": 70016,
+      "total_documents": 7777
+    },
+    "top_word_diversity": 0.7413,
+    "validation_document_completion": {
+      "eligible_documents": 3888,
+      "in_vocabulary_tokens": 1277983,
+      "nll_per_token": 8.624169551749821,
+      "oov_fraction": 0.031355544236867795,
+      "out_of_vocabulary_tokens": 41369,
+      "total_documents": 3889
+    },
+    "word_cooccurrence_npmi": {
+      "mean_npmi": -0.7027393438068061,
+      "median_topic_npmi": -0.8676417866572383,
+      "undefined_pairs_scored_as_minus_one": 34403
+    }
+  },
+  "output_sha256": {
+    "beta.npy": "aec3bee5f6363c7a015f0ecc7d50608f5700b88cef5867e97b2d3f4e476e8b2b",
+    "test_completion_nll.npy": "6d8868c7c51e3ea246d9d860d7dd8ca2082779445522d8b900df8a0bcf9729b6",
+    "test_full_theta.npy": "de163df16fc1e4708a0ff711f5d1256765bb22698b81d9eacf9bb242bcf7b1b3",
+    "test_observed_theta.npy": "2e722ad4914a5ec87609ebf30fb151707ba314a690b0bdbc20c20c3de13b1fb9",
+    "validation_completion_nll.npy": "6cf1b47bf35a0017d765ad75ac05ad439f17786ff6272af44d911118dbf625f4",
+    "validation_observed_theta.npy": "32bc8a79a0d8687a783d2c48ec7c865df6054aebb255c0d58f5a4e831e4f2ee0"
+  },
+  "peak_rss_bytes": 1844985856,
+  "schema_version": "fully-neural-ms2lda/evaluation-complete-v1",
+  "stable": true
+}
