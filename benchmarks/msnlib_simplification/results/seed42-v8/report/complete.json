@@ -1,0 +1,12 @@
+{
+  "bootstrap_complete_sha256": "11a8b33da7e56483f3d6a91cb4fde3e84e39d878ef68fdfcbb73036bf57befcd",
+  "interpretation_deferred": true,
+  "output_sha256": {
+    "README.md": "1d0e21882b0450ec1eb7dc9012eb14a38d7b545a5aaf6d2ed33e3b864a10e530",
+    "chemical_metrics.csv": "5be6648dc35a20357d32cba4e0e9d20fc7974ac6af647c3440e17c42139dcddf",
+    "collection_summary.json": "5ac16b1a7e215ed9a9b5edc540dbb2e4fd71aa37833f7f420abed7cc66c9162c",
+    "metrics.csv": "ce28e5b3f6c74f79b21627f78646c6e491e7ae9de3ada0a29ad90057afaa523d"
+  },
+  "schema_version": "msnlib-simplification/report-complete-v1",
+  "spec_sha256": "be95c09193c957b74ef7f7196356cc5dbcf18c1388e9651f3e1e3f126e6a17ad"
+}

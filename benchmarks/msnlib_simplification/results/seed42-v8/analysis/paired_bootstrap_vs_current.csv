@@ -1,0 +1,37 @@
+form,split,arm_id,budget,metric,estimate,ci_low,ci_high,groups,observations,replicates
+Current Hybrid,validation,dreams_prior__dreams_semi,2,nll_per_token,0.0,0.0,0.0,2842,3888,2000
+Current Hybrid,validation,dreams_prior__dreams_semi,2,cosine_to_reference,0.0,0.0,0.0,2842,3889,2000
+Current Hybrid,validation,dreams_prior__dreams_semi,2,js_to_reference,0.0,0.0,0.0,2842,3889,2000
+Recommended: topic-direct + 1 VB,validation,dreams_prior__topic_direct,1,nll_per_token,-0.07048385322457798,-0.07681467725812051,-0.06426611416640067,2842,3888,2000
+Recommended: topic-direct + 1 VB,validation,dreams_prior__topic_direct,1,cosine_to_reference,-0.001423325872583491,-0.0024323726547060467,-0.00039509937796312596,2842,3889,2000
+Recommended: topic-direct + 1 VB,validation,dreams_prior__topic_direct,1,js_to_reference,0.004549085728600114,0.003977598465359015,0.005092115986870193,2842,3889,2000
+Zero-encoder: analytic + 2 VB,validation,dreams_prior__analytic,2,nll_per_token,0.002370252035052113,-0.0027922153052713965,0.007277758938773556,2842,3888,2000
+Zero-encoder: analytic + 2 VB,validation,dreams_prior__analytic,2,cosine_to_reference,0.0023618583146794675,0.0013490475240952214,0.0034728982468456362,2842,3889,2000
+Zero-encoder: analytic + 2 VB,validation,dreams_prior__analytic,2,js_to_reference,-0.00042881931057602094,-0.0010131827937555288,9.560597765096916e-05,2842,3889,2000
+"Neural, no VB: topic-direct",validation,dreams_prior__topic_direct,0,nll_per_token,-0.2855637413936699,-0.3012557761604436,-0.27083914630049827,2842,3888,2000
+"Neural, no VB: topic-direct",validation,dreams_prior__topic_direct,0,cosine_to_reference,-0.03521373756468922,-0.0369785113824644,-0.03353280475443694,2842,3889,2000
+"Neural, no VB: topic-direct",validation,dreams_prior__topic_direct,0,js_to_reference,0.033239949144635364,0.03223433345954979,0.03431018552304433,2842,3889,2000
+"Neural, no VB: DreaMS-direct",validation,dreams_prior__dreams_direct,0,nll_per_token,-0.32260123231831755,-0.33883220103244643,-0.3068637211830874,2842,3888,2000
+"Neural, no VB: DreaMS-direct",validation,dreams_prior__dreams_direct,0,cosine_to_reference,-0.047943919619722525,-0.050490101758916155,-0.04571469295219818,2842,3889,2000
+"Neural, no VB: DreaMS-direct",validation,dreams_prior__dreams_direct,0,js_to_reference,0.04072555559141221,0.03950915943544945,0.0420786265827207,2842,3889,2000
+No DreaMS anywhere,validation,symmetric_prior__topic_direct,1,nll_per_token,0.2982798005145769,0.28228663067616194,0.3176285626912833,2842,3888,2000
+No DreaMS anywhere,validation,symmetric_prior__topic_direct,1,cosine_to_reference,0.01210005853601913,0.010649281141626997,0.013693967812713663,2842,3889,2000
+No DreaMS anywhere,validation,symmetric_prior__topic_direct,1,js_to_reference,-0.014110652939449488,-0.01523531436109407,-0.013081075580818276,2842,3889,2000
+Current Hybrid,test,dreams_prior__dreams_semi,2,nll_per_token,0.0,0.0,0.0,5661,7776,2000
+Current Hybrid,test,dreams_prior__dreams_semi,2,cosine_to_reference,0.0,0.0,0.0,5661,7777,2000
+Current Hybrid,test,dreams_prior__dreams_semi,2,js_to_reference,0.0,0.0,0.0,5661,7777,2000
+Recommended: topic-direct + 1 VB,test,dreams_prior__topic_direct,1,nll_per_token,-0.07382241212694135,-0.07846102929094867,-0.06902869409772432,5661,7776,2000
+Recommended: topic-direct + 1 VB,test,dreams_prior__topic_direct,1,cosine_to_reference,-0.0005559260494065617,-0.0012334302684528892,0.00018135396601343345,5661,7777,2000
+Recommended: topic-direct + 1 VB,test,dreams_prior__topic_direct,1,js_to_reference,0.004379170228107957,0.003986564509180838,0.004730990569952792,5661,7777,2000
+Zero-encoder: analytic + 2 VB,test,dreams_prior__analytic,2,nll_per_token,-0.00243425553418762,-0.005286927886649655,0.0004420812302070555,5661,7776,2000
+Zero-encoder: analytic + 2 VB,test,dreams_prior__analytic,2,cosine_to_reference,0.0031535331072267575,0.0024396068619849205,0.0039058815704303917,5661,7777,2000
+Zero-encoder: analytic + 2 VB,test,dreams_prior__analytic,2,js_to_reference,-0.0006896167850585996,-0.001075663871465717,-0.0003055823465029664,5661,7777,2000
+"Neural, no VB: topic-direct",test,dreams_prior__topic_direct,0,nll_per_token,-0.29507113245615796,-0.30544355881028207,-0.28446363701457517,5661,7776,2000
+"Neural, no VB: topic-direct",test,dreams_prior__topic_direct,0,cosine_to_reference,-0.03427901336921803,-0.03537939122011983,-0.03308581066663739,5661,7777,2000
+"Neural, no VB: topic-direct",test,dreams_prior__topic_direct,0,js_to_reference,0.03286904816894209,0.032176883929248744,0.03354486910159785,5661,7777,2000
+"Neural, no VB: DreaMS-direct",test,dreams_prior__dreams_direct,0,nll_per_token,-0.3314897128832131,-0.34188403406220114,-0.31991985316532756,5661,7776,2000
+"Neural, no VB: DreaMS-direct",test,dreams_prior__dreams_direct,0,cosine_to_reference,-0.04756393073990286,-0.049037648157688477,-0.04598642521794192,5661,7777,2000
+"Neural, no VB: DreaMS-direct",test,dreams_prior__dreams_direct,0,js_to_reference,0.04083508675800027,0.03991440466003409,0.041694648135836364,5661,7777,2000
+No DreaMS anywhere,test,symmetric_prior__topic_direct,1,nll_per_token,0.28319560360074925,0.2726448510584621,0.29337068321455145,5661,7776,2000
+No DreaMS anywhere,test,symmetric_prior__topic_direct,1,cosine_to_reference,0.012702935833847942,0.011806743652240893,0.01356045738810264,5661,7777,2000
+No DreaMS anywhere,test,symmetric_prior__topic_direct,1,js_to_reference,-0.014152425559528102,-0.01471724190780795,-0.013569069018172333,5661,7777,2000
