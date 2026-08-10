@@ -1,0 +1,91 @@
+{
+  "schema_version": "fully-neural-ms2lda/protocol-v1",
+  "tracking_issue": "https://github.com/joewandy/MS2LDA/issues/6",
+  "evidence_scope": "corrected_fixed_split_seed_42",
+  "seed": 42,
+  "num_topics": 1000,
+  "training_cpu_threads": 4,
+  "evaluation_cpu_threads": 1,
+  "sgns": {
+    "dimensions": 48,
+    "epochs": 5,
+    "positive_pairs_per_document": 8,
+    "negative_samples": 5,
+    "negative_power": 0.75,
+    "batch_size": 8192,
+    "learning_rate": 0.01
+  },
+  "token_features": {
+    "fourier_frequencies": [1, 2, 4, 8, 16, 32, 64],
+    "mass_scale": 1000.0,
+    "type_dimensions": 2,
+    "output_dimensions": 64
+  },
+  "model": {
+    "embedding_dimensions": 64,
+    "hidden_dimensions": 256,
+    "topic_word_temperature": 0.2,
+    "dropout": 0.1,
+    "ecr_epsilon": 0.05,
+    "ecr_iterations": 20,
+    "ecr_vocabulary_block": 4096,
+    "ecr_weight": 5.0,
+    "kl_warmup_epochs": 20,
+    "gradient_clip_norm": 5.0
+  },
+  "training": {
+    "batch_size": 128,
+    "topic_update_batch_size": 512,
+    "topic_updates_per_epoch": 1,
+    "learning_rate": 0.001,
+    "weight_decay": 0.0001,
+    "maximum_epochs": 160,
+    "minimum_epochs": 40,
+    "validation_interval": 2,
+    "early_stopping_patience": 15,
+    "minimum_nll_improvement": 0.0001,
+    "selection_minimum_active_topics": 182,
+    "selection_minimum_diversity": 0.55,
+    "maximum_hours_per_attempt": 12.0
+  },
+  "rescue": {
+    "eligible_only_for_collapse": true,
+    "same_initialization": true,
+    "usage_guard_weight": 0.25,
+    "sparsity_guard_weight": 0.05,
+    "target_effective_topics": 9.0
+  },
+  "evaluation": {
+    "document_active_threshold": 0.01,
+    "corpus_active_threshold": 0.001,
+    "topic_top_n": 10,
+    "membership_threshold": 0.5,
+    "latency_subset_size": 128,
+    "latency_repeats": 5,
+    "mag_fingerprint_threshold": 0.8
+  },
+  "hard_viability_gates": {
+    "active_topics_reference_fraction": 0.7,
+    "top_word_diversity_absolute_drop": 0.15,
+    "effective_topics_reference_minimum_fraction": 0.25,
+    "effective_topics_reference_maximum_multiple": 4.0,
+    "nll_reference_maximum_fraction": 1.1,
+    "dominant_sos_absolute_drop": 0.1,
+    "high_confidence_chemical_coverage_reference_fraction": 0.5
+  },
+  "competitive_scorecard": {
+    "nll_reference_maximum_fraction": 1.02,
+    "diversity_absolute_drop": 0.05,
+    "npmi_absolute_drop": 0.05,
+    "dominant_sos_absolute_drop": 0.02,
+    "chemical_coverage_reference_fraction": 0.9,
+    "inference_speedup_minimum": 2.0,
+    "inference_speedup_stretch": 5.0
+  },
+  "forbidden_candidate_dependencies": [
+    "dreams",
+    "tomotopy",
+    "ms2lda_hybrid._variational",
+    "sklearn.decomposition"
+  ]
+}
