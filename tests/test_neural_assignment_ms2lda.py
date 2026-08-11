@@ -13,9 +13,11 @@ import torch
 
 from benchmarks.msnlib_validation.data import PeakGroup
 from benchmarks.neural_assignment_ms2lda.config import (
+    CONTINUATION_PROTOCOL_PATH,
     REPO_ROOT,
     code_manifest,
     load_protocol,
+    resolve_protocol_path,
     static_candidate_audit,
 )
 from benchmarks.neural_assignment_ms2lda.data import (
@@ -33,6 +35,7 @@ from benchmarks.neural_assignment_ms2lda.model import (
     router_block_loss,
     topic_block_loss,
 )
+from benchmarks.neural_assignment_ms2lda.report import _markdown
 from benchmarks.neural_assignment_ms2lda.smoke import run_smoke
 from benchmarks.neural_assignment_ms2lda.synthetic import generate_synthetic
 from benchmarks.neural_assignment_ms2lda.training import (
@@ -84,6 +87,77 @@ def test_protocol_freezes_stages_architecture_and_budgets() -> None:
     assert protocol["stop_rule"]["no_automatic_annotation_redirect"] is True
 
 
+def test_exploratory_continuation_changes_only_the_k200_blocking_policy() -> None:
+    base = load_protocol()
+    continuation = load_protocol(CONTINUATION_PROTOCOL_PATH)
+    amendment = continuation["exploratory_amendment"]
+    assert amendment["declared_after_validation_observation"] is True
+    assert amendment["test_data_touched_in_trigger_run"] is False
+    assert amendment["waived_k200_blocking_failures"] == ["active_topics"]
+    assert continuation["k200_gates"] == base["k200_gates"]
+    assert continuation["k1000_gates"] == base["k1000_gates"]
+    assert continuation["chemical_gates"] == base["chemical_gates"]
+    assert continuation["rescue"] == base["rescue"]
+
+    metrics = {
+        "active_topics": {"corpus_active_topics": 67},
+        "top_word_diversity": 0.871,
+        "mixture_diagnostics": {"effective_topic_count_median": 11.03},
+        "document_completion": {"nll_per_token": 8.292},
+        "word_cooccurrence_npmi": {"mean_npmi": -0.515},
+    }
+    original_gate = gate_checks(
+        metrics,
+        stage="k200",
+        stable=True,
+        protocol=base,
+    )
+    continuation_gate = gate_checks(
+        metrics,
+        stage="k200",
+        stable=True,
+        protocol=continuation,
+    )
+    assert original_gate["raw_pass"] is False
+    assert original_gate["pass"] is False
+    assert original_gate["blocking_failures"] == ["active_topics"]
+    assert continuation_gate["raw_pass"] is False
+    assert continuation_gate["pass"] is True
+    assert continuation_gate["failed"] == ["active_topics"]
+    assert continuation_gate["waived_failures"] == ["active_topics"]
+    assert continuation_gate["blocking_failures"] == []
+
+
+def test_protocol_selection_rejects_uncommitted_paths(tmp_path: Path) -> None:
+    assert resolve_protocol_path() != resolve_protocol_path(CONTINUATION_PROTOCOL_PATH)
+    with np.testing.assert_raises(ValueError):
+        resolve_protocol_path(tmp_path / "ad_hoc.json")
+
+
+def test_report_discloses_raw_failure_and_exploratory_waiver() -> None:
+    rendered = _markdown(
+        {
+            "decision": "continue_to_k1000",
+            "furthest_stage": "k200",
+            "selected_attempt": None,
+            "exploratory_amendment": {"id": "screen-waiver"},
+            "gates": {
+                "synthetic": None,
+                "k200": {
+                    "pass": True,
+                    "raw_pass": False,
+                    "waived_failures": ["active_topics"],
+                },
+                "k1000_validation": None,
+                "k1000_test": None,
+                "chemical": None,
+            },
+        },
+    )
+    assert "declared after the v1 K=200 validation result" in rendered
+    assert "PASS WITH EXPLORATORY WAIVER (active_topics)" in rendered
+
+
 def test_candidate_audit_proves_fully_neural_one_pass_contract() -> None:
     audit = static_candidate_audit(load_protocol())
     assert audit["violations"] == []
@@ -106,7 +180,12 @@ def test_package_entrypoint_does_not_eagerly_import_torch() -> None:
 def test_code_manifest_covers_runner_protocol_and_shared_dependencies() -> None:
     manifest = code_manifest()
     assert "scripts/run_neural_assignment_ms2lda.sh" in manifest
+    assert "scripts/run_neural_assignment_ms2lda_k1000_continuation.sh" in manifest
     assert "benchmarks/neural_assignment_ms2lda/protocol.json" in manifest
+    assert (
+        "benchmarks/neural_assignment_ms2lda/protocol_k1000_continuation.json"
+        in manifest
+    )
     assert "benchmarks/neural_assignment_ms2lda/model.py" in manifest
     assert "benchmarks/neural_assignment_ms2lda/training.py" in manifest
     assert "benchmarks/fully_neural_ms2lda/embeddings.py" in manifest
@@ -365,5 +444,15 @@ def test_durable_runner_has_valid_bash_and_merge_gate() -> None:
     assert "screen -dmS" in source
     assert "caffeinate -dimsu" in source
     assert "NEURAL_ASSIGNMENT_LAUNCH_TOKEN" in source
+    assert "NEURAL_ASSIGNMENT_PROTOCOL" in source
+    assert "NEURAL_ASSIGNMENT_SESSION_NAME" in source
+    assert "NEURAL_ASSIGNMENT_LAUNCH_WAIT_SECONDS:-60" in source
     assert "git branch --show-current" in source
     assert "cmp -s" in source
+    continuation = (
+        REPO_ROOT / "scripts/run_neural_assignment_ms2lda_k1000_continuation.sh"
+    )
+    subprocess.run(["bash", "-n", str(continuation)], check=True)
+    continuation_source = continuation.read_text(encoding="utf-8")
+    assert "protocol_k1000_continuation.json" in continuation_source
+    assert "seed42-v2-k1000-continuation" in continuation_source

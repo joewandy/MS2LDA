@@ -6,7 +6,9 @@ DEFAULT_DATA_ROOT="/Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs"
 SOURCE_RUN="${NEURAL_ASSIGNMENT_SOURCE_RUN:-${DEFAULT_DATA_ROOT}/hybrid-lda-simplification-seed42-v8}"
 REFERENCE_RUN="${NEURAL_ASSIGNMENT_REFERENCE_RUN:-${DEFAULT_DATA_ROOT}/indicative-msnlib-k1000-seed42-peak-pooling-correction}"
 RUN_DIR="${NEURAL_ASSIGNMENT_RUN_DIR:-${DEFAULT_DATA_ROOT}/neural-assignment-ms2lda-seed42-v1}"
-SESSION_NAME="neural-assignment-ms2lda-seed42-v1"
+PROTOCOL_FILE="${NEURAL_ASSIGNMENT_PROTOCOL:-${REPO_ROOT}/benchmarks/neural_assignment_ms2lda/protocol.json}"
+SESSION_NAME="${NEURAL_ASSIGNMENT_SESSION_NAME:-neural-assignment-ms2lda-seed42-v1}"
+LAUNCH_WAIT_SECONDS="${NEURAL_ASSIGNMENT_LAUNCH_WAIT_SECONDS:-60}"
 LOG_DIR="${RUN_DIR}/logs"
 LOG_FILE="${LOG_DIR}/runner.log"
 LAUNCH_MARKER="${LOG_DIR}/launch.marker"
@@ -40,6 +42,14 @@ preflight() {
       exit 1
     fi
   done
+  if [[ ! -f "${PROTOCOL_FILE}" ]]; then
+    echo "Committed protocol is unavailable: ${PROTOCOL_FILE}"
+    exit 1
+  fi
+  if [[ ! "${LAUNCH_WAIT_SECONDS}" =~ ^[1-9][0-9]*$ ]]; then
+    echo "Launch wait must be a positive integer number of seconds."
+    exit 1
+  fi
 }
 
 foreground() {
@@ -52,7 +62,8 @@ foreground() {
     python -m benchmarks.neural_assignment_ms2lda run \
     --run "${RUN_DIR}" \
     --source "${SOURCE_RUN}" \
-    --reference "${REFERENCE_RUN}" >>"${LOG_FILE}" 2>&1
+    --reference "${REFERENCE_RUN}" \
+    --protocol "${PROTOCOL_FILE}" >>"${LOG_FILE}" 2>&1
 }
 
 start_background() {
@@ -70,8 +81,15 @@ start_background() {
   launch_token="$(date -u +%Y%m%dT%H%M%SZ)-$$"
   printf '%s\n' "${launch_token}" >"${LAUNCH_MARKER}"
   screen -dmS "${SESSION_NAME}" env \
-    NEURAL_ASSIGNMENT_LAUNCH_TOKEN="${launch_token}" /bin/bash "$0" foreground
-  for _ in {1..15}; do
+    NEURAL_ASSIGNMENT_LAUNCH_TOKEN="${launch_token}" \
+    NEURAL_ASSIGNMENT_SOURCE_RUN="${SOURCE_RUN}" \
+    NEURAL_ASSIGNMENT_REFERENCE_RUN="${REFERENCE_RUN}" \
+    NEURAL_ASSIGNMENT_RUN_DIR="${RUN_DIR}" \
+    NEURAL_ASSIGNMENT_PROTOCOL="${PROTOCOL_FILE}" \
+    NEURAL_ASSIGNMENT_SESSION_NAME="${SESSION_NAME}" \
+    NEURAL_ASSIGNMENT_LAUNCH_WAIT_SECONDS="${LAUNCH_WAIT_SECONDS}" \
+    /bin/bash "$0" foreground
+  for ((second = 0; second < LAUNCH_WAIT_SECONDS; second++)); do
     if [[ -f "${RUN_DIR}/complete.json" ]]; then
       echo "Study completed during launch. Log: ${LOG_FILE}"
       return
@@ -83,7 +101,7 @@ start_background() {
     fi
     sleep 1
   done
-  echo "Runner did not enter its foreground command within 15 seconds."
+  echo "Runner did not enter its foreground command within ${LAUNCH_WAIT_SECONDS} seconds."
   [[ -f "${LOG_FILE}" ]] && tail -n 80 "${LOG_FILE}"
   exit 1
 }

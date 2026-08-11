@@ -19,6 +19,11 @@ def _parser() -> argparse.ArgumentParser:
     run.add_argument("--run", required=True, type=Path)
     run.add_argument("--source", required=True, type=Path)
     run.add_argument("--reference", required=True, type=Path)
+    run.add_argument(
+        "--protocol",
+        type=Path,
+        help="committed protocol file; defaults to the original bounded protocol",
+    )
     chemical = commands.add_parser("chemical", help="run MAG in its pinned env")
     chemical.add_argument("--run", required=True, type=Path)
     chemical.add_argument("--attempt", required=True, choices=("primary", "rescue"))
@@ -43,6 +48,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             args.run,
             source_run=args.source,
             reference_run=args.reference,
+            protocol_path=args.protocol,
         )
     elif args.command == "chemical":
         from .chemical import run_chemical_scoring

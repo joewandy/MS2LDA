@@ -196,6 +196,7 @@ def run_study(
     *,
     source_run: str | Path,
     reference_run: str | Path,
+    protocol_path: str | Path | None = None,
 ) -> dict[str, Any]:
     """Run or exactly resume every eligible stage and stop automatically."""
     directory = Path(run_dir).expanduser().resolve()
@@ -203,6 +204,7 @@ def run_study(
         directory,
         source_run=source_run,
         reference_run=reference_run,
+        protocol_path=protocol_path,
     )
     verify_run(directory)
     _require_merged_clean_main(lock)

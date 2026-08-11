@@ -1,0 +1,161 @@
+{
+  "schema_version": "neural-assignment-ms2lda/protocol-v2",
+  "tracking_issue": "https://github.com/joewandy/MS2LDA/issues/10",
+  "evidence_scope": "corrected_fixed_split_seed_42_posthoc_k1000_continuation",
+  "exploratory_amendment": {
+    "id": "posthoc-k200-active-screen-waiver-v1",
+    "base_protocol": "benchmarks/neural_assignment_ms2lda/protocol.json",
+    "trigger_run": "neural-assignment-ms2lda-seed42-v1",
+    "declared_after_validation_observation": true,
+    "test_data_touched_in_trigger_run": false,
+    "stage": "k200",
+    "waived_k200_blocking_failures": ["active_topics"],
+    "rationale": "The K=200 candidate passed stability, NLL, diversity, NPMI, and mixture gates; 67 of 200 topics exceeded 1/K usage, 122 exceeded 0.1/K, and the same active definition retained 363 of 1000 Tomotopy reference topics. Treat the K=200 active count as diagnostic and test capacity at the unchanged final K=1000 gate.",
+    "k1000_validation_gates_unchanged": true,
+    "test_and_chemical_gates_unchanged": true
+  },
+  "seed": 42,
+  "training_cpu_threads": 4,
+  "evaluation_cpu_threads": 1,
+  "sgns": {
+    "dimensions": 48,
+    "epochs": 5,
+    "positive_pairs_per_document": 8,
+    "negative_samples": 5,
+    "negative_power": 0.75,
+    "batch_size": 8192,
+    "learning_rate": 0.01
+  },
+  "token_features": {
+    "fourier_frequencies": [1, 2, 4, 8, 16, 32, 64],
+    "mass_scale": 1000.0,
+    "type_dimensions": 2,
+    "output_dimensions": 64
+  },
+  "model": {
+    "input_dimensions": 64,
+    "projection_dimensions": 128,
+    "router_hidden_dimensions": 256,
+    "top_k": 2,
+    "beta_temperature": 0.2,
+    "sinkhorn_epsilon": 0.05,
+    "sinkhorn_iterations": 5,
+    "gradient_clip_norm": 5.0
+  },
+  "views": {
+    "pairs": 4,
+    "retained_peak_group_fraction": 0.8,
+    "fragment_loss_group_atomic": true
+  },
+  "optimization": {
+    "batch_size_candidates": [64, 128, 256],
+    "maximum_rss_bytes": 8589934592,
+    "topic_update_batch_size": 512,
+    "topic_updates_per_epoch": 4,
+    "learning_rate": 0.001,
+    "weight_decay": 0.0001,
+    "local_decoder_weight": 0.25,
+    "theta_consistency_weight": 0.1,
+    "minimum_nll_improvement": 0.0001
+  },
+  "primary": {
+    "routing_temperature_start": 0.5,
+    "routing_temperature_end": 0.1,
+    "routing_temperature_anneal_epochs": 30,
+    "sinkhorn_weight_start": 0.25,
+    "sinkhorn_weight_hold_epochs": 10,
+    "sinkhorn_weight_end": 0.05,
+    "sinkhorn_weight_end_epoch": 40,
+    "recycle_usage_fraction_of_uniform": 0.1,
+    "recycle_patience_validations": 3,
+    "recycle_through_epoch": 60,
+    "maximum_recycles_per_topic": 2
+  },
+  "rescue": {
+    "eligible_only_for_collapse": true,
+    "same_initialization": true,
+    "sinkhorn_weight_start": 0.5,
+    "sinkhorn_weight_hold_epochs": 20,
+    "sinkhorn_weight_end": 0.15,
+    "sinkhorn_weight_end_epoch": 60,
+    "recycle_usage_fraction_of_uniform": 0.25,
+    "recycle_patience_validations": 2,
+    "recycle_through_epoch": 80,
+    "maximum_recycles_per_topic": 2,
+    "diffuse_rescue_top_k": 1,
+    "diffuse_rescue_final_temperature": 0.07
+  },
+  "stages": {
+    "synthetic": {
+      "num_topics": 32,
+      "maximum_epochs": 120,
+      "minimum_epochs": 20,
+      "validation_interval": 2,
+      "early_stopping_patience": 15,
+      "maximum_hours": 2.0
+    },
+    "k200": {
+      "num_topics": 200,
+      "maximum_epochs": 80,
+      "minimum_epochs": 20,
+      "validation_interval": 2,
+      "early_stopping_patience": 10,
+      "maximum_hours": 2.0
+    },
+    "k1000": {
+      "num_topics": 1000,
+      "maximum_epochs": 160,
+      "minimum_epochs": 40,
+      "validation_interval": 2,
+      "early_stopping_patience": 15,
+      "maximum_hours": 12.0
+    }
+  },
+  "synthetic_gates": {
+    "minimum_occupied_fraction": 0.9,
+    "occupation_usage_fraction_of_uniform": 0.1,
+    "minimum_matched_beta_cosine": 0.75,
+    "minimum_top20_jaccard": 0.5,
+    "maximum_nll_fraction_of_unigram": 0.9
+  },
+  "k200_gates": {
+    "minimum_active_topics": 120,
+    "minimum_top_word_diversity": 0.65,
+    "minimum_mean_npmi": -0.6,
+    "minimum_median_effective_topics": 2.3,
+    "maximum_median_effective_topics": 36.5,
+    "maximum_validation_nll": 10.73
+  },
+  "k1000_gates": {
+    "minimum_active_topics": 255,
+    "minimum_top_word_diversity": 0.6648,
+    "minimum_median_effective_topics": 2.279,
+    "maximum_median_effective_topics": 36.469,
+    "maximum_validation_nll": 10.7326
+  },
+  "chemical_gates": {
+    "minimum_dominant_mean_sos": 0.5232,
+    "minimum_high_confidence_coverage": 0.1665
+  },
+  "evaluation": {
+    "document_active_threshold": 0.01,
+    "topic_top_n": 10,
+    "membership_threshold": 0.5,
+    "latency_subset_size": 128,
+    "latency_repeats": 5,
+    "mag_fingerprint_threshold": 0.8
+  },
+  "forbidden_candidate_dependencies": [
+    "dreams",
+    "tomotopy",
+    "ms2lda_hybrid._variational",
+    "sklearn.decomposition",
+    "pymc"
+  ],
+  "stop_rule": {
+    "synthetic_failure_stops": true,
+    "k200_failure_stops": true,
+    "maximum_k1000_attempts": 2,
+    "no_automatic_annotation_redirect": true
+  }
+}

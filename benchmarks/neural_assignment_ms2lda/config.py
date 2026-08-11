@@ -17,8 +17,16 @@ from .utils import file_sha256, object_sha256, read_json, write_json
 PACKAGE_ROOT = Path(__file__).resolve().parent
 REPO_ROOT = PACKAGE_ROOT.parents[1]
 PROTOCOL_PATH = PACKAGE_ROOT / "protocol.json"
+CONTINUATION_PROTOCOL_PATH = PACKAGE_ROOT / "protocol_k1000_continuation.json"
+PROTOCOL_PATHS = (PROTOCOL_PATH, CONTINUATION_PROTOCOL_PATH)
 RUNNER_PATH = REPO_ROOT / "scripts/run_neural_assignment_ms2lda.sh"
+CONTINUATION_RUNNER_PATH = (
+    REPO_ROOT / "scripts/run_neural_assignment_ms2lda_k1000_continuation.sh"
+)
 DESIGN_NOTE_PATH = REPO_ROOT / "docs/research/neural_assignment_ms2lda_protocol.md"
+CONTINUATION_NOTE_PATH = (
+    REPO_ROOT / "docs/research/neural_assignment_ms2lda_k1000_continuation.md"
+)
 
 COUNT_FILES = (
     "complete.json",
@@ -70,10 +78,64 @@ SHARED_SOURCE_FILES = (
 )
 
 
-def load_protocol() -> dict[str, Any]:
-    """Load and validate the committed staged protocol."""
-    protocol = read_json(PROTOCOL_PATH)
-    if protocol.get("schema_version") != "neural-assignment-ms2lda/protocol-v1":
+def resolve_protocol_path(path: str | Path | None = None) -> Path:
+    """Resolve one of the two committed protocols, rejecting ad-hoc files."""
+    selected = PROTOCOL_PATH if path is None else Path(path).expanduser().resolve()
+    allowed = {candidate.resolve() for candidate in PROTOCOL_PATHS}
+    if selected.resolve() not in allowed:
+        msg = "the runner accepts only committed neural-assignment protocols"
+        raise ValueError(msg)
+    return selected.resolve()
+
+
+def _validate_exploratory_amendment(
+    protocol: dict[str, Any],
+    *,
+    schema: str,
+) -> None:
+    """Prove that protocol v2 changes only declared screening metadata."""
+    amendment = protocol.get("exploratory_amendment")
+    if schema != "neural-assignment-ms2lda/protocol-v2":
+        if amendment is not None:
+            msg = "the original protocol cannot contain a post-hoc amendment"
+            raise ValueError(msg)
+        return
+    if amendment is None:
+        msg = "protocol v2 requires an explicit exploratory amendment"
+        raise ValueError(msg)
+    if amendment.get("waived_k200_blocking_failures") != ["active_topics"]:
+        msg = "only the K=200 active-topic screening stop may be waived"
+        raise ValueError(msg)
+    base = read_json(PROTOCOL_PATH)
+    base_science = {
+        key: value
+        for key, value in base.items()
+        if key not in {"schema_version", "evidence_scope"}
+    }
+    continuation_science = {
+        key: value
+        for key, value in protocol.items()
+        if key
+        not in {
+            "schema_version",
+            "evidence_scope",
+            "exploratory_amendment",
+        }
+    }
+    if continuation_science != base_science:
+        msg = "the exploratory continuation changed a frozen scientific setting"
+        raise ValueError(msg)
+
+
+def load_protocol(path: str | Path | None = None) -> dict[str, Any]:
+    """Load and validate a committed staged protocol."""
+    selected = resolve_protocol_path(path)
+    protocol = read_json(selected)
+    schema = protocol.get("schema_version")
+    if schema not in {
+        "neural-assignment-ms2lda/protocol-v1",
+        "neural-assignment-ms2lda/protocol-v2",
+    }:
         msg = "unexpected neural-assignment protocol schema"
         raise ValueError(msg)
     features = protocol["token_features"]
@@ -115,6 +177,7 @@ def load_protocol() -> dict[str, Any]:
     if not 0 < occupation < 1:
         msg = "synthetic occupation threshold must be a fraction of uniform"
         raise ValueError(msg)
+    _validate_exploratory_amendment(protocol, schema=str(schema))
     return protocol
 
 
@@ -155,10 +218,12 @@ def _source_files() -> list[Path]:
     files = list(PACKAGE_ROOT.glob("*.py"))
     files.extend(
         (
-            PROTOCOL_PATH,
+            *PROTOCOL_PATHS,
             PACKAGE_ROOT / "README.md",
             RUNNER_PATH,
+            CONTINUATION_RUNNER_PATH,
             DESIGN_NOTE_PATH,
+            CONTINUATION_NOTE_PATH,
         ),
     )
     files.extend(REPO_ROOT / relative for relative in SHARED_SOURCE_FILES)
@@ -232,11 +297,14 @@ def initialize_run(
     *,
     source_run: str | Path,
     reference_run: str | Path,
+    protocol_path: str | Path | None = None,
 ) -> dict[str, Any]:
     """Freeze code and immutable input identities before fitting."""
     directory = Path(run_dir).expanduser().resolve()
     source = Path(source_run).expanduser().resolve()
     reference = Path(reference_run).expanduser().resolve()
+    selected_protocol = resolve_protocol_path(protocol_path)
+    protocol_source = str(selected_protocol.relative_to(REPO_ROOT))
     lock_path = directory / "neural.lock.json"
     if lock_path.is_file():
         lock = verify_run(directory)
@@ -245,6 +313,11 @@ def initialize_run(
             raise ValueError(msg)
         if Path(lock["reference_run"]) != reference:
             msg = "requested reference differs from the frozen run"
+            raise ValueError(msg)
+        if lock.get("protocol_source", str(PROTOCOL_PATH.relative_to(REPO_ROOT))) != (
+            protocol_source
+        ):
+            msg = "requested protocol differs from the frozen run"
             raise ValueError(msg)
         return lock
     counts = source / "shared/counts"
@@ -256,7 +329,7 @@ def initialize_run(
         msg = f"required neural input is missing: {missing[0]}"
         raise FileNotFoundError(msg)
 
-    protocol = load_protocol()
+    protocol = load_protocol(selected_protocol)
     audit = static_candidate_audit(protocol)
     manifest = code_manifest()
     directory.mkdir(parents=True, exist_ok=True)
@@ -275,6 +348,7 @@ def initialize_run(
         "git": _git_state(),
         "source_run": str(source),
         "reference_run": str(reference),
+        "protocol_source": protocol_source,
         "protocol_sha256": object_sha256(protocol),
         "code_manifest_sha256": object_sha256(manifest),
         "candidate_audit_sha256": object_sha256(audit),

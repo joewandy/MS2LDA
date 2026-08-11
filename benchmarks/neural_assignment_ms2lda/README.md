@@ -34,3 +34,15 @@ implementation has been merged into a clean fork main.
 
 The architecture, literature grounding, exact gates, and stop rule are
 documented in docs/research/neural_assignment_ms2lda_protocol.md.
+
+The completed v1 run stopped only at the K=200 active-topic screen. Its
+post-hoc exploratory K=1000 continuation is a separate committed protocol:
+`protocol_k1000_continuation.json`. It records the raw K=200 failure, waives
+only that screening failure as blocking, and leaves every final K=1000, test,
+and chemical criterion unchanged. The rationale and interpretation boundary
+are documented in
+`docs/research/neural_assignment_ms2lda_k1000_continuation.md`.
+
+Use `scripts/run_neural_assignment_ms2lda_k1000_continuation.sh` for the
+continuation's `start`, `resume`, `status`, and `verify` operations. It fixes
+the amended protocol, run directory, and detached-session identity together.

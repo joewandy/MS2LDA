@@ -478,11 +478,28 @@ def gate_checks(
             "actual": npmi,
             "minimum": float(config["minimum_mean_npmi"]),
         }
+    failed = [name for name, row in checks.items() if not row["pass"]]
+    amendment = protocol.get("exploratory_amendment", {})
+    waived = (
+        list(amendment.get("waived_k200_blocking_failures", []))
+        if stage == "k200"
+        else []
+    )
+    unexpected_waivers = sorted(set(waived) - set(checks))
+    if unexpected_waivers:
+        msg = f"waiver names an unknown K=200 gate: {unexpected_waivers[0]}"
+        raise ValueError(msg)
+    waived_failures = [name for name in failed if name in waived]
+    blocking_failures = [name for name in failed if name not in waived]
     return {
         "stage": stage,
         "checks": checks,
-        "pass": all(row["pass"] for row in checks.values()),
-        "failed": [name for name, row in checks.items() if not row["pass"]],
+        "raw_pass": not failed,
+        "pass": not blocking_failures,
+        "failed": failed,
+        "waived_failures": waived_failures,
+        "blocking_failures": blocking_failures,
+        "exploratory_amendment_id": (amendment.get("id") if waived_failures else None),
     }
 
 
@@ -828,7 +845,7 @@ def train_attempt(
                 stable=stable,
                 protocol=protocol,
             )
-            failures = len(gate["failed"])
+            failures = len(gate["blocking_failures"])
             nll = float(validation["document_completion"]["nll_per_token"])
             candidate_key = (failures, nll)
             improved = (

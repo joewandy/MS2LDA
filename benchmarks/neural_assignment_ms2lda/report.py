@@ -56,10 +56,24 @@ def _markdown(report: dict[str, Any]) -> str:
         "redirect the project to motif annotation.",
         "",
     ]
+    amendment = report.get("exploratory_amendment")
+    if amendment is not None:
+        lines.extend(
+            [
+                "This continuation was declared after the v1 K=200 validation "
+                "result. Only the K=200 active-topic screening stop is waived; "
+                "all final K=1000, test, and chemical gates are unchanged.",
+                "",
+            ],
+        )
     for stage in ("synthetic", "k200", "k1000_validation", "k1000_test", "chemical"):
         value = report["gates"].get(stage)
         if value is not None:
-            lines.append(f"- {stage}: {'PASS' if value['pass'] else 'FAIL'}")
+            label = "PASS" if value["pass"] else "FAIL"
+            waived = value.get("waived_failures", [])
+            if value["pass"] and waived:
+                label = f"PASS WITH EXPLORATORY WAIVER ({', '.join(waived)})"
+            lines.append(f"- {stage}: {label}")
     lines.extend(
         [
             "",
@@ -86,6 +100,8 @@ def _scorecard_rows(report: dict[str, Any]) -> list[dict[str, Any]]:
                         "actual": check.get("actual", ""),
                         "minimum": check.get("minimum", ""),
                         "maximum": check.get("maximum", ""),
+                        "waived": metric in gate.get("waived_failures", []),
+                        "blocking": metric in gate.get("blocking_failures", []),
                     },
                 )
         elif stage == "synthetic":
@@ -99,6 +115,8 @@ def _scorecard_rows(report: dict[str, Any]) -> list[dict[str, Any]]:
                             "actual": check.get("actual", ""),
                             "minimum": check.get("minimum", ""),
                             "maximum": check.get("maximum", ""),
+                            "waived": False,
+                            "blocking": not check["pass"],
                         },
                     )
     return rows
@@ -193,6 +211,7 @@ def build_report(
         "evaluation": evaluation,
         "chemical": chemical,
         "reference": reference,
+        "exploratory_amendment": protocol.get("exploratory_amendment"),
         "fully_neural_contract": {
             "routing_passes_per_representation": 1,
             "local_vb_steps": 0,
