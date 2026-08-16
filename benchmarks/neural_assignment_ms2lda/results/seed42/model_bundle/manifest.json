@@ -1,0 +1,32 @@
+{
+  "beta_derivation": "softmax(2 * normalized_topics @ normalized_projected_tokens.T / beta_temperature)",
+  "bundle_version": "neural-ms2lda-msnlib-k500-v1",
+  "files": {
+    "chemistry.json": {
+      "bytes": 2188,
+      "sha256": "f06fc9e71912114ef0d1d080afce37d19ef2c9bd4fe95cf453b04cf6fb5969c7"
+    },
+    "evaluation.json": {
+      "bytes": 4346,
+      "sha256": "0bccceb93c0a6741a2fde113e0c7c05e0e479f69138249766368644cb1cbc3e2"
+    },
+    "model.pt": {
+      "bytes": 6126693,
+      "sha256": "6b424d133e66a5b9623572074fcc244566c701cf48e04e8dca363f09301c7961"
+    },
+    "protocol.json": {
+      "bytes": 4530,
+      "sha256": "5f6c6d4770e290e8edbc76d41f711778dd4399a1f7b46c88dc33dec96317df18"
+    },
+    "provenance.json": {
+      "bytes": 4404,
+      "sha256": "f552cdd219e21a99b2936d6c9e049b547c983774fd2b555d3d9254f5fe245aeb"
+    },
+    "vocabulary.json": {
+      "bytes": 399546,
+      "sha256": "8e7bf7ba06a9a2fbd75326d9e7b44eb973bdec5557da195c6678a654d93ee308"
+    }
+  },
+  "schema_version": "neural-ms2lda/model-bundle-v1",
+  "selected_epoch": 38
+}

@@ -1,0 +1,22 @@
+{
+  "evidence_sha256": {
+    "benchmarks/neural_assignment_ms2lda/results/seed42/capacity_screen.csv": "3e19a66e8286b8502d7caaf9a69bcad620d157921e229631dd72681f90ad86fa",
+    "benchmarks/neural_assignment_ms2lda/results/seed42/comparator.json": "d4201ee75c8f4645ddf6c87dec3fe5b47601c2cbf428250e3adb7c6d35d7517e",
+    "benchmarks/neural_assignment_ms2lda/results/seed42/fresh_reproducibility.json": "76f84d75e32ab2ae5e24924c5a652e02fd5988ecdd432b4e001c36a0bd04c8bc",
+    "benchmarks/neural_assignment_ms2lda/results/seed42/historical_replay.json": "bb0c1772a4706eca4907e1b508ca2dfb99b82251f224022ceedc2e51cd3ddd36",
+    "benchmarks/neural_assignment_ms2lda/results/seed42/model_bundle/chemistry.json": "f06fc9e71912114ef0d1d080afce37d19ef2c9bd4fe95cf453b04cf6fb5969c7",
+    "benchmarks/neural_assignment_ms2lda/results/seed42/model_bundle/evaluation.json": "0bccceb93c0a6741a2fde113e0c7c05e0e479f69138249766368644cb1cbc3e2",
+    "scripts/generate_neural_ms2lda_report.py": "031412f8a45e05301f2182a3337176ea23b8a9abea228ba16b8adf577ced99b5"
+  },
+  "output_sha256": {
+    "docs/research/figures/architecture.png": "72ff3489bf2ccc57bbc2d76b606bf84e47d611499cd4ef50280a7e7a4c0e64fd",
+    "docs/research/figures/capacity_pareto.png": "bdbd3384ce9f1dc170cc73184e9f11f1780d7b86f8c143b747692e396f7e78c1",
+    "docs/research/figures/chemistry_coverage.png": "88247e84e3ad3482e98b65f64c5581ab2a3de734a206a2d245c7123535fa31b7",
+    "docs/research/figures/final_comparison.png": "bdc2efb5e446bfcde49a4fcb7af37c2418849e0de0de6f351f7a1971f204590f",
+    "docs/research/figures/inference_speed.png": "162b546c7aee3c31891b434fa0076d605eda12581244f4696ac9fa0a7011b996",
+    "docs/research/generated/final_comparison_table.tex": "248e0c40b0b34254185123c304083de173be783328311d3b13673fa38a1f59e3",
+    "docs/research/neural_ms2lda_checkpoint.pdf": "b94959902597a84f1ce00cd11953eff5a4d5769e1e27ac9bb666dc76d4d5c2bd",
+    "docs/research/neural_ms2lda_checkpoint.tex": "5989aab50d8e930038839ac11c4b82ee09aa547790644d524e103a03c6596a19"
+  },
+  "schema_version": "neural-ms2lda/report-manifest-v1"
+}

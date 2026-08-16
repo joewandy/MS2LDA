@@ -1,0 +1,122 @@
+{
+  "evaluation_seconds": 15.187246832996607,
+  "method": "neural_erntm_k500",
+  "metrics": {
+    "active_topics": {
+      "corpus_active_topics": 132,
+      "document_active_mean": 14.428442844284428,
+      "document_active_median": 14.0,
+      "document_active_p95": 26.0
+    },
+    "cached_latency": {
+      "documents": 128,
+      "iterative_inference_steps": 0,
+      "median_seconds_per_spectrum": 0.00018086523436977586,
+      "median_spectra_per_second": 5528.9785429714875,
+      "p95_seconds_per_spectrum": 0.00018425254224894161,
+      "repeats": 5,
+      "routing_passes": 1
+    },
+    "full_spectrum_mixture": {
+      "effective_topic_count_mean": 17.915511743761755,
+      "effective_topic_count_median": 14.750376813107733,
+      "effective_topic_count_p95": 41.93919490709062,
+      "maximum_topic_probability_maximum": 0.9617622261414026,
+      "maximum_topic_probability_median": 0.20301539974963062,
+      "maximum_topic_probability_p95": 0.40975874221141656
+    },
+    "routing": {
+      "assignment_entropy_mean": 0.5087405443191528,
+      "local_vb_steps": 0,
+      "maximum_assignment_mass_mean": 0.7369211316108704,
+      "routing_passes_per_spectrum": 1,
+      "temperature": 0.09999999999999998,
+      "top_k": 2
+    },
+    "test_document_completion": {
+      "eligible_documents": 7776,
+      "in_vocabulary_tokens": 2534703,
+      "nll_per_token": 8.356339527018973,
+      "oov_fraction": 0.026880442765611186,
+      "out_of_vocabulary_tokens": 70016,
+      "total_documents": 7777
+    },
+    "top_word_diversity": 0.7354,
+    "topic_inventory": {
+      "all_topics": {
+        "distinct_topic_equivalents": 367.7,
+        "top_word_diversity": 0.7354,
+        "topics": 500,
+        "unique_top_words": 3677
+      },
+      "corpus_effective_topic_count": 169.4842300248925,
+      "mass_coverages": {
+        "mass_90": {
+          "actual_mass": 0.9003970136999193,
+          "distinct_topic_equivalents": 138.7,
+          "target_mass": 0.9,
+          "top_word_diversity": 0.9006493506493507,
+          "topics": 154,
+          "unique_top_words": 1387
+        },
+        "mass_95": {
+          "actual_mass": 0.9504618749018412,
+          "distinct_topic_equivalents": 178.8,
+          "target_mass": 0.95,
+          "top_word_diversity": 0.8984924623115578,
+          "topics": 199,
+          "unique_top_words": 1788
+        },
+        "mass_99": {
+          "actual_mass": 0.9902246041079193,
+          "distinct_topic_equivalents": 231.5,
+          "target_mass": 0.99,
+          "top_word_diversity": 0.8703007518796992,
+          "topics": 266,
+          "unique_top_words": 2315
+        }
+      },
+      "topic_count": 500,
+      "usage_at_least_tenth_uniform": {
+        "distinct_topic_equivalents": 237.7,
+        "threshold": 0.0002,
+        "top_word_diversity": 0.8643636363636363,
+        "topics": 275,
+        "unique_top_words": 2377
+      },
+      "usage_at_least_uniform": {
+        "distinct_topic_equivalents": 118.4,
+        "threshold": 0.002,
+        "top_word_diversity": 0.9107692307692308,
+        "topics": 130,
+        "unique_top_words": 1184
+      }
+    },
+    "validation_document_completion": {
+      "eligible_documents": 3888,
+      "in_vocabulary_tokens": 1277983,
+      "nll_per_token": 8.339485170922588,
+      "oov_fraction": 0.031355544236867795,
+      "out_of_vocabulary_tokens": 41369,
+      "total_documents": 3889
+    },
+    "word_cooccurrence_npmi": {
+      "mean_npmi": -0.5698579777924967,
+      "median_topic_npmi": -0.7564405055043604,
+      "undefined_pairs_scored_as_minus_one": 14916
+    }
+  },
+  "output_sha256": {
+    "beta.npy": "2efcab31227d0f6f52fbe3294d7015fe943cb1eaea664dd7a0a78e88301b096f",
+    "test_completion_nll.npy": "22c0f524e1dda0ff7e87cd6e7f7afbfa1f298aa4c42fb810b2ea5f8527c9a7cb",
+    "test_full_theta.npy": "8101e8c28724013cb15e668984c302778af69fe1c315090f598ee1100505ed4f",
+    "test_observed_theta.npy": "f5c4e5076a3e84ed278483c4942f4e4a4d8962da95208da941eddc602619441f",
+    "validation_completion_nll.npy": "96107f6bd48c0f70f330b3a8ff3207b1f763dea22c980fb7220a5ffff07d73bd",
+    "validation_observed_theta.npy": "1ee2ff33679cfcf347fe811fd451778e86636c1d9c6d44cbe094b253ddba27d9"
+  },
+  "peak_rss_bytes": 1515274240,
+  "schema_version": "neural-ms2lda/neural-evaluation-v1",
+  "selected_epoch": 38,
+  "stable": true,
+  "topic_count": 500
+}

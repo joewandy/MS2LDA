@@ -1,0 +1,17 @@
+name: ms2lda-neural
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip=26.0
+  - numpy=1.25.2
+  - scipy=1.13.1
+  - rdkit=2024.9.6
+  - pip:
+      - torch==2.6.0
+      - tomotopy==0.13.0
+      - pytest==8.3.5
+      - black==24.10.0
+      - ruff==0.11.13
+      - build==1.2.2.post1
+      - poetry-core==1.9.1

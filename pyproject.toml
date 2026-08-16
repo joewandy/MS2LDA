@@ -32,7 +32,8 @@ packages = [
   { include = "MS2LDA" },
   { include = "App" },
   { include = "scripts" },          # for scripts.ms2lda_runfull
-  { include = "massql4motifs" }     # Vendored until merged upstream
+  { include = "massql4motifs" },    # Vendored until merged upstream
+  { include = "benchmarks" }        # Reproducible research checkpoint CLI
 ]
 
 include = [
