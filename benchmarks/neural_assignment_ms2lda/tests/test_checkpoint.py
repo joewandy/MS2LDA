@@ -368,6 +368,7 @@ def test_development_accepts_removed_legacy_protocol_metadata() -> None:
             "motif_spectrum_top_n": 20,
         }
     )
+    source.pop("development_gates")
     _validate_frozen_protocol(source, current)
     source["seed"] = 43
     with pytest.raises(ValueError, match="seed"):

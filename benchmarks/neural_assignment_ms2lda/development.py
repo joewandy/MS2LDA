@@ -64,7 +64,6 @@ def _validate_frozen_protocol(source: dict[str, Any], current: dict[str, Any]) -
         "model",
         "views",
         "anti_collapse",
-        "development_gates",
         "evaluation",
     )
     changed = [] if source["seed"] == current["seed"] else ["seed"]
@@ -74,6 +73,12 @@ def _validate_frozen_protocol(source: dict[str, Any], current: dict[str, Any]) -
             f"{section}.{key}"
             for key, value in current[section].items()
             if key not in ignored and source[section].get(key) != value
+        )
+    if "development_gates" in source:
+        changed.extend(
+            f"development_gates.{key}"
+            for key, value in current["development_gates"].items()
+            if source["development_gates"].get(key) != value
         )
     source_optimization = source["optimization"]
     current_optimization = current["optimization"]
