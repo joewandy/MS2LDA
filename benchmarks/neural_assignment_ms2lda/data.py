@@ -98,14 +98,14 @@ def load_heldout_records(counts_dir: str | Path, split: str) -> list[dict[str, A
         msg = "held-out split must be validation or test"
         raise ValueError(msg)
     rows = []
-    with (Path(counts_dir) / "heldout_records.jsonl").open(
-        encoding="utf-8",
-    ) as handle:
+    path = Path(counts_dir) / f"{split}_records.jsonl"
+    with path.open(encoding="utf-8") as handle:
         for line in handle:
             if line.strip():
                 row = json.loads(line)
-                if row["split"] == split:
-                    rows.append(row)
+                if row.get("split") != split:
+                    raise ValueError(f"unexpected split in {path.name}")
+                rows.append(row)
     return rows
 
 
@@ -302,7 +302,10 @@ def prepare_data(
     output.mkdir(parents=True, exist_ok=True)
     matrices: dict[str, sp.csr_matrix] = {}
     identifiers: dict[str, list[str]] = {}
-    heldout_rows: list[dict[str, Any]] = []
+    heldout_rows: dict[str, list[dict[str, Any]]] = {
+        "validation": [],
+        "test": [],
+    }
     split_rows: list[dict[str, Any]] = []
     for record in records:
         split = assignments[record.spectrum_id]
@@ -353,7 +356,7 @@ def prepare_data(
             full_documents.append(full_words)
             observed_documents.append(observed_filtered)
             completion_documents.append(completion_words)
-            heldout_rows.append(
+            heldout_rows[split].append(
                 {
                     "spectrum_id": record.spectrum_id,
                     "split": split,
@@ -385,11 +388,14 @@ def prepare_data(
     )
     identifiers_path = output / "identifiers.json"
     write_json(identifiers_path, identifiers)
-    heldout_path = output / "heldout_records.jsonl"
     split_path = output / "split_manifest.jsonl"
-    _write_jsonl(heldout_path, heldout_rows)
+    heldout_paths = []
+    for split, rows in heldout_rows.items():
+        path = output / f"{split}_records.jsonl"
+        _write_jsonl(path, rows)
+        heldout_paths.append(path)
     _write_jsonl(split_path, split_rows)
-    outputs.extend((vocabulary_path, identifiers_path, heldout_path, split_path))
+    outputs.extend((vocabulary_path, identifiers_path, *heldout_paths, split_path))
     result = {
         "schema_version": "neural-ms2lda/prepared-data-v1",
         "raw_mgf": {"path": str(mgf), "sha256": file_sha256(mgf)},

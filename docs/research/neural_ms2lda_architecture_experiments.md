@@ -1,8 +1,10 @@
 # Neural MS2LDA architecture experiments
 
 This ledger records seed-42 architecture development after the published K=500
-checkpoint. Test matrices and chemical outcomes were kept sealed until an
-architecture satisfied every predeclared validation gate.
+checkpoint. Test matrices and chemical outcomes were not evaluated until an
+architecture satisfied every predeclared validation gate. The earlier runner
+linked the complete prepared-data directory even though it did not load test
+matrices; the cleaned runner now exposes named train and validation files only.
 
 ## Frozen development baseline
 
@@ -209,3 +211,7 @@ Decision: retain the co-occurrence graph, nearest-topic margin on every
 prototype update, and parameter-free local-document product-of-experts router
 as the verified seed-42 architecture. Do not continue validation tuning after
 the one-time test confirmation.
+
+Post-lock software cleanup removed inactive experiment switches and gave the
+active protocol a semantic, unversioned name. This did not change the accepted
+checkpoint or any measurement recorded above.

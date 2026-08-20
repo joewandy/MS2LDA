@@ -30,6 +30,7 @@ from benchmarks.msnlib_validation.metrics import (
     calculate_sos_smaller_fingerprint,
 )
 
+from .data import load_heldout_records
 from .utils import file_sha256, peak_rss_bytes, read_json, write_json
 
 
@@ -45,17 +46,6 @@ def _write_jsonl(path: Path, rows: Sequence[dict[str, Any]]) -> None:
         os.replace(temporary, path)
     finally:
         temporary.unlink(missing_ok=True)
-
-
-def _test_records(data: Path) -> list[dict[str, Any]]:
-    rows = []
-    with (data / "heldout_records.jsonl").open(encoding="utf-8") as handle:
-        for line in handle:
-            if line.strip():
-                row = json.loads(line)
-                if row["split"] == "test":
-                    rows.append(row)
-    return rows
 
 
 def _topic_scores(
@@ -202,7 +192,7 @@ def run_chemical_scoring(
     beta = np.load(beta_path, mmap_mode="r")
     theta = np.load(theta_path, mmap_mode="r")
     vocabulary = list(map(str, read_json(data / "vocabulary.json")["vocabulary"]))
-    records = _test_records(data)
+    records = load_heldout_records(data, "test")
     if theta.shape[0] != len(records):
         raise ValueError("full mixtures and held-out records differ")
     spectra = topic_spectra(

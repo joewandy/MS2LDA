@@ -20,7 +20,7 @@ from .metrics import (
     sparse_npmi,
     top_word_diversity,
 )
-from .training import load_selected_model
+from .training import load_selected_model, validation_gate_summary
 from .utils import atomic_save_numpy, file_sha256, peak_rss_bytes, read_json, write_json
 
 
@@ -72,6 +72,16 @@ def evaluate_neural(run_dir: str | Path, protocol: dict[str, Any]) -> dict[str, 
     directory = Path(run_dir).expanduser().resolve()
     output = directory / "evaluation/neural"
     complete_path = output / "complete.json"
+    selected_path = directory / "model/selected.json"
+    selected = read_json(selected_path)
+    training_manifest = read_json(directory / "model/complete.json")
+    if selected != training_manifest["selected"]:
+        raise ValueError("selected model manifest changed")
+    gate_summary = validation_gate_summary(selected["validation"], protocol)
+    if gate_summary != selected.get("validation_gate_summary"):
+        raise ValueError("selected model validation gates changed")
+    if gate_summary["all_gates_met"] is not True:
+        raise RuntimeError("test evaluation requires every validation gate to pass")
     if complete_path.is_file():
         result = read_json(complete_path)
         for name, digest in result["output_sha256"].items():
@@ -83,8 +93,9 @@ def evaluate_neural(run_dir: str | Path, protocol: dict[str, Any]) -> dict[str, 
         directory / "test_access.json",
         {
             "schema_version": "neural-ms2lda/test-access-v1",
-            "selected_model_sha256": file_sha256(directory / "model/selected.json"),
+            "selected_model_sha256": file_sha256(selected_path),
             "selection_final_before_test": True,
+            "validation_gates_met": True,
         },
     )
     train = load_csr(data / "train.npz")

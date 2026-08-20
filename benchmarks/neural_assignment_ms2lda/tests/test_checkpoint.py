@@ -36,6 +36,11 @@ from benchmarks.neural_assignment_ms2lda.data import (
     prepare_training_views,
     sparse_batch,
 )
+from benchmarks.neural_assignment_ms2lda.development import (
+    DEVELOPMENT_DATA_FILES,
+    READ_ONLY_STAGES,
+    _link_read_only_inputs,
+)
 from benchmarks.neural_assignment_ms2lda.embeddings import train_sgns
 from benchmarks.neural_assignment_ms2lda.evaluation import evaluate_neural
 from benchmarks.neural_assignment_ms2lda.model import (
@@ -46,7 +51,6 @@ from benchmarks.neural_assignment_ms2lda.model import (
 )
 from benchmarks.neural_assignment_ms2lda.regularizers import (
     cooccurrence_topic_constraint,
-    erntm_topic_constraint,
     nearest_neighbor_topic_constraint,
 )
 from benchmarks.neural_assignment_ms2lda.report import build_machine_report
@@ -111,7 +115,7 @@ def test_split_audit_rejects_compound_leakage() -> None:
         audit_split_disjointness(records, {"a": "train", "b": "test"})
 
 
-def test_sinkhorn_top2_erntm_gradients_and_recycling() -> None:
+def test_sinkhorn_top2_topic_gradients_and_recycling() -> None:
     protocol = load_protocol()
     features = torch.nn.functional.normalize(torch.randn(20, 64), dim=1)
     from benchmarks.neural_assignment_ms2lda.model import initialize_model
@@ -138,8 +142,7 @@ def test_sinkhorn_top2_erntm_gradients_and_recycling() -> None:
     topic = topic_block_loss(
         model, batch, batch, temperature=0.5, top_k=2, local_decoder_weight=0.25
     )
-    regularizer = erntm_topic_constraint(model)
-    (topic.total + regularizer.loss).backward()
+    topic.total.backward()
     assert model.topic_prototypes.grad is not None
     assert torch.isfinite(model.topic_prototypes.grad).all()
     before = model.topic_prototypes.detach().clone()
@@ -261,7 +264,7 @@ def test_committed_bundle_keeps_zero_document_prior() -> None:
     assert len(vocabulary) == model.vocabulary_size
 
 
-def test_topic_separation_honors_update_placement_flags() -> None:
+def test_protocol_exposes_one_active_topic_architecture() -> None:
     protocol = load_protocol()
     from benchmarks.neural_assignment_ms2lda.model import initialize_model
 
@@ -269,20 +272,46 @@ def test_topic_separation_honors_update_placement_flags() -> None:
     model, _ = initialize_model(features, num_topics=4, protocol=protocol)
     config = copy.deepcopy(protocol["topic_separation"])
     config["neighbors"] = 2
-    reference = model.topic_prototypes.sum()
-    for placement_key in (
-        "apply_during_router_updates",
-        "apply_during_topic_updates",
-    ):
-        config[placement_key] = False
-        result, weighted = _weighted_topic_separation(
-            model,
-            config,
-            placement_key=placement_key,
-            reference=reference,
-        )
-        assert result is None
-        assert float(weighted) == 0.0
+    result, weighted = _weighted_topic_separation(model, config)
+    assert torch.allclose(weighted, float(config["weight"]) * result.loss)
+    assert "erntm_weight" not in protocol["optimization"]
+    assert "enabled" not in protocol["cooccurrence_regularization"]
+    assert set(protocol["topic_separation"]) == {
+        "method",
+        "neighbors",
+        "margin",
+        "weight",
+    }
+
+
+def test_split_records_are_loaded_without_opening_the_other_split(
+    tmp_path: Path,
+) -> None:
+    validation = {"split": "validation", "spectrum_id": "validation-1"}
+    (tmp_path / "validation_records.jsonl").write_text(
+        json.dumps(validation) + "\n", encoding="utf-8"
+    )
+    (tmp_path / "test_records.jsonl").write_text("not-json\n", encoding="utf-8")
+    assert load_heldout_records(tmp_path, "validation") == [validation]
+
+
+def test_development_inputs_exclude_the_test_partition(tmp_path: Path) -> None:
+    source = tmp_path / "source"
+    output = tmp_path / "output"
+    for name in DEVELOPMENT_DATA_FILES:
+        path = source / "data" / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(name.encode("utf-8"))
+    (source / "data/test_full.npz").write_bytes(b"sealed")
+    for name in READ_ONLY_STAGES:
+        (source / name).mkdir(parents=True)
+
+    _link_read_only_inputs(source, output)
+
+    assert {path.name for path in (output / "data").iterdir()} == set(
+        DEVELOPMENT_DATA_FILES
+    )
+    assert not (output / "data/test_full.npz").exists()
 
 
 def test_verify_run_checks_cooccurrence_graph(tmp_path: Path) -> None:
@@ -321,15 +350,67 @@ def test_verify_run_checks_cooccurrence_graph(tmp_path: Path) -> None:
     graph = run / "cooccurrence_graph/positive_npmi_graph.npz"
     graph.parent.mkdir(parents=True)
     graph.write_bytes(b"frozen train-only graph")
+    graph_manifest = {
+        "output_sha256": {graph.name: file_sha256(graph)},
+    }
     write_json(
         graph.parent / "complete.json",
-        {"graph_sha256": file_sha256(graph)},
+        graph_manifest,
     )
+    selected_checkpoint = run / "model/selected.pt"
+    selected_checkpoint.parent.mkdir(parents=True)
+    selected_checkpoint.write_bytes(b"selected model")
+    selected_manifest = {
+        "checkpoint": selected_checkpoint.name,
+        "checkpoint_sha256": file_sha256(selected_checkpoint),
+    }
+    write_json(
+        run / "model/complete.json",
+        {
+            "selected": selected_manifest,
+            "cooccurrence_graph": graph_manifest,
+        },
+    )
+    write_json(run / "model/selected.json", selected_manifest)
     result = neural_config.verify_run(run, data_root=tmp_path)
     assert "cooccurrence_graph/complete.json" in result["manifests_present"]
-    graph.write_bytes(b"tampered graph")
-    with pytest.raises(ValueError, match="co-occurrence graph changed"):
+    write_json(graph.parent / "complete.json", {"output_sha256": {}})
+    with pytest.raises(ValueError, match="graph manifest is incomplete"):
         neural_config.verify_run(run, data_root=tmp_path)
+    write_json(graph.parent / "complete.json", graph_manifest)
+    graph.write_bytes(b"tampered graph")
+    with pytest.raises(ValueError, match="artifact changed"):
+        neural_config.verify_run(run, data_root=tmp_path)
+    graph.write_bytes(b"frozen train-only graph")
+    (graph.parent / "complete.json").unlink()
+    with pytest.raises(FileNotFoundError, match="requires a co-occurrence graph"):
+        neural_config.verify_run(run, data_root=tmp_path)
+
+
+def test_neural_evaluation_rejects_failed_validation_gates(tmp_path: Path) -> None:
+    run = tmp_path / "run"
+    protocol = load_protocol()
+    targets = protocol["development_gates"]
+    validation = {
+        "word_cooccurrence_npmi": {
+            "mean_npmi": targets["minimum_mean_npmi"],
+            "undefined_pair_fraction": targets["maximum_undefined_pair_fraction"],
+        },
+        "top_word_diversity": float(targets["minimum_top_word_diversity"]) - 0.1,
+        "mixture_diagnostics": {
+            "effective_topic_count_median": targets["maximum_effective_topics_median"]
+        },
+        "document_completion": {"nll_per_token": targets["maximum_validation_nll"]},
+    }
+    selected = {
+        "validation": validation,
+        "validation_gate_summary": validation_gate_summary(validation, protocol),
+    }
+    write_json(run / "model/selected.json", selected)
+    write_json(run / "model/complete.json", {"selected": selected})
+    with pytest.raises(RuntimeError, match="every validation gate"):
+        evaluate_neural(run, protocol)
+    assert not (run / "test_access.json").exists()
 
 
 def test_tomotopy_empty_document_uses_topic_prior() -> None:
@@ -418,6 +499,15 @@ def _mini_protocol(mgf: Path) -> dict[str, object]:
         }
     )
     protocol["topic_separation"]["neighbors"] = 2
+    protocol["development_gates"].update(
+        {
+            "minimum_mean_npmi": -1.0,
+            "maximum_undefined_pair_fraction": 1.0,
+            "minimum_top_word_diversity": 0.0,
+            "maximum_effective_topics_median": 4.0,
+            "maximum_validation_nll": 1.0e9,
+        }
+    )
     protocol["evaluation"].update({"latency_subset_size": 2, "latency_repeats": 1})
     return protocol
 
@@ -501,6 +591,7 @@ def test_miniature_mgf_through_report_and_bundle(tmp_path: Path) -> None:
         protocol=protocol,
     )
     selected_hash = result["selected"]["checkpoint_sha256"]
+    assert "graph_sha256" not in result["cooccurrence_graph"]
     resumed = train_model(
         run,
         train=train,

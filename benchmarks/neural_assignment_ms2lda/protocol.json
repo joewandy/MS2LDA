@@ -1,6 +1,6 @@
 {
   "schema_version": "neural-ms2lda/protocol-v1",
-  "protocol_name": "neural-ms2lda-msnlib-k500-seed42-v5-family3-hierarchical-development",
+  "protocol_name": "neural-ms2lda-msnlib-k500-seed42-hierarchical-cooccurrence-margin",
   "evidence_scope": "single-seed-applied-method-checkpoint",
   "seed": 42,
   "input_files": {
@@ -93,7 +93,6 @@
     "weight_decay": 0.0001,
     "local_decoder_weight": 0.25,
     "theta_consistency_weight": 0.1,
-    "erntm_weight": 0.0,
     "maximum_epochs": 40,
     "validation_interval": 2
   },
@@ -111,7 +110,6 @@
     "maximum_recycles_per_topic": 2
   },
   "cooccurrence_regularization": {
-    "enabled": true,
     "minimum_document_frequency": 10,
     "minimum_pair_frequency": 3,
     "maximum_neighbors": 16,
@@ -122,9 +120,7 @@
     "method": "nearest_neighbor_cosine_margin",
     "neighbors": 8,
     "margin": 0.3,
-    "weight": 5.0,
-    "apply_during_router_updates": true,
-    "apply_during_topic_updates": true
+    "weight": 5.0
   },
   "development_gates": {
     "baseline_mean_npmi": -0.5698579777924967,

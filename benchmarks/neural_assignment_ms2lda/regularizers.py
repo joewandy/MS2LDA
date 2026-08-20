@@ -11,47 +11,11 @@ from .model import NeuralAssignmentMS2LDA
 
 
 @dataclass(frozen=True)
-class DiversityRegularizerResult:
+class RegularizerResult:
     """A scalar regularizer and diagnostics that are safe to serialize."""
 
     loss: torch.Tensor
     diagnostics: dict[str, float]
-
-
-@dataclass(frozen=True)
-class CooccurrenceRegularizerResult:
-    """A graph-coherence scalar and serializable diagnostics."""
-
-    loss: torch.Tensor
-    diagnostics: dict[str, float]
-
-
-def erntm_topic_constraint(
-    model: NeuralAssignmentMS2LDA,
-) -> DiversityRegularizerResult:
-    """Apply the ERNTM identity-target cross-entropy topic constraint.
-
-    Shao et al. (2022) define the constraint as cross-entropy between the
-    topic-topic similarity matrix and the identity matrix.  The prototypes are
-    normalized here, matching the geometry already used by this model.
-    """
-    topics = F.normalize(model.topic_prototypes, dim=1)
-    similarities = topics @ topics.T
-    targets = torch.arange(model.num_topics, device=similarities.device)
-    loss = F.cross_entropy(similarities, targets)
-    with torch.no_grad():
-        off_diagonal = similarities[
-            ~torch.eye(
-                model.num_topics,
-                dtype=torch.bool,
-                device=similarities.device,
-            )
-        ]
-        diagnostics = {
-            "mean_off_diagonal_cosine": float(off_diagonal.mean()),
-            "maximum_off_diagonal_cosine": float(off_diagonal.max()),
-        }
-    return DiversityRegularizerResult(loss=loss, diagnostics=diagnostics)
 
 
 def cooccurrence_topic_constraint(
@@ -59,7 +23,7 @@ def cooccurrence_topic_constraint(
     graph: torch.Tensor,
     *,
     beta: torch.Tensor | None = None,
-) -> CooccurrenceRegularizerResult:
+) -> RegularizerResult:
     """Maximize within-topic probability assigned to positive-NPMI graph edges."""
     if graph.layout != torch.sparse_coo or graph.shape != (
         model.vocabulary_size,
@@ -77,7 +41,7 @@ def cooccurrence_topic_constraint(
             "cooccurrence_affinity_minimum": float(affinity.min()),
             "cooccurrence_affinity_maximum": float(affinity.max()),
         }
-    return CooccurrenceRegularizerResult(loss=loss, diagnostics=diagnostics)
+    return RegularizerResult(loss=loss, diagnostics=diagnostics)
 
 
 def nearest_neighbor_topic_constraint(
@@ -85,7 +49,7 @@ def nearest_neighbor_topic_constraint(
     *,
     neighbors: int,
     margin: float,
-) -> DiversityRegularizerResult:
+) -> RegularizerResult:
     """Penalize each topic's nearest prototype neighbours above a cosine margin."""
     if not 0 < neighbors < model.num_topics:
         raise ValueError("nearest-neighbour count must be between zero and K")
@@ -110,4 +74,4 @@ def nearest_neighbor_topic_constraint(
                 torch.mean((nearest > float(margin)).to(dtype=torch.float32))
             ),
         }
-    return DiversityRegularizerResult(loss=loss, diagnostics=diagnostics)
+    return RegularizerResult(loss=loss, diagnostics=diagnostics)

@@ -72,6 +72,8 @@ def load_protocol() -> dict[str, Any]:
         raise ValueError("the document topic prior weight is fixed to one")
     if int(protocol["optimization"]["maximum_epochs"]) != 40:
         raise ValueError("the reproducibility run is fixed to 40 epochs")
+    if protocol["topic_separation"]["method"] != "nearest_neighbor_cosine_margin":
+        raise ValueError("unexpected topic-separation method")
     dimensions = (
         int(protocol["sgns"]["dimensions"])
         + 2 * len(protocol["token_features"]["fourier_frequencies"])
@@ -137,6 +139,7 @@ def static_discovery_audit() -> dict[str, Any]:
         PACKAGE_ROOT / "regularizers.py",
         PACKAGE_ROOT / "embeddings.py",
         PACKAGE_ROOT / "data.py",
+        PACKAGE_ROOT / "cooccurrence.py",
     )
     forbidden = {"tomotopy", "dreams", "pymc", "ms2lda_hybrid"}
     imports: set[str] = set()
@@ -213,6 +216,11 @@ def verify_run(
         raise ValueError("raw MGF changed")
     checked: list[str] = []
 
+    model_manifest_path = directory / "model/complete.json"
+    graph_manifest_path = directory / "cooccurrence_graph/complete.json"
+    if model_manifest_path.is_file() and not graph_manifest_path.is_file():
+        raise FileNotFoundError("trained model requires a co-occurrence graph manifest")
+
     def verify_outputs(manifest_name: str) -> dict[str, Any]:
         manifest_path = directory / manifest_name
         manifest = read_json(manifest_path)
@@ -259,13 +267,17 @@ def verify_run(
                 ):
                     raise ValueError("model initialization changed")
             elif manifest_name == "cooccurrence_graph/complete.json":
-                graph = path.parent / "positive_npmi_graph.npz"
-                if not graph.is_file() or file_sha256(graph) != manifest.get(
-                    "graph_sha256"
-                ):
-                    raise ValueError("co-occurrence graph changed")
+                if set(manifest.get("output_sha256", {})) != {
+                    "positive_npmi_graph.npz"
+                }:
+                    raise ValueError("co-occurrence graph manifest is incomplete")
             elif manifest_name == "model/complete.json":
+                if manifest["cooccurrence_graph"] != read_json(graph_manifest_path):
+                    raise ValueError("model co-occurrence graph provenance changed")
                 selected = manifest["selected"]
+                selected_path = path.parent / "selected.json"
+                if not selected_path.is_file() or read_json(selected_path) != selected:
+                    raise ValueError("selected model manifest changed")
                 if (
                     file_sha256(path.parent / selected["checkpoint"])
                     != selected["checkpoint_sha256"]

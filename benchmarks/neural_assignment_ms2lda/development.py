@@ -17,11 +17,16 @@ from .training import train_model
 from .utils import file_sha256, object_sha256, read_json, write_json
 
 READ_ONLY_STAGES = (
-    "data",
     "training_views",
-    "embeddings",
     "token_features",
     "initialization",
+)
+DEVELOPMENT_DATA_FILES = (
+    "train.npz",
+    "validation_observed.npz",
+    "validation_completion.npz",
+    "validation_full.npz",
+    "validation_records.jsonl",
 )
 
 
@@ -35,11 +40,7 @@ def _source_evidence(source: Path) -> dict[str, str]:
     names = (
         "protocol.resolved.json",
         "data/complete.json",
-        "data/train.npz",
-        "data/validation_observed.npz",
-        "data/validation_completion.npz",
-        "data/validation_full.npz",
-        "data/heldout_records.jsonl",
+        *(f"data/{name}" for name in DEVELOPMENT_DATA_FILES),
         "training_views/complete.json",
         "token_features/features.npy",
         "token_features/complete.json",
@@ -67,29 +68,46 @@ def _validate_frozen_protocol(source: dict[str, Any], current: dict[str, Any]) -
     changed = [key for key in keys if source[key] != current[key]]
     source_optimization = source["optimization"]
     current_optimization = current["optimization"]
-    architecture_optimization_keys = {"erntm_weight"}
+    frozen_optimization_keys = (
+        "batch_size",
+        "topic_update_batch_size",
+        "topic_updates_per_epoch",
+        "learning_rate",
+        "weight_decay",
+        "local_decoder_weight",
+        "theta_consistency_weight",
+        "maximum_epochs",
+        "validation_interval",
+    )
     changed.extend(
         f"optimization.{key}"
-        for key, value in source_optimization.items()
-        if key not in architecture_optimization_keys
-        and current_optimization.get(key) != value
+        for key in frozen_optimization_keys
+        if source_optimization.get(key) != current_optimization.get(key)
     )
     if changed:
         raise ValueError(f"frozen benchmark fields changed: {changed}")
 
 
-def _link_read_only_stages(source: Path, output: Path) -> None:
+def _link(target: Path, link: Path, *, directory: bool) -> None:
+    if link.is_symlink():
+        if link.resolve() != target.resolve():
+            raise ValueError(f"experiment input link changed: {link.name}")
+    elif link.exists():
+        raise ValueError(f"experiment input must be a read-only link: {link.name}")
+    else:
+        link.symlink_to(target, target_is_directory=directory)
+
+
+def _link_read_only_inputs(source: Path, output: Path) -> None:
     output.mkdir(parents=True, exist_ok=True)
+    data = output / "data"
+    if data.is_symlink():
+        raise ValueError("development data must not expose the complete source split")
+    data.mkdir(exist_ok=True)
+    for name in DEVELOPMENT_DATA_FILES:
+        _link(source / "data" / name, data / name, directory=False)
     for name in READ_ONLY_STAGES:
-        target = source / name
-        link = output / name
-        if link.is_symlink():
-            if link.resolve() != target.resolve():
-                raise ValueError(f"experiment stage link changed: {name}")
-        elif link.exists():
-            raise ValueError(f"experiment stage must be a read-only link: {name}")
-        else:
-            link.symlink_to(target, target_is_directory=True)
+        _link(source / name, output / name, directory=True)
 
 
 def run_development_experiment(
@@ -121,14 +139,12 @@ def run_development_experiment(
     lock_path = output / "development.lock.json"
     if lock_path.is_file() and read_json(lock_path) != lock:
         raise ValueError("development experiment provenance changed")
-    _link_read_only_stages(source, output)
+    _link_read_only_inputs(source, output)
     if not lock_path.is_file():
         write_json(output / "protocol.resolved.json", protocol)
         write_json(lock_path, lock)
 
     torch.set_num_threads(int(protocol["training_cpu_threads"]))
-    with torch.random.fork_rng(devices=[]):
-        torch.manual_seed(int(protocol["seed"]))
     data = output / "data"
     train = load_csr(data / "train.npz")
     result = train_model(

@@ -30,8 +30,8 @@ unattended shell wrapper in `scripts/run_neural_ms2lda.sh` pins the numerical
 runtime to four CPU threads.
 
 The committed bundle and paper-style report are research artifacts. They do
-does not change the public MS2LDA application defaults, and the
-results are not presented as Tomotopy parity.
+not change the public MS2LDA application defaults, and the results are not
+presented as Tomotopy parity.
 
 Regenerate the paper figures and table from committed evidence with
 `python scripts/generate_neural_ms2lda_report.py`. After compiling the LaTeX,

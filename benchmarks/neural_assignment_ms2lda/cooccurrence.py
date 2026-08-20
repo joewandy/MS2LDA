@@ -98,6 +98,8 @@ def positive_npmi_graph(
     graph = directed.minimum(directed.T).tocsr()
     graph.setdiag(0)
     graph.eliminate_zeros()
+    if graph.nnz == 0:
+        raise RuntimeError("mutual-neighbour pruning produced an empty graph")
     degree = np.diff(graph.indptr)
     diagnostics = {
         "documents": int(matrix.shape[0]),
@@ -133,7 +135,7 @@ def prepare_cooccurrence_graph(
         result = read_json(complete_path)
         if result["config"] != config:
             raise ValueError("co-occurrence graph configuration changed")
-        if file_sha256(graph_path) != result["graph_sha256"]:
+        if file_sha256(graph_path) != result["output_sha256"][graph_path.name]:
             raise ValueError("co-occurrence graph changed")
         return sp.load_npz(graph_path).tocsr(), result
 
@@ -154,7 +156,6 @@ def prepare_cooccurrence_graph(
         "training_split_only": True,
         "config": config,
         "diagnostics": diagnostics,
-        "graph_sha256": graph_digest,
         "output_sha256": {graph_path.name: graph_digest},
     }
     write_json(complete_path, result)

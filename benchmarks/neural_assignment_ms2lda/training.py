@@ -22,7 +22,6 @@ from .inventory import topic_inventory_summary
 from .model import recycle_dead_prototypes, router_block_loss, topic_block_loss
 from .regularizers import (
     cooccurrence_topic_constraint,
-    erntm_topic_constraint,
     nearest_neighbor_topic_constraint,
 )
 from .utils import atomic_torch_save, file_sha256, peak_rss_bytes, read_json, write_json
@@ -41,13 +40,8 @@ def _entry_losses(output: Any, beta: torch.Tensor) -> torch.Tensor:
 def _weighted_topic_separation(
     model: torch.nn.Module,
     config: dict[str, Any],
-    *,
-    placement_key: str,
-    reference: torch.Tensor,
-) -> tuple[Any | None, torch.Tensor]:
-    """Apply topic separation only at the protocol-declared update placement."""
-    if not bool(config[placement_key]):
-        return None, reference.new_zeros(())
+) -> tuple[Any, torch.Tensor]:
+    """Return the supported nearest-topic margin and its weighted loss."""
     result = nearest_neighbor_topic_constraint(
         model,
         neighbors=int(config["neighbors"]),
@@ -173,18 +167,17 @@ def train_model(
     root = Path(run_dir)
     output = root / "model"
     output.mkdir(parents=True, exist_ok=True)
-    graph_tensor: torch.Tensor | None = None
-    graph_manifest: dict[str, Any] | None = None
     graph_config = protocol["cooccurrence_regularization"]
     separation_config = protocol["topic_separation"]
-    if bool(graph_config["enabled"]):
-        graph, graph_manifest = prepare_cooccurrence_graph(
-            root, train=train, protocol=protocol
-        )
-        graph_tensor = torch_sparse_graph(graph)
+    graph, graph_manifest = prepare_cooccurrence_graph(
+        root, train=train, protocol=protocol
+    )
+    graph_tensor = torch_sparse_graph(graph)
     complete_path = output / "complete.json"
     if complete_path.is_file():
         result = read_json(complete_path)
+        if result["cooccurrence_graph"] != graph_manifest:
+            raise ValueError("model co-occurrence graph provenance changed")
         selected = output / result["selected"]["checkpoint"]
         if file_sha256(selected) != result["selected"]["checkpoint_sha256"]:
             raise ValueError("selected model checkpoint changed")
@@ -247,7 +240,6 @@ def train_model(
             "consistency": 0.0,
             "topic_base": 0.0,
             "local_decoder": 0.0,
-            "erntm": 0.0,
             "cooccurrence": 0.0,
             "topic_separation": 0.0,
         }
@@ -280,8 +272,6 @@ def train_model(
             router_separation, weighted_router_separation = _weighted_topic_separation(
                 model,
                 separation_config,
-                placement_key="apply_during_router_updates",
-                reference=terms.total,
             )
             router_total = terms.total + weighted_router_separation
             if not torch.isfinite(router_total):
@@ -306,8 +296,7 @@ def train_model(
                     )
             totals["router_total"] += float(router_total.detach())
             totals["router_base"] += float(terms.total.detach())
-            if router_separation is not None:
-                totals["router_separation"] += float(router_separation.loss.detach())
+            totals["router_separation"] += float(router_separation.loss.detach())
             totals["completion"] += float(terms.completion.detach())
             totals["sinkhorn"] += float(terms.sinkhorn.detach())
             totals["consistency"] += float(terms.consistency.detach())
@@ -336,30 +325,17 @@ def train_model(
                     top_k=top_k,
                     local_decoder_weight=float(optimization["local_decoder_weight"]),
                 )
-                regularizer = erntm_topic_constraint(model)
-                weighted_erntm = float(optimization["erntm_weight"]) * regularizer.loss
                 separation, weighted_separation = _weighted_topic_separation(
                     model,
                     separation_config,
-                    placement_key="apply_during_topic_updates",
-                    reference=terms.total,
                 )
-                if graph_tensor is None:
-                    cooccurrence = None
-                    weighted_cooccurrence = terms.total.new_zeros(())
-                else:
-                    cooccurrence = cooccurrence_topic_constraint(
-                        model, graph_tensor, beta=terms.beta
-                    )
-                    weighted_cooccurrence = (
-                        float(graph_config["weight"]) * cooccurrence.loss
-                    )
-                total = (
-                    terms.total
-                    + weighted_erntm
-                    + weighted_cooccurrence
-                    + weighted_separation
+                cooccurrence = cooccurrence_topic_constraint(
+                    model, graph_tensor, beta=terms.beta
                 )
+                weighted_cooccurrence = (
+                    float(graph_config["weight"]) * cooccurrence.loss
+                )
+                total = terms.total + weighted_cooccurrence + weighted_separation
                 if not torch.isfinite(total):
                     stable = False
                     stop_reason = "non_finite_topic_loss"
@@ -376,15 +352,11 @@ def train_model(
                 totals["topic_base"] += float(terms.total.detach())
                 totals["completion"] += float(terms.completion.detach())
                 totals["local_decoder"] += float(terms.local_decoder.detach())
-                totals["erntm"] += float(regularizer.loss.detach())
-                if cooccurrence is not None:
-                    totals["cooccurrence"] += float(cooccurrence.loss.detach())
-                if separation is not None:
-                    totals["topic_separation"] += float(separation.loss.detach())
+                totals["cooccurrence"] += float(cooccurrence.loss.detach())
+                totals["topic_separation"] += float(separation.loss.detach())
                 regularizer_diagnostics = {
-                    **regularizer.diagnostics,
-                    **({} if separation is None else separation.diagnostics),
-                    **({} if cooccurrence is None else cooccurrence.diagnostics),
+                    **separation.diagnostics,
+                    **cooccurrence.diagnostics,
                 }
                 topic_updates += 1
                 global_step += 1
@@ -477,7 +449,6 @@ def train_model(
                 "consistency": totals["consistency"] / max(router_batches, 1),
                 "topic_base": totals["topic_base"] / max(topic_updates, 1),
                 "local_decoder": totals["local_decoder"] / max(topic_updates, 1),
-                "erntm": totals["erntm"] / max(topic_updates, 1),
                 "cooccurrence": totals["cooccurrence"] / max(topic_updates, 1),
                 "topic_separation": totals["topic_separation"] / max(topic_updates, 1),
             },
