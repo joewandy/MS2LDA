@@ -18,11 +18,7 @@ from benchmarks.msnlib_validation.data import (
     build_training_vocabulary,
 )
 from benchmarks.neural_assignment_ms2lda import config as neural_config
-from benchmarks.neural_assignment_ms2lda.bundle import (
-    _bundle_version,
-    load_bundle,
-    package_bundle,
-)
+from benchmarks.neural_assignment_ms2lda.bundle import load_bundle, package_bundle
 from benchmarks.neural_assignment_ms2lda.config import load_protocol
 from benchmarks.neural_assignment_ms2lda.cooccurrence import (
     positive_npmi_graph,
@@ -53,10 +49,7 @@ from benchmarks.neural_assignment_ms2lda.regularizers import (
     erntm_topic_constraint,
     nearest_neighbor_topic_constraint,
 )
-from benchmarks.neural_assignment_ms2lda.report import (
-    _architecture_copy,
-    build_machine_report,
-)
+from benchmarks.neural_assignment_ms2lda.report import build_machine_report
 from benchmarks.neural_assignment_ms2lda.tomotopy import _infer_theta
 from benchmarks.neural_assignment_ms2lda.training import (
     _weighted_topic_separation,
@@ -260,32 +253,12 @@ def test_hierarchical_router_adds_one_shared_document_score() -> None:
     assert torch.isfinite(hierarchical.theta).all()
 
 
-def test_committed_v1_bundle_keeps_zero_document_prior() -> None:
+def test_committed_bundle_keeps_zero_document_prior() -> None:
     bundle = Path(__file__).parents[1] / "results/seed42/model_bundle"
     model, vocabulary, manifest = load_bundle(bundle)
-    assert manifest["bundle_version"] == "neural-ms2lda-msnlib-k500-v1"
+    assert manifest["schema_version"] == "neural-ms2lda/model-bundle-v1"
     assert model.document_topic_prior_weight == 0.0
     assert len(vocabulary) == model.vocabulary_size
-
-
-def test_bundle_version_follows_packaged_protocol() -> None:
-    protocol = load_protocol()
-    assert _bundle_version(protocol) == "neural-ms2lda-msnlib-k500-v2"
-    legacy = copy.deepcopy(protocol)
-    del legacy["hierarchical_routing"]
-    assert _bundle_version(legacy) == "neural-ms2lda-msnlib-k500-v1"
-
-
-def test_report_copy_follows_frozen_protocol_architecture() -> None:
-    protocol = load_protocol()
-    current_title, current_headline = _architecture_copy(protocol)
-    assert "Hierarchical" in current_title
-    assert "ERNTM" not in current_headline
-    legacy = copy.deepcopy(protocol)
-    del legacy["hierarchical_routing"]
-    legacy_title, legacy_headline = _architecture_copy(legacy)
-    assert "Collapse-resistant" in legacy_title
-    assert "ERNTM" in legacy_headline
 
 
 def test_topic_separation_honors_update_placement_flags() -> None:
@@ -563,10 +536,11 @@ def test_miniature_mgf_through_report_and_bundle(tmp_path: Path) -> None:
     report = build_machine_report(run)
     assert len(report["methods"]) == 2
     assert neural["method"] == "neural_cooccurrence_margin_hierarchical_k500"
+    assert neural["method"] in report["title"]
     assert "ERNTM" not in report["headline"]
     bundle = tmp_path / "bundle"
     packaged = package_bundle(run, bundle)
-    assert packaged["bundle_version"] == "neural-ms2lda-msnlib-k500-v2"
+    assert "bundle_version" not in packaged
     loaded, vocabulary, manifest = load_bundle(bundle)
     assert loaded.num_topics == 4
     assert len(vocabulary) == train.shape[1]
