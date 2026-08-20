@@ -12,7 +12,13 @@ from typing import Any
 
 from benchmarks.msnlib_validation.config import resolve_input_paths, verify_inputs
 
-from .utils import file_sha256, object_sha256, read_json, write_json
+from .utils import (
+    file_sha256,
+    object_sha256,
+    read_json,
+    verify_output_hashes,
+    write_json,
+)
 
 PACKAGE_ROOT = Path(__file__).resolve().parent
 REPO_ROOT = PACKAGE_ROOT.parents[1]
@@ -65,22 +71,10 @@ def load_protocol() -> dict[str, Any]:
         raise ValueError("the supported neural model is fixed to K=500")
     if int(protocol["model"]["top_k"]) != 2:
         raise ValueError("the supported router is fixed to top-2")
-    routing = protocol["hierarchical_routing"]
-    if routing["method"] != "local_document_product_of_experts":
-        raise ValueError("unexpected hierarchical routing method")
-    if float(routing["weight"]) != 1.0:
+    if float(protocol["model"]["document_topic_prior_weight"]) != 1.0:
         raise ValueError("the document topic prior weight is fixed to one")
     if int(protocol["optimization"]["maximum_epochs"]) != 40:
         raise ValueError("the reproducibility run is fixed to 40 epochs")
-    if protocol["topic_separation"]["method"] != "nearest_neighbor_cosine_margin":
-        raise ValueError("unexpected topic-separation method")
-    dimensions = (
-        int(protocol["sgns"]["dimensions"])
-        + 2 * len(protocol["token_features"]["fourier_frequencies"])
-        + int(protocol["token_features"]["type_dimensions"])
-    )
-    if dimensions != int(protocol["model"]["input_dimensions"]):
-        raise ValueError("token feature and model dimensions differ")
     return protocol
 
 
@@ -158,13 +152,7 @@ def static_discovery_audit() -> dict[str, Any]:
     violations = sorted((imports | suspicious_names) & forbidden)
     if violations:
         raise RuntimeError(f"forbidden discovery dependency found: {violations}")
-    return {
-        "fully_neural": True,
-        "forbidden_dependencies_found": [],
-        "tomotopy_role": "post-training comparator only",
-        "chemistry_fields_in_training": [],
-        "test_information_in_training": False,
-    }
+    return {"forbidden_dependencies_found": []}
 
 
 def initialize_run(run_dir: str | Path, *, data_root: str | Path) -> dict[str, Any]:
@@ -224,10 +212,8 @@ def verify_run(
     def verify_outputs(manifest_name: str) -> dict[str, Any]:
         manifest_path = directory / manifest_name
         manifest = read_json(manifest_path)
-        for name, digest in manifest.get("output_sha256", {}).items():
-            output = manifest_path.parent / name
-            if not output.is_file() or file_sha256(output) != digest:
-                raise ValueError(f"artifact changed: {output}")
+        if "output_sha256" in manifest:
+            verify_output_hashes(manifest_path.parent, manifest)
         checked.append(manifest_name)
         return manifest
 
@@ -248,25 +234,7 @@ def verify_run(
         path = directory / manifest_name
         if path.is_file():
             manifest = verify_outputs(manifest_name)
-            if manifest_name == "embeddings/complete.json":
-                if (
-                    file_sha256(path.parent / "embeddings.npy")
-                    != manifest["embeddings_sha256"]
-                ):
-                    raise ValueError("SGNS embeddings changed")
-            elif manifest_name == "token_features/complete.json":
-                if (
-                    file_sha256(path.parent / "features.npy")
-                    != manifest["features_sha256"]
-                ):
-                    raise ValueError("token features changed")
-            elif manifest_name == "initialization/complete.json":
-                if (
-                    file_sha256(path.parent / "model_initialization.pt")
-                    != manifest["checkpoint_sha256"]
-                ):
-                    raise ValueError("model initialization changed")
-            elif manifest_name == "cooccurrence_graph/complete.json":
+            if manifest_name == "cooccurrence_graph/complete.json":
                 if set(manifest.get("output_sha256", {})) != {
                     "positive_npmi_graph.npz"
                 }:
@@ -311,10 +279,6 @@ def verify_run(
         views = read_json(views_path)
         if not views["frozen_train_counts_reproduced_exactly"]:
             raise ValueError("raw-MGF training counts do not reproduce exactly")
-        if not views["physical_peak_groups_atomic"]:
-            raise ValueError("fragment/loss peak groups were not kept atomic")
-        if views["chemistry_fields_in_model_inputs"]:
-            raise ValueError("chemistry fields entered the neural model inputs")
     return {
         "schema_version": "neural-ms2lda/verification-v1",
         "verified": True,

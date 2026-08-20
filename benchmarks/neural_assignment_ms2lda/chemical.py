@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import time
 from functools import cache
 from pathlib import Path
@@ -31,21 +30,14 @@ from benchmarks.msnlib_validation.metrics import (
 )
 
 from .data import load_heldout_records
-from .utils import file_sha256, peak_rss_bytes, read_json, write_json
-
-
-def _write_jsonl(path: Path, rows: Sequence[dict[str, Any]]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
-    try:
-        with temporary.open("w", encoding="utf-8") as handle:
-            for row in rows:
-                handle.write(
-                    json.dumps(row, sort_keys=True, separators=(",", ":")) + "\n"
-                )
-        os.replace(temporary, path)
-    finally:
-        temporary.unlink(missing_ok=True)
+from .utils import (
+    file_sha256,
+    peak_rss_bytes,
+    read_json,
+    verify_output_hashes,
+    write_json,
+    write_jsonl,
+)
 
 
 def _topic_scores(
@@ -162,9 +154,7 @@ def run_chemical_scoring(
     output = directory / "chemical" / method
     if (output / "complete.json").is_file():
         result = read_json(output / "complete.json")
-        for name, digest in result["output_sha256"].items():
-            if file_sha256(output / name) != digest:
-                raise ValueError(f"chemical artifact changed: {name}")
+        verify_output_hashes(output, result)
         return result
     import faiss
 
@@ -183,12 +173,9 @@ def run_chemical_scoring(
     )
     data = directory / "data"
     evaluation = directory / "evaluation" / method
-    result_manifest = read_json(evaluation / "complete.json")
+    verify_output_hashes(evaluation, read_json(evaluation / "complete.json"))
     beta_path = evaluation / "beta.npy"
     theta_path = evaluation / "test_full_theta.npy"
-    for path in (beta_path, theta_path):
-        if file_sha256(path) != result_manifest["output_sha256"][path.name]:
-            raise ValueError(f"evaluation changed before chemistry: {path.name}")
     beta = np.load(beta_path, mmap_mode="r")
     theta = np.load(theta_path, mmap_mode="r")
     vocabulary = list(map(str, read_json(data / "vocabulary.json")["vocabulary"]))
@@ -303,7 +290,7 @@ def run_chemical_scoring(
         "compound_scores.jsonl": compound_rows,
     }
     for name, rows in rows_by_name.items():
-        _write_jsonl(output / name, rows)
+        write_jsonl(output / name, rows)
     write_json(output / "summaries.json", summaries)
     by_mode = {row["association_mode"]: row for row in summaries}
     result = {
@@ -321,7 +308,6 @@ def run_chemical_scoring(
         "association_results": summaries,
         "dominant_topic_chemistry": by_mode["dominant_topic"],
         "high_confidence_chemistry": by_mode["probability_ge_frozen_threshold"],
-        "chemical_labels_used_for_training": False,
         "heldout_compounds_excluded_from_mag": index_manifest["retained_leak_rows"]
         == 0,
         "mag_seconds": time.perf_counter() - started,

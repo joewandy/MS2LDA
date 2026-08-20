@@ -21,7 +21,14 @@ from .metrics import (
     top_word_diversity,
 )
 from .training import load_selected_model, validation_gate_summary
-from .utils import atomic_save_numpy, file_sha256, peak_rss_bytes, read_json, write_json
+from .utils import (
+    atomic_save_numpy,
+    file_sha256,
+    peak_rss_bytes,
+    read_json,
+    verify_output_hashes,
+    write_json,
+)
 
 
 @torch.inference_mode()
@@ -84,13 +91,12 @@ def evaluate_neural(run_dir: str | Path, protocol: dict[str, Any]) -> dict[str, 
         raise RuntimeError("test evaluation requires every validation gate to pass")
     if complete_path.is_file():
         result = read_json(complete_path)
-        for name, digest in result["output_sha256"].items():
-            if file_sha256(output / name) != digest:
-                raise ValueError(f"neural evaluation artifact changed: {name}")
+        verify_output_hashes(output, result)
         return result
     data = directory / "data"
+    test_access_path = output / "test_access.json"
     write_json(
-        directory / "test_access.json",
+        test_access_path,
         {
             "schema_version": "neural-ms2lda/test-access-v1",
             "selected_model_sha256": file_sha256(selected_path),
@@ -200,7 +206,10 @@ def evaluate_neural(run_dir: str | Path, protocol: dict[str, Any]) -> dict[str, 
         "metrics": metrics,
         "evaluation_seconds": time.perf_counter() - started,
         "peak_rss_bytes": peak_rss_bytes(),
-        "output_sha256": {name: file_sha256(output / name) for name in arrays},
+        "output_sha256": {
+            name: file_sha256(output / name)
+            for name in (*arrays, test_access_path.name)
+        },
     }
     write_json(complete_path, result)
     return result

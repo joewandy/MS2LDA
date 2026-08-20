@@ -118,7 +118,6 @@ def _selection(
         "validation_gate_summary": validation_gate_summary(
             selected["validation"], protocol
         ),
-        "selection_rule": protocol["selection_rule"],
     }
 
 

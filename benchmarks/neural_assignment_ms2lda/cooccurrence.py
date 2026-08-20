@@ -12,7 +12,7 @@ import numpy as np
 import scipy.sparse as sp
 import torch
 
-from .utils import file_sha256, read_json, write_json
+from .utils import file_sha256, read_json, verify_output_hashes, write_json
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
@@ -135,8 +135,7 @@ def prepare_cooccurrence_graph(
         result = read_json(complete_path)
         if result["config"] != config:
             raise ValueError("co-occurrence graph configuration changed")
-        if file_sha256(graph_path) != result["output_sha256"][graph_path.name]:
-            raise ValueError("co-occurrence graph changed")
+        verify_output_hashes(directory, result)
         return sp.load_npz(graph_path).tocsr(), result
 
     graph, diagnostics = positive_npmi_graph(
@@ -153,7 +152,6 @@ def prepare_cooccurrence_graph(
     graph_digest = file_sha256(graph_path)
     result = {
         "schema_version": "neural-ms2lda/cooccurrence-graph-v1",
-        "training_split_only": True,
         "config": config,
         "diagnostics": diagnostics,
         "output_sha256": {graph_path.name: graph_digest},

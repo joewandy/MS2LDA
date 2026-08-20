@@ -47,13 +47,12 @@ def build_machine_report(run_dir: str | Path) -> dict[str, Any]:
         _method_row(neural, neural_chemistry),
         _method_row(comparator, comparator_chemistry),
     ]
-    neural_method = str(neural["method"])
     result = {
         "schema_version": "neural-ms2lda/research-report-v1",
-        "title": f"Neural MS2LDA on MSnLib: {neural_method}",
+        "title": "Neural MS2LDA on MSnLib",
         "evidence_scope": "single-seed applied-method reproducibility checkpoint",
         "headline": (
-            f"The evaluated {neural_method} model is a working, collapse-resistant, "
+            "The evaluated neural model is a working, collapse-resistant, "
             "fast fully neural discovery model; Tomotopy remains the production "
             "comparator."
         ),

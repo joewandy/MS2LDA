@@ -34,12 +34,14 @@ from benchmarks.neural_assignment_ms2lda.data import (
     load_view_pairs,
     prepare_data,
     prepare_training_views,
+    select_view_peak_groups,
     sparse_batch,
 )
 from benchmarks.neural_assignment_ms2lda.development import (
     DEVELOPMENT_DATA_FILES,
     READ_ONLY_STAGES,
     _link_read_only_inputs,
+    _validate_frozen_protocol,
 )
 from benchmarks.neural_assignment_ms2lda.embeddings import train_sgns
 from benchmarks.neural_assignment_ms2lda.evaluation import evaluate_neural
@@ -113,6 +115,24 @@ def test_split_audit_rejects_compound_leakage() -> None:
     )
     with pytest.raises(ValueError, match="split leakage"):
         audit_split_disjointness(records, {"a": "train", "b": "test"})
+
+
+def test_training_views_keep_physical_peak_groups_atomic() -> None:
+    groups = (
+        PeakGroup(0, 100.0, 1.0, ("frag@100.0", "loss@200.0")),
+        PeakGroup(1, 110.0, 0.5, ("frag@110.0", "loss@190.0")),
+    )
+    selected = select_view_peak_groups(
+        groups,
+        spectrum_id="spectrum",
+        seed=42,
+        pair_index=0,
+        side="left",
+        retained_fraction=0.5,
+    )
+    assert len(selected) == 1
+    assert selected[0] in groups
+    assert len(selected[0].tokens) == 2
 
 
 def test_sinkhorn_top2_topic_gradients_and_recycling() -> None:
@@ -277,11 +297,14 @@ def test_protocol_exposes_one_active_topic_architecture() -> None:
     assert "erntm_weight" not in protocol["optimization"]
     assert "enabled" not in protocol["cooccurrence_regularization"]
     assert set(protocol["topic_separation"]) == {
-        "method",
         "neighbors",
         "margin",
         "weight",
     }
+    assert "protocol_name" not in protocol
+    assert "evidence_scope" not in protocol
+    assert "training_exclusions" not in protocol
+    assert "published_motifset" not in protocol["input_files"]
 
 
 def test_split_records_are_loaded_without_opening_the_other_split(
@@ -312,6 +335,27 @@ def test_development_inputs_exclude_the_test_partition(tmp_path: Path) -> None:
         DEVELOPMENT_DATA_FILES
     )
     assert not (output / "data/test_full.npz").exists()
+
+
+def test_development_accepts_removed_legacy_protocol_metadata() -> None:
+    current = load_protocol()
+    source = copy.deepcopy(current)
+    source["input_files"]["published_motifset"] = {"unused": True}
+    source["token_features"].update({"type_dimensions": 2, "output_dimensions": 64})
+    source["model"].update({"input_dimensions": 64})
+    source["model"].pop("document_topic_prior_weight")
+    source["views"]["fragment_loss_group_atomic"] = True
+    source["evaluation"].update(
+        {
+            "membership_threshold": 0.5,
+            "mag_fingerprint_threshold": 0.8,
+            "motif_spectrum_top_n": 20,
+        }
+    )
+    _validate_frozen_protocol(source, current)
+    source["seed"] = 43
+    with pytest.raises(ValueError, match="seed"):
+        _validate_frozen_protocol(source, current)
 
 
 def test_verify_run_checks_cooccurrence_graph(tmp_path: Path) -> None:
@@ -410,7 +454,7 @@ def test_neural_evaluation_rejects_failed_validation_gates(tmp_path: Path) -> No
     write_json(run / "model/complete.json", {"selected": selected})
     with pytest.raises(RuntimeError, match="every validation gate"):
         evaluate_neural(run, protocol)
-    assert not (run / "test_access.json").exists()
+    assert not (run / "evaluation/neural/test_access.json").exists()
 
 
 def test_tomotopy_empty_document_uses_topic_prior() -> None:
@@ -460,13 +504,10 @@ def _mini_protocol(mgf: Path) -> dict[str, object]:
             "batch_size": 32,
         }
     )
-    protocol["token_features"].update(
-        {"fourier_frequencies": [1], "output_dimensions": 8}
-    )
+    protocol["token_features"]["fourier_frequencies"] = [1]
     protocol["model"].update(
         {
             "num_topics": 4,
-            "input_dimensions": 8,
             "projection_dimensions": 8,
             "router_hidden_dimensions": 8,
             "sinkhorn_iterations": 10,
@@ -577,9 +618,15 @@ def test_miniature_mgf_through_report_and_bundle(tmp_path: Path) -> None:
     }
     prepare_training_views(run, counts_dir=data, data_root=tmp_path, protocol=protocol)
     train = load_csr(data / "train.npz")
-    train_sgns(run / "embeddings", train, protocol["sgns"], seed=42)
-    prepare_token_features(run, counts_dir=data, protocol=protocol)
-    prepare_initialization(run, train=train, protocol=protocol)
+    embeddings = train_sgns(run / "embeddings", train, protocol["sgns"], seed=42)
+    assert set(embeddings["output_sha256"]) == {"embeddings.npy"}
+    assert "embeddings_sha256" not in embeddings
+    features = prepare_token_features(run, counts_dir=data, protocol=protocol)
+    assert set(features["output_sha256"]) == {"features.npy"}
+    assert "features_sha256" not in features
+    initialization = prepare_initialization(run, train=train, protocol=protocol)
+    assert set(initialization["output_sha256"]) == {"model_initialization.pt"}
+    assert "checkpoint_sha256" not in initialization
     result = train_model(
         run,
         train=train,
@@ -605,6 +652,7 @@ def test_miniature_mgf_through_report_and_bundle(tmp_path: Path) -> None:
     assert resumed["selected"]["checkpoint_sha256"] == selected_hash
     write_json(run / "protocol.resolved.json", protocol)
     neural = evaluate_neural(run, protocol)
+    assert "test_access.json" in neural["output_sha256"]
     comparator = copy.deepcopy(neural)
     comparator.update({"method": "tomotopy_k1000_comparator", "topic_count": 1000})
     write_json(run / "evaluation/tomotopy/complete.json", comparator)
@@ -627,13 +675,14 @@ def test_miniature_mgf_through_report_and_bundle(tmp_path: Path) -> None:
     report = build_machine_report(run)
     assert len(report["methods"]) == 2
     assert neural["method"] == "neural_cooccurrence_margin_hierarchical_k500"
-    assert neural["method"] in report["title"]
+    assert report["title"] == "Neural MS2LDA on MSnLib"
     assert "ERNTM" not in report["headline"]
     bundle = tmp_path / "bundle"
     packaged = package_bundle(run, bundle)
     assert "bundle_version" not in packaged
     loaded, vocabulary, manifest = load_bundle(bundle)
     assert loaded.num_topics == 4
+    assert loaded.document_topic_prior_weight == 1.0
     assert len(vocabulary) == train.shape[1]
     assert manifest["selected_epoch"] in {1, 2}
     provenance_text = (bundle / "provenance.json").read_text(encoding="utf-8")

@@ -212,6 +212,6 @@ prototype update, and parameter-free local-document product-of-experts router
 as the verified seed-42 architecture. Do not continue validation tuning after
 the one-time test confirmation.
 
-Post-lock software cleanup removed inactive experiment switches and gave the
-active protocol a semantic, unversioned name. This did not change the accepted
-checkpoint or any measurement recorded above.
+Post-lock software cleanup removed inactive experiment switches and unused
+descriptive protocol fields. This did not change the accepted checkpoint or
+any measurement recorded above.

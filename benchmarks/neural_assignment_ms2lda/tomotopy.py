@@ -24,6 +24,7 @@ from .utils import (
     object_sha256,
     peak_rss_bytes,
     read_json,
+    verify_output_hashes,
     write_json,
 )
 
@@ -125,9 +126,7 @@ def train_and_evaluate_tomotopy(
     complete_path = output / "complete.json"
     if complete_path.is_file():
         result = read_json(complete_path)
-        for name, digest in result["output_sha256"].items():
-            if file_sha256(output / name) != digest:
-                raise ValueError(f"Tomotopy artifact changed: {name}")
+        verify_output_hashes(output, result)
         return result
     output.mkdir(parents=True, exist_ok=True)
     data = directory / "data"
@@ -278,8 +277,9 @@ def train_and_evaluate_tomotopy(
         "training_seconds_total": float(history[-1]["cumulative_training_seconds"]),
         "metrics": metrics,
         "peak_rss_bytes": peak_rss_bytes(),
-        "model_sha256": file_sha256(final_model),
-        "output_sha256": {name: file_sha256(output / name) for name in arrays},
+        "output_sha256": {
+            name: file_sha256(output / name) for name in (*arrays, final_model.name)
+        },
     }
     write_json(complete_path, result)
     return result

@@ -99,7 +99,6 @@ def load_bundle(
     from .model import NeuralAssignmentMS2LDA
 
     config = protocol["model"]
-    hierarchical = protocol.get("hierarchical_routing", {})
     topic_indices = torch.arange(int(config["num_topics"]), dtype=torch.int64)
     model = NeuralAssignmentMS2LDA(
         features,
@@ -107,7 +106,9 @@ def load_bundle(
         projection_dimensions=int(config["projection_dimensions"]),
         router_hidden_dimensions=int(config["router_hidden_dimensions"]),
         beta_temperature=float(config["beta_temperature"]),
-        document_topic_prior_weight=float(hierarchical.get("weight", 0.0)),
+        document_topic_prior_weight=float(
+            config.get("document_topic_prior_weight", 0.0)
+        ),
         topic_initial_indices=topic_indices,
         seed=int(protocol["seed"]) + int(config["num_topics"]),
     )

@@ -191,7 +191,7 @@ class NeuralAssignmentMS2LDA(nn.Module):
         self.topic_prototypes = nn.Parameter(initial)
 
     def projected_tokens(self) -> torch.Tensor:
-        """Project the fixed 64-D token table into normalized neural geometry."""
+        """Project the fixed token table into normalized neural geometry."""
         return F.normalize(self.token_projection(self.token_features), dim=1)
 
     def topic_word_distribution(
@@ -478,7 +478,7 @@ def initialize_model(
     with torch.random.fork_rng(devices=[]):
         torch.manual_seed(seed + int(num_topics))
         temporary_projection = nn.Linear(
-            int(model_config["input_dimensions"]),
+            int(token_features.shape[1]),
             int(model_config["projection_dimensions"]),
             bias=False,
         )
@@ -501,7 +501,7 @@ def initialize_model(
         projection_dimensions=int(model_config["projection_dimensions"]),
         router_hidden_dimensions=int(model_config["router_hidden_dimensions"]),
         beta_temperature=float(model_config["beta_temperature"]),
-        document_topic_prior_weight=float(protocol["hierarchical_routing"]["weight"]),
+        document_topic_prior_weight=float(model_config["document_topic_prior_weight"]),
         topic_initial_indices=initial_indices,
         seed=seed + int(num_topics),
     )

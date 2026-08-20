@@ -11,7 +11,7 @@ from typing import Any, Sequence
 
 import torch
 
-from .config import code_manifest, load_protocol
+from .config import REPO_ROOT, code_manifest, load_protocol
 from .data import load_csr, load_heldout_records, load_view_pairs
 from .training import train_model
 from .utils import file_sha256, object_sha256, read_json, write_json
@@ -28,12 +28,6 @@ DEVELOPMENT_DATA_FILES = (
     "validation_full.npz",
     "validation_records.jsonl",
 )
-
-
-def _git_value(*arguments: str) -> str:
-    return subprocess.check_output(
-        ["git", *arguments], cwd=Path(__file__).resolve().parents[2], text=True
-    ).strip()
 
 
 def _source_evidence(source: Path) -> dict[str, str]:
@@ -54,8 +48,7 @@ def _source_evidence(source: Path) -> dict[str, str]:
 
 
 def _validate_frozen_protocol(source: dict[str, Any], current: dict[str, Any]) -> None:
-    keys = (
-        "seed",
+    sections = (
         "input_files",
         "preprocessing",
         "sgns",
@@ -63,9 +56,17 @@ def _validate_frozen_protocol(source: dict[str, Any], current: dict[str, Any]) -
         "model",
         "views",
         "anti_collapse",
+        "development_gates",
         "evaluation",
     )
-    changed = [key for key in keys if source[key] != current[key]]
+    changed = [] if source["seed"] == current["seed"] else ["seed"]
+    for section in sections:
+        ignored = {"document_topic_prior_weight"} if section == "model" else set()
+        changed.extend(
+            f"{section}.{key}"
+            for key, value in current[section].items()
+            if key not in ignored and source[section].get(key) != value
+        )
     source_optimization = source["optimization"]
     current_optimization = current["optimization"]
     frozen_optimization_keys = (
@@ -131,10 +132,9 @@ def run_development_experiment(
         "source_artifact_sha256": evidence,
         "protocol_sha256": object_sha256(protocol),
         "code_sha256": object_sha256(code_manifest()),
-        "git_revision": _git_value("rev-parse", "HEAD"),
-        "git_branch": _git_value("branch", "--show-current"),
-        "test_matrices_loaded": False,
-        "test_evaluation_performed": False,
+        "git_revision": subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], cwd=REPO_ROOT, text=True
+        ).strip(),
     }
     lock_path = output / "development.lock.json"
     if lock_path.is_file() and read_json(lock_path) != lock:
@@ -164,9 +164,6 @@ def run_development_experiment(
         "selected_epoch": int(result["selected"]["epoch"]),
         "selected_checkpoint_sha256": result["selected"]["checkpoint_sha256"],
         "validation_gate_summary": result["selected"]["validation_gate_summary"],
-        "development_gates": protocol["development_gates"],
-        "test_matrices_loaded": False,
-        "test_evaluation_performed": False,
     }
     write_json(output / "validation_result.json", summary)
     return summary

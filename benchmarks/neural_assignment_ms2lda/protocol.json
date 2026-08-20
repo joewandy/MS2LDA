@@ -1,18 +1,11 @@
 {
   "schema_version": "neural-ms2lda/protocol-v1",
-  "protocol_name": "neural-ms2lda-msnlib-k500-seed42-hierarchical-cooccurrence-margin",
-  "evidence_scope": "single-seed-applied-method-checkpoint",
   "seed": 42,
   "input_files": {
     "mgf": {
       "relative_path": "extracted/Data/Benchmark_MSn_Lib/Corinna_Library_filtered_positive.mgf",
       "bytes": 88159030,
       "sha256": "c1a2389754e630590111bde8f50403c9d90081d3f3427bc63defef0b9714682f"
-    },
-    "published_motifset": {
-      "relative_path": "extracted/Data/Benchmark_MSn_Lib/CaseStudy_Corinna_Library_filtered_1000motifs_output_100625/motifset.json",
-      "bytes": 1537391,
-      "sha256": "76cc12fc12b9160a5871d4bf1f5c373d6ca5b520bbafcd078ae0d1b5e542587d"
     },
     "spec2vec_db": {
       "relative_path": "extracted/model_positive_mode/positive_train_data/150225_CombLibraries_spectra.db",
@@ -59,31 +52,22 @@
   },
   "token_features": {
     "fourier_frequencies": [1, 2, 4, 8, 16, 32, 64],
-    "mass_scale": 1000.0,
-    "type_dimensions": 2,
-    "output_dimensions": 64
+    "mass_scale": 1000.0
   },
   "model": {
     "num_topics": 500,
-    "input_dimensions": 64,
     "projection_dimensions": 128,
     "router_hidden_dimensions": 256,
     "top_k": 2,
     "beta_temperature": 0.2,
+    "document_topic_prior_weight": 1.0,
     "sinkhorn_epsilon": 0.05,
     "sinkhorn_iterations": 5,
     "gradient_clip_norm": 5.0
   },
-  "hierarchical_routing": {
-    "method": "local_document_product_of_experts",
-    "weight": 1.0,
-    "document_context": "count_weighted_projected_token_sum",
-    "inference_mapping": "count_normalized_top2_routed_mass"
-  },
   "views": {
     "pairs": 4,
-    "retained_peak_group_fraction": 0.8,
-    "fragment_loss_group_atomic": true
+    "retained_peak_group_fraction": 0.8
   },
   "optimization": {
     "batch_size": 128,
@@ -117,30 +101,22 @@
     "weight": 1.0
   },
   "topic_separation": {
-    "method": "nearest_neighbor_cosine_margin",
     "neighbors": 8,
     "margin": 0.3,
     "weight": 5.0
   },
   "development_gates": {
-    "baseline_mean_npmi": -0.5698579777924967,
     "minimum_mean_npmi": -0.4198579777924967,
-    "baseline_undefined_pair_fraction": 0.6629333333333334,
     "maximum_undefined_pair_fraction": 0.5629333333333334,
     "minimum_top_word_diversity": 0.70,
-    "baseline_effective_topics_median": 15.229454934106943,
     "maximum_effective_topics_median": 11.422091200580207,
-    "baseline_validation_nll": 8.339485170922588,
     "maximum_validation_nll": 8.589669726050266
   },
   "evaluation": {
     "document_active_threshold": 0.01,
     "topic_top_n": 10,
-    "membership_threshold": 0.5,
     "latency_subset_size": 128,
-    "latency_repeats": 5,
-    "mag_fingerprint_threshold": 0.8,
-    "motif_spectrum_top_n": 20
+    "latency_repeats": 5
   },
   "tomotopy": {
     "num_topics": 1000,
@@ -161,14 +137,5 @@
     "mag_fingerprint_threshold": 0.8,
     "motif_spectrum_top_n": 20,
     "membership_threshold": 0.5
-  },
-  "selection_rule": "validation_goal_gates_then_coherence_sparsity_and_nll",
-  "training_exclusions": [
-    "Tomotopy topics or assignments",
-    "DreaMS embeddings",
-    "variational Bayes",
-    "chemistry labels",
-    "validation chemistry",
-    "test spectra or labels"
-  ]
+  }
 }

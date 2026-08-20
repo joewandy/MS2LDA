@@ -18,6 +18,7 @@ from .utils import (
     atomic_torch_save,
     file_sha256,
     read_json,
+    verify_output_hashes,
     write_json,
 )
 
@@ -107,9 +108,7 @@ def train_sgns(
     embeddings_path = output / "embeddings.npy"
     if complete_path.is_file():
         complete = read_json(complete_path)
-        if file_sha256(embeddings_path) != complete["embeddings_sha256"]:
-            msg = "SGNS embeddings changed after completion"
-            raise ValueError(msg)
+        verify_output_hashes(output, complete)
         return complete
     output.mkdir(parents=True, exist_ok=True)
     torch.manual_seed(seed)
@@ -187,7 +186,6 @@ def train_sgns(
     atomic_save_numpy(embeddings_path, embeddings)
     result = {
         "schema_version": "neural-ms2lda/sgns-v1",
-        "training_split_only": True,
         "documents": matrix.shape[0],
         "vocabulary_size": matrix.shape[1],
         "dimensions": embeddings.shape[1],
@@ -198,7 +196,9 @@ def train_sgns(
         "negative_samples": int(config["negative_samples"]),
         "negative_power": float(config["negative_power"]),
         "elapsed_seconds": history[-1]["elapsed_seconds"],
-        "embeddings_sha256": file_sha256(embeddings_path),
+        "output_sha256": {
+            embeddings_path.name: file_sha256(embeddings_path),
+        },
     }
     write_json(complete_path, result)
     return result
