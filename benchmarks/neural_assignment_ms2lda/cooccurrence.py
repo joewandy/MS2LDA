@@ -148,12 +148,14 @@ def prepare_cooccurrence_graph(
     temporary = directory / ".positive_npmi_graph.tmp.npz"
     sp.save_npz(temporary, graph, compressed=True)
     os.replace(temporary, graph_path)
+    graph_digest = file_sha256(graph_path)
     result = {
         "schema_version": "neural-ms2lda/cooccurrence-graph-v1",
         "training_split_only": True,
         "config": config,
         "diagnostics": diagnostics,
-        "graph_sha256": file_sha256(graph_path),
+        "graph_sha256": graph_digest,
+        "output_sha256": {graph_path.name: graph_digest},
     }
     write_json(complete_path, result)
     return graph, result

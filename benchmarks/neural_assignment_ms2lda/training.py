@@ -1,4 +1,4 @@
-"""Exact-resume training for the single supported K=500 ERNTM model."""
+"""Exact-resume training for the supported K=500 neural topic model."""
 
 from __future__ import annotations
 
@@ -36,6 +36,24 @@ def _entry_losses(output: Any, beta: torch.Tensor) -> torch.Tensor:
     words = beta[:, output.token_indices].T
     probability = torch.sum(topics * words, dim=1).clamp_min(1e-12)
     return -torch.log(probability)
+
+
+def _weighted_topic_separation(
+    model: torch.nn.Module,
+    config: dict[str, Any],
+    *,
+    placement_key: str,
+    reference: torch.Tensor,
+) -> tuple[Any | None, torch.Tensor]:
+    """Apply topic separation only at the protocol-declared update placement."""
+    if not bool(config[placement_key]):
+        return None, reference.new_zeros(())
+    result = nearest_neighbor_topic_constraint(
+        model,
+        neighbors=int(config["neighbors"]),
+        margin=float(config["margin"]),
+    )
+    return result, float(config["weight"]) * result.loss
 
 
 def validation_gate_summary(
@@ -259,14 +277,13 @@ def train_model(
                 sinkhorn_epsilon=float(model_config["sinkhorn_epsilon"]),
                 sinkhorn_iterations=int(model_config["sinkhorn_iterations"]),
             )
-            router_separation = nearest_neighbor_topic_constraint(
+            router_separation, weighted_router_separation = _weighted_topic_separation(
                 model,
-                neighbors=int(separation_config["neighbors"]),
-                margin=float(separation_config["margin"]),
+                separation_config,
+                placement_key="apply_during_router_updates",
+                reference=terms.total,
             )
-            router_total = terms.total + (
-                float(separation_config["weight"]) * router_separation.loss
-            )
+            router_total = terms.total + weighted_router_separation
             if not torch.isfinite(router_total):
                 stable = False
                 stop_reason = "non_finite_router_loss"
@@ -289,7 +306,8 @@ def train_model(
                     )
             totals["router_total"] += float(router_total.detach())
             totals["router_base"] += float(terms.total.detach())
-            totals["router_separation"] += float(router_separation.loss.detach())
+            if router_separation is not None:
+                totals["router_separation"] += float(router_separation.loss.detach())
             totals["completion"] += float(terms.completion.detach())
             totals["sinkhorn"] += float(terms.sinkhorn.detach())
             totals["consistency"] += float(terms.consistency.detach())
@@ -320,13 +338,11 @@ def train_model(
                 )
                 regularizer = erntm_topic_constraint(model)
                 weighted_erntm = float(optimization["erntm_weight"]) * regularizer.loss
-                separation = nearest_neighbor_topic_constraint(
+                separation, weighted_separation = _weighted_topic_separation(
                     model,
-                    neighbors=int(separation_config["neighbors"]),
-                    margin=float(separation_config["margin"]),
-                )
-                weighted_separation = (
-                    float(separation_config["weight"]) * separation.loss
+                    separation_config,
+                    placement_key="apply_during_topic_updates",
+                    reference=terms.total,
                 )
                 if graph_tensor is None:
                     cooccurrence = None
@@ -363,10 +379,11 @@ def train_model(
                 totals["erntm"] += float(regularizer.loss.detach())
                 if cooccurrence is not None:
                     totals["cooccurrence"] += float(cooccurrence.loss.detach())
-                totals["topic_separation"] += float(separation.loss.detach())
+                if separation is not None:
+                    totals["topic_separation"] += float(separation.loss.detach())
                 regularizer_diagnostics = {
                     **regularizer.diagnostics,
-                    **separation.diagnostics,
+                    **({} if separation is None else separation.diagnostics),
                     **({} if cooccurrence is None else cooccurrence.diagnostics),
                 }
                 topic_updates += 1

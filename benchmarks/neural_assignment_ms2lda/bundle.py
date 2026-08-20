@@ -20,6 +20,16 @@ BUNDLE_FILES = (
 )
 
 
+def _bundle_version(protocol: dict[str, Any]) -> str:
+    """Identify the packaged architecture without relabeling legacy runs."""
+    if "hierarchical_routing" not in protocol:
+        return "neural-ms2lda-msnlib-k500-v1"
+    routing = protocol["hierarchical_routing"]
+    if routing.get("method") != "local_document_product_of_experts":
+        raise ValueError("cannot package an unknown hierarchical routing architecture")
+    return "neural-ms2lda-msnlib-k500-v2"
+
+
 def _portable_provenance(run: Path, selected: dict[str, Any]) -> dict[str, Any]:
     """Retain scientific provenance without local paths or user metadata."""
     lock = read_json(run / "run.lock.json")
@@ -55,15 +65,17 @@ def package_bundle(run_dir: str | Path, output_dir: str | Path) -> dict[str, Any
     output.mkdir(parents=True, exist_ok=True)
     selected = read_json(run / "model/selected.json")
     checkpoint = run / "model" / selected["checkpoint"]
+    protocol_path = run / "protocol.resolved.json"
+    protocol = read_json(protocol_path)
     shutil.copy2(checkpoint, output / "model.pt")
     shutil.copy2(run / "data/vocabulary.json", output / "vocabulary.json")
-    shutil.copy2(run / "protocol.resolved.json", output / "protocol.json")
+    shutil.copy2(protocol_path, output / "protocol.json")
     shutil.copy2(run / "evaluation/neural/complete.json", output / "evaluation.json")
     shutil.copy2(run / "chemical/neural/complete.json", output / "chemistry.json")
     write_json(output / "provenance.json", _portable_provenance(run, selected))
     manifest = {
         "schema_version": "neural-ms2lda/model-bundle-v1",
-        "bundle_version": "neural-ms2lda-msnlib-k500-v2",
+        "bundle_version": _bundle_version(protocol),
         "selected_epoch": int(selected["epoch"]),
         "beta_derivation": "softmax(2 * normalized_topics @ normalized_projected_tokens.T / beta_temperature)",
         "files": {

@@ -182,7 +182,7 @@ def evaluate_neural(run_dir: str | Path, protocol: dict[str, Any]) -> dict[str, 
         atomic_save_numpy(output / name, values)
     result = {
         "schema_version": "neural-ms2lda/neural-evaluation-v1",
-        "method": "neural_erntm_k500",
+        "method": "neural_cooccurrence_margin_hierarchical_k500",
         "topic_count": int(beta.shape[0]),
         "selected_epoch": int(checkpoint["epoch"]),
         "stable": True,

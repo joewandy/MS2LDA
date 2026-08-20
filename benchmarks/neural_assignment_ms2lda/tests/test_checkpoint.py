@@ -17,7 +17,12 @@ from benchmarks.msnlib_validation.data import (
     audit_split_disjointness,
     build_training_vocabulary,
 )
-from benchmarks.neural_assignment_ms2lda.bundle import load_bundle, package_bundle
+from benchmarks.neural_assignment_ms2lda import config as neural_config
+from benchmarks.neural_assignment_ms2lda.bundle import (
+    _bundle_version,
+    load_bundle,
+    package_bundle,
+)
 from benchmarks.neural_assignment_ms2lda.config import load_protocol
 from benchmarks.neural_assignment_ms2lda.cooccurrence import (
     positive_npmi_graph,
@@ -51,6 +56,7 @@ from benchmarks.neural_assignment_ms2lda.regularizers import (
 from benchmarks.neural_assignment_ms2lda.report import build_machine_report
 from benchmarks.neural_assignment_ms2lda.tomotopy import _infer_theta
 from benchmarks.neural_assignment_ms2lda.training import (
+    _weighted_topic_separation,
     train_model,
     validation_gate_summary,
 )
@@ -259,6 +265,85 @@ def test_committed_v1_bundle_keeps_zero_document_prior() -> None:
     assert len(vocabulary) == model.vocabulary_size
 
 
+def test_bundle_version_follows_packaged_protocol() -> None:
+    protocol = load_protocol()
+    assert _bundle_version(protocol) == "neural-ms2lda-msnlib-k500-v2"
+    legacy = copy.deepcopy(protocol)
+    del legacy["hierarchical_routing"]
+    assert _bundle_version(legacy) == "neural-ms2lda-msnlib-k500-v1"
+
+
+def test_topic_separation_honors_update_placement_flags() -> None:
+    protocol = load_protocol()
+    from benchmarks.neural_assignment_ms2lda.model import initialize_model
+
+    features = torch.nn.functional.normalize(torch.randn(20, 64), dim=1)
+    model, _ = initialize_model(features, num_topics=4, protocol=protocol)
+    config = copy.deepcopy(protocol["topic_separation"])
+    config["neighbors"] = 2
+    reference = model.topic_prototypes.sum()
+    for placement_key in (
+        "apply_during_router_updates",
+        "apply_during_topic_updates",
+    ):
+        config[placement_key] = False
+        result, weighted = _weighted_topic_separation(
+            model,
+            config,
+            placement_key=placement_key,
+            reference=reference,
+        )
+        assert result is None
+        assert float(weighted) == 0.0
+
+
+def test_verify_run_checks_cooccurrence_graph(tmp_path: Path) -> None:
+    mgf = tmp_path / "input.mgf"
+    mgf.write_text("BEGIN IONS\nEND IONS\n", encoding="utf-8")
+    protocol = copy.deepcopy(load_protocol())
+    protocol["input_files"] = {
+        "mgf": {
+            "relative_path": mgf.name,
+            "bytes": mgf.stat().st_size,
+            "sha256": file_sha256(mgf),
+        }
+    }
+    run = tmp_path / "run"
+    write_json(run / "protocol.resolved.json", protocol)
+    inputs = neural_config.verify_inputs(protocol, tmp_path, names={"mgf"})
+    write_json(
+        run / "run.lock.json",
+        {
+            "data_root": str(tmp_path),
+            "protocol_sha256": neural_config.object_sha256(protocol),
+            "inputs": inputs,
+            "code": neural_config.code_manifest(),
+        },
+    )
+    write_json(
+        run / "data/complete.json",
+        {
+            "leakage_audit": {"leaked_compounds": 0, "leaked_groups": 0},
+            "vocabulary": {
+                "source_split": "train",
+                "order": "raw_training_spectra_first_seen",
+            },
+        },
+    )
+    graph = run / "cooccurrence_graph/positive_npmi_graph.npz"
+    graph.parent.mkdir(parents=True)
+    graph.write_bytes(b"frozen train-only graph")
+    write_json(
+        graph.parent / "complete.json",
+        {"graph_sha256": file_sha256(graph)},
+    )
+    result = neural_config.verify_run(run, data_root=tmp_path)
+    assert "cooccurrence_graph/complete.json" in result["manifests_present"]
+    graph.write_bytes(b"tampered graph")
+    with pytest.raises(ValueError, match="co-occurrence graph changed"):
+        neural_config.verify_run(run, data_root=tmp_path)
+
+
 def test_tomotopy_empty_document_uses_topic_prior() -> None:
     class FakeModel:
         k = 2
@@ -462,8 +547,11 @@ def test_miniature_mgf_through_report_and_bundle(tmp_path: Path) -> None:
     )
     report = build_machine_report(run)
     assert len(report["methods"]) == 2
+    assert neural["method"] == "neural_cooccurrence_margin_hierarchical_k500"
+    assert "ERNTM" not in report["headline"]
     bundle = tmp_path / "bundle"
-    package_bundle(run, bundle)
+    packaged = package_bundle(run, bundle)
+    assert packaged["bundle_version"] == "neural-ms2lda-msnlib-k500-v2"
     loaded, vocabulary, manifest = load_bundle(bundle)
     assert loaded.num_topics == 4
     assert len(vocabulary) == train.shape[1]

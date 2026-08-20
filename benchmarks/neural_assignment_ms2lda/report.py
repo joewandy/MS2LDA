@@ -49,12 +49,12 @@ def build_machine_report(run_dir: str | Path) -> dict[str, Any]:
     ]
     result = {
         "schema_version": "neural-ms2lda/research-report-v1",
-        "title": "Collapse-resistant fully neural MS2LDA on MSnLib",
+        "title": "Hierarchical co-occurrence neural MS2LDA on MSnLib",
         "evidence_scope": "single-seed applied-method reproducibility checkpoint",
         "headline": (
-            "The K=500 ERNTM model is a working, collapse-resistant, fast fully "
-            "neural discovery model; Tomotopy remains stronger on coherence and "
-            "chemical interpretation and remains the production comparator."
+            "The K=500 hierarchical co-occurrence and topic-margin model is a "
+            "working, collapse-resistant, fast fully neural discovery model; "
+            "Tomotopy remains the production comparator."
         ),
         "methods": rows,
         "training_contract": {

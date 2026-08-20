@@ -229,6 +229,7 @@ def verify_run(
         "embeddings/complete.json",
         "token_features/complete.json",
         "initialization/complete.json",
+        "cooccurrence_graph/complete.json",
         "model/complete.json",
         "evaluation/neural/complete.json",
         "evaluation/tomotopy/complete.json",
@@ -257,6 +258,12 @@ def verify_run(
                     != manifest["checkpoint_sha256"]
                 ):
                     raise ValueError("model initialization changed")
+            elif manifest_name == "cooccurrence_graph/complete.json":
+                graph = path.parent / "positive_npmi_graph.npz"
+                if not graph.is_file() or file_sha256(graph) != manifest.get(
+                    "graph_sha256"
+                ):
+                    raise ValueError("co-occurrence graph changed")
             elif manifest_name == "model/complete.json":
                 selected = manifest["selected"]
                 if (
