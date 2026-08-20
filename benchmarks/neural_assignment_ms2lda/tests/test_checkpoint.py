@@ -398,16 +398,18 @@ def test_verify_run_checks_cooccurrence_graph(tmp_path: Path) -> None:
             "code": neural_config.code_manifest(),
         },
     )
-    write_json(
-        run / "data/complete.json",
-        {
-            "leakage_audit": {"leaked_compounds": 0, "leaked_groups": 0},
-            "vocabulary": {
-                "source_split": "train",
-                "order": "raw_training_spectra_first_seen",
-            },
+    data_artifact = run / "data/train.npz"
+    data_artifact.parent.mkdir(parents=True)
+    data_artifact.write_bytes(b"frozen training data")
+    data_manifest = {
+        "leakage_audit": {"leaked_compounds": 0, "leaked_groups": 0},
+        "vocabulary": {
+            "source_split": "train",
+            "order": "raw_training_spectra_first_seen",
         },
-    )
+        "output_sha256": {data_artifact.name: file_sha256(data_artifact)},
+    }
+    write_json(run / "data/complete.json", data_manifest)
     graph = run / "cooccurrence_graph/positive_npmi_graph.npz"
     graph.parent.mkdir(parents=True)
     graph.write_bytes(b"frozen train-only graph")
@@ -435,8 +437,14 @@ def test_verify_run_checks_cooccurrence_graph(tmp_path: Path) -> None:
     write_json(run / "model/selected.json", selected_manifest)
     result = neural_config.verify_run(run, data_root=tmp_path)
     assert "cooccurrence_graph/complete.json" in result["manifests_present"]
+    unhashed_data_manifest = data_manifest.copy()
+    unhashed_data_manifest.pop("output_sha256")
+    write_json(run / "data/complete.json", unhashed_data_manifest)
+    with pytest.raises(ValueError, match="no output hashes"):
+        neural_config.verify_run(run, data_root=tmp_path)
+    write_json(run / "data/complete.json", data_manifest)
     write_json(graph.parent / "complete.json", {"output_sha256": {}})
-    with pytest.raises(ValueError, match="graph manifest is incomplete"):
+    with pytest.raises(ValueError, match="no output hashes"):
         neural_config.verify_run(run, data_root=tmp_path)
     write_json(graph.parent / "complete.json", graph_manifest)
     graph.write_bytes(b"tampered graph")
@@ -706,6 +714,17 @@ def test_miniature_mgf_through_report_and_bundle(tmp_path: Path) -> None:
     provenance = json.loads(provenance_text)
     assert provenance["inputs"]["mgf"]["sha256"] == file_sha256(mgf)
     assert "path" not in provenance_text
+    legacy_protocol = json.loads((bundle / "protocol.json").read_text())
+    legacy_protocol["model"].pop("document_topic_prior_weight")
+    legacy_protocol["hierarchical_routing"] = {"weight": 1.0}
+    write_json(bundle / "protocol.json", legacy_protocol)
+    manifest["files"]["protocol.json"] = {
+        "bytes": (bundle / "protocol.json").stat().st_size,
+        "sha256": file_sha256(bundle / "protocol.json"),
+    }
+    write_json(bundle / "manifest.json", manifest)
+    legacy_loaded, _, _ = load_bundle(bundle)
+    assert legacy_loaded.document_topic_prior_weight == 1.0
 
 
 def test_zip_safety_rejects_parent_traversal(tmp_path: Path) -> None:

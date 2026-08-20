@@ -80,7 +80,10 @@ def write_jsonl(path: str | Path, rows: Iterable[Any]) -> None:
 def verify_output_hashes(directory: str | Path, manifest: dict[str, Any]) -> None:
     """Verify every artifact in a standard stage output map."""
     root = Path(directory)
-    for name, digest in manifest["output_sha256"].items():
+    hashes = manifest.get("output_sha256")
+    if not isinstance(hashes, dict) or not hashes:
+        raise ValueError("stage manifest has no output hashes")
+    for name, digest in hashes.items():
         path = root / name
         if not path.is_file() or file_sha256(path) != digest:
             raise ValueError(f"artifact changed: {path}")
