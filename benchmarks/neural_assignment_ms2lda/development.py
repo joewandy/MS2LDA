@@ -14,7 +14,7 @@ import torch
 from .config import REPO_ROOT, code_manifest, load_protocol
 from .data import load_csr, load_heldout_records, load_view_pairs
 from .training import train_model
-from .utils import file_sha256, object_sha256, read_json, write_json
+from .utils import file_sha256, object_sha256, read_json, write_json, write_jsonl
 
 READ_ONLY_STAGES = (
     "training_views",
@@ -28,23 +28,31 @@ DEVELOPMENT_DATA_FILES = (
     "validation_full.npz",
     "validation_records.jsonl",
 )
+LEGACY_HELDOUT_RECORDS = "heldout_records.jsonl"
 
 
 def _source_evidence(source: Path) -> dict[str, str]:
     names = (
         "protocol.resolved.json",
         "data/complete.json",
-        *(f"data/{name}" for name in DEVELOPMENT_DATA_FILES),
+        *(f"data/{name}" for name in DEVELOPMENT_DATA_FILES[:-1]),
         "training_views/complete.json",
         "token_features/features.npy",
         "token_features/complete.json",
         "initialization/model_initialization.pt",
         "initialization/complete.json",
     )
+    validation_records = source / "data" / DEVELOPMENT_DATA_FILES[-1]
+    if not validation_records.is_file():
+        validation_records = source / "data" / LEGACY_HELDOUT_RECORDS
     missing = [name for name in names if not (source / name).is_file()]
+    if not validation_records.is_file():
+        missing.append(f"data/{DEVELOPMENT_DATA_FILES[-1]}")
     if missing:
         raise FileNotFoundError(f"source run is incomplete: {missing}")
-    return {name: file_sha256(source / name) for name in names}
+    evidence = {name: file_sha256(source / name) for name in names}
+    evidence[f"data/{validation_records.name}"] = file_sha256(validation_records)
+    return evidence
 
 
 def _validate_frozen_protocol(source: dict[str, Any], current: dict[str, Any]) -> None:
@@ -105,8 +113,24 @@ def _link_read_only_inputs(source: Path, output: Path) -> None:
     if data.is_symlink():
         raise ValueError("development data must not expose the complete source split")
     data.mkdir(exist_ok=True)
-    for name in DEVELOPMENT_DATA_FILES:
+    for name in DEVELOPMENT_DATA_FILES[:-1]:
         _link(source / "data" / name, data / name, directory=False)
+    validation_records = source / "data" / DEVELOPMENT_DATA_FILES[-1]
+    if validation_records.is_file():
+        _link(validation_records, data / validation_records.name, directory=False)
+    else:
+        rows = []
+        with (source / "data" / LEGACY_HELDOUT_RECORDS).open(
+            encoding="utf-8"
+        ) as handle:
+            for line in handle:
+                if line.strip():
+                    row = json.loads(line)
+                    if row.get("split") == "validation":
+                        rows.append(row)
+        if not rows:
+            raise ValueError("legacy held-out records contain no validation rows")
+        write_jsonl(data / DEVELOPMENT_DATA_FILES[-1], rows)
     for name in READ_ONLY_STAGES:
         _link(source / name, output / name, directory=True)
 

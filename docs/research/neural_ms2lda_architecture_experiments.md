@@ -4,7 +4,9 @@ This ledger records seed-42 architecture development after the published K=500
 checkpoint. Test matrices and chemical outcomes were not evaluated until an
 architecture satisfied every predeclared validation gate. The earlier runner
 linked the complete prepared-data directory even though it did not load test
-matrices; the cleaned runner now exposes named train and validation files only.
+matrices; the cleaned runner now exposes named train and validation files only,
+filtering validation rows when the frozen baseline uses the legacy combined
+annotation file.
 
 ## Frozen development baseline
 

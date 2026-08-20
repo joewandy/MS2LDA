@@ -62,7 +62,11 @@ from benchmarks.neural_assignment_ms2lda.training import (
     train_model,
     validation_gate_summary,
 )
-from benchmarks.neural_assignment_ms2lda.utils import file_sha256, write_json
+from benchmarks.neural_assignment_ms2lda.utils import (
+    file_sha256,
+    write_json,
+    write_jsonl,
+)
 from scripts.download_msnlib_validation_assets import (
     RECORD_API,
     RECORD_ID,
@@ -335,6 +339,18 @@ def test_development_inputs_exclude_the_test_partition(tmp_path: Path) -> None:
         DEVELOPMENT_DATA_FILES
     )
     assert not (output / "data/test_full.npz").exists()
+
+    (source / "data/validation_records.jsonl").unlink()
+    validation = {"split": "validation", "spectrum_id": "validation-1"}
+    test = {"split": "test", "spectrum_id": "test-1"}
+    write_jsonl(
+        source / "data/heldout_records.jsonl",
+        (validation, test),
+    )
+    legacy_output = tmp_path / "legacy-output"
+    _link_read_only_inputs(source, legacy_output)
+    assert load_heldout_records(legacy_output / "data", "validation") == [validation]
+    assert not (legacy_output / "data/test_records.jsonl").exists()
 
 
 def test_development_accepts_removed_legacy_protocol_metadata() -> None:
