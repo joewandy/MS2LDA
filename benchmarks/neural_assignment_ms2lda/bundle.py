@@ -63,7 +63,7 @@ def package_bundle(run_dir: str | Path, output_dir: str | Path) -> dict[str, Any
     write_json(output / "provenance.json", _portable_provenance(run, selected))
     manifest = {
         "schema_version": "neural-ms2lda/model-bundle-v1",
-        "bundle_version": "neural-ms2lda-msnlib-k500-v1",
+        "bundle_version": "neural-ms2lda-msnlib-k500-v2",
         "selected_epoch": int(selected["epoch"]),
         "beta_derivation": "softmax(2 * normalized_topics @ normalized_projected_tokens.T / beta_temperature)",
         "files": {
@@ -99,6 +99,7 @@ def load_bundle(
     from .model import NeuralAssignmentMS2LDA
 
     config = protocol["model"]
+    hierarchical = protocol.get("hierarchical_routing", {})
     topic_indices = torch.arange(int(config["num_topics"]), dtype=torch.int64)
     model = NeuralAssignmentMS2LDA(
         features,
@@ -106,6 +107,7 @@ def load_bundle(
         projection_dimensions=int(config["projection_dimensions"]),
         router_hidden_dimensions=int(config["router_hidden_dimensions"]),
         beta_temperature=float(config["beta_temperature"]),
+        document_topic_prior_weight=float(hierarchical.get("weight", 0.0)),
         topic_initial_indices=topic_indices,
         seed=int(protocol["seed"]) + int(config["num_topics"]),
     )

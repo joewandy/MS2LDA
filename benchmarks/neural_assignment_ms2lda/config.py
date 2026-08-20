@@ -30,6 +30,7 @@ SOURCE_FILES = (
     "benchmarks/neural_assignment_ms2lda/bundle.py",
     "benchmarks/neural_assignment_ms2lda/chemical.py",
     "benchmarks/neural_assignment_ms2lda/cli.py",
+    "benchmarks/neural_assignment_ms2lda/cooccurrence.py",
     "benchmarks/neural_assignment_ms2lda/config.py",
     "benchmarks/neural_assignment_ms2lda/core.py",
     "benchmarks/neural_assignment_ms2lda/data.py",
@@ -44,6 +45,7 @@ SOURCE_FILES = (
     "benchmarks/neural_assignment_ms2lda/tomotopy.py",
     "benchmarks/neural_assignment_ms2lda/training.py",
     "benchmarks/neural_assignment_ms2lda/utils.py",
+    "benchmarks/neural_assignment_ms2lda/development.py",
     "scripts/download_msnlib_validation_assets.py",
     "scripts/generate_neural_ms2lda_report.py",
     "scripts/run_neural_ms2lda.sh",
@@ -63,6 +65,11 @@ def load_protocol() -> dict[str, Any]:
         raise ValueError("the supported neural model is fixed to K=500")
     if int(protocol["model"]["top_k"]) != 2:
         raise ValueError("the supported router is fixed to top-2")
+    routing = protocol["hierarchical_routing"]
+    if routing["method"] != "local_document_product_of_experts":
+        raise ValueError("unexpected hierarchical routing method")
+    if float(routing["weight"]) != 1.0:
+        raise ValueError("the document topic prior weight is fixed to one")
     if int(protocol["optimization"]["maximum_epochs"]) != 40:
         raise ValueError("the reproducibility run is fixed to 40 epochs")
     dimensions = (

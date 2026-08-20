@@ -139,6 +139,7 @@ def sparse_npmi(
                     pair = (first, second)
                     pair_frequency[pair] = pair_frequency.get(pair, 0) + 1
     topic_scores = []
+    defined_scores = []
     undefined = 0
     for topic in top_indices:
         scores = []
@@ -158,9 +159,16 @@ def sparse_npmi(
                 / -math.log(joint)
             )
             scores.append(score)
+            defined_scores.append(score)
         topic_scores.append(float(np.mean(scores)))
+    total_pairs = len(topic_scores) * math.comb(count, 2)
     return {
         "mean_npmi": float(np.mean(topic_scores)),
         "median_topic_npmi": float(np.median(topic_scores)),
+        "defined_pair_mean_npmi": (
+            float(np.mean(defined_scores)) if defined_scores else -1.0
+        ),
         "undefined_pairs_scored_as_minus_one": undefined,
+        "undefined_pair_fraction": float(undefined / total_pairs),
+        "total_top_word_pairs": int(total_pairs),
     }

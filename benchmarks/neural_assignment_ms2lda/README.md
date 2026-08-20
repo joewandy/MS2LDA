@@ -1,10 +1,12 @@
 # Neural MS2LDA research checkpoint
 
 This directory contains one supported research model: a collapse-resistant,
-fully neural ERNTM MS2LDA with 500 topics. It discovers topics without a
-Tomotopy teacher, DreaMS, variational Bayes, chemistry labels, or test-set
-information. Tomotopy K=1000 is trained separately as the established
-post-training comparator.
+fully neural hierarchical MS2LDA with 500 topics. A train-only co-occurrence
+graph shapes topic words, a nearest-topic margin preserves distinct topics,
+and a local-document product-of-experts router concentrates each spectrum in
+one pass. It discovers topics without a Tomotopy teacher, DreaMS, variational
+Bayes, chemistry labels, or test-set information. Tomotopy K=1000 is trained
+separately as the established post-training comparator.
 
 The complete resumable workflow is:
 

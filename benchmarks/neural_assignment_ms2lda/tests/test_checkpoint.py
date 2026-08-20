@@ -19,6 +19,10 @@ from benchmarks.msnlib_validation.data import (
 )
 from benchmarks.neural_assignment_ms2lda.bundle import load_bundle, package_bundle
 from benchmarks.neural_assignment_ms2lda.config import load_protocol
+from benchmarks.neural_assignment_ms2lda.cooccurrence import (
+    positive_npmi_graph,
+    torch_sparse_graph,
+)
 from benchmarks.neural_assignment_ms2lda.core import (
     prepare_initialization,
     prepare_token_features,
@@ -39,10 +43,17 @@ from benchmarks.neural_assignment_ms2lda.model import (
     router_block_loss,
     topic_block_loss,
 )
-from benchmarks.neural_assignment_ms2lda.regularizers import erntm_topic_constraint
+from benchmarks.neural_assignment_ms2lda.regularizers import (
+    cooccurrence_topic_constraint,
+    erntm_topic_constraint,
+    nearest_neighbor_topic_constraint,
+)
 from benchmarks.neural_assignment_ms2lda.report import build_machine_report
 from benchmarks.neural_assignment_ms2lda.tomotopy import _infer_theta
-from benchmarks.neural_assignment_ms2lda.training import train_model
+from benchmarks.neural_assignment_ms2lda.training import (
+    train_model,
+    validation_gate_summary,
+)
 from benchmarks.neural_assignment_ms2lda.utils import file_sha256, write_json
 from scripts.download_msnlib_validation_assets import (
     RECORD_API,
@@ -142,6 +153,112 @@ def test_sinkhorn_top2_erntm_gradients_and_recycling() -> None:
     assert torch.allclose(targets.sum(dim=0), torch.full((4,), 10.0), atol=1e-5)
 
 
+def test_positive_npmi_graph_supplies_topic_gradients() -> None:
+    protocol = load_protocol()
+    matrix = sp.csr_matrix(
+        np.asarray(
+            [
+                [1, 1, 0, 0, 0, 0],
+                [1, 1, 1, 0, 0, 0],
+                [1, 1, 0, 0, 0, 0],
+                [0, 0, 0, 1, 1, 0],
+                [0, 0, 0, 1, 1, 1],
+                [0, 0, 0, 1, 1, 0],
+            ],
+            dtype=np.float32,
+        )
+    )
+    graph, diagnostics = positive_npmi_graph(
+        matrix,
+        minimum_document_frequency=1,
+        minimum_pair_frequency=1,
+        maximum_neighbors=2,
+        minimum_npmi=0.0,
+    )
+    assert graph.nnz > 0
+    assert (graph != graph.T).nnz == 0
+    assert np.allclose(graph.diagonal(), 0.0)
+    assert diagnostics["words_with_neighbors"] >= 4
+
+    from benchmarks.neural_assignment_ms2lda.model import initialize_model
+
+    features = torch.nn.functional.normalize(torch.randn(6, 64), dim=1)
+    model, _ = initialize_model(features, num_topics=4, protocol=protocol)
+    result = cooccurrence_topic_constraint(model, torch_sparse_graph(graph))
+    result.loss.backward()
+    assert torch.isfinite(result.loss)
+    assert model.topic_prototypes.grad is not None
+    assert torch.isfinite(model.topic_prototypes.grad).all()
+
+
+def test_validation_gate_summary_uses_predeclared_thresholds() -> None:
+    protocol = load_protocol()
+    targets = protocol["development_gates"]
+    validation = {
+        "word_cooccurrence_npmi": {
+            "mean_npmi": targets["minimum_mean_npmi"],
+            "undefined_pair_fraction": targets["maximum_undefined_pair_fraction"],
+        },
+        "top_word_diversity": targets["minimum_top_word_diversity"],
+        "mixture_diagnostics": {
+            "effective_topic_count_median": targets["maximum_effective_topics_median"]
+        },
+        "document_completion": {"nll_per_token": targets["maximum_validation_nll"]},
+    }
+    summary = validation_gate_summary(validation, protocol)
+    assert summary["all_gates_met"]
+    assert summary["gates_met"] == 5
+    validation["top_word_diversity"] = (
+        float(targets["minimum_top_word_diversity"]) - 1e-6
+    )
+    summary = validation_gate_summary(validation, protocol)
+    assert not summary["all_gates_met"]
+    assert summary["gates_met"] == 4
+
+
+def test_nearest_neighbor_constraint_penalizes_close_topics() -> None:
+    protocol = load_protocol()
+    from benchmarks.neural_assignment_ms2lda.model import initialize_model
+
+    features = torch.nn.functional.normalize(torch.randn(20, 64), dim=1)
+    model, _ = initialize_model(features, num_topics=4, protocol=protocol)
+    with torch.no_grad():
+        model.topic_prototypes[1] = model.topic_prototypes[0] + 0.01
+    result = nearest_neighbor_topic_constraint(model, neighbors=2, margin=0.3)
+    result.loss.backward()
+    assert float(result.loss) > 0
+    assert result.diagnostics["nearest_topic_cosine_maximum"] > 0.9
+    assert model.topic_prototypes.grad is not None
+    assert torch.isfinite(model.topic_prototypes.grad).all()
+
+
+def test_hierarchical_router_adds_one_shared_document_score() -> None:
+    protocol = load_protocol()
+    from benchmarks.neural_assignment_ms2lda.model import initialize_model
+
+    features = torch.nn.functional.normalize(torch.randn(20, 64), dim=1)
+    model, _ = initialize_model(features, num_topics=4, protocol=protocol)
+    matrix = sp.csr_matrix(np.eye(2, 20, dtype=np.float32) + 1.0)
+    batch = sparse_batch(matrix, np.arange(2, dtype=np.int64))
+    model.document_topic_prior_weight = 0.0
+    local = model.route(batch, temperature=0.5, top_k=2, straight_through=False)
+    model.document_topic_prior_weight = 1.0
+    hierarchical = model.route(batch, temperature=0.5, top_k=2, straight_through=False)
+    added = hierarchical.logits - local.logits
+    for row in range(batch.documents):
+        document_rows = added[batch.row_ids == row]
+        assert torch.allclose(document_rows, document_rows[:1].expand_as(document_rows))
+    assert torch.isfinite(hierarchical.theta).all()
+
+
+def test_committed_v1_bundle_keeps_zero_document_prior() -> None:
+    bundle = Path(__file__).parents[1] / "results/seed42/model_bundle"
+    model, vocabulary, manifest = load_bundle(bundle)
+    assert manifest["bundle_version"] == "neural-ms2lda-msnlib-k500-v1"
+    assert model.document_topic_prior_weight == 0.0
+    assert len(vocabulary) == model.vocabulary_size
+
+
 def test_tomotopy_empty_document_uses_topic_prior() -> None:
     class FakeModel:
         k = 2
@@ -220,6 +337,14 @@ def _mini_protocol(mgf: Path) -> dict[str, object]:
             "recycle_through_epoch": 2,
         }
     )
+    protocol["cooccurrence_regularization"].update(
+        {
+            "minimum_document_frequency": 1,
+            "minimum_pair_frequency": 1,
+            "maximum_neighbors": 2,
+        }
+    )
+    protocol["topic_separation"]["neighbors"] = 2
     protocol["evaluation"].update({"latency_subset_size": 2, "latency_repeats": 1})
     return protocol
 
