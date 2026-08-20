@@ -8,6 +8,26 @@ from typing import Any
 from .utils import file_sha256, read_json, write_json
 
 
+def _architecture_copy(protocol: dict[str, Any]) -> tuple[str, str]:
+    """Describe the architecture recorded by this run's frozen protocol."""
+    if "hierarchical_routing" not in protocol:
+        return (
+            "Collapse-resistant fully neural MS2LDA on MSnLib",
+            "The K=500 ERNTM model is a working, collapse-resistant, fast fully "
+            "neural discovery model; Tomotopy remains stronger on coherence and "
+            "chemical interpretation and remains the production comparator.",
+        )
+    routing = protocol["hierarchical_routing"]
+    if routing.get("method") != "local_document_product_of_experts":
+        raise ValueError("cannot report an unknown hierarchical routing architecture")
+    return (
+        "Hierarchical co-occurrence neural MS2LDA on MSnLib",
+        "The K=500 hierarchical co-occurrence and topic-margin model is a "
+        "working, collapse-resistant, fast fully neural discovery model; "
+        "Tomotopy remains the production comparator.",
+    )
+
+
 def _method_row(result: dict[str, Any], chemistry: dict[str, Any]) -> dict[str, Any]:
     metrics = result["metrics"]
     dominant = chemistry["dominant_topic_chemistry"]
@@ -39,6 +59,8 @@ def _method_row(result: dict[str, Any], chemistry: dict[str, Any]) -> dict[str, 
 def build_machine_report(run_dir: str | Path) -> dict[str, Any]:
     """Build the final comparison from completed evaluation artifacts."""
     directory = Path(run_dir).expanduser().resolve()
+    protocol = read_json(directory / "protocol.resolved.json")
+    title, headline = _architecture_copy(protocol)
     neural = read_json(directory / "evaluation/neural/complete.json")
     comparator = read_json(directory / "evaluation/tomotopy/complete.json")
     neural_chemistry = read_json(directory / "chemical/neural/complete.json")
@@ -49,13 +71,9 @@ def build_machine_report(run_dir: str | Path) -> dict[str, Any]:
     ]
     result = {
         "schema_version": "neural-ms2lda/research-report-v1",
-        "title": "Hierarchical co-occurrence neural MS2LDA on MSnLib",
+        "title": title,
         "evidence_scope": "single-seed applied-method reproducibility checkpoint",
-        "headline": (
-            "The K=500 hierarchical co-occurrence and topic-margin model is a "
-            "working, collapse-resistant, fast fully neural discovery model; "
-            "Tomotopy remains the production comparator."
-        ),
+        "headline": headline,
         "methods": rows,
         "training_contract": {
             "unsupervised": True,

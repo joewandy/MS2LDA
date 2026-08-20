@@ -53,7 +53,10 @@ from benchmarks.neural_assignment_ms2lda.regularizers import (
     erntm_topic_constraint,
     nearest_neighbor_topic_constraint,
 )
-from benchmarks.neural_assignment_ms2lda.report import build_machine_report
+from benchmarks.neural_assignment_ms2lda.report import (
+    _architecture_copy,
+    build_machine_report,
+)
 from benchmarks.neural_assignment_ms2lda.tomotopy import _infer_theta
 from benchmarks.neural_assignment_ms2lda.training import (
     _weighted_topic_separation,
@@ -271,6 +274,18 @@ def test_bundle_version_follows_packaged_protocol() -> None:
     legacy = copy.deepcopy(protocol)
     del legacy["hierarchical_routing"]
     assert _bundle_version(legacy) == "neural-ms2lda-msnlib-k500-v1"
+
+
+def test_report_copy_follows_frozen_protocol_architecture() -> None:
+    protocol = load_protocol()
+    current_title, current_headline = _architecture_copy(protocol)
+    assert "Hierarchical" in current_title
+    assert "ERNTM" not in current_headline
+    legacy = copy.deepcopy(protocol)
+    del legacy["hierarchical_routing"]
+    legacy_title, legacy_headline = _architecture_copy(legacy)
+    assert "Collapse-resistant" in legacy_title
+    assert "ERNTM" in legacy_headline
 
 
 def test_topic_separation_honors_update_placement_flags() -> None:
