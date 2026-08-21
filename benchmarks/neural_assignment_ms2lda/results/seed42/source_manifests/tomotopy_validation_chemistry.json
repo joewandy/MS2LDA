@@ -1,0 +1,84 @@
+{
+  "annotation_coverage": 0.607,
+  "association_results": [
+    {
+      "associated_spectra": 3889,
+      "association_mode": "dominant_topic",
+      "eligible_topics": 579,
+      "mean_sos": 0.6300081304937649,
+      "median_sos": 0.638888888888889,
+      "membership_threshold": null,
+      "sos_bands": {
+        "high_gt_0_8": 69,
+        "intermediate_0_6_to_0_8": 280,
+        "low_lt_0_6": 230
+      },
+      "sos_evaluable_coverage": 0.579,
+      "topic_compound_associations": 3871,
+      "total_topics": 1000
+    },
+    {
+      "associated_spectra": 446,
+      "association_mode": "probability_ge_frozen_threshold",
+      "eligible_topics": 206,
+      "mean_sos": 0.676148899919428,
+      "median_sos": 0.6854497354497355,
+      "membership_threshold": 0.5,
+      "sos_bands": {
+        "high_gt_0_8": 58,
+        "intermediate_0_6_to_0_8": 80,
+        "low_lt_0_6": 68
+      },
+      "sos_evaluable_coverage": 0.206,
+      "topic_compound_associations": 444,
+      "total_topics": 1000
+    }
+  ],
+  "cluster_failures": 0,
+  "dominant_topic_chemistry": {
+    "associated_spectra": 3889,
+    "association_mode": "dominant_topic",
+    "eligible_topics": 579,
+    "mean_sos": 0.6300081304937649,
+    "median_sos": 0.638888888888889,
+    "membership_threshold": null,
+    "sos_bands": {
+      "high_gt_0_8": 69,
+      "intermediate_0_6_to_0_8": 280,
+      "low_lt_0_6": 230
+    },
+    "sos_evaluable_coverage": 0.579,
+    "topic_compound_associations": 3871,
+    "total_topics": 1000
+  },
+  "heldout_compounds_excluded_from_mag": true,
+  "high_confidence_chemistry": {
+    "associated_spectra": 446,
+    "association_mode": "probability_ge_frozen_threshold",
+    "eligible_topics": 206,
+    "mean_sos": 0.676148899919428,
+    "median_sos": 0.6854497354497355,
+    "membership_threshold": 0.5,
+    "sos_bands": {
+      "high_gt_0_8": 58,
+      "intermediate_0_6_to_0_8": 80,
+      "low_lt_0_6": 68
+    },
+    "sos_evaluable_coverage": 0.206,
+    "topic_compound_associations": 444,
+    "total_topics": 1000
+  },
+  "mag_seconds": 43.799341291996825,
+  "method": "tomotopy",
+  "optimization_failures": 0,
+  "output_sha256": {
+    "annotations.jsonl": "4c0090f173dc9cba697e0f7ded9e221c55247b19bfaa6e73dbd02295e16919b2",
+    "compound_scores.jsonl": "e31a4fb83bae911ebc010229b9345b77b2b48e6a1ede3a842df6e4ec33ca9510",
+    "summaries.json": "74f7b2d5c85f236ae027c438ced3e7ba4721c67de88b68eb7877bbf6669b8652",
+    "topic_scores.jsonl": "b55f1d135a873fedb90837374dc6dccfb06f7470358a6b49ea7681e540c15b3b"
+  },
+  "peak_rss_bytes": 1819262976,
+  "schema_version": "neural-ms2lda/chemical-evaluation-v1",
+  "split": "validation",
+  "topics": 1000
+}

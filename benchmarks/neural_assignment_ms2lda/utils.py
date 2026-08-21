@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 import resource
+from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
@@ -60,14 +61,32 @@ def write_json(path: str | Path, value: Any) -> None:
         temporary.unlink(missing_ok=True)
 
 
-def append_jsonl(path: str | Path, value: Any) -> None:
-    """Append one durable canonical JSON record."""
+def write_jsonl(path: str | Path, rows: Iterable[Any]) -> None:
+    """Atomically write canonical JSON Lines."""
     destination = Path(path)
     destination.parent.mkdir(parents=True, exist_ok=True)
-    with destination.open("a", encoding="utf-8") as handle:
-        handle.write(canonical_json_bytes(value).decode("ascii") + "\n")
-        handle.flush()
-        os.fsync(handle.fileno())
+    temporary = destination.with_name(f".{destination.name}.{os.getpid()}.tmp")
+    try:
+        with temporary.open("wb") as handle:
+            for row in rows:
+                handle.write(canonical_json_bytes(row) + b"\n")
+            handle.flush()
+            os.fsync(handle.fileno())
+        temporary.replace(destination)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
+def verify_output_hashes(directory: str | Path, manifest: dict[str, Any]) -> None:
+    """Verify every artifact in a standard stage output map."""
+    root = Path(directory)
+    hashes = manifest.get("output_sha256")
+    if not isinstance(hashes, dict) or not hashes:
+        raise ValueError("stage manifest has no output hashes")
+    for name, digest in hashes.items():
+        path = root / name
+        if not path.is_file() or file_sha256(path) != digest:
+            raise ValueError(f"artifact changed: {path}")
 
 
 def atomic_save_numpy(path: str | Path, value: np.ndarray) -> None:

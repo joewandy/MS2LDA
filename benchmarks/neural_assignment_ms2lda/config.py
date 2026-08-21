@@ -12,7 +12,13 @@ from typing import Any
 
 from benchmarks.msnlib_validation.config import resolve_input_paths, verify_inputs
 
-from .utils import file_sha256, object_sha256, read_json, write_json
+from .utils import (
+    file_sha256,
+    object_sha256,
+    read_json,
+    verify_output_hashes,
+    write_json,
+)
 
 PACKAGE_ROOT = Path(__file__).resolve().parent
 REPO_ROOT = PACKAGE_ROOT.parents[1]
@@ -30,11 +36,13 @@ SOURCE_FILES = (
     "benchmarks/neural_assignment_ms2lda/bundle.py",
     "benchmarks/neural_assignment_ms2lda/chemical.py",
     "benchmarks/neural_assignment_ms2lda/cli.py",
+    "benchmarks/neural_assignment_ms2lda/cooccurrence.py",
     "benchmarks/neural_assignment_ms2lda/config.py",
     "benchmarks/neural_assignment_ms2lda/core.py",
     "benchmarks/neural_assignment_ms2lda/data.py",
     "benchmarks/neural_assignment_ms2lda/embeddings.py",
     "benchmarks/neural_assignment_ms2lda/evaluation.py",
+    "benchmarks/neural_assignment_ms2lda/gates.py",
     "benchmarks/neural_assignment_ms2lda/inventory.py",
     "benchmarks/neural_assignment_ms2lda/metrics.py",
     "benchmarks/neural_assignment_ms2lda/model.py",
@@ -44,6 +52,7 @@ SOURCE_FILES = (
     "benchmarks/neural_assignment_ms2lda/tomotopy.py",
     "benchmarks/neural_assignment_ms2lda/training.py",
     "benchmarks/neural_assignment_ms2lda/utils.py",
+    "benchmarks/neural_assignment_ms2lda/development.py",
     "scripts/download_msnlib_validation_assets.py",
     "scripts/generate_neural_ms2lda_report.py",
     "scripts/run_neural_ms2lda.sh",
@@ -57,21 +66,18 @@ def load_protocol() -> dict[str, Any]:
         raise ValueError("unexpected neural MS2LDA protocol schema")
     if int(protocol["seed"]) != 42:
         raise ValueError("the checkpoint protocol is fixed to seed 42")
-    if int(protocol["training_cpu_threads"]) != 4:
-        raise ValueError("training must use four CPU threads")
-    if int(protocol["model"]["num_topics"]) != 500:
-        raise ValueError("the supported neural model is fixed to K=500")
+    if int(protocol["cpu_threads"]) != 6:
+        raise ValueError("the comparison must use six CPU threads")
+    if int(protocol["model"]["num_topics"]) != 1000:
+        raise ValueError("the comparison is fixed to K=1000")
     if int(protocol["model"]["top_k"]) != 2:
         raise ValueError("the supported router is fixed to top-2")
+    if float(protocol["model"]["document_topic_prior_weight"]) != 1.0:
+        raise ValueError("the document topic prior weight is fixed to one")
+    if float(protocol["model"]["document_mixture_weight"]) != 0.5:
+        raise ValueError("the document mixture weight is fixed to one half")
     if int(protocol["optimization"]["maximum_epochs"]) != 40:
         raise ValueError("the reproducibility run is fixed to 40 epochs")
-    dimensions = (
-        int(protocol["sgns"]["dimensions"])
-        + 2 * len(protocol["token_features"]["fourier_frequencies"])
-        + int(protocol["token_features"]["type_dimensions"])
-    )
-    if dimensions != int(protocol["model"]["input_dimensions"]):
-        raise ValueError("token feature and model dimensions differ")
     return protocol
 
 
@@ -130,6 +136,7 @@ def static_discovery_audit() -> dict[str, Any]:
         PACKAGE_ROOT / "regularizers.py",
         PACKAGE_ROOT / "embeddings.py",
         PACKAGE_ROOT / "data.py",
+        PACKAGE_ROOT / "cooccurrence.py",
     )
     forbidden = {"tomotopy", "dreams", "pymc", "ms2lda_hybrid"}
     imports: set[str] = set()
@@ -148,22 +155,24 @@ def static_discovery_audit() -> dict[str, Any]:
     violations = sorted((imports | suspicious_names) & forbidden)
     if violations:
         raise RuntimeError(f"forbidden discovery dependency found: {violations}")
-    return {
-        "fully_neural": True,
-        "forbidden_dependencies_found": [],
-        "tomotopy_role": "post-training comparator only",
-        "chemistry_fields_in_training": [],
-        "test_information_in_training": False,
-    }
+    return {"forbidden_dependencies_found": []}
 
 
-def initialize_run(run_dir: str | Path, *, data_root: str | Path) -> dict[str, Any]:
+def initialize_run(
+    run_dir: str | Path,
+    *,
+    data_root: str | Path,
+    tomotopy_reference_run: str | Path,
+) -> dict[str, Any]:
     """Create or verify an immutable, exactly resumable run lock."""
     directory = Path(run_dir).expanduser().resolve()
     root = Path(data_root).expanduser().resolve()
     directory.mkdir(parents=True, exist_ok=True)
     protocol = load_protocol()
     lock_path = directory / "run.lock.json"
+    from .tomotopy import tomotopy_reference_evidence
+
+    reference = tomotopy_reference_evidence(tomotopy_reference_run, protocol)
     expected = {
         "schema_version": "neural-ms2lda/run-lock-v1",
         "data_root": str(root),
@@ -173,10 +182,17 @@ def initialize_run(run_dir: str | Path, *, data_root: str | Path) -> dict[str, A
         "environment": environment_manifest(),
         "git": _git_state(),
         "discovery_audit": static_discovery_audit(),
+        "tomotopy_reference": reference,
     }
     if lock_path.is_file():
         existing = read_json(lock_path)
-        immutable = ("data_root", "protocol_sha256", "inputs", "code")
+        immutable = (
+            "data_root",
+            "protocol_sha256",
+            "inputs",
+            "code",
+            "tomotopy_reference",
+        )
         if any(existing.get(key) != expected.get(key) for key in immutable):
             raise ValueError("run provenance differs from its immutable lock")
         return existing
@@ -199,6 +215,13 @@ def verify_run(
         raise ValueError("resolved protocol changed")
     if code_manifest() != lock["code"]:
         raise ValueError("workflow source changed after the run was frozen")
+    reference = lock.get("tomotopy_reference")
+    if reference is not None:
+        from .tomotopy import tomotopy_reference_evidence
+
+        current_reference = tomotopy_reference_evidence(reference["run"], protocol)
+        if current_reference != reference:
+            raise ValueError("Tomotopy reference evidence changed")
     root = Path(data_root or lock["data_root"]).expanduser().resolve()
     names = None if verify_large_inputs else {"mgf"}
     inputs = verify_inputs(protocol, root, names=names)
@@ -206,13 +229,16 @@ def verify_run(
         raise ValueError("raw MGF changed")
     checked: list[str] = []
 
+    model_manifest_path = directory / "model/complete.json"
+    graph_manifest_path = directory / "cooccurrence_graph/complete.json"
+    if model_manifest_path.is_file() and not graph_manifest_path.is_file():
+        raise FileNotFoundError("trained model requires a co-occurrence graph manifest")
+
     def verify_outputs(manifest_name: str) -> dict[str, Any]:
         manifest_path = directory / manifest_name
         manifest = read_json(manifest_path)
-        for name, digest in manifest.get("output_sha256", {}).items():
-            output = manifest_path.parent / name
-            if not output.is_file() or file_sha256(output) != digest:
-                raise ValueError(f"artifact changed: {output}")
+        if manifest_name not in {"model/complete.json", "report/report.json"}:
+            verify_output_hashes(manifest_path.parent, manifest)
         checked.append(manifest_name)
         return manifest
 
@@ -222,6 +248,7 @@ def verify_run(
         "embeddings/complete.json",
         "token_features/complete.json",
         "initialization/complete.json",
+        "cooccurrence_graph/complete.json",
         "model/complete.json",
         "evaluation/neural/complete.json",
         "evaluation/tomotopy/complete.json",
@@ -232,34 +259,44 @@ def verify_run(
         path = directory / manifest_name
         if path.is_file():
             manifest = verify_outputs(manifest_name)
-            if manifest_name == "embeddings/complete.json":
-                if (
-                    file_sha256(path.parent / "embeddings.npy")
-                    != manifest["embeddings_sha256"]
-                ):
-                    raise ValueError("SGNS embeddings changed")
-            elif manifest_name == "token_features/complete.json":
-                if (
-                    file_sha256(path.parent / "features.npy")
-                    != manifest["features_sha256"]
-                ):
-                    raise ValueError("token features changed")
-            elif manifest_name == "initialization/complete.json":
-                if (
-                    file_sha256(path.parent / "model_initialization.pt")
-                    != manifest["checkpoint_sha256"]
-                ):
-                    raise ValueError("model initialization changed")
+            if manifest_name == "cooccurrence_graph/complete.json":
+                if set(manifest.get("output_sha256", {})) != {
+                    "positive_npmi_graph.npz"
+                }:
+                    raise ValueError("co-occurrence graph manifest is incomplete")
             elif manifest_name == "model/complete.json":
+                if manifest["cooccurrence_graph"] != read_json(graph_manifest_path):
+                    raise ValueError("model co-occurrence graph provenance changed")
                 selected = manifest["selected"]
+                selected_path = path.parent / "selected.json"
+                if not selected_path.is_file() or read_json(selected_path) != selected:
+                    raise ValueError("selected model manifest changed")
                 if (
                     file_sha256(path.parent / selected["checkpoint"])
                     != selected["checkpoint_sha256"]
                 ):
                     raise ValueError("selected neural checkpoint changed")
+                if selected.get("selection_rule") != "fixed_final_epoch":
+                    raise ValueError(
+                        "neural checkpoint was not selected by final epoch"
+                    )
+                if int(selected["epoch"]) != int(
+                    protocol["optimization"]["maximum_epochs"]
+                ):
+                    raise ValueError(
+                        "selected neural checkpoint is not the final epoch"
+                    )
+            elif manifest_name == "evaluation/tomotopy/complete.json":
+                if reference is None or manifest.get("reference") != reference:
+                    raise ValueError("Tomotopy reference provenance changed")
+                if int(manifest.get("inference_workers", 0)) != int(
+                    protocol["cpu_threads"]
+                ):
+                    raise ValueError("Tomotopy inference did not use six workers")
             elif manifest_name == "report/report.json":
                 report_sources = {
                     "protocol": directory / "protocol.resolved.json",
+                    "neural_training": directory / "model/complete.json",
                     "neural_evaluation": directory / "evaluation/neural/complete.json",
                     "tomotopy_evaluation": directory
                     / "evaluation/tomotopy/complete.json",
@@ -285,10 +322,6 @@ def verify_run(
         views = read_json(views_path)
         if not views["frozen_train_counts_reproduced_exactly"]:
             raise ValueError("raw-MGF training counts do not reproduce exactly")
-        if not views["physical_peak_groups_atomic"]:
-            raise ValueError("fragment/loss peak groups were not kept atomic")
-        if views["chemistry_fields_in_model_inputs"]:
-            raise ValueError("chemistry fields entered the neural model inputs")
     return {
         "schema_version": "neural-ms2lda/verification-v1",
         "verified": True,

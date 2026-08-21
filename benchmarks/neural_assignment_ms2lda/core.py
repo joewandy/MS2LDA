@@ -29,6 +29,7 @@ from .utils import (
     atomic_torch_save,
     file_sha256,
     read_json,
+    verify_output_hashes,
     write_json,
 )
 
@@ -132,8 +133,7 @@ def prepare_token_features(
     features_path = output / "features.npy"
     if complete_path.is_file():
         result = read_json(complete_path)
-        if file_sha256(features_path) != result["features_sha256"]:
-            raise ValueError("token features changed")
+        verify_output_hashes(output, result)
         return result
     embeddings = np.load(directory / "embeddings/embeddings.npy")
     vocabulary = load_vocabulary(counts_dir)
@@ -142,9 +142,7 @@ def prepare_token_features(
     result = {
         "schema_version": "neural-ms2lda/token-features-v1",
         "shape": list(features.shape),
-        "training_split_only": True,
-        "chemical_labels_used": False,
-        "features_sha256": file_sha256(features_path),
+        "output_sha256": {features_path.name: file_sha256(features_path)},
     }
     write_json(complete_path, result)
     return result
@@ -160,8 +158,7 @@ def prepare_initialization(
     complete_path = output / "complete.json"
     if complete_path.is_file():
         result = read_json(complete_path)
-        if file_sha256(checkpoint_path) != result["checkpoint_sha256"]:
-            raise ValueError("model initialization changed")
+        verify_output_hashes(output, result)
         return result
     features = torch.from_numpy(np.load(directory / "token_features/features.npy"))
     model, indices = initialize_model(
@@ -178,14 +175,14 @@ def prepare_initialization(
             "topic_initial_indices": indices,
             "seed": int(protocol["seed"]),
             "method": "weighted_kmeans_plus_plus_seeding_without_lloyd_updates",
-            "teacher_used": False,
         },
     )
     result = {
         "schema_version": "neural-ms2lda/initialization-complete-v1",
         "num_topics": int(protocol["model"]["num_topics"]),
-        "data_only": True,
-        "checkpoint_sha256": file_sha256(checkpoint_path),
+        "output_sha256": {
+            checkpoint_path.name: file_sha256(checkpoint_path),
+        },
     }
     write_json(complete_path, result)
     return result
@@ -209,6 +206,8 @@ def fresh_model(
         projection_dimensions=int(config["projection_dimensions"]),
         router_hidden_dimensions=int(config["router_hidden_dimensions"]),
         beta_temperature=float(config["beta_temperature"]),
+        document_mixture_weight=float(config["document_mixture_weight"]),
+        document_topic_prior_weight=float(config["document_topic_prior_weight"]),
         topic_initial_indices=checkpoint["topic_initial_indices"],
         seed=int(protocol["seed"]) + int(config["num_topics"]),
     )

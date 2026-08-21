@@ -1,4 +1,4 @@
-"""Versioned, hash-verified portable neural MS2LDA model bundles."""
+"""Hash-verified portable neural MS2LDA model bundles."""
 
 from __future__ import annotations
 
@@ -55,15 +55,15 @@ def package_bundle(run_dir: str | Path, output_dir: str | Path) -> dict[str, Any
     output.mkdir(parents=True, exist_ok=True)
     selected = read_json(run / "model/selected.json")
     checkpoint = run / "model" / selected["checkpoint"]
+    protocol_path = run / "protocol.resolved.json"
     shutil.copy2(checkpoint, output / "model.pt")
     shutil.copy2(run / "data/vocabulary.json", output / "vocabulary.json")
-    shutil.copy2(run / "protocol.resolved.json", output / "protocol.json")
+    shutil.copy2(protocol_path, output / "protocol.json")
     shutil.copy2(run / "evaluation/neural/complete.json", output / "evaluation.json")
     shutil.copy2(run / "chemical/neural/complete.json", output / "chemistry.json")
     write_json(output / "provenance.json", _portable_provenance(run, selected))
     manifest = {
         "schema_version": "neural-ms2lda/model-bundle-v1",
-        "bundle_version": "neural-ms2lda-msnlib-k500-v1",
         "selected_epoch": int(selected["epoch"]),
         "beta_derivation": "softmax(2 * normalized_topics @ normalized_projected_tokens.T / beta_temperature)",
         "files": {
@@ -106,6 +106,13 @@ def load_bundle(
         projection_dimensions=int(config["projection_dimensions"]),
         router_hidden_dimensions=int(config["router_hidden_dimensions"]),
         beta_temperature=float(config["beta_temperature"]),
+        document_mixture_weight=float(config.get("document_mixture_weight", 0.0)),
+        document_topic_prior_weight=float(
+            config.get(
+                "document_topic_prior_weight",
+                protocol.get("hierarchical_routing", {}).get("weight", 0.0),
+            )
+        ),
         topic_initial_indices=topic_indices,
         seed=int(protocol["seed"]) + int(config["num_topics"]),
     )

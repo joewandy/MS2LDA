@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import time
 from functools import cache
 from pathlib import Path
@@ -30,32 +29,24 @@ from benchmarks.msnlib_validation.metrics import (
     calculate_sos_smaller_fingerprint,
 )
 
-from .utils import file_sha256, peak_rss_bytes, read_json, write_json
+from .data import load_heldout_records
+from .utils import (
+    file_sha256,
+    peak_rss_bytes,
+    read_json,
+    verify_output_hashes,
+    write_json,
+    write_jsonl,
+)
 
 
-def _write_jsonl(path: Path, rows: Sequence[dict[str, Any]]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
-    try:
-        with temporary.open("w", encoding="utf-8") as handle:
-            for row in rows:
-                handle.write(
-                    json.dumps(row, sort_keys=True, separators=(",", ":")) + "\n"
-                )
-        os.replace(temporary, path)
-    finally:
-        temporary.unlink(missing_ok=True)
-
-
-def _test_records(data: Path) -> list[dict[str, Any]]:
-    rows = []
-    with (data / "heldout_records.jsonl").open(encoding="utf-8") as handle:
-        for line in handle:
-            if line.strip():
-                row = json.loads(line)
-                if row["split"] == "test":
-                    rows.append(row)
-    return rows
+def _sos_bands(values: Sequence[float]) -> dict[str, int]:
+    """Count eligible topic SOS values in the paper's fixed bands."""
+    return {
+        "high_gt_0_8": sum(value > 0.8 for value in values),
+        "intermediate_0_6_to_0_8": sum(0.6 <= value <= 0.8 for value in values),
+        "low_lt_0_6": sum(value < 0.6 for value in values),
+    }
 
 
 def _topic_scores(
@@ -154,6 +145,7 @@ def _topic_scores(
             ),
             "mean_sos": float(np.mean(values)) if values else None,
             "median_sos": float(np.median(values)) if values else None,
+            "sos_bands": _sos_bands(values),
         },
     )
 
@@ -164,17 +156,21 @@ def run_chemical_scoring(
     method: str,
     data_root: str | Path,
     protocol: dict[str, Any],
+    split: str = "test",
 ) -> dict[str, Any]:
     """Annotate neural or comparator topics and score held-out compounds."""
-    if method not in {"neural", "tomotopy"}:
-        raise ValueError("chemical method must be neural or tomotopy")
+    allowed = {"neural", "current_neural", "candidate_neural", "tomotopy"}
+    if method not in allowed:
+        raise ValueError(f"chemical method must be one of {sorted(allowed)}")
+    if split not in {"validation", "test"}:
+        raise ValueError("chemical split must be validation or test")
     directory = Path(run_dir).expanduser().resolve()
-    output = directory / "chemical" / method
+    group = "chemical" if split == "test" else "validation_chemical"
+    evaluation_group = "evaluation" if split == "test" else "validation_evaluation"
+    output = directory / group / method
     if (output / "complete.json").is_file():
         result = read_json(output / "complete.json")
-        for name, digest in result["output_sha256"].items():
-            if file_sha256(output / name) != digest:
-                raise ValueError(f"chemical artifact changed: {name}")
+        verify_output_hashes(output, result)
         return result
     import faiss
 
@@ -192,17 +188,14 @@ def run_chemical_scoring(
         directory, data_root=data_root, protocol=protocol
     )
     data = directory / "data"
-    evaluation = directory / "evaluation" / method
-    result_manifest = read_json(evaluation / "complete.json")
+    evaluation = directory / evaluation_group / method
+    verify_output_hashes(evaluation, read_json(evaluation / "complete.json"))
     beta_path = evaluation / "beta.npy"
-    theta_path = evaluation / "test_full_theta.npy"
-    for path in (beta_path, theta_path):
-        if file_sha256(path) != result_manifest["output_sha256"][path.name]:
-            raise ValueError(f"evaluation changed before chemistry: {path.name}")
+    theta_path = evaluation / f"{split}_full_theta.npy"
     beta = np.load(beta_path, mmap_mode="r")
     theta = np.load(theta_path, mmap_mode="r")
     vocabulary = list(map(str, read_json(data / "vocabulary.json")["vocabulary"]))
-    records = _test_records(data)
+    records = load_heldout_records(data, split)
     if theta.shape[0] != len(records):
         raise ValueError("full mixtures and held-out records differ")
     spectra = topic_spectra(
@@ -313,12 +306,13 @@ def run_chemical_scoring(
         "compound_scores.jsonl": compound_rows,
     }
     for name, rows in rows_by_name.items():
-        _write_jsonl(output / name, rows)
+        write_jsonl(output / name, rows)
     write_json(output / "summaries.json", summaries)
     by_mode = {row["association_mode"]: row for row in summaries}
     result = {
         "schema_version": "neural-ms2lda/chemical-evaluation-v1",
         "method": method,
+        "split": split,
         "topics": len(annotations),
         "annotation_coverage": sum(
             row["optimized_feature_count"] > 0 for row in annotations
@@ -331,7 +325,6 @@ def run_chemical_scoring(
         "association_results": summaries,
         "dominant_topic_chemistry": by_mode["dominant_topic"],
         "high_confidence_chemistry": by_mode["probability_ge_frozen_threshold"],
-        "chemical_labels_used_for_training": False,
         "heldout_compounds_excluded_from_mag": index_manifest["retained_leak_rows"]
         == 0,
         "mag_seconds": time.perf_counter() - started,
@@ -350,13 +343,19 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run", required=True, type=Path)
     parser.add_argument("--data-root", required=True, type=Path)
-    parser.add_argument("--method", choices=("neural", "tomotopy"), required=True)
+    parser.add_argument(
+        "--method",
+        choices=("neural", "current_neural", "candidate_neural", "tomotopy"),
+        required=True,
+    )
+    parser.add_argument("--split", choices=("validation", "test"), default="test")
     args = parser.parse_args(argv)
     result = run_chemical_scoring(
         args.run,
         method=args.method,
         data_root=args.data_root,
         protocol=read_json(args.run / "protocol.resolved.json"),
+        split=args.split,
     )
     print(json.dumps(result, indent=2, sort_keys=True))
     return 0

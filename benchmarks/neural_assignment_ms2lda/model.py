@@ -49,6 +49,7 @@ class TopicLossTerms:
     total: torch.Tensor
     completion: torch.Tensor
     local_decoder: torch.Tensor
+    beta: torch.Tensor
 
 
 def balanced_sinkhorn_targets(
@@ -148,6 +149,8 @@ class NeuralAssignmentMS2LDA(nn.Module):
         projection_dimensions: int,
         router_hidden_dimensions: int,
         beta_temperature: float,
+        document_mixture_weight: float,
+        document_topic_prior_weight: float,
         topic_initial_indices: torch.Tensor,
         seed: int,
     ) -> None:
@@ -163,6 +166,8 @@ class NeuralAssignmentMS2LDA(nn.Module):
         self.input_dimensions = int(token_features.shape[1])
         self.projection_dimensions = int(projection_dimensions)
         self.beta_temperature = float(beta_temperature)
+        self.document_mixture_weight = float(document_mixture_weight)
+        self.document_topic_prior_weight = float(document_topic_prior_weight)
         self.register_buffer("token_features", token_features.detach().clone())
 
         with torch.random.fork_rng(devices=[]):
@@ -188,7 +193,7 @@ class NeuralAssignmentMS2LDA(nn.Module):
         self.topic_prototypes = nn.Parameter(initial)
 
     def projected_tokens(self) -> torch.Tensor:
-        """Project the fixed 64-D token table into normalized neural geometry."""
+        """Project the fixed token table into normalized neural geometry."""
         return F.normalize(self.token_projection(self.token_features), dim=1)
 
     def topic_word_distribution(
@@ -207,7 +212,7 @@ class NeuralAssignmentMS2LDA(nn.Module):
         self,
         batch: SparseBatch,
         projected_tokens: torch.Tensor,
-    ) -> torch.Tensor:
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         token_values = projected_tokens[batch.indices]
         weighted = token_values * batch.weights.unsqueeze(1)
         document_sums = token_values.new_zeros(
@@ -220,7 +225,9 @@ class NeuralAssignmentMS2LDA(nn.Module):
         ).clamp_min(1.0)
         context = context_numerator / context_denominator.unsqueeze(1)
         correction = self.context_router(torch.cat((token_values, context), dim=1))
-        return F.normalize(token_values + correction, dim=1)
+        token_routes = F.normalize(token_values + correction, dim=1)
+        document_routes = F.normalize(document_sums, dim=1)
+        return token_routes, document_routes
 
     @staticmethod
     def aggregate_theta(
@@ -229,10 +236,20 @@ class NeuralAssignmentMS2LDA(nn.Module):
         row_ids: torch.Tensor,
         weights: torch.Tensor,
         documents: int,
+        document_logits: torch.Tensor | None = None,
+        temperature: float = 1.0,
+        document_mixture_weight: float = 0.0,
     ) -> torch.Tensor:
-        """Aggregate count-weighted token assignments into document mixtures."""
+        """Combine count-weighted token mass with shared document evidence."""
         topic_mass = assignments.new_zeros((documents, assignments.shape[1]))
         topic_mass.index_add_(0, row_ids, assignments * weights.unsqueeze(1))
+        mixture_weight = float(document_mixture_weight)
+        if mixture_weight:
+            if document_logits is None or document_logits.shape != topic_mass.shape:
+                msg = "document logits must match document topic mass"
+                raise ValueError(msg)
+            gate = F.softmax(document_logits / float(temperature), dim=1)
+            topic_mass = topic_mass * gate.pow(mixture_weight)
         totals = topic_mass.sum(dim=1, keepdim=True)
         theta = topic_mass / totals.clamp_min(1e-12)
         empty = totals.squeeze(1) <= 0
@@ -254,9 +271,13 @@ class NeuralAssignmentMS2LDA(nn.Module):
         tokens = (
             self.projected_tokens() if projected_tokens is None else projected_tokens
         )
-        routes = self._route_embeddings(batch, tokens)
+        routes, document_routes = self._route_embeddings(batch, tokens)
         topics = F.normalize(self.topic_prototypes, dim=1)
-        logits = routes @ topics.T
+        local_logits = routes @ topics.T
+        document_logits = document_routes @ topics.T
+        logits = local_logits + (
+            self.document_topic_prior_weight * document_logits[batch.row_ids]
+        )
         soft = F.softmax(logits / float(temperature), dim=1)
         selected_k = min(int(top_k), self.num_topics)
         indices = torch.topk(soft, k=selected_k, dim=1).indices
@@ -269,6 +290,9 @@ class NeuralAssignmentMS2LDA(nn.Module):
             row_ids=batch.row_ids,
             weights=batch.weights,
             documents=batch.documents,
+            document_logits=document_logits,
+            temperature=temperature,
+            document_mixture_weight=self.document_mixture_weight,
         )
         return AssignmentOutput(
             theta=theta,
@@ -416,6 +440,7 @@ def topic_block_loss(
         total=completion + float(local_decoder_weight) * local,
         completion=completion,
         local_decoder=local,
+        beta=beta,
     )
 
 
@@ -468,7 +493,7 @@ def initialize_model(
     with torch.random.fork_rng(devices=[]):
         torch.manual_seed(seed + int(num_topics))
         temporary_projection = nn.Linear(
-            int(model_config["input_dimensions"]),
+            int(token_features.shape[1]),
             int(model_config["projection_dimensions"]),
             bias=False,
         )
@@ -491,6 +516,8 @@ def initialize_model(
         projection_dimensions=int(model_config["projection_dimensions"]),
         router_hidden_dimensions=int(model_config["router_hidden_dimensions"]),
         beta_temperature=float(model_config["beta_temperature"]),
+        document_mixture_weight=float(model_config["document_mixture_weight"]),
+        document_topic_prior_weight=float(model_config["document_topic_prior_weight"]),
         topic_initial_indices=initial_indices,
         seed=seed + int(num_topics),
     )

@@ -1,4 +1,4 @@
-"""Exact-resume training for the single supported K=500 ERNTM model."""
+"""Exact-resume training for the supported neural topic model."""
 
 from __future__ import annotations
 
@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any, Callable
 import numpy as np
 import torch
 
+from .cooccurrence import prepare_cooccurrence_graph, torch_sparse_graph
 from .core import (
     HardContextQueue,
     fresh_model,
@@ -19,7 +20,10 @@ from .core import (
 from .data import ViewPair, iter_row_batches, sparse_batch
 from .inventory import topic_inventory_summary
 from .model import recycle_dead_prototypes, router_block_loss, topic_block_loss
-from .regularizers import erntm_topic_constraint
+from .regularizers import (
+    cooccurrence_topic_constraint,
+    nearest_neighbor_topic_constraint,
+)
 from .utils import atomic_torch_save, file_sha256, peak_rss_bytes, read_json, write_json
 
 if TYPE_CHECKING:
@@ -33,28 +37,32 @@ def _entry_losses(output: Any, beta: torch.Tensor) -> torch.Tensor:
     return -torch.log(probability)
 
 
-def _selection(history: list[dict[str, Any]]) -> dict[str, Any]:
-    candidates = [row for row in history if row.get("validation") is not None]
-    if not candidates:
-        raise RuntimeError("training produced no validation checkpoint")
+def _weighted_topic_separation(
+    model: torch.nn.Module,
+    config: dict[str, Any],
+) -> tuple[Any, torch.Tensor]:
+    """Return the supported nearest-topic margin and its weighted loss."""
+    result = nearest_neighbor_topic_constraint(
+        model,
+        neighbors=int(config["neighbors"]),
+        margin=float(config["margin"]),
+    )
+    return result, float(config["weight"]) * result.loss
 
-    def key(row: dict[str, Any]) -> tuple[float, float, int]:
-        validation = row["validation"]
-        mass99 = validation["topic_inventory"]["mass_coverages"]["mass_99"]
-        nll = validation["document_completion"]["nll_per_token"]
-        return (
-            -float(mass99["distinct_topic_equivalents"]),
-            float(nll),
-            int(row["epoch"]),
-        )
 
-    selected = min(candidates, key=key)
-    epoch = int(selected["epoch"])
+def _selection(
+    history: list[dict[str, Any]], protocol: dict[str, Any]
+) -> dict[str, Any]:
+    """Select the predeclared final epoch without metric-based checkpoint search."""
+    epoch = int(protocol["optimization"]["maximum_epochs"])
+    selected = next((row for row in history if int(row["epoch"]) == epoch), None)
+    if selected is None or selected.get("validation") is None:
+        raise RuntimeError("the final epoch has no validation checkpoint")
     return {
+        "selection_rule": "fixed_final_epoch",
         "epoch": epoch,
         "checkpoint": f"validation_checkpoints/epoch_{epoch:04d}.pt",
         "validation": selected["validation"],
-        "selection_rule": "maximum_validation_mass99_distinct_topic_equivalents_then_lower_nll",
     }
 
 
@@ -103,9 +111,17 @@ def train_model(
     root = Path(run_dir)
     output = root / "model"
     output.mkdir(parents=True, exist_ok=True)
+    graph_config = protocol["cooccurrence_regularization"]
+    separation_config = protocol["topic_separation"]
+    graph, graph_manifest = prepare_cooccurrence_graph(
+        root, train=train, protocol=protocol
+    )
+    graph_tensor = torch_sparse_graph(graph)
     complete_path = output / "complete.json"
     if complete_path.is_file():
         result = read_json(complete_path)
+        if result["cooccurrence_graph"] != graph_manifest:
+            raise ValueError("model co-occurrence graph provenance changed")
         selected = output / result["selected"]["checkpoint"]
         if file_sha256(selected) != result["selected"]["checkpoint_sha256"]:
             raise ValueError("selected model checkpoint changed")
@@ -161,12 +177,15 @@ def train_model(
         balance_weight = sinkhorn_weight(epoch, protocol)
         totals = {
             "router_total": 0.0,
+            "router_base": 0.0,
+            "router_separation": 0.0,
             "completion": 0.0,
             "sinkhorn": 0.0,
             "consistency": 0.0,
             "topic_base": 0.0,
             "local_decoder": 0.0,
-            "erntm": 0.0,
+            "cooccurrence": 0.0,
+            "topic_separation": 0.0,
         }
         router_batches = 0
         topic_updates = 0
@@ -194,11 +213,16 @@ def train_model(
                 sinkhorn_epsilon=float(model_config["sinkhorn_epsilon"]),
                 sinkhorn_iterations=int(model_config["sinkhorn_iterations"]),
             )
-            if not torch.isfinite(terms.total):
+            router_separation, weighted_router_separation = _weighted_topic_separation(
+                model,
+                separation_config,
+            )
+            router_total = terms.total + weighted_router_separation
+            if not torch.isfinite(router_total):
                 stable = False
                 stop_reason = "non_finite_router_loss"
                 break
-            terms.total.backward()
+            router_total.backward()
             gradient_norm = torch.nn.utils.clip_grad_norm_(
                 model.parameters(), float(model_config["gradient_clip_norm"])
             )
@@ -214,7 +238,9 @@ def train_model(
                         routed.route_embeddings,
                         limit=32,
                     )
-            totals["router_total"] += float(terms.total.detach())
+            totals["router_total"] += float(router_total.detach())
+            totals["router_base"] += float(terms.total.detach())
+            totals["router_separation"] += float(router_separation.loss.detach())
             totals["completion"] += float(terms.completion.detach())
             totals["sinkhorn"] += float(terms.sinkhorn.detach())
             totals["consistency"] += float(terms.consistency.detach())
@@ -243,9 +269,17 @@ def train_model(
                     top_k=top_k,
                     local_decoder_weight=float(optimization["local_decoder_weight"]),
                 )
-                regularizer = erntm_topic_constraint(model)
-                weighted_erntm = float(optimization["erntm_weight"]) * regularizer.loss
-                total = terms.total + weighted_erntm
+                separation, weighted_separation = _weighted_topic_separation(
+                    model,
+                    separation_config,
+                )
+                cooccurrence = cooccurrence_topic_constraint(
+                    model, graph_tensor, beta=terms.beta
+                )
+                weighted_cooccurrence = (
+                    float(graph_config["weight"]) * cooccurrence.loss
+                )
+                total = terms.total + weighted_cooccurrence + weighted_separation
                 if not torch.isfinite(total):
                     stable = False
                     stop_reason = "non_finite_topic_loss"
@@ -262,8 +296,12 @@ def train_model(
                 totals["topic_base"] += float(terms.total.detach())
                 totals["completion"] += float(terms.completion.detach())
                 totals["local_decoder"] += float(terms.local_decoder.detach())
-                totals["erntm"] += float(regularizer.loss.detach())
-                regularizer_diagnostics = regularizer.diagnostics
+                totals["cooccurrence"] += float(cooccurrence.loss.detach())
+                totals["topic_separation"] += float(separation.loss.detach())
+                regularizer_diagnostics = {
+                    **separation.diagnostics,
+                    **cooccurrence.diagnostics,
+                }
                 topic_updates += 1
                 global_step += 1
 
@@ -280,6 +318,7 @@ def train_model(
                 validation_records=validation_records,
                 protocol=protocol,
                 epoch=epochs_completed,
+                include_npmi=True,
             )
             usage = np.asarray(validation.pop("_usage"), dtype=np.float64)
             with torch.inference_mode():
@@ -345,13 +384,17 @@ def train_model(
             "sinkhorn_weight": balance_weight,
             "losses": {
                 "router_total": totals["router_total"] / max(router_batches, 1),
+                "router_base": totals["router_base"] / max(router_batches, 1),
+                "router_separation": totals["router_separation"]
+                / max(router_batches, 1),
                 "completion": totals["completion"]
                 / max(router_batches + topic_updates, 1),
                 "sinkhorn": totals["sinkhorn"] / max(router_batches, 1),
                 "consistency": totals["consistency"] / max(router_batches, 1),
                 "topic_base": totals["topic_base"] / max(topic_updates, 1),
                 "local_decoder": totals["local_decoder"] / max(topic_updates, 1),
-                "erntm": totals["erntm"] / max(topic_updates, 1),
+                "cooccurrence": totals["cooccurrence"] / max(topic_updates, 1),
+                "topic_separation": totals["topic_separation"] / max(topic_updates, 1),
             },
             "regularizer_diagnostics": regularizer_diagnostics,
             "validation": validation,
@@ -388,7 +431,7 @@ def train_model(
 
     if not stable:
         raise RuntimeError(f"neural training failed: {stop_reason}")
-    selected = _selection(history)
+    selected = _selection(history, protocol)
     selected_path = output / selected["checkpoint"]
     selected["checkpoint_sha256"] = file_sha256(selected_path)
     write_json(output / "selected.json", selected)
@@ -401,6 +444,7 @@ def train_model(
         "elapsed_seconds": float(history[-1]["elapsed_seconds"]),
         "selected": selected,
         "recycle_count_total": int(recycle_counts.sum()),
+        "cooccurrence_graph": graph_manifest,
         "peak_rss_bytes": peak_rss_bytes(),
     }
     write_json(complete_path, result)
@@ -410,7 +454,7 @@ def train_model(
 def load_selected_model(
     run_dir: str | Path, protocol: dict[str, Any]
 ) -> tuple[torch.nn.Module, dict[str, Any]]:
-    """Load the validation-selected checkpoint and verify its digest."""
+    """Load the fixed final-epoch checkpoint and verify its digest."""
     directory = Path(run_dir)
     selected = read_json(directory / "model/selected.json")
     checkpoint_path = directory / "model" / selected["checkpoint"]

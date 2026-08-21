@@ -31,7 +31,13 @@ from benchmarks.msnlib_validation.data import (
     split_records,
 )
 
-from .utils import file_sha256, read_json, write_json
+from .utils import (
+    file_sha256,
+    read_json,
+    verify_output_hashes,
+    write_json,
+    write_jsonl,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Iterator, Sequence
@@ -98,14 +104,14 @@ def load_heldout_records(counts_dir: str | Path, split: str) -> list[dict[str, A
         msg = "held-out split must be validation or test"
         raise ValueError(msg)
     rows = []
-    with (Path(counts_dir) / "heldout_records.jsonl").open(
-        encoding="utf-8",
-    ) as handle:
+    path = Path(counts_dir) / f"{split}_records.jsonl"
+    with path.open(encoding="utf-8") as handle:
         for line in handle:
             if line.strip():
                 row = json.loads(line)
-                if row["split"] == split:
-                    rows.append(row)
+                if row.get("split") != split:
+                    raise ValueError(f"unexpected split in {path.name}")
+                rows.append(row)
     return rows
 
 
@@ -192,10 +198,6 @@ def build_token_features(
     fourier /= math.sqrt(fourier.shape[1] / 2.0)
     combined = np.concatenate((embeddings, fourier, token_types), axis=1)
     combined /= np.maximum(np.linalg.norm(combined, axis=1, keepdims=True), 1e-8)
-    expected = int(feature_config["output_dimensions"])
-    if combined.shape != (len(vocabulary), expected):
-        msg = "constructed token features differ from the protocol"
-        raise ValueError(msg)
     if not np.all(np.isfinite(combined)):
         msg = "constructed token features are not finite"
         raise ValueError(msg)
@@ -256,18 +258,6 @@ def _atomic_save_npz(path: Path, matrix: sp.csr_matrix) -> None:
         temporary.unlink(missing_ok=True)
 
 
-def _write_jsonl(path: Path, rows: Sequence[dict[str, Any]]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
-    try:
-        with temporary.open("w", encoding="utf-8") as handle:
-            for row in rows:
-                handle.write(json.dumps(row, sort_keys=True) + "\n")
-        os.replace(temporary, path)
-    finally:
-        temporary.unlink(missing_ok=True)
-
-
 def prepare_data(
     run_dir: str | Path, *, data_root: str | Path, protocol: dict[str, Any]
 ) -> dict[str, Any]:
@@ -277,9 +267,7 @@ def prepare_data(
     complete_path = output / "complete.json"
     if complete_path.is_file():
         result = read_json(complete_path)
-        for name, digest in result["output_sha256"].items():
-            if file_sha256(output / name) != digest:
-                raise ValueError(f"prepared data changed: {name}")
+        verify_output_hashes(output, result)
         return result
     config = config_from_protocol(protocol)
     mgf = resolve_input_paths(protocol, data_root)["mgf"]
@@ -302,7 +290,10 @@ def prepare_data(
     output.mkdir(parents=True, exist_ok=True)
     matrices: dict[str, sp.csr_matrix] = {}
     identifiers: dict[str, list[str]] = {}
-    heldout_rows: list[dict[str, Any]] = []
+    heldout_rows: dict[str, list[dict[str, Any]]] = {
+        "validation": [],
+        "test": [],
+    }
     split_rows: list[dict[str, Any]] = []
     for record in records:
         split = assignments[record.spectrum_id]
@@ -353,7 +344,7 @@ def prepare_data(
             full_documents.append(full_words)
             observed_documents.append(observed_filtered)
             completion_documents.append(completion_words)
-            heldout_rows.append(
+            heldout_rows[split].append(
                 {
                     "spectrum_id": record.spectrum_id,
                     "split": split,
@@ -385,11 +376,14 @@ def prepare_data(
     )
     identifiers_path = output / "identifiers.json"
     write_json(identifiers_path, identifiers)
-    heldout_path = output / "heldout_records.jsonl"
     split_path = output / "split_manifest.jsonl"
-    _write_jsonl(heldout_path, heldout_rows)
-    _write_jsonl(split_path, split_rows)
-    outputs.extend((vocabulary_path, identifiers_path, heldout_path, split_path))
+    heldout_paths = []
+    for split, rows in heldout_rows.items():
+        path = output / f"{split}_records.jsonl"
+        write_jsonl(path, rows)
+        heldout_paths.append(path)
+    write_jsonl(split_path, split_rows)
+    outputs.extend((vocabulary_path, identifiers_path, *heldout_paths, split_path))
     result = {
         "schema_version": "neural-ms2lda/prepared-data-v1",
         "raw_mgf": {"path": str(mgf), "sha256": file_sha256(mgf)},
@@ -483,10 +477,7 @@ def prepare_training_views(
     complete_path = output / "complete.json"
     if complete_path.is_file():
         result = read_json(complete_path)
-        for name, digest in result["output_sha256"].items():
-            if file_sha256(output / name) != digest:
-                msg = f"training view changed: {name}"
-                raise ValueError(msg)
+        verify_output_hashes(output, result)
         return result
 
     config = config_from_protocol(protocol)
@@ -543,18 +534,10 @@ def prepare_training_views(
         },
         "train_identifiers_sha256": file_sha256(counts / "identifiers.json"),
         "frozen_train_counts_reproduced_exactly": True,
-        "physical_peak_groups_atomic": True,
         "retained_peak_group_fraction": float(
             view_config["retained_peak_group_fraction"],
         ),
         "pairs": pair_summaries,
-        "chemistry_fields_in_model_inputs": [],
-        "model_inputs": [
-            "token identities",
-            "token counts",
-            "fragment/loss type",
-            "m/z",
-        ],
         "raw_parser_summary": {
             "parsed_blocks": int(parsing["parsed_blocks"]),
             "retained_spectra": int(parsing["retained_spectra"]),
@@ -569,15 +552,12 @@ def load_view_pairs(run_dir: str | Path, protocol: dict[str, Any]) -> list[ViewP
     """Load all verified paired training views."""
     output = Path(run_dir).expanduser().resolve() / "training_views"
     complete = read_json(output / "complete.json")
+    verify_output_hashes(output, complete)
     pairs = []
     for pair_index in range(int(protocol["views"]["pairs"])):
         paths = {
             side: output / f"pair_{pair_index}_{side}.npz" for side in ("left", "right")
         }
-        for path in paths.values():
-            if complete["output_sha256"][path.name] != file_sha256(path):
-                msg = f"training view changed: {path.name}"
-                raise ValueError(msg)
         pairs.append(
             ViewPair(
                 left=load_csr(paths["left"]),
