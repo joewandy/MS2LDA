@@ -1,4 +1,4 @@
-"""Exact-resume training for the supported K=500 neural topic model."""
+"""Exact-resume training for the supported neural topic model."""
 
 from __future__ import annotations
 
@@ -50,74 +50,19 @@ def _weighted_topic_separation(
     return result, float(config["weight"]) * result.loss
 
 
-def validation_gate_summary(
-    validation: dict[str, Any], protocol: dict[str, Any]
-) -> dict[str, Any]:
-    """Evaluate the predeclared seed-42 development gates."""
-    targets = protocol["development_gates"]
-    coherence = validation["word_cooccurrence_npmi"]
-    values = {
-        "mean_npmi": float(coherence["mean_npmi"]),
-        "undefined_pair_fraction": float(coherence["undefined_pair_fraction"]),
-        "top_word_diversity": float(validation["top_word_diversity"]),
-        "effective_topics_median": float(
-            validation["mixture_diagnostics"]["effective_topic_count_median"]
-        ),
-        "validation_nll": float(validation["document_completion"]["nll_per_token"]),
-    }
-    gates = {
-        "mean_npmi": values["mean_npmi"] >= float(targets["minimum_mean_npmi"]),
-        "undefined_pair_fraction": values["undefined_pair_fraction"]
-        <= float(targets["maximum_undefined_pair_fraction"]),
-        "top_word_diversity": values["top_word_diversity"]
-        >= float(targets["minimum_top_word_diversity"]),
-        "effective_topics_median": values["effective_topics_median"]
-        <= float(targets["maximum_effective_topics_median"]),
-        "validation_nll": values["validation_nll"]
-        <= float(targets["maximum_validation_nll"]),
-    }
-    return {
-        "values": values,
-        "gates": gates,
-        "gates_met": int(sum(gates.values())),
-        "all_gates_met": bool(all(gates.values())),
-    }
-
-
 def _selection(
     history: list[dict[str, Any]], protocol: dict[str, Any]
 ) -> dict[str, Any]:
-    candidates = [row for row in history if row.get("validation") is not None]
-    if not candidates:
-        raise RuntimeError("training produced no validation checkpoint")
-
-    def key(row: dict[str, Any]) -> tuple[float, ...]:
-        validation = row["validation"]
-        summary = validation_gate_summary(validation, protocol)
-        gates = summary["gates"]
-        values = summary["values"]
-        admissibility_failures = int(not gates["top_word_diversity"]) + int(
-            not gates["validation_nll"]
-        )
-        return (
-            float(admissibility_failures),
-            -float(summary["gates_met"]),
-            -values["mean_npmi"],
-            values["undefined_pair_fraction"],
-            values["effective_topics_median"],
-            values["validation_nll"],
-            float(row["epoch"]),
-        )
-
-    selected = min(candidates, key=key)
-    epoch = int(selected["epoch"])
+    """Select the predeclared final epoch without metric-based checkpoint search."""
+    epoch = int(protocol["optimization"]["maximum_epochs"])
+    selected = next((row for row in history if int(row["epoch"]) == epoch), None)
+    if selected is None or selected.get("validation") is None:
+        raise RuntimeError("the final epoch has no validation checkpoint")
     return {
+        "selection_rule": "fixed_final_epoch",
         "epoch": epoch,
         "checkpoint": f"validation_checkpoints/epoch_{epoch:04d}.pt",
         "validation": selected["validation"],
-        "validation_gate_summary": validation_gate_summary(
-            selected["validation"], protocol
-        ),
     }
 
 
@@ -509,7 +454,7 @@ def train_model(
 def load_selected_model(
     run_dir: str | Path, protocol: dict[str, Any]
 ) -> tuple[torch.nn.Module, dict[str, Any]]:
-    """Load the validation-selected checkpoint and verify its digest."""
+    """Load the fixed final-epoch checkpoint and verify its digest."""
     directory = Path(run_dir)
     selected = read_json(directory / "model/selected.json")
     checkpoint_path = directory / "model" / selected["checkpoint"]

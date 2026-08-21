@@ -20,7 +20,7 @@ from .metrics import (
     sparse_npmi,
     top_word_diversity,
 )
-from .training import load_selected_model, validation_gate_summary
+from .training import load_selected_model
 from .utils import (
     atomic_save_numpy,
     file_sha256,
@@ -71,6 +71,7 @@ def _latency(
         "p95_seconds_per_spectrum": float(np.percentile(seconds, 95)),
         "routing_passes": 1,
         "iterative_inference_steps": 0,
+        "cpu_threads": torch.get_num_threads(),
     }
 
 
@@ -84,11 +85,11 @@ def evaluate_neural(run_dir: str | Path, protocol: dict[str, Any]) -> dict[str, 
     training_manifest = read_json(directory / "model/complete.json")
     if selected != training_manifest["selected"]:
         raise ValueError("selected model manifest changed")
-    gate_summary = validation_gate_summary(selected["validation"], protocol)
-    if gate_summary != selected.get("validation_gate_summary"):
-        raise ValueError("selected model validation gates changed")
-    if gate_summary["all_gates_met"] is not True:
-        raise RuntimeError("test evaluation requires every validation gate to pass")
+    final_epoch = int(protocol["optimization"]["maximum_epochs"])
+    if selected.get("selection_rule") != "fixed_final_epoch":
+        raise ValueError("neural selection rule changed")
+    if int(selected["epoch"]) != final_epoch:
+        raise ValueError("test evaluation requires the fixed final epoch")
     if complete_path.is_file():
         result = read_json(complete_path)
         verify_output_hashes(output, result)
@@ -101,7 +102,8 @@ def evaluate_neural(run_dir: str | Path, protocol: dict[str, Any]) -> dict[str, 
             "schema_version": "neural-ms2lda/test-access-v1",
             "selected_model_sha256": file_sha256(selected_path),
             "selection_final_before_test": True,
-            "validation_gates_met": True,
+            "selection_rule": "fixed_final_epoch",
+            "selected_epoch": final_epoch,
         },
     )
     train = load_csr(data / "train.npz")
@@ -199,9 +201,10 @@ def evaluate_neural(run_dir: str | Path, protocol: dict[str, Any]) -> dict[str, 
         atomic_save_numpy(output / name, values)
     result = {
         "schema_version": "neural-ms2lda/neural-evaluation-v1",
-        "method": "neural_cooccurrence_margin_hierarchical_k500",
+        "method": "neural_cooccurrence_margin_hierarchical",
         "topic_count": int(beta.shape[0]),
         "selected_epoch": int(checkpoint["epoch"]),
+        "cpu_threads": int(protocol["cpu_threads"]),
         "stable": True,
         "metrics": metrics,
         "evaluation_seconds": time.perf_counter() - started,

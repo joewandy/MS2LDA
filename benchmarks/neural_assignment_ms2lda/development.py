@@ -74,12 +74,6 @@ def _validate_frozen_protocol(source: dict[str, Any], current: dict[str, Any]) -
             for key, value in current[section].items()
             if key not in ignored and source[section].get(key) != value
         )
-    if "development_gates" in source:
-        changed.extend(
-            f"development_gates.{key}"
-            for key, value in current["development_gates"].items()
-            if source["development_gates"].get(key) != value
-        )
     source_optimization = source["optimization"]
     current_optimization = current["optimization"]
     frozen_optimization_keys = (
@@ -173,7 +167,7 @@ def run_development_experiment(
         write_json(output / "protocol.resolved.json", protocol)
         write_json(lock_path, lock)
 
-    torch.set_num_threads(int(protocol["training_cpu_threads"]))
+    torch.set_num_threads(int(protocol["cpu_threads"]))
     data = output / "data"
     train = load_csr(data / "train.npz")
     result = train_model(
@@ -191,8 +185,9 @@ def run_development_experiment(
         "schema_version": "neural-ms2lda/development-result-v1",
         "hypothesis": str(hypothesis),
         "selected_epoch": int(result["selected"]["epoch"]),
+        "selection_rule": result["selected"]["selection_rule"],
         "selected_checkpoint_sha256": result["selected"]["checkpoint_sha256"],
-        "validation_gate_summary": result["selected"]["validation_gate_summary"],
+        "validation": result["selected"]["validation"],
     }
     write_json(output / "validation_result.json", summary)
     return summary

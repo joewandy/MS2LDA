@@ -65,10 +65,10 @@ def load_protocol() -> dict[str, Any]:
         raise ValueError("unexpected neural MS2LDA protocol schema")
     if int(protocol["seed"]) != 42:
         raise ValueError("the checkpoint protocol is fixed to seed 42")
-    if int(protocol["training_cpu_threads"]) != 4:
-        raise ValueError("training must use four CPU threads")
-    if int(protocol["model"]["num_topics"]) != 500:
-        raise ValueError("the supported neural model is fixed to K=500")
+    if int(protocol["cpu_threads"]) != 6:
+        raise ValueError("the comparison must use six CPU threads")
+    if int(protocol["model"]["num_topics"]) != 1000:
+        raise ValueError("the comparison is fixed to K=1000")
     if int(protocol["model"]["top_k"]) != 2:
         raise ValueError("the supported router is fixed to top-2")
     if float(protocol["model"]["document_topic_prior_weight"]) != 1.0:
@@ -155,13 +155,21 @@ def static_discovery_audit() -> dict[str, Any]:
     return {"forbidden_dependencies_found": []}
 
 
-def initialize_run(run_dir: str | Path, *, data_root: str | Path) -> dict[str, Any]:
+def initialize_run(
+    run_dir: str | Path,
+    *,
+    data_root: str | Path,
+    tomotopy_reference_run: str | Path,
+) -> dict[str, Any]:
     """Create or verify an immutable, exactly resumable run lock."""
     directory = Path(run_dir).expanduser().resolve()
     root = Path(data_root).expanduser().resolve()
     directory.mkdir(parents=True, exist_ok=True)
     protocol = load_protocol()
     lock_path = directory / "run.lock.json"
+    from .tomotopy import tomotopy_reference_evidence
+
+    reference = tomotopy_reference_evidence(tomotopy_reference_run, protocol)
     expected = {
         "schema_version": "neural-ms2lda/run-lock-v1",
         "data_root": str(root),
@@ -171,10 +179,17 @@ def initialize_run(run_dir: str | Path, *, data_root: str | Path) -> dict[str, A
         "environment": environment_manifest(),
         "git": _git_state(),
         "discovery_audit": static_discovery_audit(),
+        "tomotopy_reference": reference,
     }
     if lock_path.is_file():
         existing = read_json(lock_path)
-        immutable = ("data_root", "protocol_sha256", "inputs", "code")
+        immutable = (
+            "data_root",
+            "protocol_sha256",
+            "inputs",
+            "code",
+            "tomotopy_reference",
+        )
         if any(existing.get(key) != expected.get(key) for key in immutable):
             raise ValueError("run provenance differs from its immutable lock")
         return existing
@@ -197,6 +212,13 @@ def verify_run(
         raise ValueError("resolved protocol changed")
     if code_manifest() != lock["code"]:
         raise ValueError("workflow source changed after the run was frozen")
+    reference = lock.get("tomotopy_reference")
+    if reference is not None:
+        from .tomotopy import tomotopy_reference_evidence
+
+        current_reference = tomotopy_reference_evidence(reference["run"], protocol)
+        if current_reference != reference:
+            raise ValueError("Tomotopy reference evidence changed")
     root = Path(data_root or lock["data_root"]).expanduser().resolve()
     names = None if verify_large_inputs else {"mgf"}
     inputs = verify_inputs(protocol, root, names=names)
@@ -251,6 +273,23 @@ def verify_run(
                     != selected["checkpoint_sha256"]
                 ):
                     raise ValueError("selected neural checkpoint changed")
+                if selected.get("selection_rule") != "fixed_final_epoch":
+                    raise ValueError(
+                        "neural checkpoint was not selected by final epoch"
+                    )
+                if int(selected["epoch"]) != int(
+                    protocol["optimization"]["maximum_epochs"]
+                ):
+                    raise ValueError(
+                        "selected neural checkpoint is not the final epoch"
+                    )
+            elif manifest_name == "evaluation/tomotopy/complete.json":
+                if reference is None or manifest.get("reference") != reference:
+                    raise ValueError("Tomotopy reference provenance changed")
+                if int(manifest.get("inference_workers", 0)) != int(
+                    protocol["cpu_threads"]
+                ):
+                    raise ValueError("Tomotopy inference did not use six workers")
             elif manifest_name == "report/report.json":
                 report_sources = {
                     "protocol": directory / "protocol.resolved.json",

@@ -1,0 +1,85 @@
+{
+  "comparison_contract": {
+    "cpu_threads": 6,
+    "neural_selected_epoch": 40,
+    "seed": 42,
+    "tomotopy_inference_iterations": 100,
+    "tomotopy_training_reused": true,
+    "topics": 1000
+  },
+  "evidence_scope": "single-seed applied-method reproducibility checkpoint",
+  "headline": "A controlled K=1000, six-thread comparison on seed 42.",
+  "limitations": [
+    "single fixed seed",
+    "research checkpoint rather than production replacement",
+    "cached CPU throughput compares native inference algorithms rather than equal operation counts",
+    "Tomotopy training is reused while its held-out inference is recomputed"
+  ],
+  "methods": [
+    {
+      "active_topics": 287,
+      "annotated_topics": 384,
+      "annotation_coverage": 0.384,
+      "dominant_eligible_topics": 332,
+      "dominant_mean_sos": 0.6125363548832997,
+      "effective_topics_median": 13.308410030192817,
+      "high_confidence_associated_spectra": 138,
+      "high_confidence_eligible_topics": 55,
+      "high_confidence_mean_sos": 0.6253060045298037,
+      "inference_workers": 6,
+      "mass99_distinct_topic_equivalents": 663.6,
+      "mean_npmi": -0.2965402996516472,
+      "method": "neural_cooccurrence_margin_hierarchical",
+      "peak_rss_bytes": 4367040512,
+      "spectra_per_second": 7793.057785511732,
+      "test_nll": 8.365980050600706,
+      "top_word_diversity": 0.71,
+      "topics": 1000,
+      "training_reused": false,
+      "training_seconds": 5064.448707042002,
+      "training_workers": 6,
+      "undefined_pair_fraction": 0.43348888888888887
+    },
+    {
+      "active_topics": 363,
+      "annotated_topics": 607,
+      "annotation_coverage": 0.607,
+      "dominant_eligible_topics": 598,
+      "dominant_mean_sos": 0.6237704189510398,
+      "effective_topics_median": 9.11729431486084,
+      "high_confidence_associated_spectra": 961,
+      "high_confidence_eligible_topics": 333,
+      "high_confidence_mean_sos": 0.6369010145188874,
+      "inference_workers": 6,
+      "mass99_distinct_topic_equivalents": 779.9,
+      "mean_npmi": -0.29958039177154516,
+      "method": "tomotopy",
+      "peak_rss_bytes": 1515274240,
+      "spectra_per_second": 30.049701734805108,
+      "test_nll": 9.756948055261505,
+      "top_word_diversity": 0.8145,
+      "topics": 1000,
+      "training_reused": true,
+      "training_seconds": 4561.683655708999,
+      "training_workers": 6,
+      "undefined_pair_fraction": 0.4562222222222222
+    }
+  ],
+  "schema_version": "neural-ms2lda/research-report-v1",
+  "source_sha256": {
+    "neural_chemistry": "d8c259b140181c02876c9ae1eeade0478fa4b216827c67ac7f47ab9d44e0f60d",
+    "neural_evaluation": "fa43163f15514d2e420b38e09ecdfaaba5a5a352fcfc9d17f0e475e5b8f8ecf0",
+    "protocol": "a47bcfc3739165cb7a1b22e65aa27274e7dfb41e20d91fa65ab82f9af16e6161",
+    "tomotopy_chemistry": "9d82b262c3b1ea39ff02c2677da5efcf759d4b59f39773eaafd990ed2ea723de",
+    "tomotopy_evaluation": "a79f52b81bafb5a7eee640919033db737e8def85324d6386bcb25a6752400980"
+  },
+  "title": "Neural MS2LDA on MSnLib",
+  "training_contract": {
+    "chemistry_labels": false,
+    "dreams_input": false,
+    "test_information": false,
+    "tomotopy_teacher": false,
+    "unsupervised": true,
+    "variational_bayes": false
+  }
+}

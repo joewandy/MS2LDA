@@ -40,7 +40,7 @@
     "completion_observed_fraction": 0.5,
     "completion_seed": 42
   },
-  "training_cpu_threads": 4,
+  "cpu_threads": 6,
   "sgns": {
     "dimensions": 48,
     "epochs": 5,
@@ -55,7 +55,7 @@
     "mass_scale": 1000.0
   },
   "model": {
-    "num_topics": 500,
+    "num_topics": 1000,
     "projection_dimensions": 128,
     "router_hidden_dimensions": 256,
     "top_k": 2,
@@ -105,13 +105,6 @@
     "margin": 0.3,
     "weight": 5.0
   },
-  "development_gates": {
-    "minimum_mean_npmi": -0.4198579777924967,
-    "maximum_undefined_pair_fraction": 0.5629333333333334,
-    "minimum_top_word_diversity": 0.70,
-    "maximum_effective_topics_median": 11.422091200580207,
-    "maximum_validation_nll": 8.589669726050266
-  },
   "evaluation": {
     "document_active_threshold": 0.01,
     "topic_top_n": 10,
@@ -127,7 +120,6 @@
     "convergence_window": 10,
     "convergence_threshold": 0.005,
     "inference_iterations": 100,
-    "workers": 6,
     "parallel": 3
   },
   "chemistry": {

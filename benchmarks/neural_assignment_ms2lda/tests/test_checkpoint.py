@@ -56,11 +56,15 @@ from benchmarks.neural_assignment_ms2lda.regularizers import (
     nearest_neighbor_topic_constraint,
 )
 from benchmarks.neural_assignment_ms2lda.report import build_machine_report
-from benchmarks.neural_assignment_ms2lda.tomotopy import _infer_theta
+from benchmarks.neural_assignment_ms2lda.tomotopy import (
+    REFERENCE_DATA_FILES,
+    _infer_theta,
+    tomotopy_reference_evidence,
+)
 from benchmarks.neural_assignment_ms2lda.training import (
+    _selection,
     _weighted_topic_separation,
     train_model,
-    validation_gate_summary,
 )
 from benchmarks.neural_assignment_ms2lda.utils import (
     file_sha256,
@@ -220,29 +224,16 @@ def test_positive_npmi_graph_supplies_topic_gradients() -> None:
     assert torch.isfinite(model.topic_prototypes.grad).all()
 
 
-def test_validation_gate_summary_uses_predeclared_thresholds() -> None:
+def test_checkpoint_selection_is_always_the_fixed_final_epoch() -> None:
     protocol = load_protocol()
-    targets = protocol["development_gates"]
-    validation = {
-        "word_cooccurrence_npmi": {
-            "mean_npmi": targets["minimum_mean_npmi"],
-            "undefined_pair_fraction": targets["maximum_undefined_pair_fraction"],
-        },
-        "top_word_diversity": targets["minimum_top_word_diversity"],
-        "mixture_diagnostics": {
-            "effective_topic_count_median": targets["maximum_effective_topics_median"]
-        },
-        "document_completion": {"nll_per_token": targets["maximum_validation_nll"]},
-    }
-    summary = validation_gate_summary(validation, protocol)
-    assert summary["all_gates_met"]
-    assert summary["gates_met"] == 5
-    validation["top_word_diversity"] = (
-        float(targets["minimum_top_word_diversity"]) - 1e-6
-    )
-    summary = validation_gate_summary(validation, protocol)
-    assert not summary["all_gates_met"]
-    assert summary["gates_met"] == 4
+    history = [
+        {"epoch": 2, "validation": {"nll": 1.0}},
+        {"epoch": 40, "validation": {"nll": 100.0}},
+    ]
+    selected = _selection(history, protocol)
+    assert selected["selection_rule"] == "fixed_final_epoch"
+    assert selected["epoch"] == 40
+    assert selected["validation"] == {"nll": 100.0}
 
 
 def test_nearest_neighbor_constraint_penalizes_close_topics() -> None:
@@ -280,16 +271,21 @@ def test_hierarchical_router_adds_one_shared_document_score() -> None:
     assert torch.isfinite(hierarchical.theta).all()
 
 
-def test_committed_bundle_keeps_zero_document_prior() -> None:
+def test_committed_bundle_matches_supported_architecture() -> None:
     bundle = Path(__file__).parents[1] / "results/seed42/model_bundle"
     model, vocabulary, manifest = load_bundle(bundle)
     assert manifest["schema_version"] == "neural-ms2lda/model-bundle-v1"
-    assert model.document_topic_prior_weight == 0.0
+    assert model.num_topics == 1000
+    assert model.document_topic_prior_weight == 1.0
     assert len(vocabulary) == model.vocabulary_size
 
 
 def test_protocol_exposes_one_active_topic_architecture() -> None:
     protocol = load_protocol()
+    assert protocol["cpu_threads"] == 6
+    assert protocol["model"]["num_topics"] == 1000
+    assert "development_gates" not in protocol
+    assert "workers" not in protocol["tomotopy"]
     from benchmarks.neural_assignment_ms2lda.model import initialize_model
 
     features = torch.nn.functional.normalize(torch.randn(20, 64), dim=1)
@@ -368,7 +364,7 @@ def test_development_accepts_removed_legacy_protocol_metadata() -> None:
             "motif_spectrum_top_n": 20,
         }
     )
-    source.pop("development_gates")
+    source["development_gates"] = {"legacy": True}
     _validate_frozen_protocol(source, current)
     source["seed"] = 43
     with pytest.raises(ValueError, match="seed"):
@@ -426,6 +422,8 @@ def test_verify_run_checks_cooccurrence_graph(tmp_path: Path) -> None:
     selected_manifest = {
         "checkpoint": selected_checkpoint.name,
         "checkpoint_sha256": file_sha256(selected_checkpoint),
+        "selection_rule": "fixed_final_epoch",
+        "epoch": int(protocol["optimization"]["maximum_epochs"]),
     }
     write_json(
         run / "model/complete.json",
@@ -456,33 +454,23 @@ def test_verify_run_checks_cooccurrence_graph(tmp_path: Path) -> None:
         neural_config.verify_run(run, data_root=tmp_path)
 
 
-def test_neural_evaluation_rejects_failed_validation_gates(tmp_path: Path) -> None:
+def test_neural_evaluation_rejects_nonfinal_checkpoint(tmp_path: Path) -> None:
     run = tmp_path / "run"
     protocol = load_protocol()
-    targets = protocol["development_gates"]
-    validation = {
-        "word_cooccurrence_npmi": {
-            "mean_npmi": targets["minimum_mean_npmi"],
-            "undefined_pair_fraction": targets["maximum_undefined_pair_fraction"],
-        },
-        "top_word_diversity": float(targets["minimum_top_word_diversity"]) - 0.1,
-        "mixture_diagnostics": {
-            "effective_topic_count_median": targets["maximum_effective_topics_median"]
-        },
-        "document_completion": {"nll_per_token": targets["maximum_validation_nll"]},
-    }
     selected = {
-        "validation": validation,
-        "validation_gate_summary": validation_gate_summary(validation, protocol),
+        "selection_rule": "fixed_final_epoch",
+        "epoch": int(protocol["optimization"]["maximum_epochs"]) - 2,
     }
     write_json(run / "model/selected.json", selected)
     write_json(run / "model/complete.json", {"selected": selected})
-    with pytest.raises(RuntimeError, match="every validation gate"):
+    with pytest.raises(ValueError, match="fixed final epoch"):
         evaluate_neural(run, protocol)
     assert not (run / "evaluation/neural/test_access.json").exists()
 
 
 def test_tomotopy_empty_document_uses_topic_prior() -> None:
+    calls = []
+
     class FakeModel:
         k = 2
         alpha = np.asarray([0.3, 0.7], dtype=np.float32)
@@ -494,14 +482,60 @@ def test_tomotopy_empty_document_uses_topic_prior() -> None:
 
         @staticmethod
         def infer(
-            documents: list[list[str]], **_: object
+            documents: list[list[str]], **kwargs: object
         ) -> tuple[list[list[float]], None]:
+            calls.append(kwargs)
             return [[0.8, 0.2] for _ in documents], None
 
-    theta = _infer_theta(FakeModel(), [[], ["frag@100.0"], []], iterations=5)
+    theta = _infer_theta(FakeModel(), [[], ["frag@100.0"], []], iterations=5, workers=6)
     assert np.allclose(theta[0], [0.3, 0.7])
     assert np.allclose(theta[1], [0.8, 0.2])
     assert np.allclose(theta[2], [0.3, 0.7])
+    assert calls == [{"iter": 5, "workers": 6, "parallel": 1, "together": False}]
+
+
+def test_tomotopy_reference_requires_matching_protocol_and_hashes(
+    tmp_path: Path,
+) -> None:
+    protocol = load_protocol()
+    reference = tmp_path / "reference"
+    source_protocol = copy.deepcopy(protocol)
+    source_protocol["tomotopy"]["workers"] = 6
+    source_protocol["training_cpu_threads"] = 4
+    write_json(reference / "protocol.resolved.json", source_protocol)
+
+    output_sha256 = {}
+    for name in REFERENCE_DATA_FILES:
+        path = reference / "data" / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(name.encode("utf-8"))
+        output_sha256[name] = file_sha256(path)
+    write_json(reference / "data/complete.json", {"output_sha256": output_sha256})
+
+    model = reference / "evaluation/tomotopy/model.bin"
+    model.parent.mkdir(parents=True, exist_ok=True)
+    model.write_bytes(b"frozen tomotopy model")
+    write_json(
+        model.parent / "complete.json",
+        {
+            "model_sha256": file_sha256(model),
+            "topic_count": 1000,
+            "training_workers": 6,
+            "training_parallel": 3,
+            "training_iterations": 750,
+            "training_seconds_total": 4561.0,
+            "peak_rss_bytes": 1024,
+            "converged": True,
+        },
+    )
+
+    evidence = tomotopy_reference_evidence(reference, protocol)
+    assert evidence["model_sha256"] == file_sha256(model)
+    assert evidence["training_workers"] == 6
+
+    model.write_bytes(b"tampered")
+    with pytest.raises(ValueError, match="reference model changed"):
+        tomotopy_reference_evidence(reference, protocol)
 
 
 def _mini_protocol(mgf: Path) -> dict[str, object]:
@@ -565,15 +599,6 @@ def _mini_protocol(mgf: Path) -> dict[str, object]:
         }
     )
     protocol["topic_separation"]["neighbors"] = 2
-    protocol["development_gates"].update(
-        {
-            "minimum_mean_npmi": -1.0,
-            "maximum_undefined_pair_fraction": 1.0,
-            "minimum_top_word_diversity": 0.0,
-            "maximum_effective_topics_median": 4.0,
-            "maximum_validation_nll": 1.0e9,
-        }
-    )
     protocol["evaluation"].update({"latency_subset_size": 2, "latency_repeats": 1})
     return protocol
 
@@ -679,12 +704,25 @@ def test_miniature_mgf_through_report_and_bundle(tmp_path: Path) -> None:
     neural = evaluate_neural(run, protocol)
     assert "test_access.json" in neural["output_sha256"]
     comparator = copy.deepcopy(neural)
-    comparator.update({"method": "tomotopy_k1000_comparator", "topic_count": 1000})
+    comparator.update(
+        {
+            "method": "tomotopy",
+            "training_reused": True,
+            "training_seconds_total": 10.0,
+            "training_workers": 6,
+            "inference_iterations": 100,
+        }
+    )
     write_json(run / "evaluation/tomotopy/complete.json", comparator)
     chemistry = {
+        "topics": 4,
         "annotation_coverage": 0.5,
         "dominant_topic_chemistry": {"eligible_topics": 2, "mean_sos": 0.6},
-        "high_confidence_chemistry": {"eligible_topics": 1, "mean_sos": 0.7},
+        "high_confidence_chemistry": {
+            "eligible_topics": 1,
+            "associated_spectra": 2,
+            "mean_sos": 0.7,
+        },
     }
     write_json(run / "chemical/neural/complete.json", chemistry)
     write_json(run / "chemical/tomotopy/complete.json", chemistry)
@@ -699,7 +737,7 @@ def test_miniature_mgf_through_report_and_bundle(tmp_path: Path) -> None:
     )
     report = build_machine_report(run)
     assert len(report["methods"]) == 2
-    assert neural["method"] == "neural_cooccurrence_margin_hierarchical_k500"
+    assert neural["method"] == "neural_cooccurrence_margin_hierarchical"
     assert report["title"] == "Neural MS2LDA on MSnLib"
     assert "ERNTM" not in report["headline"]
     bundle = tmp_path / "bundle"
@@ -709,7 +747,7 @@ def test_miniature_mgf_through_report_and_bundle(tmp_path: Path) -> None:
     assert loaded.num_topics == 4
     assert loaded.document_topic_prior_weight == 1.0
     assert len(vocabulary) == train.shape[1]
-    assert manifest["selected_epoch"] in {1, 2}
+    assert manifest["selected_epoch"] == 2
     provenance_text = (bundle / "provenance.json").read_text(encoding="utf-8")
     provenance = json.loads(provenance_text)
     assert provenance["inputs"]["mgf"]["sha256"] == file_sha256(mgf)
