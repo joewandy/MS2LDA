@@ -1,0 +1,45 @@
+{
+  "checks": {
+    "annotation_coverage": false,
+    "gap_closed": true,
+    "mean_high_confidence_sos": true,
+    "stable": true,
+    "validation_nll": true
+  },
+  "decision": "rejected",
+  "measurements": {
+    "candidate_annotation_coverage": 0.42,
+    "candidate_mean_high_confidence_sos": 0.6372698877198302,
+    "candidate_training_seconds": 10666.520600707998,
+    "candidate_validation_nll": 8.416573483450886,
+    "current_mean_high_confidence_sos": 0.622722366969358
+  },
+  "paper_outcome": {
+    "candidate_neural_useful_high_confidence_motifs": 83,
+    "closed_fraction": 0.5338983050847458,
+    "current_neural_useful_high_confidence_motifs": 20,
+    "tomotopy_useful_high_confidence_motifs": 138,
+    "validation_gap": 118
+  },
+  "reported_context": {
+    "prior_10_percent_runtime_seconds": 5571.0,
+    "training_within_prior_10_percent": false
+  },
+  "schema_version": "neural-ms2lda/validation-gate-v1",
+  "selected_checkpoint_sha256": "8e52a88bce4d8138391f5898c2a3a16e65aaf3f4ec2d8b357851b1eeb70e1339",
+  "source_sha256": {
+    "candidate_neural_chemistry": "e3127861d3fb1a804c31978417d6e905e0dde234a32f7e827f402df0e684ecba",
+    "candidate_selected": "f0d201e0970024551efd446cf42d40c381f4e36db94f61993647fae7f8237f6d",
+    "candidate_training": "3ec4b264cb5e4c3ac4e39b9cccb3a9793fed04099e7cbdcd4268ad05cc04ba8c",
+    "candidate_validation": "36128a6a0972b94de656f31b236f966b35de1f08afc3128d8c8e7b4330da1754",
+    "current_neural_chemistry": "eab10b548283c1177d5390f7a53bf12ac7d27649669341ca798d833d7cc36050",
+    "tomotopy_chemistry": "fc13208d12d8f539d01b4c169029a03126b225a47b915e27ec52452eb7272378"
+  },
+  "test_evaluation_authorized": false,
+  "thresholds": {
+    "maximum_mean_sos_drop": 0.02,
+    "maximum_validation_nll": 8.5266,
+    "minimum_annotation_coverage": 0.496,
+    "minimum_gap_closed": 0.5
+  }
+}

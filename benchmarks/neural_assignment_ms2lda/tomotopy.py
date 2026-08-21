@@ -366,3 +366,101 @@ def evaluate_tomotopy_reference(
     }
     write_json(complete_path, result)
     return result
+
+
+def evaluate_tomotopy_validation_reference(
+    run_dir: str | Path,
+    protocol: dict[str, Any],
+    *,
+    reference_run: str | Path,
+) -> dict[str, Any]:
+    """Evaluate the frozen comparator on validation, without candidate test access."""
+    try:
+        import tomotopy as tp
+    except ImportError as exc:  # pragma: no cover
+        raise ImportError("tomotopy==0.13.0 is required for the comparator") from exc
+
+    directory = Path(run_dir).expanduser().resolve()
+    output = directory / "validation_evaluation/tomotopy"
+    complete_path = output / "complete.json"
+    reference = tomotopy_reference_evidence(reference_run, protocol)
+    if complete_path.is_file():
+        result = read_json(complete_path)
+        verify_output_hashes(output, result)
+        if result.get("reference") != reference:
+            raise ValueError("Tomotopy validation reference provenance changed")
+        return result
+    data = directory / "data"
+    for name in ("train.npz", "vocabulary.json"):
+        if file_sha256(data / name) != reference["data_sha256"][name]:
+            raise ValueError(f"validation data differs from Tomotopy reference: {name}")
+
+    model_path = Path(reference["run"]) / "evaluation/tomotopy/model.bin"
+    model = tp.LDAModel.load(str(model_path))
+    config = protocol["tomotopy"]
+    if int(model.k) != int(config["num_topics"]):
+        raise ValueError("loaded Tomotopy topic count differs")
+    _alpha_evidence(model, config)
+    vocabulary = load_vocabulary(data)
+    observed = load_csr(data / "validation_observed.npz")
+    completion = load_csr(data / "validation_completion.npz")
+    full = load_csr(data / "validation_full.npz")
+    records = load_heldout_records(data, "validation")
+    workers = int(protocol["cpu_threads"])
+    iterations = int(config["inference_iterations"])
+    started = time.perf_counter()
+    raw_beta = np.vstack(
+        [
+            np.asarray(model.get_topic_word_dist(topic), dtype=np.float32)
+            for topic in range(model.k)
+        ]
+    )
+    beta = _align_beta(raw_beta, list(model.used_vocabs), vocabulary)
+    theta = _infer_theta(
+        model,
+        _documents(observed, vocabulary),
+        iterations=iterations,
+        workers=workers,
+    )
+    full_theta = _infer_theta(
+        model,
+        _documents(full, vocabulary),
+        iterations=iterations,
+        workers=workers,
+    )
+    document_completion, losses = completion_metrics(theta, beta, completion, records)
+    maximum = full_theta.max(axis=1)
+    confident = maximum >= 0.5
+    arrays = {
+        "beta.npy": beta,
+        "validation_observed_theta.npy": theta,
+        "validation_full_theta.npy": full_theta,
+        "validation_completion_nll.npy": losses,
+    }
+    if not all(np.isfinite(values).all() for values in (beta, theta, full_theta)):
+        raise FloatingPointError("Tomotopy produced non-finite validation evidence")
+    output.mkdir(parents=True, exist_ok=True)
+    for name, values in arrays.items():
+        atomic_save_numpy(output / name, values)
+    result = {
+        "schema_version": "neural-ms2lda/validation-evaluation-v1",
+        "method": "tomotopy",
+        "split": "validation",
+        "topic_count": int(model.k),
+        "source_sha256": reference["model_sha256"],
+        "stable": True,
+        "metrics": {
+            "validation_document_completion": document_completion,
+            "high_confidence_spectra": int(confident.sum()),
+            "distinct_high_confidence_topics": int(
+                np.unique(full_theta[confident].argmax(axis=1)).size
+            ),
+            "full_spectrum_mixture": effective_topic_summary(full_theta),
+        },
+        "evaluation_seconds": time.perf_counter() - started,
+        "peak_rss_bytes": peak_rss_bytes(),
+        "reference": reference,
+        "output_sha256": {name: file_sha256(output / name) for name in arrays},
+    }
+    write_json(complete_path, result)
+    return result

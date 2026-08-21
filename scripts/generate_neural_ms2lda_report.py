@@ -1,4 +1,4 @@
-"""Generate the neural MS2LDA comparison figures and table from evidence."""
+"""Generate the paper-focused document-gate comparison from hashed evidence."""
 
 from __future__ import annotations
 
@@ -13,11 +13,13 @@ import numpy as np
 
 REPO = Path(__file__).resolve().parents[1]
 RESULTS = REPO / "benchmarks/neural_assignment_ms2lda/results/seed42"
+SOURCES = RESULTS / "source_manifests"
 DOCS = REPO / "docs/research"
 FIGURES = DOCS / "figures"
 GENERATED = DOCS / "generated"
 MANIFEST = DOCS / "report_manifest.json"
-COLORS = ("#2563eb", "#64748b")
+COLORS = ("#2563eb", "#f59e0b", "#64748b")
+LABELS = ("Current neural", "Document-gated neural", "Tomotopy")
 
 
 def _json(path: Path) -> dict[str, Any]:
@@ -38,94 +40,86 @@ def _save(figure: plt.Figure, name: str) -> None:
     plt.close(figure)
 
 
-def _methods() -> tuple[dict[str, Any], dict[str, Any]]:
-    rows = _json(RESULTS / "comparison.json")["methods"]
-    neural = next(row for row in rows if str(row["method"]).startswith("neural_"))
-    tomotopy = next(row for row in rows if row["method"] == "tomotopy")
-    return neural, tomotopy
+def _comparison() -> dict[str, Any]:
+    return _json(RESULTS / "comparison.json")
+
+
+def _methods() -> list[dict[str, Any]]:
+    rows = _comparison()["methods"]
+    expected = ("current_neural", "candidate_neural", "tomotopy")
+    if tuple(row["method"] for row in rows) != expected:
+        raise ValueError("unexpected report method order")
+    return rows
 
 
 def architecture() -> None:
-    figure, axes = plt.subplots(2, 1, figsize=(11.0, 5.6))
-    for axis in axes:
-        axis.set_xlim(0, 11)
-        axis.set_ylim(0, 3.2)
-        axis.axis("off")
-
-    axes[0].text(0.2, 2.85, "One-pass neural inference", fontsize=11, weight="bold")
-    boxes = [
-        (0.2, 1.15, 1.6, "Sparse spectrum", "#dbeafe"),
-        (2.2, 1.15, 1.6, "Train-only\ntoken features", "#dbeafe"),
-        (4.2, 1.15, 1.6, "Hierarchical\ntop-2 router", "#bfdbfe"),
-        (6.2, 1.15, 1.6, "Topic mixture", "#bfdbfe"),
-        (8.2, 1.15, 1.6, "Topic-word\nmatrix", "#bfdbfe"),
-    ]
-    for x, y, width, label, color in boxes:
-        axes[0].add_patch(
-            plt.Rectangle(
-                (x, y), width, 1.0, facecolor=color, edgecolor="#1e3a8a", lw=1.4
-            )
-        )
-        axes[0].text(x + width / 2, y + 0.5, label, ha="center", va="center")
-    for x in (1.8, 3.8, 5.8, 7.8):
-        axes[0].annotate(
-            "", xy=(x + 0.4, 1.65), xytext=(x, 1.65), arrowprops={"arrowstyle": "->"}
-        )
-    axes[0].text(
-        5.0,
-        0.45,
-        "The same learned prototypes route tokens and define the topic-word distribution",
-        ha="center",
-        color="#1e3a8a",
+    figure, axis = plt.subplots(figsize=(11.0, 3.3))
+    axis.set_xlim(0, 12)
+    axis.set_ylim(0, 3.3)
+    axis.axis("off")
+    boxes = (
+        (0.2, "Sparse\nspectrum", "#dbeafe"),
+        (2.25, "Top-2 token\nrouting", "#bfdbfe"),
+        (4.3, "Token topic\nmass", "#bfdbfe"),
+        (6.35, "Document\nsoftmax", "#fef3c7"),
+        (8.4, "Multiply by\n$g_d^{0.5}$", "#fde68a"),
+        (10.45, "Normalized\n$\\theta_d$", "#d1fae5"),
     )
-
-    axes[1].text(0.2, 2.85, "Training-only topic controls", fontsize=11, weight="bold")
-    controls = [
-        (0.3, "Balanced routing\nlimits usage collapse", "#fef3c7"),
-        (3.9, "Positive NPMI graph\nshapes topic words", "#d1fae5"),
-        (7.5, "Nearest-topic margin\nlimits duplication", "#ede9fe"),
-    ]
-    for x, label, color in controls:
-        axes[1].add_patch(
-            plt.Rectangle(
-                (x, 1.0), 3.0, 1.15, facecolor=color, edgecolor="#334155", lw=1.3
-            )
+    for x, label, color in boxes:
+        axis.add_patch(
+            plt.Rectangle((x, 1.2), 1.55, 1.0, facecolor=color, edgecolor="#334155")
         )
-        axes[1].text(x + 1.5, 1.575, label, ha="center", va="center")
-    axes[1].text(
-        5.5,
-        0.35,
-        "Persistently underused topics are recycled from high-loss contexts",
+        axis.text(x + 0.775, 1.7, label, ha="center", va="center")
+    for x in (1.75, 3.8, 5.85, 7.9, 9.95):
+        axis.annotate(
+            "", xy=(x + 0.5, 1.7), xytext=(x, 1.7), arrowprops={"arrowstyle": "->"}
+        )
+    axis.text(
+        6,
+        2.8,
+        r"$g_d=\mathrm{softmax}(\mathrm{document\ logits}/T)$, "
+        r"$\theta_d=\mathrm{normalize}(\mathrm{token\ mass}\,g_d^{0.5})$",
+        ha="center",
+        fontsize=11,
+        weight="bold",
+    )
+    axis.text(
+        6,
+        0.55,
+        "The gate adds no encoder or loss; zero token support and empty-spectrum fallback are preserved.",
         ha="center",
         color="#334155",
     )
-    figure.subplots_adjust(hspace=0.15)
     _save(figure, "architecture.png")
 
 
 def comparison() -> None:
-    neural, tomotopy = _methods()
-    labels = [f"Neural\nK={neural['topics']}", f"Tomotopy\nK={tomotopy['topics']}"]
+    rows = _methods()
     metrics = (
-        ("Held-out NLL\n(lower is better)", "test_nll"),
-        ("Top-word diversity\n(higher is better)", "top_word_diversity"),
-        ("Mean NPMI\n(higher is better)", "mean_npmi"),
-        ("Active topics", "active_topics"),
+        ("Optimized motifs", "optimized_motifs"),
+        ("High-confidence\nevaluable motifs", "high_confidence_eligible_topics"),
+        (
+            "Useful high-confidence motifs\n(SOS >= 0.6)",
+            "useful_high_confidence_motifs",
+        ),
+        ("Model-fitting time\n(minutes)", "training_seconds"),
     )
-    figure, axes = plt.subplots(1, 4, figsize=(12.0, 3.6))
+    figure, axes = plt.subplots(1, 4, figsize=(13.0, 3.7))
     for axis, (title, key) in zip(axes, metrics, strict=True):
-        values = [float(neural[key]), float(tomotopy[key])]
-        bars = axis.bar(labels, values, color=COLORS, width=0.65)
+        values = [float(row[key]) for row in rows]
+        if key == "training_seconds":
+            values = [value / 60 for value in values]
+        bars = axis.bar(LABELS, values, color=COLORS, width=0.68)
         axis.set_title(title, fontsize=9)
-        axis.tick_params(axis="x", labelsize=8)
+        axis.tick_params(axis="x", labelrotation=18, labelsize=7)
         axis.grid(axis="y", alpha=0.2)
         for bar, value in zip(bars, values, strict=True):
             axis.text(
                 bar.get_x() + bar.get_width() / 2,
                 value,
-                f"{value:.3g}",
+                f"{value:.1f}" if key == "training_seconds" else f"{value:.0f}",
                 ha="center",
-                va="bottom" if value >= 0 else "top",
+                va="bottom",
                 fontsize=8,
             )
     figure.tight_layout()
@@ -133,73 +127,54 @@ def comparison() -> None:
 
 
 def chemistry() -> None:
-    neural, tomotopy = _methods()
-    rows = (neural, tomotopy)
-    labels = [f"Neural K={neural['topics']}", f"Tomotopy K={tomotopy['topics']}"]
-    x = np.arange(2)
-    width = 0.34
-    dominant = [row["dominant_eligible_topics"] / row["topics"] for row in rows]
-    confident = [row["high_confidence_eligible_topics"] / row["topics"] for row in rows]
-    figure, axes = plt.subplots(1, 2, figsize=(9.2, 3.8))
-    first = axes[0].bar(
-        x - width / 2, dominant, width, label="dominant", color="#2563eb"
+    rows = _methods()
+    x = np.arange(len(rows))
+    high = np.asarray([row["sos_bands"]["high_gt_0_8"] for row in rows])
+    intermediate = np.asarray(
+        [row["sos_bands"]["intermediate_0_6_to_0_8"] for row in rows]
     )
-    second = axes[0].bar(
-        x + width / 2,
-        confident,
-        width,
-        label="probability >= 0.5",
-        color="#93c5fd",
+    low = np.asarray([row["sos_bands"]["low_lt_0_6"] for row in rows])
+    figure, axes = plt.subplots(1, 2, figsize=(10.0, 4.0))
+    axes[0].bar(x, low, color="#cbd5e1", label="Low < 0.6")
+    axes[0].bar(x, intermediate, bottom=low, color="#60a5fa", label="0.6–0.8")
+    axes[0].bar(
+        x,
+        high,
+        bottom=low + intermediate,
+        color="#1d4ed8",
+        label="High > 0.8",
     )
-    axes[0].set_xticks(x, labels, rotation=10, ha="right")
-    axes[0].set_ylim(0, 1)
-    axes[0].set_ylabel("SOS-evaluable topic proportion")
-    axes[0].legend(frameon=False)
+    axes[0].set_xticks(x, LABELS, rotation=12, ha="right")
+    axes[0].set_ylabel("High-confidence SOS-evaluable motifs")
+    axes[0].legend(frameon=False, fontsize=8)
     axes[0].grid(axis="y", alpha=0.2)
-    counts = [
-        *((row["dominant_eligible_topics"], row["topics"]) for row in rows),
-        *((row["high_confidence_eligible_topics"], row["topics"]) for row in rows),
-    ]
-    for bar, (numerator, denominator) in zip([*first, *second], counts, strict=True):
-        axes[0].text(
-            bar.get_x() + bar.get_width() / 2,
-            bar.get_height() + 0.025,
-            f"{numerator}/{denominator}",
-            ha="center",
-            fontsize=8,
-        )
 
-    dominant_sos = [row["dominant_mean_sos"] for row in rows]
-    confident_sos = [row["high_confidence_mean_sos"] for row in rows]
-    axes[1].bar(x - width / 2, dominant_sos, width, color="#2563eb")
-    axes[1].bar(x + width / 2, confident_sos, width, color="#93c5fd")
-    axes[1].set_xticks(x, labels, rotation=10, ha="right")
-    axes[1].set_ylim(0, 1)
-    axes[1].set_ylabel("Compound-balanced mean SOS")
+    width = 0.34
+    means = [row["high_confidence_mean_sos"] for row in rows]
+    medians = [row["high_confidence_median_sos"] for row in rows]
+    axes[1].bar(x - width / 2, means, width, color="#2563eb", label="Mean")
+    axes[1].bar(x + width / 2, medians, width, color="#93c5fd", label="Median")
+    axes[1].set_xticks(x, LABELS, rotation=12, ha="right")
+    axes[1].set_ylim(0, 0.8)
+    axes[1].set_ylabel("Compound-balanced SOS")
+    axes[1].legend(frameon=False)
     axes[1].grid(axis="y", alpha=0.2)
-    for bar, value in zip(
-        axes[1].patches, [*dominant_sos, *confident_sos], strict=True
-    ):
-        axes[1].text(
-            bar.get_x() + bar.get_width() / 2,
-            value + 0.025,
-            f"{value:.3f}",
-            ha="center",
-            fontsize=8,
-        )
     figure.tight_layout()
     _save(figure, "chemistry_coverage.png")
 
 
 def speed() -> None:
-    neural, tomotopy = _methods()
-    values = [neural["spectra_per_second"], tomotopy["spectra_per_second"]]
+    evidence = _comparison()["secondary_warm_in_memory_batch_inference"]
+    values = (
+        evidence["current_neural_spectra_per_second"],
+        evidence["tomotopy_spectra_per_second"],
+    )
     figure, axis = plt.subplots(figsize=(5.7, 3.7))
     bars = axis.bar(
-        ["Neural\none pass", "Tomotopy\n100 iterations"], values, color=COLORS
+        ("Current neural", "Tomotopy"), values, color=(COLORS[0], COLORS[2])
     )
     axis.set_yscale("log")
-    axis.set_ylabel("Six-thread cached throughput (spectra/s, log scale)")
+    axis.set_ylabel("Warm in-memory batch inference (spectra/s)")
     axis.grid(axis="y", which="both", alpha=0.2)
     for bar, value in zip(bars, values, strict=True):
         axis.text(
@@ -207,123 +182,46 @@ def speed() -> None:
             value * 1.15,
             f"{value:,.1f}",
             ha="center",
-            fontsize=9,
         )
     _save(figure, "inference_speed.png")
 
 
-def resources() -> None:
-    neural, tomotopy = _methods()
-    rows = (neural, tomotopy)
-    labels = ["Neural", "Tomotopy"]
-    figure, axes = plt.subplots(1, 2, figsize=(8.5, 3.6))
-    minutes = [row["training_seconds"] / 60 for row in rows]
-    memory = [row["pipeline_peak_rss_bytes"] / (1024**3) for row in rows]
-    for axis, values, title, unit in (
-        (axes[0], minutes, "Training wall time", "minutes"),
-        (axes[1], memory, "Cumulative pipeline peak RSS", "GiB"),
-    ):
-        bars = axis.bar(labels, values, color=COLORS)
-        axis.set_title(title)
-        axis.set_ylabel(unit)
-        axis.grid(axis="y", alpha=0.2)
-        for bar, value in zip(bars, values, strict=True):
-            axis.text(
-                bar.get_x() + bar.get_width() / 2,
-                value,
-                f"{value:.2f}",
-                ha="center",
-                va="bottom",
-            )
-    figure.tight_layout()
-    _save(figure, "resource_use.png")
-
-
-def _percent(value: float, numerator: int, denominator: int) -> str:
-    return f"{value:.1%} ({numerator}/{denominator})".replace("%", "\\%")
-
-
 def tables() -> None:
-    neural, tomotopy = _methods()
-    rows = (
-        ("Topics requested", f"{neural['topics']}", f"{tomotopy['topics']}"),
+    rows = _methods()
+    metrics = (
+        ("Optimized motifs", lambda row: str(row["optimized_motifs"])),
         (
-            "Held-out NLL (lower is better)",
-            f"{neural['test_nll']:.4f}",
-            f"{tomotopy['test_nll']:.4f}",
+            "High-confidence SOS-evaluable motifs",
+            lambda row: str(row["high_confidence_eligible_topics"]),
+        ),
+        ("SOS high ($>0.8$)", lambda row: str(row["sos_bands"]["high_gt_0_8"])),
+        (
+            "SOS intermediate ($0.6$--$0.8$)",
+            lambda row: str(row["sos_bands"]["intermediate_0_6_to_0_8"]),
+        ),
+        ("SOS low ($<0.6$)", lambda row: str(row["sos_bands"]["low_lt_0_6"])),
+        (
+            "Useful high-confidence motifs (SOS $\\geq0.6$)",
+            lambda row: str(row["useful_high_confidence_motifs"]),
         ),
         (
-            "Top-word diversity",
-            f"{neural['top_word_diversity']:.4f}",
-            f"{tomotopy['top_word_diversity']:.4f}",
-        ),
-        ("Mean NPMI", f"{neural['mean_npmi']:.4f}", f"{tomotopy['mean_npmi']:.4f}"),
-        (
-            "Undefined top-word pairs",
-            f"{neural['undefined_pair_fraction']:.1%}".replace("%", "\\%"),
-            f"{tomotopy['undefined_pair_fraction']:.1%}".replace("%", "\\%"),
+            "Mean high-confidence SOS",
+            lambda row: f"{row['high_confidence_mean_sos']:.4f}",
         ),
         (
-            "Corpus-active topics",
-            str(neural["active_topics"]),
-            str(tomotopy["active_topics"]),
+            "Median high-confidence SOS",
+            lambda row: f"{row['high_confidence_median_sos']:.4f}",
         ),
         (
-            "Median effective topics per spectrum",
-            f"{neural['effective_topics_median']:.2f}",
-            f"{tomotopy['effective_topics_median']:.2f}",
-        ),
-        (
-            "Mass-99 distinct-topic equivalents",
-            f"{neural['mass99_distinct_topic_equivalents']:.1f}",
-            f"{tomotopy['mass99_distinct_topic_equivalents']:.1f}",
-        ),
-        (
-            "Annotation coverage",
-            _percent(
-                neural["annotation_coverage"],
-                neural["annotated_topics"],
-                neural["topics"],
-            ),
-            _percent(
-                tomotopy["annotation_coverage"],
-                tomotopy["annotated_topics"],
-                tomotopy["topics"],
-            ),
-        ),
-        (
-            "Dominant SOS-evaluable topics",
-            f"{neural['dominant_eligible_topics']}/{neural['topics']}",
-            f"{tomotopy['dominant_eligible_topics']}/{tomotopy['topics']}",
-        ),
-        (
-            "Dominant mean SOS",
-            f"{neural['dominant_mean_sos']:.4f}",
-            f"{tomotopy['dominant_mean_sos']:.4f}",
-        ),
-        (
-            "High-confidence associations",
-            str(neural["high_confidence_associated_spectra"]),
-            str(tomotopy["high_confidence_associated_spectra"]),
-        ),
-        (
-            "Six-thread cached spectra/s",
-            f"{neural['spectra_per_second']:,.1f}",
-            f"{tomotopy['spectra_per_second']:,.1f}",
-        ),
-        (
-            "Training time (minutes)",
-            f"{neural['training_seconds'] / 60:.1f}",
-            f"{tomotopy['training_seconds'] / 60:.1f}",
-        ),
-        (
-            "Cumulative pipeline peak RSS (GiB)",
-            f"{neural['pipeline_peak_rss_bytes'] / (1024**3):.2f}",
-            f"{tomotopy['pipeline_peak_rss_bytes'] / (1024**3):.2f}",
+            "Model-fitting time (minutes)",
+            lambda row: f"{row['training_seconds'] / 60:.1f}",
         ),
     )
     GENERATED.mkdir(parents=True, exist_ok=True)
-    body = "\n".join(f"{name} & {left} & {right} \\\\" for name, left, right in rows)
+    body = "\n".join(
+        f"{name} & " + " & ".join(render(row) for row in rows) + " \\\\"
+        for name, render in metrics
+    )
     (GENERATED / "final_comparison_table.tex").write_text(
         body + "\n\\bottomrule\n", encoding="utf-8"
     )
@@ -335,28 +233,27 @@ def _generate() -> None:
     comparison()
     chemistry()
     speed()
-    resources()
     tables()
 
 
 def _manifest_files() -> tuple[list[Path], list[Path]]:
-    source_manifests = RESULTS / "source_manifests"
-    comparison_sources = {
-        "protocol": RESULTS / "model_bundle/protocol.json",
-        "neural_training": source_manifests / "neural_training.json",
-        "neural_evaluation": RESULTS / "model_bundle/evaluation.json",
-        "tomotopy_evaluation": source_manifests / "tomotopy_evaluation.json",
-        "neural_chemistry": RESULTS / "model_bundle/chemistry.json",
-        "tomotopy_chemistry": source_manifests / "tomotopy_chemistry.json",
+    sources = {
+        "candidate_training": SOURCES / "candidate_training.json",
+        "candidate_evaluation": SOURCES / "candidate_validation.json",
+        "current_evaluation": SOURCES / "current_validation.json",
+        "tomotopy_evaluation": SOURCES / "tomotopy_validation.json",
+        "candidate_chemistry": SOURCES / "candidate_validation_chemistry.json",
+        "current_chemistry": SOURCES / "current_validation_chemistry.json",
+        "tomotopy_chemistry": SOURCES / "tomotopy_validation_chemistry.json",
+        "validation_gate": SOURCES / "validation_gate.json",
     }
-    declared = _json(RESULTS / "comparison.json")["source_sha256"]
-    for name, path in comparison_sources.items():
-        if path.is_file() and _sha256(path) != declared.get(name):
+    declared = _comparison()["source_sha256"]
+    for name, path in sources.items():
+        if _sha256(path) != declared[name]:
             raise ValueError(f"comparison source mismatch: {name}")
     evidence = [
         RESULTS / "comparison.json",
-        *comparison_sources.values(),
-        RESULTS / "model_bundle/provenance.json",
+        *sources.values(),
         Path(__file__).resolve(),
     ]
     outputs = [
@@ -364,7 +261,6 @@ def _manifest_files() -> tuple[list[Path], list[Path]]:
         FIGURES / "chemistry_coverage.png",
         FIGURES / "final_comparison.png",
         FIGURES / "inference_speed.png",
-        FIGURES / "resource_use.png",
         GENERATED / "final_comparison_table.tex",
         DOCS / "neural_ms2lda_checkpoint.tex",
         DOCS / "neural_ms2lda_checkpoint.pdf",
@@ -394,7 +290,7 @@ def _verify_manifest() -> None:
     payload = _json(MANIFEST)
     for section in ("evidence_sha256", "output_sha256"):
         for name, expected in payload[section].items():
-            path = REPO / str(name)
+            path = REPO / name
             if not path.is_file() or _sha256(path) != expected:
                 raise ValueError(f"report manifest mismatch: {name}")
 

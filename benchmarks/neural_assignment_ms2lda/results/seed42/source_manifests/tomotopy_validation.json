@@ -1,0 +1,56 @@
+{
+  "evaluation_seconds": 320.8443206660013,
+  "method": "tomotopy",
+  "metrics": {
+    "distinct_high_confidence_topics": 299,
+    "full_spectrum_mixture": {
+      "effective_topic_count_mean": 11.884937198764062,
+      "effective_topic_count_median": 9.0957117596068,
+      "effective_topic_count_p95": 28.457559262830056,
+      "maximum_topic_probability_maximum": 0.9694699606020454,
+      "maximum_topic_probability_median": 0.3106992179656047,
+      "maximum_topic_probability_p95": 0.668470994034553
+    },
+    "high_confidence_spectra": 446,
+    "validation_document_completion": {
+      "eligible_documents": 3888,
+      "in_vocabulary_tokens": 1277983,
+      "nll_per_token": 9.662228074924426,
+      "oov_fraction": 0.031355544236867795,
+      "out_of_vocabulary_tokens": 41369,
+      "total_documents": 3889
+    }
+  },
+  "output_sha256": {
+    "beta.npy": "17586b80c3299b673797c46db609ca3f41c39efef4ef31f814018593dbc06211",
+    "validation_completion_nll.npy": "3b8c0d88fb514fbe04454e798168a6029d0e6aa706ee06fd5a65ea9f0b722df7",
+    "validation_full_theta.npy": "e0bcc62d01c1717547ca719b74e17536661b0d42aff2bdb3bde09dfaeb55e81e",
+    "validation_observed_theta.npy": "d31a03f42c92411cade1008fd8c4eadf19cc5dbff284a1d36ccc5e429d009fc7"
+  },
+  "peak_rss_bytes": 1524973568,
+  "reference": {
+    "data_sha256": {
+      "identifiers.json": "b112d462878554b51f000fdc25922d7c35cdf0ead8b545890d597d04965bc40e",
+      "test_completion.npz": "328f5970632ee03877c0151846db6034d98d0041f4012f9603d6519552553c45",
+      "test_full.npz": "45b931c5c5a56d8a4f86ca0d19942d09089056c815a41210aae55c12e692cd01",
+      "test_observed.npz": "855154fb1ee2c72f8dc56bef5258de997e951075042b458cbafe7877ab355f33",
+      "train.npz": "b4808f341864ba1df246a5093992f52397c2f96e0b48b23245b9b17e30aa5b52",
+      "vocabulary.json": "8e7bf7ba06a9a2fbd75326d9e7b44eb973bdec5557da195c6678a654d93ee308"
+    },
+    "model_sha256": "2c0dbe64fcf76bfb542ed509145f251faa703691c59aed07af49a9cb99e457c6",
+    "run": "/Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/neural-ms2lda-clean-k500-seed42-v1",
+    "source_data_manifest_sha256": "2c0d70233f8b18a75253f6e8c4f453d729ca683e5c475d423ac168b6095b1ad0",
+    "source_evaluation_sha256": "b0d4e4a46bf0a60a040cda0be6bfc983cef81e8e89b341a67959119795c9cb38",
+    "source_peak_rss_bytes": 1515274240,
+    "source_protocol_sha256": "5f6c6d4770e290e8edbc76d41f711778dd4399a1f7b46c88dc33dec96317df18",
+    "training_iterations": 750,
+    "training_parallel": 3,
+    "training_seconds_total": 4561.683655708999,
+    "training_workers": 6
+  },
+  "schema_version": "neural-ms2lda/validation-evaluation-v1",
+  "source_sha256": "2c0dbe64fcf76bfb542ed509145f251faa703691c59aed07af49a9cb99e457c6",
+  "split": "validation",
+  "stable": true,
+  "topic_count": 1000
+}

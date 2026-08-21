@@ -19,6 +19,7 @@ from benchmarks.msnlib_validation.data import (
 )
 from benchmarks.neural_assignment_ms2lda import config as neural_config
 from benchmarks.neural_assignment_ms2lda.bundle import load_bundle, package_bundle
+from benchmarks.neural_assignment_ms2lda.chemical import _sos_bands
 from benchmarks.neural_assignment_ms2lda.config import load_protocol
 from benchmarks.neural_assignment_ms2lda.cooccurrence import (
     positive_npmi_graph,
@@ -47,6 +48,7 @@ from benchmarks.neural_assignment_ms2lda.development import (
 )
 from benchmarks.neural_assignment_ms2lda.embeddings import train_sgns
 from benchmarks.neural_assignment_ms2lda.evaluation import evaluate_neural
+from benchmarks.neural_assignment_ms2lda.gates import evaluate_validation_gate
 from benchmarks.neural_assignment_ms2lda.model import (
     balanced_sinkhorn_targets,
     recycle_dead_prototypes,
@@ -274,12 +276,126 @@ def test_hierarchical_router_adds_one_shared_document_score() -> None:
     assert torch.isfinite(hierarchical.theta).all()
 
 
+def test_document_gate_normalization_support_empty_fallback_and_gradients() -> None:
+    protocol = load_protocol()
+    from benchmarks.neural_assignment_ms2lda.model import initialize_model
+
+    features = torch.nn.functional.normalize(torch.randn(8, 64), dim=1)
+    model, _ = initialize_model(features, num_topics=4, protocol=protocol)
+    assignments = torch.tensor(
+        [[0.6, 0.4, 0.0, 0.0], [0.2, 0.8, 0.0, 0.0]],
+        requires_grad=True,
+    )
+    row_ids = torch.tensor([0, 0])
+    weights = torch.tensor([1.0, 2.0])
+    logits = torch.tensor(
+        [[1.0, -1.0, 4.0, 3.0], [3.0, 2.0, 1.0, 0.0]],
+        requires_grad=True,
+    )
+    gated = model.aggregate_theta(
+        assignments=assignments,
+        row_ids=row_ids,
+        weights=weights,
+        documents=2,
+        document_logits=logits,
+        temperature=0.5,
+        document_mixture_weight=0.5,
+    )
+    assert torch.allclose(gated.sum(dim=1), torch.ones(2))
+    assert torch.equal(gated[0, 2:], torch.zeros(2))
+    assert torch.allclose(gated[1], torch.full((4,), 0.25))
+    gated[0, 0].backward()
+    assert assignments.grad is not None and torch.isfinite(assignments.grad).all()
+    assert logits.grad is not None and torch.isfinite(logits.grad).all()
+    assert torch.count_nonzero(logits.grad) > 0
+
+
+def test_zero_document_gate_weight_exactly_recovers_token_mixture() -> None:
+    protocol = load_protocol()
+    from benchmarks.neural_assignment_ms2lda.model import initialize_model
+
+    features = torch.nn.functional.normalize(torch.randn(8, 64), dim=1)
+    model, _ = initialize_model(features, num_topics=4, protocol=protocol)
+    assignments = torch.softmax(torch.randn(5, 4), dim=1)
+    row_ids = torch.tensor([0, 0, 1, 1, 1])
+    weights = torch.rand(5)
+    baseline = model.aggregate_theta(
+        assignments=assignments,
+        row_ids=row_ids,
+        weights=weights,
+        documents=2,
+    )
+    recovered = model.aggregate_theta(
+        assignments=assignments,
+        row_ids=row_ids,
+        weights=weights,
+        documents=2,
+        document_logits=torch.randn(2, 4),
+        temperature=0.1,
+        document_mixture_weight=0.0,
+    )
+    assert torch.equal(recovered, baseline)
+
+
+def test_sos_bands_include_fixed_boundaries_and_cover_all_values() -> None:
+    bands = _sos_bands([0.0, 0.5999, 0.6, 0.7, 0.8, 0.8001, 1.0])
+    assert bands == {
+        "high_gt_0_8": 2,
+        "intermediate_0_6_to_0_8": 3,
+        "low_lt_0_6": 2,
+    }
+    assert sum(bands.values()) == 7
+
+
+def test_validation_gate_uses_only_predeclared_validation_evidence(
+    tmp_path: Path,
+) -> None:
+    def chemistry(useful: int, *, coverage: float, mean_sos: float) -> dict:
+        return {
+            "annotation_coverage": coverage,
+            "high_confidence_chemistry": {
+                "mean_sos": mean_sos,
+                "sos_bands": {
+                    "high_gt_0_8": 0,
+                    "intermediate_0_6_to_0_8": useful,
+                    "low_lt_0_6": 1,
+                },
+            },
+        }
+
+    payloads = {
+        "validation_chemical/current_neural/complete.json": chemistry(
+            50, coverage=0.384, mean_sos=0.64
+        ),
+        "validation_chemical/candidate_neural/complete.json": chemistry(
+            180, coverage=0.5, mean_sos=0.62
+        ),
+        "validation_chemical/tomotopy/complete.json": chemistry(
+            300, coverage=0.607, mean_sos=0.65
+        ),
+        "validation_evaluation/candidate_neural/complete.json": {
+            "stable": True,
+            "metrics": {"validation_document_completion": {"nll_per_token": 8.5}},
+        },
+        "model/complete.json": {"stable": True, "elapsed_seconds": 9000.0},
+        "model/selected.json": {"checkpoint_sha256": "fixed-checkpoint"},
+    }
+    for name, payload in payloads.items():
+        write_json(tmp_path / name, payload)
+    result = evaluate_validation_gate(tmp_path)
+    assert result["decision"] == "accepted"
+    assert result["test_evaluation_authorized"] is True
+    assert result["reported_context"]["training_within_prior_10_percent"] is False
+    assert result["paper_outcome"]["closed_fraction"] == pytest.approx(0.52)
+
+
 def test_committed_bundle_matches_supported_architecture() -> None:
     bundle = Path(__file__).parents[1] / "results/seed42/model_bundle"
     model, vocabulary, manifest = load_bundle(bundle)
     assert manifest["schema_version"] == "neural-ms2lda/model-bundle-v1"
     assert model.num_topics == 1000
     assert model.document_topic_prior_weight == 1.0
+    assert model.document_mixture_weight == 0.0
     assert len(vocabulary) == model.vocabulary_size
 
 
@@ -287,6 +403,7 @@ def test_protocol_exposes_one_active_topic_architecture() -> None:
     protocol = load_protocol()
     assert protocol["cpu_threads"] == 6
     assert protocol["model"]["num_topics"] == 1000
+    assert protocol["model"]["document_mixture_weight"] == 0.5
     assert "development_gates" not in protocol
     assert "workers" not in protocol["tomotopy"]
     from benchmarks.neural_assignment_ms2lda.model import initialize_model
@@ -331,6 +448,7 @@ def test_development_inputs_exclude_the_test_partition(tmp_path: Path) -> None:
     (source / "data/test_full.npz").write_bytes(b"sealed")
     for name in READ_ONLY_STAGES:
         (source / name).mkdir(parents=True)
+    (source / "mag").mkdir(parents=True)
 
     _link_read_only_inputs(source, output)
 
@@ -338,6 +456,7 @@ def test_development_inputs_exclude_the_test_partition(tmp_path: Path) -> None:
         DEVELOPMENT_DATA_FILES
     )
     assert not (output / "data/test_full.npz").exists()
+    assert (output / "mag").is_symlink()
 
     (source / "data/validation_records.jsonl").unlink()
     validation = {"split": "validation", "spectrum_id": "validation-1"}
@@ -360,6 +479,16 @@ def test_development_verifies_frozen_source_artifacts(tmp_path: Path) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(name.encode("utf-8"))
         data_hashes[name] = file_sha256(path)
+    split_manifest = source / "data/split_manifest.jsonl"
+    write_jsonl(
+        split_manifest,
+        (
+            {"split": "train", "connectivity_key": "train"},
+            {"split": "validation", "connectivity_key": "validation"},
+            {"split": "test", "connectivity_key": "test"},
+        ),
+    )
+    data_hashes[split_manifest.name] = file_sha256(split_manifest)
     write_json(source / "data/complete.json", {"output_sha256": data_hashes})
 
     view = source / "training_views/pair.npz"
@@ -378,12 +507,19 @@ def test_development_verifies_frozen_source_artifacts(tmp_path: Path) -> None:
         {"features_sha256": file_sha256(features)},
     )
 
-    initialization = source / "initialization/model_initialization.pt"
-    initialization.parent.mkdir(parents=True)
-    initialization.write_bytes(b"model initialization")
+    mag = source / "mag/index"
+    mag.mkdir(parents=True)
+    mag_hashes = {}
+    excluded = mag / "excluded_connectivity_keys.json"
+    write_json(excluded, {"connectivity_keys": ["test", "validation"]})
+    mag_hashes[excluded.name] = file_sha256(excluded)
+    for name in ("kept_original_ids.npy", "spec2vec_filtered.faiss"):
+        path = mag / name
+        path.write_bytes(name.encode("utf-8"))
+        mag_hashes[name] = file_sha256(path)
     write_json(
-        initialization.parent / "complete.json",
-        {"checkpoint_sha256": file_sha256(initialization)},
+        mag / "manifest.json",
+        {"output_sha256": mag_hashes},
     )
 
     _verify_source_artifacts(source, source / "data/validation_records.jsonl")
@@ -399,6 +535,7 @@ def test_development_accepts_removed_legacy_protocol_metadata() -> None:
     source["token_features"].update({"type_dimensions": 2, "output_dimensions": 64})
     source["model"].update({"input_dimensions": 64})
     source["model"].pop("document_topic_prior_weight")
+    source["model"].pop("document_mixture_weight")
     source["views"]["fragment_loss_group_atomic"] = True
     source["evaluation"].update(
         {
@@ -414,11 +551,11 @@ def test_development_accepts_removed_legacy_protocol_metadata() -> None:
         _validate_frozen_protocol(source, current)
 
 
-def test_development_replay_keeps_the_frozen_topic_capacity() -> None:
+def test_development_uses_the_single_supported_topic_capacity() -> None:
     source = copy.deepcopy(load_protocol())
     source["model"]["num_topics"] = 500
     protocol = _development_protocol(source)
-    assert protocol["model"]["num_topics"] == 500
+    assert protocol["model"]["num_topics"] == 1000
     assert protocol["cpu_threads"] == 6
     _validate_frozen_protocol(source, protocol)
 
@@ -818,6 +955,7 @@ def test_miniature_mgf_through_report_and_bundle(tmp_path: Path) -> None:
     loaded, vocabulary, manifest = load_bundle(bundle)
     assert loaded.num_topics == 4
     assert loaded.document_topic_prior_weight == 1.0
+    assert loaded.document_mixture_weight == 0.5
     assert len(vocabulary) == train.shape[1]
     assert manifest["selected_epoch"] == 2
     provenance_text = (bundle / "provenance.json").read_text(encoding="utf-8")
@@ -826,6 +964,7 @@ def test_miniature_mgf_through_report_and_bundle(tmp_path: Path) -> None:
     assert "path" not in provenance_text
     legacy_protocol = json.loads((bundle / "protocol.json").read_text())
     legacy_protocol["model"].pop("document_topic_prior_weight")
+    legacy_protocol["model"].pop("document_mixture_weight")
     legacy_protocol["hierarchical_routing"] = {"weight": 1.0}
     write_json(bundle / "protocol.json", legacy_protocol)
     manifest["files"]["protocol.json"] = {
@@ -835,6 +974,7 @@ def test_miniature_mgf_through_report_and_bundle(tmp_path: Path) -> None:
     write_json(bundle / "manifest.json", manifest)
     legacy_loaded, _, _ = load_bundle(bundle)
     assert legacy_loaded.document_topic_prior_weight == 1.0
+    assert legacy_loaded.document_mixture_weight == 0.0
 
 
 def test_zip_safety_rejects_parent_traversal(tmp_path: Path) -> None:

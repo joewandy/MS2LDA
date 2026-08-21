@@ -12,6 +12,7 @@ from typing import Any, Sequence
 import torch
 
 from .config import REPO_ROOT, code_manifest, load_protocol
+from .core import prepare_initialization
 from .data import load_csr, load_heldout_records, load_view_pairs
 from .training import train_model
 from .utils import (
@@ -26,7 +27,6 @@ from .utils import (
 READ_ONLY_STAGES = (
     "training_views",
     "token_features",
-    "initialization",
 )
 DEVELOPMENT_DATA_FILES = (
     "train.npz",
@@ -34,8 +34,14 @@ DEVELOPMENT_DATA_FILES = (
     "validation_completion.npz",
     "validation_full.npz",
     "validation_records.jsonl",
+    "vocabulary.json",
 )
 LEGACY_HELDOUT_RECORDS = "heldout_records.jsonl"
+MAG_FILES = (
+    "excluded_connectivity_keys.json",
+    "kept_original_ids.npy",
+    "spec2vec_filtered.faiss",
+)
 
 
 def _verify_declared_file(
@@ -56,8 +62,12 @@ def _verify_declared_file(
 def _verify_source_artifacts(source: Path, validation_records: Path) -> None:
     data = source / "data"
     data_manifest = read_json(data / "complete.json")
-    for name in (*DEVELOPMENT_DATA_FILES[:-1], validation_records.name):
+    declared = tuple(
+        name for name in DEVELOPMENT_DATA_FILES if name != "validation_records.jsonl"
+    )
+    for name in (*declared, validation_records.name):
         _verify_declared_file(data, data_manifest, name)
+    _verify_declared_file(data, data_manifest, "split_manifest.jsonl")
     training_views = source / "training_views"
     verify_output_hashes(training_views, read_json(training_views / "complete.json"))
     token_features = source / "token_features"
@@ -67,32 +77,43 @@ def _verify_source_artifacts(source: Path, validation_records: Path) -> None:
         "features.npy",
         legacy_key="features_sha256",
     )
-    initialization = source / "initialization"
-    _verify_declared_file(
-        initialization,
-        read_json(initialization / "complete.json"),
-        "model_initialization.pt",
-        legacy_key="checkpoint_sha256",
+    mag = source / "mag/index"
+    verify_output_hashes(mag, read_json(mag / "manifest.json"))
+    excluded = set(
+        read_json(mag / "excluded_connectivity_keys.json")["connectivity_keys"]
     )
+    heldout = set()
+    with (data / "split_manifest.jsonl").open(encoding="utf-8") as handle:
+        for line in handle:
+            if line.strip():
+                row = json.loads(line)
+                if row["split"] in {"validation", "test"}:
+                    heldout.add(str(row["connectivity_key"]))
+    if excluded != heldout:
+        raise ValueError("MAG exclusion does not exactly cover held-out compounds")
 
 
 def _source_evidence(source: Path) -> dict[str, str]:
+    declared = tuple(
+        name for name in DEVELOPMENT_DATA_FILES if name != "validation_records.jsonl"
+    )
     names = (
         "protocol.resolved.json",
         "data/complete.json",
-        *(f"data/{name}" for name in DEVELOPMENT_DATA_FILES[:-1]),
+        "data/split_manifest.jsonl",
+        *(f"data/{name}" for name in declared),
         "training_views/complete.json",
         "token_features/features.npy",
         "token_features/complete.json",
-        "initialization/model_initialization.pt",
-        "initialization/complete.json",
+        "mag/index/manifest.json",
+        *(f"mag/index/{name}" for name in MAG_FILES),
     )
-    validation_records = source / "data" / DEVELOPMENT_DATA_FILES[-1]
+    validation_records = source / "data/validation_records.jsonl"
     if not validation_records.is_file():
         validation_records = source / "data" / LEGACY_HELDOUT_RECORDS
     missing = [name for name in names if not (source / name).is_file()]
     if not validation_records.is_file():
-        missing.append(f"data/{DEVELOPMENT_DATA_FILES[-1]}")
+        missing.append("data/validation_records.jsonl")
     if missing:
         raise FileNotFoundError(f"source run is incomplete: {missing}")
     _verify_source_artifacts(source, validation_records)
@@ -114,7 +135,15 @@ def _validate_frozen_protocol(source: dict[str, Any], current: dict[str, Any]) -
     )
     changed = [] if source["seed"] == current["seed"] else ["seed"]
     for section in sections:
-        ignored = {"document_topic_prior_weight"} if section == "model" else set()
+        ignored = (
+            {
+                "document_mixture_weight",
+                "document_topic_prior_weight",
+                "num_topics",
+            }
+            if section == "model"
+            else set()
+        )
         changed.extend(
             f"{section}.{key}"
             for key, value in current[section].items()
@@ -143,10 +172,9 @@ def _validate_frozen_protocol(source: dict[str, Any], current: dict[str, Any]) -
 
 
 def _development_protocol(source: dict[str, Any]) -> dict[str, Any]:
-    """Use the supported architecture at the frozen source run's capacity."""
-    protocol = load_protocol()
-    protocol["model"]["num_topics"] = int(source["model"]["num_topics"])
-    return protocol
+    """Use the single supported protocol with frozen source data and views."""
+    del source
+    return load_protocol()
 
 
 def _link(target: Path, link: Path, *, directory: bool) -> None:
@@ -165,9 +193,11 @@ def _link_read_only_inputs(source: Path, output: Path) -> None:
     if data.is_symlink():
         raise ValueError("development data must not expose the complete source split")
     data.mkdir(exist_ok=True)
-    for name in DEVELOPMENT_DATA_FILES[:-1]:
+    for name in DEVELOPMENT_DATA_FILES:
+        if name == "validation_records.jsonl":
+            continue
         _link(source / "data" / name, data / name, directory=False)
-    validation_records = source / "data" / DEVELOPMENT_DATA_FILES[-1]
+    validation_records = source / "data/validation_records.jsonl"
     if validation_records.is_file():
         _link(validation_records, data / validation_records.name, directory=False)
     else:
@@ -182,9 +212,10 @@ def _link_read_only_inputs(source: Path, output: Path) -> None:
                         rows.append(row)
         if not rows:
             raise ValueError("legacy held-out records contain no validation rows")
-        write_jsonl(data / DEVELOPMENT_DATA_FILES[-1], rows)
+        write_jsonl(data / "validation_records.jsonl", rows)
     for name in READ_ONLY_STAGES:
         _link(source / name, output / name, directory=True)
+    _link(source / "mag", output / "mag", directory=True)
 
 
 def run_development_experiment(
@@ -223,6 +254,7 @@ def run_development_experiment(
     torch.set_num_threads(int(protocol["cpu_threads"]))
     data = output / "data"
     train = load_csr(data / "train.npz")
+    prepare_initialization(output, train=train, protocol=protocol)
     result = train_model(
         output,
         train=train,

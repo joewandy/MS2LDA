@@ -40,6 +40,15 @@ from .utils import (
 )
 
 
+def _sos_bands(values: Sequence[float]) -> dict[str, int]:
+    """Count eligible topic SOS values in the paper's fixed bands."""
+    return {
+        "high_gt_0_8": sum(value > 0.8 for value in values),
+        "intermediate_0_6_to_0_8": sum(0.6 <= value <= 0.8 for value in values),
+        "low_lt_0_6": sum(value < 0.6 for value in values),
+    }
+
+
 def _topic_scores(
     *,
     theta: np.ndarray,
@@ -136,6 +145,7 @@ def _topic_scores(
             ),
             "mean_sos": float(np.mean(values)) if values else None,
             "median_sos": float(np.median(values)) if values else None,
+            "sos_bands": _sos_bands(values),
         },
     )
 
@@ -146,12 +156,18 @@ def run_chemical_scoring(
     method: str,
     data_root: str | Path,
     protocol: dict[str, Any],
+    split: str = "test",
 ) -> dict[str, Any]:
     """Annotate neural or comparator topics and score held-out compounds."""
-    if method not in {"neural", "tomotopy"}:
-        raise ValueError("chemical method must be neural or tomotopy")
+    allowed = {"neural", "current_neural", "candidate_neural", "tomotopy"}
+    if method not in allowed:
+        raise ValueError(f"chemical method must be one of {sorted(allowed)}")
+    if split not in {"validation", "test"}:
+        raise ValueError("chemical split must be validation or test")
     directory = Path(run_dir).expanduser().resolve()
-    output = directory / "chemical" / method
+    group = "chemical" if split == "test" else "validation_chemical"
+    evaluation_group = "evaluation" if split == "test" else "validation_evaluation"
+    output = directory / group / method
     if (output / "complete.json").is_file():
         result = read_json(output / "complete.json")
         verify_output_hashes(output, result)
@@ -172,14 +188,14 @@ def run_chemical_scoring(
         directory, data_root=data_root, protocol=protocol
     )
     data = directory / "data"
-    evaluation = directory / "evaluation" / method
+    evaluation = directory / evaluation_group / method
     verify_output_hashes(evaluation, read_json(evaluation / "complete.json"))
     beta_path = evaluation / "beta.npy"
-    theta_path = evaluation / "test_full_theta.npy"
+    theta_path = evaluation / f"{split}_full_theta.npy"
     beta = np.load(beta_path, mmap_mode="r")
     theta = np.load(theta_path, mmap_mode="r")
     vocabulary = list(map(str, read_json(data / "vocabulary.json")["vocabulary"]))
-    records = load_heldout_records(data, "test")
+    records = load_heldout_records(data, split)
     if theta.shape[0] != len(records):
         raise ValueError("full mixtures and held-out records differ")
     spectra = topic_spectra(
@@ -296,6 +312,7 @@ def run_chemical_scoring(
     result = {
         "schema_version": "neural-ms2lda/chemical-evaluation-v1",
         "method": method,
+        "split": split,
         "topics": len(annotations),
         "annotation_coverage": sum(
             row["optimized_feature_count"] > 0 for row in annotations
@@ -326,13 +343,19 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run", required=True, type=Path)
     parser.add_argument("--data-root", required=True, type=Path)
-    parser.add_argument("--method", choices=("neural", "tomotopy"), required=True)
+    parser.add_argument(
+        "--method",
+        choices=("neural", "current_neural", "candidate_neural", "tomotopy"),
+        required=True,
+    )
+    parser.add_argument("--split", choices=("validation", "test"), default="test")
     args = parser.parse_args(argv)
     result = run_chemical_scoring(
         args.run,
         method=args.method,
         data_root=args.data_root,
         protocol=read_json(args.run / "protocol.resolved.json"),
+        split=args.split,
     )
     print(json.dumps(result, indent=2, sort_keys=True))
     return 0

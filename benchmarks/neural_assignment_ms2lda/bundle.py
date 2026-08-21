@@ -106,6 +106,7 @@ def load_bundle(
         projection_dimensions=int(config["projection_dimensions"]),
         router_hidden_dimensions=int(config["router_hidden_dimensions"]),
         beta_temperature=float(config["beta_temperature"]),
+        document_mixture_weight=float(config.get("document_mixture_weight", 0.0)),
         document_topic_prior_weight=float(
             config.get(
                 "document_topic_prior_weight",
