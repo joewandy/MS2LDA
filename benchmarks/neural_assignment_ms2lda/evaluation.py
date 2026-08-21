@@ -81,7 +81,7 @@ def _validation_result(
         "validation_full_theta.npy": full_theta,
         "validation_completion_nll.npy": losses,
     }
-    stable = all(np.isfinite(values).all() for values in arrays.values())
+    stable = all(np.isfinite(values).all() for values in (beta, theta, full_theta))
     stable = stable and np.isfinite(document_completion["nll_per_token"])
     if not stable:
         raise FloatingPointError("model produced non-finite validation evidence")

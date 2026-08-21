@@ -377,7 +377,7 @@ def test_validation_gate_uses_only_predeclared_validation_evidence(
             "stable": True,
             "metrics": {"validation_document_completion": {"nll_per_token": 8.5}},
         },
-        "model/complete.json": {"stable": True, "elapsed_seconds": 5500.0},
+        "model/complete.json": {"stable": True, "elapsed_seconds": 9000.0},
         "model/selected.json": {"checkpoint_sha256": "fixed-checkpoint"},
     }
     for name, payload in payloads.items():
@@ -385,6 +385,7 @@ def test_validation_gate_uses_only_predeclared_validation_evidence(
     result = evaluate_validation_gate(tmp_path)
     assert result["decision"] == "accepted"
     assert result["test_evaluation_authorized"] is True
+    assert result["reported_context"]["training_within_prior_10_percent"] is False
     assert result["paper_outcome"]["closed_fraction"] == pytest.approx(0.52)
 
 

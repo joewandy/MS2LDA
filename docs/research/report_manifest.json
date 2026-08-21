@@ -1,24 +1,24 @@
 {
   "evidence_sha256": {
-    "benchmarks/neural_assignment_ms2lda/results/seed42/comparison.json": "ed9331aa87157f5c7d3273681e13355b28b90814b51aa23d8cfcd157bdc7abf5",
-    "benchmarks/neural_assignment_ms2lda/results/seed42/model_bundle/chemistry.json": "d8c259b140181c02876c9ae1eeade0478fa4b216827c67ac7f47ab9d44e0f60d",
-    "benchmarks/neural_assignment_ms2lda/results/seed42/model_bundle/evaluation.json": "fa43163f15514d2e420b38e09ecdfaaba5a5a352fcfc9d17f0e475e5b8f8ecf0",
-    "benchmarks/neural_assignment_ms2lda/results/seed42/model_bundle/protocol.json": "a47bcfc3739165cb7a1b22e65aa27274e7dfb41e20d91fa65ab82f9af16e6161",
-    "benchmarks/neural_assignment_ms2lda/results/seed42/model_bundle/provenance.json": "d964ab470c5ae088915c1039c538fd745a837e8cd19004693acb36c39606a5f1",
-    "benchmarks/neural_assignment_ms2lda/results/seed42/source_manifests/neural_training.json": "f76a33c4c7df94b959eeb54512c372628ce54b11f023e025816eac51a235f631",
-    "benchmarks/neural_assignment_ms2lda/results/seed42/source_manifests/tomotopy_chemistry.json": "9d82b262c3b1ea39ff02c2677da5efcf759d4b59f39773eaafd990ed2ea723de",
-    "benchmarks/neural_assignment_ms2lda/results/seed42/source_manifests/tomotopy_evaluation.json": "a79f52b81bafb5a7eee640919033db737e8def85324d6386bcb25a6752400980",
-    "scripts/generate_neural_ms2lda_report.py": "d619881648422f4bd2c3748473532f28b369da6beb0d8021133bd6df24424a37"
+    "benchmarks/neural_assignment_ms2lda/results/seed42/comparison.json": "a63ce92fe6f31eb76d671fbfcd9f6b993142a604965bd002f5ec7007598e21a7",
+    "benchmarks/neural_assignment_ms2lda/results/seed42/source_manifests/candidate_training.json": "3ec4b264cb5e4c3ac4e39b9cccb3a9793fed04099e7cbdcd4268ad05cc04ba8c",
+    "benchmarks/neural_assignment_ms2lda/results/seed42/source_manifests/candidate_validation.json": "36128a6a0972b94de656f31b236f966b35de1f08afc3128d8c8e7b4330da1754",
+    "benchmarks/neural_assignment_ms2lda/results/seed42/source_manifests/candidate_validation_chemistry.json": "e3127861d3fb1a804c31978417d6e905e0dde234a32f7e827f402df0e684ecba",
+    "benchmarks/neural_assignment_ms2lda/results/seed42/source_manifests/current_validation.json": "4d0ea27ef0c06a5934336dbb2384a31001eaa6466adb9563bb57a740287641b1",
+    "benchmarks/neural_assignment_ms2lda/results/seed42/source_manifests/current_validation_chemistry.json": "eab10b548283c1177d5390f7a53bf12ac7d27649669341ca798d833d7cc36050",
+    "benchmarks/neural_assignment_ms2lda/results/seed42/source_manifests/tomotopy_validation.json": "562e252c3759d206755c2009425e6227967d164c8e7e70200abc12335b32fcbd",
+    "benchmarks/neural_assignment_ms2lda/results/seed42/source_manifests/tomotopy_validation_chemistry.json": "fc13208d12d8f539d01b4c169029a03126b225a47b915e27ec52452eb7272378",
+    "benchmarks/neural_assignment_ms2lda/results/seed42/source_manifests/validation_gate.json": "7886205ccdc33f7b252f52bf78ed97521b76c21374ea3b622b1810038cdd5ffb",
+    "scripts/generate_neural_ms2lda_report.py": "c09fa61931946b635e6f6d755da1943aed3b57e2d5036c78e55f3d4c9d014740"
   },
   "output_sha256": {
-    "docs/research/figures/architecture.png": "8354d3e0414488bca4793bc8db0f520311b709dbae382d6d7770870b432a07cf",
-    "docs/research/figures/chemistry_coverage.png": "f943b13e7752bee81876fcb7f23dec41561e0feb8b31c7ce7018f6f25e2578ba",
-    "docs/research/figures/final_comparison.png": "ec6c6186071af2179545e7af70a2a691c6ecca4e57602c075478df82e6143a1b",
-    "docs/research/figures/inference_speed.png": "7dcf18575fd3cbbaac8538c6891318a1a5ea6a20ae638ff2fc9c963ec0b44b78",
-    "docs/research/figures/resource_use.png": "b693861bce8150e23e3d8c722ba5af25afab3474ca869ffdc2056f96419b8fb8",
-    "docs/research/generated/final_comparison_table.tex": "b3d80b9b4f9f9bbc7007cd83e53d745e3b2107f4281a7ebaf167529d7db7843b",
-    "docs/research/neural_ms2lda_checkpoint.pdf": "c5734a2132d0d4710749dd5eea615bff8713fe88da24081728255e15f1c26edb",
-    "docs/research/neural_ms2lda_checkpoint.tex": "a1c16b3ac69beb8c1321dcac7017d4810215b7a756aacb1c3e4c50ff56808bad"
+    "docs/research/figures/architecture.png": "4caf42b7d308ba44f6a7fbadf2144dc59ac114456ab063af0407a009df062643",
+    "docs/research/figures/chemistry_coverage.png": "bdb6d8a7ee1249421083359de63ed64a0fdf370382a6e6ad3ced47325a6744cd",
+    "docs/research/figures/final_comparison.png": "7c55020665dc72b3e692fc97c9b3d40c397db9905bc512502d68c8d9f07fdaff",
+    "docs/research/figures/inference_speed.png": "daddfc4efdd2194a1b621f7aab64fdcda6b5b064b9827642af7e946af2e98693",
+    "docs/research/generated/final_comparison_table.tex": "337c75daca7c8d400681d63dcd3e9964ba46effd913604ce709e1bf6135524b6",
+    "docs/research/neural_ms2lda_checkpoint.pdf": "54b6beacb349f15103c5ce35010f74273839f3e58e40edcbb88b85258578f1db",
+    "docs/research/neural_ms2lda_checkpoint.tex": "4fa32ce86020a892065b15b9d4c6f945e03cfaf7bafcc4659ef0266a45208bca"
   },
   "schema_version": "neural-ms2lda/report-manifest-v1"
 }

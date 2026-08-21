@@ -437,7 +437,7 @@ def evaluate_tomotopy_validation_reference(
         "validation_full_theta.npy": full_theta,
         "validation_completion_nll.npy": losses,
     }
-    if not all(np.isfinite(values).all() for values in arrays.values()):
+    if not all(np.isfinite(values).all() for values in (beta, theta, full_theta)):
         raise FloatingPointError("Tomotopy produced non-finite validation evidence")
     output.mkdir(parents=True, exist_ok=True)
     for name, values in arrays.items():

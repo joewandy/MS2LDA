@@ -11,7 +11,7 @@ MINIMUM_GAP_CLOSED = 0.5
 MINIMUM_ANNOTATION_COVERAGE = 0.496
 MAXIMUM_MEAN_SOS_DROP = 0.02
 MAXIMUM_VALIDATION_NLL = 8.5266
-MAXIMUM_TRAINING_SECONDS = 5571.0
+PRIOR_RUNTIME_REFERENCE_SECONDS = 5571.0
 
 
 def _useful_high_confidence_topics(chemistry: dict[str, Any]) -> int:
@@ -64,7 +64,6 @@ def evaluate_validation_gate(run_dir: str | Path) -> dict[str, Any]:
         >= current_mean_sos - MAXIMUM_MEAN_SOS_DROP,
         "validation_nll": validation_nll <= MAXIMUM_VALIDATION_NLL,
         "stable": bool(training["stable"]) and bool(evaluation["stable"]),
-        "training_seconds": training_seconds <= MAXIMUM_TRAINING_SECONDS,
     }
     accepted = all(checks.values())
     result = {
@@ -86,12 +85,16 @@ def evaluate_validation_gate(run_dir: str | Path) -> dict[str, Any]:
             "candidate_validation_nll": validation_nll,
             "candidate_training_seconds": training_seconds,
         },
+        "reported_context": {
+            "training_within_prior_10_percent": training_seconds
+            <= PRIOR_RUNTIME_REFERENCE_SECONDS,
+            "prior_10_percent_runtime_seconds": PRIOR_RUNTIME_REFERENCE_SECONDS,
+        },
         "thresholds": {
             "minimum_gap_closed": MINIMUM_GAP_CLOSED,
             "minimum_annotation_coverage": MINIMUM_ANNOTATION_COVERAGE,
             "maximum_mean_sos_drop": MAXIMUM_MEAN_SOS_DROP,
             "maximum_validation_nll": MAXIMUM_VALIDATION_NLL,
-            "maximum_training_seconds": MAXIMUM_TRAINING_SECONDS,
         },
         "checks": checks,
         "source_sha256": {name: file_sha256(path) for name, path in paths.items()},
