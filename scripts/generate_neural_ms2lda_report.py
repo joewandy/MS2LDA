@@ -340,10 +340,22 @@ def _generate() -> None:
 
 
 def _manifest_files() -> tuple[list[Path], list[Path]]:
+    source_manifests = RESULTS / "source_manifests"
+    comparison_sources = {
+        "protocol": RESULTS / "model_bundle/protocol.json",
+        "neural_training": source_manifests / "neural_training.json",
+        "neural_evaluation": RESULTS / "model_bundle/evaluation.json",
+        "tomotopy_evaluation": source_manifests / "tomotopy_evaluation.json",
+        "neural_chemistry": RESULTS / "model_bundle/chemistry.json",
+        "tomotopy_chemistry": source_manifests / "tomotopy_chemistry.json",
+    }
+    declared = _json(RESULTS / "comparison.json")["source_sha256"]
+    for name, path in comparison_sources.items():
+        if path.is_file() and _sha256(path) != declared.get(name):
+            raise ValueError(f"comparison source mismatch: {name}")
     evidence = [
         RESULTS / "comparison.json",
-        RESULTS / "model_bundle/evaluation.json",
-        RESULTS / "model_bundle/chemistry.json",
+        *comparison_sources.values(),
         RESULTS / "model_bundle/provenance.json",
         Path(__file__).resolve(),
     ]
@@ -378,6 +390,7 @@ def _write_manifest() -> None:
 
 
 def _verify_manifest() -> None:
+    _manifest_files()
     payload = _json(MANIFEST)
     for section in ("evidence_sha256", "output_sha256"):
         for name, expected in payload[section].items():

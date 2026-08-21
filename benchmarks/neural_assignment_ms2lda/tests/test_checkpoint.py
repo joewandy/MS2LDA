@@ -43,6 +43,7 @@ from benchmarks.neural_assignment_ms2lda.development import (
     _development_protocol,
     _link_read_only_inputs,
     _validate_frozen_protocol,
+    _verify_source_artifacts,
 )
 from benchmarks.neural_assignment_ms2lda.embeddings import train_sgns
 from benchmarks.neural_assignment_ms2lda.evaluation import evaluate_neural
@@ -349,6 +350,46 @@ def test_development_inputs_exclude_the_test_partition(tmp_path: Path) -> None:
     _link_read_only_inputs(source, legacy_output)
     assert load_heldout_records(legacy_output / "data", "validation") == [validation]
     assert not (legacy_output / "data/test_records.jsonl").exists()
+
+
+def test_development_verifies_frozen_source_artifacts(tmp_path: Path) -> None:
+    source = tmp_path / "source"
+    data_hashes = {}
+    for name in DEVELOPMENT_DATA_FILES:
+        path = source / "data" / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(name.encode("utf-8"))
+        data_hashes[name] = file_sha256(path)
+    write_json(source / "data/complete.json", {"output_sha256": data_hashes})
+
+    view = source / "training_views/pair.npz"
+    view.parent.mkdir(parents=True)
+    view.write_bytes(b"paired training view")
+    write_json(
+        view.parent / "complete.json",
+        {"output_sha256": {view.name: file_sha256(view)}},
+    )
+
+    features = source / "token_features/features.npy"
+    features.parent.mkdir(parents=True)
+    features.write_bytes(b"token features")
+    write_json(
+        features.parent / "complete.json",
+        {"features_sha256": file_sha256(features)},
+    )
+
+    initialization = source / "initialization/model_initialization.pt"
+    initialization.parent.mkdir(parents=True)
+    initialization.write_bytes(b"model initialization")
+    write_json(
+        initialization.parent / "complete.json",
+        {"checkpoint_sha256": file_sha256(initialization)},
+    )
+
+    _verify_source_artifacts(source, source / "data/validation_records.jsonl")
+    features.write_bytes(b"tampered")
+    with pytest.raises(ValueError, match="source artifact changed"):
+        _verify_source_artifacts(source, source / "data/validation_records.jsonl")
 
 
 def test_development_accepts_removed_legacy_protocol_metadata() -> None:

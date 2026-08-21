@@ -14,7 +14,14 @@ import torch
 from .config import REPO_ROOT, code_manifest, load_protocol
 from .data import load_csr, load_heldout_records, load_view_pairs
 from .training import train_model
-from .utils import file_sha256, object_sha256, read_json, write_json, write_jsonl
+from .utils import (
+    file_sha256,
+    object_sha256,
+    read_json,
+    verify_output_hashes,
+    write_json,
+    write_jsonl,
+)
 
 READ_ONLY_STAGES = (
     "training_views",
@@ -29,6 +36,44 @@ DEVELOPMENT_DATA_FILES = (
     "validation_records.jsonl",
 )
 LEGACY_HELDOUT_RECORDS = "heldout_records.jsonl"
+
+
+def _verify_declared_file(
+    stage: Path,
+    manifest: dict[str, Any],
+    name: str,
+    *,
+    legacy_key: str | None = None,
+) -> None:
+    expected = manifest.get("output_sha256", {}).get(name)
+    if expected is None and legacy_key is not None:
+        expected = manifest.get(legacy_key)
+    path = stage / name
+    if expected is None or file_sha256(path) != expected:
+        raise ValueError(f"source artifact changed: {path}")
+
+
+def _verify_source_artifacts(source: Path, validation_records: Path) -> None:
+    data = source / "data"
+    data_manifest = read_json(data / "complete.json")
+    for name in (*DEVELOPMENT_DATA_FILES[:-1], validation_records.name):
+        _verify_declared_file(data, data_manifest, name)
+    training_views = source / "training_views"
+    verify_output_hashes(training_views, read_json(training_views / "complete.json"))
+    token_features = source / "token_features"
+    _verify_declared_file(
+        token_features,
+        read_json(token_features / "complete.json"),
+        "features.npy",
+        legacy_key="features_sha256",
+    )
+    initialization = source / "initialization"
+    _verify_declared_file(
+        initialization,
+        read_json(initialization / "complete.json"),
+        "model_initialization.pt",
+        legacy_key="checkpoint_sha256",
+    )
 
 
 def _source_evidence(source: Path) -> dict[str, str]:
@@ -50,6 +95,7 @@ def _source_evidence(source: Path) -> dict[str, str]:
         missing.append(f"data/{DEVELOPMENT_DATA_FILES[-1]}")
     if missing:
         raise FileNotFoundError(f"source run is incomplete: {missing}")
+    _verify_source_artifacts(source, validation_records)
     evidence = {name: file_sha256(source / name) for name in names}
     evidence[f"data/{validation_records.name}"] = file_sha256(validation_records)
     return evidence
