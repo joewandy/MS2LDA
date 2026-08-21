@@ -293,6 +293,7 @@ def verify_run(
             elif manifest_name == "report/report.json":
                 report_sources = {
                     "protocol": directory / "protocol.resolved.json",
+                    "neural_training": directory / "model/complete.json",
                     "neural_evaluation": directory / "evaluation/neural/complete.json",
                     "tomotopy_evaluation": directory
                     / "evaluation/tomotopy/complete.json",

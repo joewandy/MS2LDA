@@ -108,6 +108,7 @@ def build_machine_report(run_dir: str | Path) -> dict[str, Any]:
         ],
         "source_sha256": {
             "protocol": file_sha256(directory / "protocol.resolved.json"),
+            "neural_training": file_sha256(directory / "model/complete.json"),
             "neural_evaluation": file_sha256(
                 directory / "evaluation/neural/complete.json"
             ),

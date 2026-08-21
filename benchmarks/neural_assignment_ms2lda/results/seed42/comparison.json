@@ -69,6 +69,7 @@
   "source_sha256": {
     "neural_chemistry": "d8c259b140181c02876c9ae1eeade0478fa4b216827c67ac7f47ab9d44e0f60d",
     "neural_evaluation": "fa43163f15514d2e420b38e09ecdfaaba5a5a352fcfc9d17f0e475e5b8f8ecf0",
+    "neural_training": "f76a33c4c7df94b959eeb54512c372628ce54b11f023e025816eac51a235f631",
     "protocol": "a47bcfc3739165cb7a1b22e65aa27274e7dfb41e20d91fa65ab82f9af16e6161",
     "tomotopy_chemistry": "9d82b262c3b1ea39ff02c2677da5efcf759d4b59f39773eaafd990ed2ea723de",
     "tomotopy_evaluation": "a79f52b81bafb5a7eee640919033db737e8def85324d6386bcb25a6752400980"

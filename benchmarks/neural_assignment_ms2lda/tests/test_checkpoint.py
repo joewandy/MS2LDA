@@ -40,6 +40,7 @@ from benchmarks.neural_assignment_ms2lda.data import (
 from benchmarks.neural_assignment_ms2lda.development import (
     DEVELOPMENT_DATA_FILES,
     READ_ONLY_STAGES,
+    _development_protocol,
     _link_read_only_inputs,
     _validate_frozen_protocol,
 )
@@ -369,6 +370,15 @@ def test_development_accepts_removed_legacy_protocol_metadata() -> None:
     source["seed"] = 43
     with pytest.raises(ValueError, match="seed"):
         _validate_frozen_protocol(source, current)
+
+
+def test_development_replay_keeps_the_frozen_topic_capacity() -> None:
+    source = copy.deepcopy(load_protocol())
+    source["model"]["num_topics"] = 500
+    protocol = _development_protocol(source)
+    assert protocol["model"]["num_topics"] == 500
+    assert protocol["cpu_threads"] == 6
+    _validate_frozen_protocol(source, protocol)
 
 
 def test_verify_run_checks_cooccurrence_graph(tmp_path: Path) -> None:
@@ -737,6 +747,9 @@ def test_miniature_mgf_through_report_and_bundle(tmp_path: Path) -> None:
     )
     report = build_machine_report(run)
     assert len(report["methods"]) == 2
+    assert report["source_sha256"]["neural_training"] == file_sha256(
+        run / "model/complete.json"
+    )
     assert neural["method"] == "neural_cooccurrence_margin_hierarchical"
     assert report["title"] == "Neural MS2LDA on MSnLib"
     assert "ERNTM" not in report["headline"]

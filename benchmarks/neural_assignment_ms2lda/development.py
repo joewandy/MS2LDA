@@ -96,6 +96,13 @@ def _validate_frozen_protocol(source: dict[str, Any], current: dict[str, Any]) -
         raise ValueError(f"frozen benchmark fields changed: {changed}")
 
 
+def _development_protocol(source: dict[str, Any]) -> dict[str, Any]:
+    """Use the supported architecture at the frozen source run's capacity."""
+    protocol = load_protocol()
+    protocol["model"]["num_topics"] = int(source["model"]["num_topics"])
+    return protocol
+
+
 def _link(target: Path, link: Path, *, directory: bool) -> None:
     if link.is_symlink():
         if link.resolve() != target.resolve():
@@ -143,8 +150,8 @@ def run_development_experiment(
     """Run one architecture hypothesis without loading any test matrix."""
     source = Path(source_run).expanduser().resolve()
     output = Path(output_run).expanduser().resolve()
-    protocol = load_protocol()
     source_protocol = read_json(source / "protocol.resolved.json")
+    protocol = _development_protocol(source_protocol)
     _validate_frozen_protocol(source_protocol, protocol)
     evidence = _source_evidence(source)
     lock = {
