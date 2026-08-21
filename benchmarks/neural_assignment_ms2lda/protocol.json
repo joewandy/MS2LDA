@@ -60,6 +60,7 @@
     "router_hidden_dimensions": 256,
     "top_k": 2,
     "beta_temperature": 0.2,
+    "document_mixture_weight": 0.5,
     "document_topic_prior_weight": 1.0,
     "sinkhorn_epsilon": 0.05,
     "sinkhorn_iterations": 5,

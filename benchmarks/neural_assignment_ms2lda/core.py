@@ -206,6 +206,7 @@ def fresh_model(
         projection_dimensions=int(config["projection_dimensions"]),
         router_hidden_dimensions=int(config["router_hidden_dimensions"]),
         beta_temperature=float(config["beta_temperature"]),
+        document_mixture_weight=float(config["document_mixture_weight"]),
         document_topic_prior_weight=float(config["document_topic_prior_weight"]),
         topic_initial_indices=checkpoint["topic_initial_indices"],
         seed=int(protocol["seed"]) + int(config["num_topics"]),

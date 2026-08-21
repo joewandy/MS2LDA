@@ -42,6 +42,7 @@ SOURCE_FILES = (
     "benchmarks/neural_assignment_ms2lda/data.py",
     "benchmarks/neural_assignment_ms2lda/embeddings.py",
     "benchmarks/neural_assignment_ms2lda/evaluation.py",
+    "benchmarks/neural_assignment_ms2lda/gates.py",
     "benchmarks/neural_assignment_ms2lda/inventory.py",
     "benchmarks/neural_assignment_ms2lda/metrics.py",
     "benchmarks/neural_assignment_ms2lda/model.py",
@@ -73,6 +74,8 @@ def load_protocol() -> dict[str, Any]:
         raise ValueError("the supported router is fixed to top-2")
     if float(protocol["model"]["document_topic_prior_weight"]) != 1.0:
         raise ValueError("the document topic prior weight is fixed to one")
+    if float(protocol["model"]["document_mixture_weight"]) != 0.5:
+        raise ValueError("the document mixture weight is fixed to one half")
     if int(protocol["optimization"]["maximum_epochs"]) != 40:
         raise ValueError("the reproducibility run is fixed to 40 epochs")
     return protocol

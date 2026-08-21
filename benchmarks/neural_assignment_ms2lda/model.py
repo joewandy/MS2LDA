@@ -149,6 +149,7 @@ class NeuralAssignmentMS2LDA(nn.Module):
         projection_dimensions: int,
         router_hidden_dimensions: int,
         beta_temperature: float,
+        document_mixture_weight: float,
         document_topic_prior_weight: float,
         topic_initial_indices: torch.Tensor,
         seed: int,
@@ -165,6 +166,7 @@ class NeuralAssignmentMS2LDA(nn.Module):
         self.input_dimensions = int(token_features.shape[1])
         self.projection_dimensions = int(projection_dimensions)
         self.beta_temperature = float(beta_temperature)
+        self.document_mixture_weight = float(document_mixture_weight)
         self.document_topic_prior_weight = float(document_topic_prior_weight)
         self.register_buffer("token_features", token_features.detach().clone())
 
@@ -234,10 +236,20 @@ class NeuralAssignmentMS2LDA(nn.Module):
         row_ids: torch.Tensor,
         weights: torch.Tensor,
         documents: int,
+        document_logits: torch.Tensor | None = None,
+        temperature: float = 1.0,
+        document_mixture_weight: float = 0.0,
     ) -> torch.Tensor:
-        """Aggregate count-weighted token assignments into document mixtures."""
+        """Combine count-weighted token mass with shared document evidence."""
         topic_mass = assignments.new_zeros((documents, assignments.shape[1]))
         topic_mass.index_add_(0, row_ids, assignments * weights.unsqueeze(1))
+        mixture_weight = float(document_mixture_weight)
+        if mixture_weight:
+            if document_logits is None or document_logits.shape != topic_mass.shape:
+                msg = "document logits must match document topic mass"
+                raise ValueError(msg)
+            gate = F.softmax(document_logits / float(temperature), dim=1)
+            topic_mass = topic_mass * gate.pow(mixture_weight)
         totals = topic_mass.sum(dim=1, keepdim=True)
         theta = topic_mass / totals.clamp_min(1e-12)
         empty = totals.squeeze(1) <= 0
@@ -278,6 +290,9 @@ class NeuralAssignmentMS2LDA(nn.Module):
             row_ids=batch.row_ids,
             weights=batch.weights,
             documents=batch.documents,
+            document_logits=document_logits,
+            temperature=temperature,
+            document_mixture_weight=self.document_mixture_weight,
         )
         return AssignmentOutput(
             theta=theta,
@@ -501,6 +516,7 @@ def initialize_model(
         projection_dimensions=int(model_config["projection_dimensions"]),
         router_hidden_dimensions=int(model_config["router_hidden_dimensions"]),
         beta_temperature=float(model_config["beta_temperature"]),
+        document_mixture_weight=float(model_config["document_mixture_weight"]),
         document_topic_prior_weight=float(model_config["document_topic_prior_weight"]),
         topic_initial_indices=initial_indices,
         seed=seed + int(num_topics),
