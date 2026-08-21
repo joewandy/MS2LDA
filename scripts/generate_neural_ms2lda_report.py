@@ -218,10 +218,10 @@ def resources() -> None:
     labels = ["Neural", "Tomotopy"]
     figure, axes = plt.subplots(1, 2, figsize=(8.5, 3.6))
     minutes = [row["training_seconds"] / 60 for row in rows]
-    memory = [row["peak_rss_bytes"] / (1024**3) for row in rows]
+    memory = [row["pipeline_peak_rss_bytes"] / (1024**3) for row in rows]
     for axis, values, title, unit in (
         (axes[0], minutes, "Training wall time", "minutes"),
-        (axes[1], memory, "Peak resident memory", "GiB"),
+        (axes[1], memory, "Cumulative pipeline peak RSS", "GiB"),
     ):
         bars = axis.bar(labels, values, color=COLORS)
         axis.set_title(title)
@@ -317,9 +317,9 @@ def tables() -> None:
             f"{tomotopy['training_seconds'] / 60:.1f}",
         ),
         (
-            "Peak resident memory (GiB)",
-            f"{neural['peak_rss_bytes'] / (1024**3):.2f}",
-            f"{tomotopy['peak_rss_bytes'] / (1024**3):.2f}",
+            "Cumulative pipeline peak RSS (GiB)",
+            f"{neural['pipeline_peak_rss_bytes'] / (1024**3):.2f}",
+            f"{tomotopy['pipeline_peak_rss_bytes'] / (1024**3):.2f}",
         ),
     )
     GENERATED.mkdir(parents=True, exist_ok=True)

@@ -42,7 +42,8 @@ The Tomotopy model is the previously completed six-worker reference trained
 with the published MS2LDA parameters; its model and data hashes are verified,
 and its held-out inference and downstream chemistry are recomputed with six
 workers. This report presents the resulting likelihood, topic quality,
-inventory, chemistry, runtime, and memory evidence as a single-seed research
+inventory, chemistry, runtime, and cumulative pipeline peaks as a single-seed
+research
 comparison rather than a production-replacement claim. Neural held-out NLL is
 8.3660 versus 9.7569 for Tomotopy, and mean NPMI is marginally better
 ($-0.2965$ versus $-0.2996$), while cached inference is 259 times faster.
@@ -69,8 +70,8 @@ quantities are:
   \item identical train, validation, and test matrices and vocabulary;
   \item six software threads for neural training and inference, Tomotopy
         training and inference, SGNS, and numerical chemistry stages;
-  \item the published Tomotopy priors $\alpha=0.6$ and $\eta=0.1$, parallel
-        scheme 3, and the published convergence procedure; and
+  \item the published Tomotopy initial priors $\alpha=0.6$ and $\eta=0.1$,
+        parallel scheme 3, and the published convergence procedure; and
   \item 100 Tomotopy inference iterations, retained as the established
         held-out evaluation setting.
 \end{itemize}
@@ -143,8 +144,10 @@ Reuse is limited to the trained model. Held-out observed and full-spectrum
 topic mixtures are recomputed with six workers and 100 inference iterations;
 completion likelihood, active and effective topic counts, latency, and all
 theta-dependent chemical results are then regenerated. The source run remains
-read-only. Tomotopy training time and peak memory are carried forward with
-their source hashes and are labelled as reused evidence.
+read-only. Tomotopy training time and cumulative source-process peak RSS are
+carried forward with their source hashes and are labelled as reused evidence.
+Tomotopy optimizes the scalar alpha initializer every ten iterations; the
+runner validates and hashes the learned positive asymmetric vector.
 
 \section{Evaluation}
 
@@ -166,8 +169,9 @@ report dominant-topic and probability-at-least-0.5 associations.
 
 Cached inference throughput uses 128 spectra, five repeats, and the median
 seconds per spectrum after one warm-up. Both methods use six software threads.
-Peak resident memory and wall-clock training time are reported from the
-corresponding six-worker training runs on the same machine.
+Training time is reported from the corresponding six-worker runs. RSS is the
+process-lifetime pipeline peak, including earlier stages, rather than isolated
+model memory.
 
 \section{Results}
 
@@ -210,9 +214,9 @@ Metric & Neural & Tomotopy \\
 \begin{figure}[ht]
   \centering
   \includegraphics[width=0.88\textwidth]{resource_use.png}
-  \caption{Six-worker training time and peak resident memory. Tomotopy values
-  come from the hash-verified source training run; neural values come from the
-  fresh run.}
+  \caption{Six-worker training time and cumulative pipeline peak RSS from the
+  fresh neural and hash-verified Tomotopy source processes. RSS is not isolated
+  to either training stage.}
   \label{fig:resources}
 \end{figure}
 
@@ -240,11 +244,12 @@ has higher top-word diversity (0.8145 versus 0.7100), more corpus-active topics
 663.6 topic equivalents). MAG annotates 607 Tomotopy topics and 384 neural
 topics. Dominant-topic mean SOS is close (0.6238 versus 0.6125), but Tomotopy
 also produces many more high-confidence topic--spectrum associations (961
-versus 138). Neural training takes 84.4 minutes and peaks at 4.07 GiB resident
-memory, compared with 76.0 minutes and 1.41 GiB for the Tomotopy source run.
-The result is therefore a major architecture improvement in likelihood,
-coherence, and inference speed, but not yet a complete replacement on topic
-inventory or chemical coverage.
+versus 138). Neural training takes 84.4 minutes versus 76.0 minutes for the
+Tomotopy source run. The corresponding complete pipeline processes reached
+4.07 and 1.41 GiB peak RSS, respectively, but these cumulative values do not
+establish a model-level memory advantage. The result is therefore a major
+architecture improvement in likelihood, coherence, and inference speed, but
+not yet a complete replacement on topic inventory or chemical coverage.
 
 \section{Interpretation and limitations}
 
@@ -281,9 +286,9 @@ python -m benchmarks.neural_assignment_ms2lda verify \
   --run /path/to/run
 \end{verbatim}
 
-The committed evidence contains one comparison summary and one portable neural
-model bundle. Older capacity screens are retained in Git history rather than
-mixed into the active report.
+The active report uses one comparison summary and one portable neural model
+bundle. The historical capacity-screen CSV remains available for the
+experimental ledger but is not mixed into this comparison.
 
 \section{Conclusion}
 
@@ -292,8 +297,8 @@ matches Tomotopy coherence, improves held-out likelihood, retains a broad
 topic inventory, and makes cached inference roughly 259 times faster. The
 remaining weaknesses are equally clear: Tomotopy still yields more diverse
 and active topics, broader chemical annotation, more high-confidence
-associations, and lower memory use. Claims are restricted to this completed
-seed-42 checkpoint; the next architecture work should target inventory and
+associations. Claims are restricted to this completed seed-42 checkpoint; the
+next architecture work should target inventory and
 chemical coverage without sacrificing the newly closed coherence gap.
 
 \begin{thebibliography}{9}

@@ -21,6 +21,7 @@ from .metrics import (
 from .utils import (
     atomic_save_numpy,
     file_sha256,
+    object_sha256,
     peak_rss_bytes,
     read_json,
     verify_output_hashes,
@@ -35,6 +36,7 @@ REFERENCE_DATA_FILES = (
     "vocabulary.json",
     "identifiers.json",
 )
+ALPHA_OPTIMIZATION_INTERVAL = 10
 
 
 def _documents(matrix: Any, vocabulary: Sequence[str]) -> list[list[str]]:
@@ -59,6 +61,24 @@ def _align_beta(
     aligned = np.column_stack([beta[:, columns[word]] for word in vocabulary])
     aligned /= np.maximum(aligned.sum(axis=1, keepdims=True), 1e-12)
     return aligned.astype(np.float32, copy=False)
+
+
+def _alpha_evidence(model: Any, config: dict[str, Any]) -> dict[str, Any]:
+    """Validate the learned alpha vector and record its scalar initializer."""
+    alpha = np.asarray(model.alpha, dtype=np.float64)
+    if alpha.shape != (int(model.k),) or not np.isfinite(alpha).all():
+        raise ValueError("loaded Tomotopy alpha vector is invalid")
+    if np.any(alpha <= 0):
+        raise ValueError("loaded Tomotopy alpha vector is not positive")
+    if int(model.optim_interval) != ALPHA_OPTIMIZATION_INTERVAL:
+        raise ValueError("loaded Tomotopy alpha optimization interval differs")
+    return {
+        "initial_value": float(config["alpha"]),
+        "optimization_interval": int(model.optim_interval),
+        "learned_vector_sha256": object_sha256(alpha.tolist()),
+        "learned_minimum": float(alpha.min()),
+        "learned_maximum": float(alpha.max()),
+    }
 
 
 def tomotopy_reference_evidence(
@@ -252,6 +272,7 @@ def evaluate_tomotopy_reference(
         raise ValueError("loaded Tomotopy topic count differs")
     if not np.isclose(float(model.eta), float(config["eta"])):
         raise ValueError("loaded Tomotopy eta differs")
+    alpha_evidence = _alpha_evidence(model, config)
 
     vocabulary = load_vocabulary(data)
     train = load_csr(data / "train.npz")
@@ -335,6 +356,7 @@ def evaluate_tomotopy_reference(
         "inference_workers": workers,
         "inference_parallel": 1,
         "inference_iterations": iterations,
+        "alpha": alpha_evidence,
         "evaluation_seconds": time.perf_counter() - started,
         "metrics": metrics,
         "peak_rss_bytes": peak_rss_bytes(),

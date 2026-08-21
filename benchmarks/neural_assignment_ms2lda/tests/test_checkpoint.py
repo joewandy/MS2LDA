@@ -59,6 +59,7 @@ from benchmarks.neural_assignment_ms2lda.regularizers import (
 from benchmarks.neural_assignment_ms2lda.report import build_machine_report
 from benchmarks.neural_assignment_ms2lda.tomotopy import (
     REFERENCE_DATA_FILES,
+    _alpha_evidence,
     _infer_theta,
     tomotopy_reference_evidence,
 )
@@ -504,6 +505,22 @@ def test_tomotopy_empty_document_uses_topic_prior() -> None:
     assert calls == [{"iter": 5, "workers": 6, "parallel": 1, "together": False}]
 
 
+def test_tomotopy_alpha_evidence_allows_a_learned_vector() -> None:
+    class FakeModel:
+        k = 2
+        alpha = np.asarray([0.1, 0.2])
+        optim_interval = 10
+
+    evidence = _alpha_evidence(FakeModel(), {"alpha": 0.6})
+    assert evidence["initial_value"] == 0.6
+    assert evidence["optimization_interval"] == 10
+    assert evidence["learned_minimum"] == 0.1
+
+    FakeModel.alpha = np.asarray([0.1, 0.0])
+    with pytest.raises(ValueError, match="not positive"):
+        _alpha_evidence(FakeModel(), {"alpha": 0.6})
+
+
 def test_tomotopy_reference_requires_matching_protocol_and_hashes(
     tmp_path: Path,
 ) -> None:
@@ -747,6 +764,7 @@ def test_miniature_mgf_through_report_and_bundle(tmp_path: Path) -> None:
     )
     report = build_machine_report(run)
     assert len(report["methods"]) == 2
+    assert "pipeline_peak_rss_bytes" in report["methods"][0]
     assert report["source_sha256"]["neural_training"] == file_sha256(
         run / "model/complete.json"
     )

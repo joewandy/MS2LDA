@@ -45,7 +45,7 @@ def _method_row(
         "inference_workers": int(
             result.get("inference_workers", result.get("cpu_threads", 1))
         ),
-        "peak_rss_bytes": int(
+        "pipeline_peak_rss_bytes": int(
             result.get("source_peak_rss_bytes", result["peak_rss_bytes"])
         ),
     }
@@ -61,7 +61,7 @@ def _method_row(
         row["training_seconds"] = float(training["elapsed_seconds"])
         row["training_workers"] = int(result["cpu_threads"])
         row["training_reused"] = False
-        row["peak_rss_bytes"] = int(training["peak_rss_bytes"])
+        row["pipeline_peak_rss_bytes"] = int(training["peak_rss_bytes"])
     return row
 
 
