@@ -10,9 +10,8 @@ import pytest
 import scipy.sparse as sp
 import torch
 
-from benchmarks.neural_ms2lda.bundle import load_bundle
+from benchmarks.neural_ms2lda.artifacts import load_bundle, load_protocol
 from benchmarks.neural_ms2lda.chemical import _sos_bands
-from benchmarks.neural_ms2lda.artifacts import load_protocol
 from benchmarks.neural_ms2lda.cooccurrence import (
     positive_npmi_graph,
     torch_sparse_graph,

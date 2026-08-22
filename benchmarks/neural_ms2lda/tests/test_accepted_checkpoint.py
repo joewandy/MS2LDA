@@ -9,7 +9,7 @@ import numpy as np
 import scipy.sparse as sp
 import torch
 
-from benchmarks.neural_ms2lda.bundle import load_bundle
+from benchmarks.neural_ms2lda.artifacts import load_bundle
 from benchmarks.neural_ms2lda.data import sparse_batch
 from benchmarks.neural_ms2lda.utils import file_sha256, read_json
 

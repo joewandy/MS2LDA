@@ -19,10 +19,14 @@ import pytest
 import torch
 
 from benchmarks.neural_ms2lda import __main__ as module_entry
-from benchmarks.neural_ms2lda import chemical, pipeline
 from benchmarks.neural_ms2lda import artifacts as neural_artifacts
-from benchmarks.neural_ms2lda.bundle import load_bundle, package_bundle
-from benchmarks.neural_ms2lda.artifacts import load_protocol
+from benchmarks.neural_ms2lda import chemical, pipeline
+from benchmarks.neural_ms2lda.artifacts import (
+    build_results,
+    load_bundle,
+    load_protocol,
+    package_bundle,
+)
 from benchmarks.neural_ms2lda.data import (
     load_csr,
     load_heldout_records,
@@ -40,7 +44,6 @@ from benchmarks.neural_ms2lda.initialization import (
     prepare_token_features,
 )
 from benchmarks.neural_ms2lda.mag import _connectivity_key, build_filtered_mag_index
-from benchmarks.neural_ms2lda.report import build_results
 from benchmarks.neural_ms2lda.tomotopy import (
     _alpha_evidence,
     _converged,

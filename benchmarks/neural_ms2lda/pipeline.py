@@ -11,8 +11,13 @@ from typing import Any
 
 import torch
 
-from .bundle import package_bundle
-from .artifacts import REPO_ROOT, initialize_run, verify_run
+from .artifacts import (
+    REPO_ROOT,
+    build_results,
+    initialize_run,
+    package_bundle,
+    verify_run,
+)
 from .data import (
     load_csr,
     load_heldout_records,
@@ -23,7 +28,6 @@ from .data import (
 from .embeddings import train_sgns
 from .evaluation import evaluate_neural, evaluate_neural_validation
 from .initialization import prepare_initialization, prepare_token_features
-from .report import build_results
 from .tomotopy import evaluate_tomotopy, train_tomotopy
 from .training import train_model
 from .utils import read_json, write_json
