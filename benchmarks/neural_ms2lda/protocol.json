@@ -1,0 +1,107 @@
+{
+  "seed": 42,
+  "input_files": {
+    "mgf": "extracted/Data/Benchmark_MSn_Lib/Corinna_Library_filtered_positive.mgf",
+    "spec2vec_db": "extracted/model_positive_mode/positive_train_data/150225_CombLibraries_spectra.db",
+    "spec2vec_embeddings": "extracted/model_positive_mode/positive_train_data/150225_CleanedLibraries_Spec2Vec_pos_embeddings.npy",
+    "spec2vec_model": "extracted/model_positive_mode/positive_train_data/150225_Spec2Vec_pos_CleanedLibraries.model"
+  },
+  "preprocessing": {
+    "expected_spectra": 41568,
+    "min_mz": 0.0,
+    "max_mz": 2000.0,
+    "max_fragments": 1000,
+    "min_fragments": 5,
+    "min_intensity": 0.01,
+    "max_intensity": 1.0,
+    "significant_digits": 2,
+    "min_df": 3,
+    "min_cf": 0,
+    "rm_top": 0,
+    "split_fractions": [0.7, 0.1, 0.2],
+    "completion_observed_fraction": 0.5
+  },
+  "cpu_threads": 6,
+  "sgns": {
+    "dimensions": 48,
+    "epochs": 5,
+    "positive_pairs_per_document": 8,
+    "negative_samples": 5,
+    "negative_power": 0.75,
+    "batch_size": 8192,
+    "learning_rate": 0.01
+  },
+  "token_features": {
+    "fourier_frequencies": [1, 2, 4, 8, 16, 32, 64],
+    "mass_scale": 1000.0
+  },
+  "model": {
+    "num_topics": 1000,
+    "projection_dimensions": 128,
+    "router_hidden_dimensions": 256,
+    "beta_temperature": 0.18
+  },
+  "views": {
+    "pairs": 4,
+    "retained_peak_group_fraction": 0.8
+  },
+  "optimization": {
+    "batch_size": 128,
+    "topic_update_batch_size": 512,
+    "topic_updates_per_epoch": 4,
+    "learning_rate": 0.001,
+    "weight_decay": 0.0001,
+    "gradient_clip_norm": 5.0,
+    "local_decoder_weight": 0.25,
+    "theta_consistency_weight": 0.1,
+    "maximum_epochs": 40,
+    "validation_interval": 2
+  },
+  "anti_collapse": {
+    "routing_temperature_start": 0.5,
+    "routing_temperature_end": 0.1,
+    "routing_temperature_anneal_epochs": 30,
+    "sinkhorn_weight_start": 0.25,
+    "sinkhorn_weight_hold_epochs": 10,
+    "sinkhorn_weight_end": 0.05,
+    "sinkhorn_epsilon": 0.05,
+    "sinkhorn_iterations": 5,
+    "recycle_usage_fraction_of_uniform": 0.1,
+    "recycle_patience_validations": 3,
+    "maximum_recycles_per_topic": 2
+  },
+  "cooccurrence_regularization": {
+    "minimum_document_frequency": 10,
+    "minimum_pair_frequency": 3,
+    "maximum_neighbors": 16,
+    "minimum_npmi": 0.0,
+    "weight": 1.0
+  },
+  "topic_separation": {
+    "neighbors": 8,
+    "margin": 0.3,
+    "weight": 5.0
+  },
+  "evaluation": {
+    "latency_subset_size": 128,
+    "latency_repeats": 5
+  },
+  "tomotopy": {
+    "alpha": 0.6,
+    "eta": 0.1,
+    "maximum_iterations": 5000,
+    "step_size": 50,
+    "convergence_window": 10,
+    "convergence_threshold": 0.005,
+    "inference_iterations": 100,
+    "parallel": 3
+  },
+  "chemistry": {
+    "mag_search_k": 1000,
+    "mag_unique_molecules": 10,
+    "mag_cluster_cosine": 0.9,
+    "mag_fingerprint_threshold": 0.8,
+    "motif_spectrum_top_n": 20,
+    "membership_threshold": 0.5
+  }
+}
