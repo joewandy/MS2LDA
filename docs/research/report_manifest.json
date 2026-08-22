@@ -1,22 +1,20 @@
 {
   "evidence_sha256": {
-    "benchmarks/neural_assignment_ms2lda/protocol.json": "63d54a7735bcf4d4e67a13379a43d60cfcd17199d4b3c6c63fa648f8c06e33a2",
-    "benchmarks/neural_assignment_ms2lda/results/seed42/model_bundle/manifest.json": "029c7fb07c3643882a7cc7310157751b6d388add498aa19c1c73c1a671e237d3",
-    "benchmarks/neural_assignment_ms2lda/results/seed42/results.json": "1eefdc48b178fbdc5d7b58f09e099d9951c09a857903b2cd6c5eebe206828bcf",
-    "scripts/generate_neural_ms2lda_report.py": "75b89ef6789acecdaa9414d7fc02cb754c8aee560ec8302c0a0ff24977691150"
+    "benchmarks/neural_ms2lda/protocol.json": "64c244c7032e0fe3f86192809abae863ccf7a548753c50ed631aa29e7927c21d",
+    "benchmarks/neural_ms2lda/results/seed42/model_bundle/manifest.json": "a39c2dbf261d8193a4dce5affa2a494bc38e623bd7ae9c5bbc2678b7446ae1f7",
+    "benchmarks/neural_ms2lda/results/seed42/results.json": "2dfde5a1bdd7a88db041af060c4f4f94b2a5fe273af9326aaba0c54d1390dad5",
+    "scripts/generate_neural_ms2lda_report.py": "38f8faa208fd48d2fab9f46d21fd01cb914ae18edc5ae7b796803e890d5f0d95"
   },
   "output_sha256": {
     "docs/research/figures/inference_speed.png": "4849d737be815a573665ce2860e441e897c6fd2c1a8c11eeda597131030c12a8",
     "docs/research/figures/model_overview.png": "f2e4de0a19341373e6827ca1859bcca491c72f16114f9173e57eaba2f808ba4e",
-    "docs/research/figures/primary_results.png": "309742b19dfc928b9c2d1ce055919b70ffd2d5455dd3e629c3b3f293ee732cfd",
-    "docs/research/generated/development_table.tex": "b8f6063f3fa253a9a458aa9f5ef5837b2bd7d2753e1025a90ea5091df44d6db2",
-    "docs/research/generated/equation_code_table.tex": "6de964581c55ce3155cfd29baa161b52921bdbda8f2b12aad1fa0f60de638f62",
-    "docs/research/generated/hyperparameters_table.tex": "3665c002658af9352f7797af1a9f72ee10fcf0ceda51726f0fcc087ea12e2f12",
-    "docs/research/generated/primary_test_table.tex": "f0b6b990fd659fedcdd9a79b1e4e02221765e87bebd459fd075c33a528c3aeda",
-    "docs/research/generated/primary_validation_table.tex": "de63574f1992f9aea5ea991e63a35d0aa04e12a157aad282eff97b61c8d47195",
-    "docs/research/generated/secondary_diagnostics.tex": "b83547f153697ba0d2cbd7062b681abe3a346376318d4e18a58688337a41d6e9",
-    "docs/research/neural_ms2lda_checkpoint.pdf": "e100d8c5de4f65f24bef4711a7e94a425c2ed7c6230a4684460574137c7dccb2",
-    "docs/research/neural_ms2lda_checkpoint.tex": "8d828946cecf95efd35ca343129a154c8821ac3781244018e809d42a3acd56d3"
-  },
-  "schema_version": "neural-ms2lda/report-manifest-v1"
+    "docs/research/figures/primary_results.png": "b545f374a2436e61fe9dbd1555cd3fd82fbe73f3e953062d6f5b7fd6df66abaa",
+    "docs/research/generated/equation_code_table.tex": "0f4706a72e8b49d2fa157761012ad691a846e8045bf2a61fd367e3bb0b052a09",
+    "docs/research/generated/hyperparameters_table.tex": "48e9feb834a46ecbd6b2344700bce382fb33343318889f66e54cf4f89d7f8867",
+    "docs/research/generated/primary_test_table.tex": "2ca6197365ddb8272743c8656bc19a2948c560034d0d0dfb402772508a1f2236",
+    "docs/research/generated/primary_validation_table.tex": "0d9becb4e9ca7247757a32fbeabd7a3a418f74fdff9c0f8dd84555fdf7a3f392",
+    "docs/research/generated/secondary_diagnostics.tex": "5daf47e4124d6518d16a62e34d4ee609bfbe72ffd0c62a77ed91e963f9e092c9",
+    "docs/research/neural_ms2lda_checkpoint.pdf": "68324f9942a7d74c3f272bd964fc35f3096526f55c1e5ec27be22f799fbb2dba",
+    "docs/research/neural_ms2lda_checkpoint.tex": "ba112163081fce9f6381ae9acd5d7d0decdae9f3921e0a9ebca9bb99049fbf28"
+  }
 }

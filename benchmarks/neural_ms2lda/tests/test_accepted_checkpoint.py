@@ -11,7 +11,7 @@ import torch
 
 from benchmarks.neural_ms2lda.artifacts import load_bundle
 from benchmarks.neural_ms2lda.data import sparse_batch
-from benchmarks.neural_ms2lda.utils import file_sha256, read_json
+from benchmarks.neural_ms2lda.utils import file_sha256, object_sha256, read_json
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
 RESULTS_ROOT = PACKAGE_ROOT / "results/seed42"
@@ -20,6 +20,9 @@ BUNDLE_ROOT = RESULTS_ROOT / "model_bundle"
 CHECKPOINT_SHA256 = "639c1f37c613d908b59e3a85b7dc701e33a3f92fd7476a3257b47298143dfbc6"
 BETA_SHA256 = "9a71e51fac05d2f3a23f5632b177f3a3cba596f297e9441410afcbdb0222ea6a"
 THETA_SHA256 = "b0a7ffdae66dd9d221d3b49783ea11232f168f9500eea80c98668322354182ba"
+PRIMARY_METHODS_SHA256 = (
+    "63a20a72d69e332518a08c58b378e8d8d301a540d1e0d1703f794473326d19d2"
+)
 
 
 def _array_sha256(value: np.ndarray) -> str:
@@ -69,6 +72,7 @@ def test_accepted_checkpoint_outputs_are_exact() -> None:
 def test_accepted_paper_results_are_fixed() -> None:
     """Keep the peer-facing comparison unchanged while its plumbing is simplified."""
     results = read_json(RESULTS_ROOT / "results.json")
+    assert object_sha256(results["methods"]) == PRIMARY_METHODS_SHA256
     methods = {row["method"]: row for row in results["methods"]}
     assert methods["neural"]["validation"] == {
         "annotation_coverage": 0.663,

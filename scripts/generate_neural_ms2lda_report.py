@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 REPO = Path(__file__).resolve().parents[1]
-PACKAGE = REPO / "benchmarks/neural_assignment_ms2lda"
+PACKAGE = REPO / "benchmarks/neural_ms2lda"
 RESULTS = PACKAGE / "results/seed42"
 EVIDENCE = RESULTS / "results.json"
 PROTOCOL = PACKAGE / "protocol.json"
@@ -47,16 +47,25 @@ def _evidence() -> tuple[dict[str, Any], dict[str, Any]]:  # noqa: C901
     evidence = _json(EVIDENCE)
     protocol = _json(PROTOCOL)
     contract = evidence["comparison_contract"]
-    if evidence.get("schema_version") != "neural-ms2lda/final-results-v1":
-        raise ValueError("unexpected final-results schema")
     if [row["method"] for row in evidence["methods"]] != ["neural", "tomotopy"]:
         raise ValueError("final report must compare neural then Tomotopy")
     if int(contract["topics"]) != int(protocol["model"]["num_topics"]):
         raise ValueError("result and protocol topic counts differ")
     if int(contract["cpu_threads"]) != int(protocol["cpu_threads"]):
         raise ValueError("result and protocol thread counts differ")
-    if "normalize_token_type_evidence" in protocol["model"]:
-        raise ValueError("final protocol contains a removed experiment switch")
+    if set(protocol["model"]) != {
+        "num_topics",
+        "projection_dimensions",
+        "router_hidden_dimensions",
+        "top_k",
+        "beta_temperature",
+        "token_type_balance",
+        "document_mixture_weight",
+        "sinkhorn_epsilon",
+        "sinkhorn_iterations",
+        "gradient_clip_norm",
+    }:
+        raise ValueError("final protocol does not describe the supported model")
     expected_bundle = evidence["provenance"]["model_bundle_manifest_sha256"]
     if _sha256(BUNDLE_MANIFEST) != expected_bundle:
         raise ValueError("model bundle manifest differs from final results")
@@ -165,7 +174,7 @@ def model_overview() -> None:
 
 
 def primary_results(evidence: dict[str, Any]) -> None:
-    """Plot only the four paper-facing outcomes across both held-out splits."""
+    """Plot four paper-facing chemical outcomes across both held-out splits."""
     methods = evidence["methods"]
     x = np.arange(2)
     width = 0.34
@@ -173,6 +182,11 @@ def primary_results(evidence: dict[str, Any]) -> None:
     specifications: tuple[
         tuple[str, Callable[[dict[str, Any], str], float], str], ...
     ] = (
+        (
+            "MAG-optimized motifs",
+            lambda row, split: row[split]["optimized_motifs"],
+            "count",
+        ),
         (
             "High-confidence evaluable motifs",
             lambda row, split: row[split]["high_confidence_evaluable_motifs"],
@@ -188,11 +202,6 @@ def primary_results(evidence: dict[str, Any]) -> None:
             lambda row, split: row[split]["mean_sos"],
             "score",
         ),
-        (
-            "Held-out completion NLL/token",
-            lambda row, split: row[split]["completion_nll_per_token"],
-            "nll",
-        ),
     )
     for axis, (title, extract, kind) in zip(axes.ravel(), specifications, strict=True):
         for offset, method in zip((-width / 2, width / 2), methods, strict=True):
@@ -205,11 +214,7 @@ def primary_results(evidence: dict[str, Any]) -> None:
                 color=COLORS[method["method"]],
             )
             for bar, value in zip(bars, values, strict=True):
-                label = (
-                    f"{value:.3f}"
-                    if kind == "score"
-                    else (f"{value:.2f}" if kind == "nll" else f"{value:.0f}")
-                )
+                label = f"{value:.3f}" if kind == "score" else f"{value:.0f}"
                 axis.text(
                     bar.get_x() + bar.get_width() / 2,
                     bar.get_height(),
@@ -223,8 +228,6 @@ def primary_results(evidence: dict[str, Any]) -> None:
         axis.grid(axis="y", alpha=0.2)
         if kind == "score":
             axis.set_ylim(0.55, 0.72)
-        elif kind == "nll":
-            axis.set_ylim(8.0, 10.1)
     axes[0, 0].legend(frameon=False, loc="upper left")
     figure.tight_layout()
     _save(figure, "primary_results.png")
@@ -262,6 +265,10 @@ def _table_rows(
     return (
         ("Optimized motifs", lambda row: str(row[split]["optimized_motifs"])),
         (
+            "MAG annotation coverage",
+            lambda row: f"{100 * row[split]['annotation_coverage']:.1f}\\%",
+        ),
+        (
             "High-confidence SOS-evaluable motifs",
             lambda row: str(row[split]["high_confidence_evaluable_motifs"]),
         ),
@@ -284,10 +291,6 @@ def _table_rows(
         ("Mean high-confidence SOS", lambda row: f"{row[split]['mean_sos']:.4f}"),
         ("Median high-confidence SOS", lambda row: f"{row[split]['median_sos']:.4f}"),
         (
-            "Held-out completion NLL/token",
-            lambda row: f"{row[split]['completion_nll_per_token']:.4f}",
-        ),
-        (
             "Model-fitting time (minutes)",
             lambda row: f"{row['fitting_seconds'] / 60:.1f}",
         ),
@@ -307,7 +310,7 @@ def _write_two_method_table(
 
 
 def tables(evidence: dict[str, Any], protocol: dict[str, Any]) -> None:
-    """Generate primary, development, protocol, and code-map tables."""
+    """Generate the primary, protocol, code-map, and safety tables."""
     GENERATED.mkdir(parents=True, exist_ok=True)
     methods = evidence["methods"]
     for split in ("validation", "test"):
@@ -334,7 +337,7 @@ def tables(evidence: dict[str, Any], protocol: dict[str, Any]) -> None:
         ),
         (
             "Router",
-            f"top-{protocol['model']['top_k']}; document score weight {protocol['model']['document_topic_prior_weight']}; gate exponent {protocol['model']['document_mixture_weight']}",
+            f"top-{protocol['model']['top_k']}; additive document evidence; gate exponent {protocol['model']['document_mixture_weight']}",
         ),
         (
             "Views",
@@ -387,19 +390,6 @@ def tables(evidence: dict[str, Any], protocol: dict[str, Any]) -> None:
         encoding="utf-8",
     )
 
-    development = evidence["development_stages"]
-    (GENERATED / "development_table.tex").write_text(
-        "\n".join(
-            f"{row['stage']} & {100 * row['annotation_coverage']:.1f}\\% & "
-            f"{row['useful_high_confidence_motifs']} & "
-            f"{row['mean_high_confidence_sos']:.4f} & "
-            f"{row['validation_nll']:.4f} \\\\"
-            for row in development
-        )
-        + "\n\\bottomrule\n",
-        encoding="utf-8",
-    )
-
     code_rows = (
         ("Token feature $x_w$", r"\texttt{data.py: build\_token\_features}"),
         ("Projected token $z_w$", r"\texttt{model.py: projected\_tokens}"),
@@ -413,12 +403,12 @@ def tables(evidence: dict[str, Any], protocol: dict[str, Any]) -> None:
         ("Completion likelihood", r"\texttt{model.py: sparse\_completion\_nll}"),
         ("Router and topic objectives", r"\texttt{objectives.py}"),
         ("Positive-NPMI graph", r"\texttt{cooccurrence.py}"),
-        ("NPMI and separation losses", r"\texttt{regularizers.py}"),
+        ("NPMI and separation losses", r"\texttt{objectives.py}"),
         (
             "Alternating optimization and recycling",
-            r"\texttt{training\_steps.py; training.py}",
+            r"\texttt{optimization.py; training.py}",
         ),
-        ("One-pass held-out inference", r"\texttt{core.py: infer\_theta}"),
+        ("One-pass held-out inference", r"\texttt{model.py: infer\_theta}"),
         ("Tomotopy fit and inference", r"\texttt{tomotopy.py}"),
         ("MAG/SOS evaluation", r"\texttt{chemical.py}"),
     )
@@ -429,13 +419,17 @@ def tables(evidence: dict[str, Any], protocol: dict[str, Any]) -> None:
     )
 
     diagnostics = evidence["secondary_diagnostics"]
+    nll = diagnostics["completion_nll_per_token"]
     (GENERATED / "secondary_diagnostics.tex").write_text(
         "\n".join(
             (
                 rf"\newcommand{{\NeuralRecycledTopics}}{{{diagnostics['neural_recycled_topics_during_training']}}}",
                 rf"\newcommand{{\NeuralActiveTopics}}{{{diagnostics['neural_test_corpus_active_topics']}}}",
                 rf"\newcommand{{\NeuralMedianEffectiveTopics}}{{{diagnostics['neural_test_median_effective_topics_per_spectrum']:.2f}}}",
-                rf"\newcommand{{\NeuralTopTokenDiversity}}{{{diagnostics['neural_top_10_token_diversity']:.3f}}}",
+                rf"\newcommand{{\NeuralValidationNLL}}{{{nll['neural']['validation']:.4f}}}",
+                rf"\newcommand{{\TomotopyValidationNLL}}{{{nll['tomotopy']['validation']:.4f}}}",
+                rf"\newcommand{{\NeuralTestNLL}}{{{nll['neural']['test']:.4f}}}",
+                rf"\newcommand{{\TomotopyTestNLL}}{{{nll['tomotopy']['test']:.4f}}}",
             )
         )
         + "\n",
@@ -468,7 +462,6 @@ def _manifest_files() -> tuple[list[Path], list[Path]]:
         GENERATED / "primary_validation_table.tex",
         GENERATED / "primary_test_table.tex",
         GENERATED / "hyperparameters_table.tex",
-        GENERATED / "development_table.tex",
         GENERATED / "equation_code_table.tex",
         GENERATED / "secondary_diagnostics.tex",
         TEX,
@@ -484,7 +477,6 @@ def write_manifest() -> None:
     if missing:
         raise FileNotFoundError(f"report artifact is missing: {missing}")
     payload = {
-        "schema_version": "neural-ms2lda/report-manifest-v1",
         "evidence_sha256": {_relative(path): _sha256(path) for path in evidence},
         "output_sha256": {_relative(path): _sha256(path) for path in outputs},
     }

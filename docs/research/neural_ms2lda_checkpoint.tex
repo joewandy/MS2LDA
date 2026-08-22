@@ -47,14 +47,12 @@ with Tomotopy LDA using the same 1,000 topics, seed 42, six CPU threads, frozen
 scaffold split, and leakage-filtered MAG annotation protocol. On validation,
 the neural model yields 663 optimized motifs and 185 useful high-confidence
 motifs, compared with 607 and 138 for Tomotopy. On the once-opened test split,
-the corresponding counts are 663 and 234 versus 607 and 186. Neural held-out
-completion negative log-likelihood is lower on validation (8.501 versus 9.662)
-and test (8.523 versus 9.757). Tomotopy retains higher mean structure overlap
-score (SOS), exposing a breadth--purity trade-off rather than uniform
-superiority. The selected neural checkpoint trains in 78.7 minutes versus
-76.0 minutes for Tomotopy and performs warm resident-model inference in one
-pass. This is a fully reproducible single-seed research result, not multi-seed
-confirmation or a replacement claim for the production backend.
+the corresponding counts are 663 and 234 versus 607 and 186. Tomotopy retains
+higher mean structure overlap score (SOS), exposing a breadth--purity trade-off
+rather than uniform superiority. The selected neural checkpoint trains in 78.7
+minutes versus 76.0 minutes for Tomotopy. This is a fully reproducible
+single-seed research result, not multi-seed confirmation or a replacement
+claim for the production backend.
 \end{abstract}
 
 \section{Introduction}
@@ -172,9 +170,8 @@ The row-stochastic decoder is
   \frac{\exp(\ell_{kw})}{\sum_{v\in V_{t(w)}}\exp(\ell_{kv})}.
 \]
 This construction preserves rankings within a channel and ensures that the two
-channel masses sum to one. With $\lambda=0$, the implementation reduces exactly
-to a single vocabulary softmax; there is no runtime compatibility switch in the
-final protocol.
+channel masses sum to one. The final model fixes $\lambda=0.25$; there is no
+runtime compatibility switch or alternate decoder in the reproducibility path.
 
 \subsection{One-pass spectrum router}
 
@@ -343,10 +340,12 @@ SOS is computed against unique compounds, so repeated spectra do not
 overweight a molecule. Among SOS-evaluable high-confidence motifs, the fixed
 bands are high ($>0.8$), intermediate ($0.6\leq\mathrm{SOS}\leq0.8$), and low
 ($<0.6$). A \emph{useful high-confidence motif} is in the high or intermediate
-band. These inventory quantities, mean/median SOS, NLL, and model-fitting time
-are the primary report outputs. Collapse diagnostics and warm inference are
-secondary and appear in the appendix.
+band. These inventory quantities, mean/median SOS, and model-fitting time are
+the primary comparison outputs. Held-out NLL is retained as secondary
+predictive evidence alongside collapse diagnostics and warm inference in the
+appendix.
 
+\clearpage
 \section{Results}
 
 \subsection{Validation comparison}
@@ -373,9 +372,8 @@ The final neural model produces 663 optimized motifs, 56 more than Tomotopy,
 and 312 high-confidence SOS-evaluable motifs, 106 more than Tomotopy. Its 185
 useful motifs exceed Tomotopy's 138 by 34.1 percent. The price of this broader
 inventory is lower mean SOS (0.632 versus 0.676), although the neural mean
-remains above the predeclared 0.6318 floor. Validation NLL strongly favours the
-neural model (8.501 versus 9.662). Model fitting is similar: 78.7 minutes for
-neural and 76.0 minutes for Tomotopy.
+remains above the predeclared 0.6318 floor. Model fitting is similar: 78.7
+minutes for neural and 76.0 minutes for Tomotopy.
 
 \begin{figure}[ht]
   \centering
@@ -385,6 +383,7 @@ neural and 76.0 minutes for Tomotopy.
   \label{fig:primary}
 \end{figure}
 
+\clearpage
 \subsection{Locked test confirmation}
 
 \begingroup
@@ -409,7 +408,7 @@ The test split confirms the main pattern. Neural MS2LDA yields 234 useful
 high-confidence motifs versus 186 for Tomotopy and 424 SOS-evaluable motifs
 versus 333. Coverage remains 66.3 versus 60.7 percent. Test mean SOS is lower
 (0.620 versus 0.637), whereas medians are almost identical (0.613 versus
-0.615). Neural completion NLL remains markedly lower (8.523 versus 9.757).
+0.615).
 
 \section{Discussion}
 
@@ -461,7 +460,7 @@ A compact combination of one-pass amortized routing, shared topic geometry,
 mean-normalized fragment/loss evidence, and explicit anti-collapse training
 produces a broad neural Mass2Motif inventory without sacrificing predictive
 fit. Under the fixed seed-42, $K=1000$, six-thread protocol, the model exceeds
-Tomotopy in optimized and useful motif counts and in held-out completion, while
+Tomotopy in optimized and useful motif counts, while
 Tomotopy retains higher mean SOS. The code, protocol, model bundle, generated
 tables, and checkpoint hash form a shareable reproducibility checkpoint. The
 appropriate next scientific step is replication, not further tuning on the
@@ -486,31 +485,6 @@ Quantity & Value \\
 \end{longtable}
 \endgroup
 
-\section{Architecture development summary}
-
-Only final neural and Tomotopy results appear in the main comparison. For
-transparency, Table~\ref{tab:development} records the minimal seed-42 sequence
-that identified the final components. These are architecture-development
-diagnostics, not independent replications. The hard 50/50 decoder balance was
-rejected because coverage came with unacceptable NLL; the soft balance and
-mean-evidence correction retained the probabilistic fit.
-
-\begingroup
-\small
-\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.37\textwidth}rrrr@{}}
-\caption{Validation-only architecture development.}\label{tab:development}\\
-\toprule
-Architecture stage & Coverage & Useful & Mean SOS & NLL \\
-\midrule
-\endfirsthead
-\toprule
-Architecture stage & Coverage & Useful & Mean SOS & NLL \\
-\midrule
-\endhead
-\input{generated/development_table.tex}
-\end{longtable}
-\endgroup
-
 \section{Equation--implementation correspondence}
 
 \begingroup
@@ -532,9 +506,12 @@ Report component & Implementation \\
 \section{Secondary diagnostics and practical inference}
 
 At test time, \NeuralActiveTopics{} neural topics exceed uniform corpus usage,
-median effective topics per spectrum are \NeuralMedianEffectiveTopics{}, and
-top-10 token diversity is \NeuralTopTokenDiversity{}. These are
-collapse-safety diagnostics, not headline chemical outcomes.
+and median effective topics per spectrum are \NeuralMedianEffectiveTopics{}.
+These are collapse-safety diagnostics, not headline chemical outcomes.
+Held-out completion NLL per token was \NeuralValidationNLL{} versus
+\TomotopyValidationNLL{} on validation and \NeuralTestNLL{} versus
+\TomotopyTestNLL{} on test (neural versus Tomotopy). This predictive check is
+reported here as safety evidence rather than as a headline chemistry result.
 
 \begin{figure}[H]
   \centering
@@ -554,8 +531,8 @@ construction, model loading, and cold-start costs.
 
 The protocol fixes seed 42, $K=1000$, six CPU threads, and final epoch 40. The
 portable bundle contains the resolved protocol, vocabulary, model state,
-evaluation summary, chemistry summary, and hashes. The selected checkpoint
-SHA-256 is:
+provenance, and file hashes; evaluation evidence remains in the canonical
+\texttt{results.json} outside the bundle. The selected checkpoint SHA-256 is:
 \begin{center}
 \small\texttt{639c1f37c613d908b59e3a85b7dc701e}\\[-2pt]
 \texttt{33a3f92fd7476a3257b47298143dfbc6}.
@@ -568,17 +545,15 @@ conda env create -f environment-msnlib-mag.yml
 conda run -n ms2lda-neural python \
   scripts/download_msnlib_validation_assets.py \
   --data-root /path/to/MSnLib-assets
-export NEURAL_MS2LDA_DATA=/path/to/MSnLib-assets
-export NEURAL_MS2LDA_RUN=/path/to/run
-export NEURAL_MS2LDA_ENV=ms2lda-neural
-scripts/run_neural_ms2lda.sh start
-scripts/run_neural_ms2lda.sh status
-scripts/run_neural_ms2lda.sh verify
+conda run -n ms2lda-neural python -m benchmarks.neural_ms2lda run \
+  --data-root /path/to/MSnLib-assets --run /path/to/run
+conda run -n ms2lda-neural python -m benchmarks.neural_ms2lda verify \
+  --data-root /path/to/MSnLib-assets --run /path/to/run
 \end{verbatim}
 The acquisition script checks archive and extracted-file hashes before the run
-begins. The runner records source, protocol, dependency, and input hashes;
-\texttt{start} can be invoked again to resume exactly at a completed epoch or
-stage boundary.
+begins. The runner records source, protocol, dependency, and input hashes; the
+same \texttt{run} command resumes exactly at a completed epoch or stage
+boundary.
 The workflow trains the Tomotopy comparator from the same frozen training
 matrix; no external reference run is required. Validation evaluation and MAG
 scoring complete before the test evaluation functions are called.

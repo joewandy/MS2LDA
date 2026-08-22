@@ -3,7 +3,7 @@ Token features & 48 SGNS + 14 Fourier + 2 type = 64 dimensions \\
 SGNS & 5 epochs; 8 pairs/document; 5 negatives; power 0.75; lr 0.01 \\
 Projection; router hidden & 128; 256 \\
 Decoder & temperature 0.18; type pull 0.25 \\
-Router & top-2; document score weight 1.0; gate exponent 0.75 \\
+Router & top-2; additive document evidence; gate exponent 0.75 \\
 Views & 4 pairs; 80\% physical peak groups/view \\
 AdamW & lr 0.001; weight decay 0.0001; gradient clip 5.0 \\
 Batches and epochs & router 128; topic 512; 4 topic updates/epoch; 40 epochs \\

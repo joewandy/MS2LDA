@@ -280,7 +280,6 @@ def write_acquisition_manifest(
     """Record the public acquisition without machine-specific absolute paths."""
 
     manifest = {
-        "schema_version": "msnlib-validation-acquisition/v1",
         "created_utc": datetime.now(timezone.utc).isoformat(),
         "zenodo_record": RECORD_ID,
         "zenodo_api": RECORD_API,
@@ -309,8 +308,6 @@ def validate_acquisition_manifest(
     if not path.is_file():
         raise FileNotFoundError(f"missing acquisition manifest: {path}")
     manifest = json.loads(path.read_text(encoding="utf-8"))
-    if manifest.get("schema_version") != "msnlib-validation-acquisition/v1":
-        raise ValueError("unexpected acquisition manifest schema")
     if int(manifest.get("zenodo_record", -1)) != RECORD_ID:
         raise ValueError("acquisition manifest records the wrong Zenodo record")
     if manifest.get("zenodo_api") != RECORD_API:
