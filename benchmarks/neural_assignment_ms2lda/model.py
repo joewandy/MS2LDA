@@ -150,6 +150,7 @@ class NeuralAssignmentMS2LDA(nn.Module):
         router_hidden_dimensions: int,
         beta_temperature: float,
         token_type_balance: float,
+        normalize_token_type_evidence: bool,
         document_mixture_weight: float,
         document_topic_prior_weight: float,
         topic_initial_indices: torch.Tensor,
@@ -168,6 +169,7 @@ class NeuralAssignmentMS2LDA(nn.Module):
         self.projection_dimensions = int(projection_dimensions)
         self.beta_temperature = float(beta_temperature)
         self.token_type_balance = float(token_type_balance)
+        self.normalize_token_type_evidence = bool(normalize_token_type_evidence)
         if not 0.0 <= self.token_type_balance <= 1.0:
             msg = "token type balance must be between zero and one"
             raise ValueError(msg)
@@ -231,6 +233,11 @@ class NeuralAssignmentMS2LDA(nn.Module):
             ),
             dim=1,
         )
+        if self.normalize_token_type_evidence:
+            vocabulary_sizes = type_logits.new_tensor(
+                (fragment_logits.shape[1], loss_logits.shape[1]),
+            )
+            type_logits = type_logits - torch.log(vocabulary_sizes).unsqueeze(0)
         fragment_mass = F.softmax(type_logits, dim=1)[:, :1]
         balanced_fragment_mass = (1.0 - balance) * fragment_mass + 0.5 * balance
         probabilities = torch.empty_like(logits)
@@ -551,6 +558,9 @@ def initialize_model(
         router_hidden_dimensions=int(model_config["router_hidden_dimensions"]),
         beta_temperature=float(model_config["beta_temperature"]),
         token_type_balance=float(model_config.get("token_type_balance", 0.0)),
+        normalize_token_type_evidence=bool(
+            model_config.get("normalize_token_type_evidence", False)
+        ),
         document_mixture_weight=float(model_config["document_mixture_weight"]),
         document_topic_prior_weight=float(model_config["document_topic_prior_weight"]),
         topic_initial_indices=initial_indices,

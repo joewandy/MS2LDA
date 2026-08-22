@@ -209,22 +209,37 @@ def test_sinkhorn_top2_topic_gradients_and_recycling() -> None:
 
 def test_decoder_softly_balances_token_types_with_gradients() -> None:
     protocol = load_protocol()
+    summed_protocol = copy.deepcopy(protocol)
+    summed_protocol["model"]["normalize_token_type_evidence"] = False
     legacy_protocol = copy.deepcopy(protocol)
     legacy_protocol["model"]["token_type_balance"] = 0.0
     from benchmarks.neural_assignment_ms2lda.model import initialize_model
 
-    features = _token_features(20)
+    features = _token_features(10)
+    features[:, -2:] = 0.0
+    features[:2, -2] = 1.0
+    features[2:, -1] = 1.0
+    features = torch.nn.functional.normalize(features, dim=1)
     model, _ = initialize_model(features, num_topics=4, protocol=protocol)
+    summed, _ = initialize_model(features, num_topics=4, protocol=summed_protocol)
     legacy, _ = initialize_model(features, num_topics=4, protocol=legacy_protocol)
     beta = model.topic_word_distribution()
+    summed_beta = summed.topic_word_distribution()
     legacy_beta = legacy.topic_word_distribution()
-    legacy_fragment_mass = legacy_beta[:, ::2].sum(dim=1)
-    expected_fragment_mass = 0.75 * legacy_fragment_mass + 0.125
     assert torch.allclose(beta.sum(dim=1), torch.ones(4), atol=1e-6)
-    assert torch.allclose(beta[:, ::2].sum(dim=1), expected_fragment_mass, atol=1e-6)
+    assert torch.allclose(summed_beta.sum(dim=1), torch.ones(4), atol=1e-6)
     (-torch.log(beta[:, 0]).mean()).backward()
     assert model.topic_prototypes.grad is not None
     assert torch.isfinite(model.topic_prototypes.grad).all()
+
+    zero_logits = torch.zeros(10, model.projection_dimensions)
+    neutral_beta = model.topic_word_distribution(zero_logits)
+    legacy_summed_beta = summed.topic_word_distribution(zero_logits)
+    assert torch.allclose(neutral_beta[:, :2].sum(dim=1), torch.full((4,), 0.5))
+    assert torch.allclose(
+        legacy_summed_beta[:, :2].sum(dim=1),
+        torch.full((4,), 0.275),
+    )
 
     tokens = legacy.projected_tokens()
     topics = torch.nn.functional.normalize(legacy.topic_prototypes, dim=1)
@@ -408,13 +423,13 @@ def test_validation_gate_uses_only_predeclared_validation_evidence(
 
     payloads = {
         "validation_chemical/current_neural/complete.json": chemistry(
-            50, coverage=0.384, mean_sos=0.64
+            148, coverage=0.515, mean_sos=0.6418
         ),
         "validation_chemical/candidate_neural/complete.json": chemistry(
-            180, coverage=0.5, mean_sos=0.62
+            148, coverage=0.607, mean_sos=0.6318
         ),
         "validation_chemical/tomotopy/complete.json": chemistry(
-            300, coverage=0.607, mean_sos=0.65
+            138, coverage=0.607, mean_sos=0.6761
         ),
         "validation_evaluation/candidate_neural/complete.json": {
             "stable": True,
@@ -429,7 +444,7 @@ def test_validation_gate_uses_only_predeclared_validation_evidence(
     assert result["decision"] == "accepted"
     assert result["test_evaluation_authorized"] is True
     assert result["reported_context"]["training_within_prior_10_percent"] is False
-    assert result["paper_outcome"]["closed_fraction"] == pytest.approx(0.52)
+    assert result["paper_outcome"]["candidate_change_from_current"] == 0
 
 
 def test_committed_bundle_matches_supported_architecture() -> None:
@@ -440,6 +455,7 @@ def test_committed_bundle_matches_supported_architecture() -> None:
     assert model.document_topic_prior_weight == 1.0
     assert model.document_mixture_weight == 0.75
     assert model.token_type_balance == 0.25
+    assert model.normalize_token_type_evidence is False
     assert len(vocabulary) == model.vocabulary_size
 
 
@@ -450,6 +466,7 @@ def test_protocol_exposes_one_active_topic_architecture() -> None:
     assert protocol["model"]["document_mixture_weight"] == 0.75
     assert protocol["model"]["beta_temperature"] == 0.18
     assert protocol["model"]["token_type_balance"] == 0.25
+    assert protocol["model"]["normalize_token_type_evidence"] is True
     assert "development_gates" not in protocol
     assert "workers" not in protocol["tomotopy"]
     from benchmarks.neural_assignment_ms2lda.model import initialize_model
@@ -582,6 +599,7 @@ def test_development_accepts_removed_legacy_protocol_metadata() -> None:
     source["model"].update({"input_dimensions": 64})
     source["model"].pop("document_topic_prior_weight")
     source["model"].pop("document_mixture_weight")
+    source["model"].pop("normalize_token_type_evidence")
     source["views"]["fragment_loss_group_atomic"] = True
     source["evaluation"].update(
         {
@@ -1031,6 +1049,7 @@ def test_miniature_mgf_through_report_and_bundle(tmp_path: Path) -> None:
     assert loaded.num_topics == 4
     assert loaded.document_topic_prior_weight == 1.0
     assert loaded.document_mixture_weight == 0.75
+    assert loaded.normalize_token_type_evidence is True
     assert len(vocabulary) == train.shape[1]
     assert manifest["selected_epoch"] == 2
     provenance_text = (bundle / "provenance.json").read_text(encoding="utf-8")
@@ -1040,6 +1059,7 @@ def test_miniature_mgf_through_report_and_bundle(tmp_path: Path) -> None:
     legacy_protocol = json.loads((bundle / "protocol.json").read_text())
     legacy_protocol["model"].pop("document_topic_prior_weight")
     legacy_protocol["model"].pop("document_mixture_weight")
+    legacy_protocol["model"].pop("normalize_token_type_evidence")
     legacy_protocol["hierarchical_routing"] = {"weight": 1.0}
     write_json(bundle / "protocol.json", legacy_protocol)
     manifest["files"]["protocol.json"] = {
@@ -1050,6 +1070,7 @@ def test_miniature_mgf_through_report_and_bundle(tmp_path: Path) -> None:
     legacy_loaded, _, _ = load_bundle(bundle)
     assert legacy_loaded.document_topic_prior_weight == 1.0
     assert legacy_loaded.document_mixture_weight == 0.0
+    assert legacy_loaded.normalize_token_type_evidence is False
 
 
 def test_zip_safety_rejects_parent_traversal(tmp_path: Path) -> None:

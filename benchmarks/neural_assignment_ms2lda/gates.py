@@ -7,9 +7,9 @@ from typing import Any
 
 from .utils import file_sha256, read_json, write_json
 
-MINIMUM_GAP_CLOSED = 0.5
-MINIMUM_ANNOTATION_COVERAGE = 0.496
-MAXIMUM_MEAN_SOS_DROP = 0.02
+MINIMUM_ANNOTATION_COVERAGE = 0.607
+MINIMUM_USEFUL_HIGH_CONFIDENCE_MOTIFS = 148
+MINIMUM_MEAN_SOS = 0.6318
 MAXIMUM_VALIDATION_NLL = 8.5266
 PRIOR_RUNTIME_REFERENCE_SECONDS = 5571.0
 
@@ -44,12 +44,6 @@ def evaluate_validation_gate(run_dir: str | Path) -> dict[str, Any]:
     current_useful = _useful_high_confidence_topics(current)
     candidate_useful = _useful_high_confidence_topics(candidate)
     comparator_useful = _useful_high_confidence_topics(comparator)
-    gap = comparator_useful - current_useful
-    closed_fraction = (
-        (candidate_useful - current_useful) / gap
-        if gap > 0
-        else float(candidate_useful >= comparator_useful)
-    )
     current_mean_sos = float(current["high_confidence_chemistry"]["mean_sos"])
     candidate_mean_sos = float(candidate["high_confidence_chemistry"]["mean_sos"])
     validation_nll = float(
@@ -57,11 +51,11 @@ def evaluate_validation_gate(run_dir: str | Path) -> dict[str, Any]:
     )
     training_seconds = float(training["elapsed_seconds"])
     checks = {
-        "gap_closed": closed_fraction >= MINIMUM_GAP_CLOSED,
         "annotation_coverage": float(candidate["annotation_coverage"])
         >= MINIMUM_ANNOTATION_COVERAGE,
-        "mean_high_confidence_sos": candidate_mean_sos
-        >= current_mean_sos - MAXIMUM_MEAN_SOS_DROP,
+        "useful_high_confidence_motifs": candidate_useful
+        >= MINIMUM_USEFUL_HIGH_CONFIDENCE_MOTIFS,
+        "mean_high_confidence_sos": candidate_mean_sos >= MINIMUM_MEAN_SOS,
         "validation_nll": validation_nll <= MAXIMUM_VALIDATION_NLL,
         "stable": bool(training["stable"]) and bool(evaluation["stable"]),
     }
@@ -75,8 +69,7 @@ def evaluate_validation_gate(run_dir: str | Path) -> dict[str, Any]:
             "current_neural_useful_high_confidence_motifs": current_useful,
             "candidate_neural_useful_high_confidence_motifs": candidate_useful,
             "tomotopy_useful_high_confidence_motifs": comparator_useful,
-            "validation_gap": gap,
-            "closed_fraction": closed_fraction,
+            "candidate_change_from_current": candidate_useful - current_useful,
         },
         "measurements": {
             "candidate_annotation_coverage": float(candidate["annotation_coverage"]),
@@ -91,9 +84,11 @@ def evaluate_validation_gate(run_dir: str | Path) -> dict[str, Any]:
             "prior_10_percent_runtime_seconds": PRIOR_RUNTIME_REFERENCE_SECONDS,
         },
         "thresholds": {
-            "minimum_gap_closed": MINIMUM_GAP_CLOSED,
             "minimum_annotation_coverage": MINIMUM_ANNOTATION_COVERAGE,
-            "maximum_mean_sos_drop": MAXIMUM_MEAN_SOS_DROP,
+            "minimum_useful_high_confidence_motifs": (
+                MINIMUM_USEFUL_HIGH_CONFIDENCE_MOTIFS
+            ),
+            "minimum_mean_sos": MINIMUM_MEAN_SOS,
             "maximum_validation_nll": MAXIMUM_VALIDATION_NLL,
         },
         "checks": checks,

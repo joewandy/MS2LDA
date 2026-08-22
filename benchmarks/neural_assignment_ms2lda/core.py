@@ -207,6 +207,9 @@ def fresh_model(
         router_hidden_dimensions=int(config["router_hidden_dimensions"]),
         beta_temperature=float(config["beta_temperature"]),
         token_type_balance=float(config.get("token_type_balance", 0.0)),
+        normalize_token_type_evidence=bool(
+            config.get("normalize_token_type_evidence", False)
+        ),
         document_mixture_weight=float(config["document_mixture_weight"]),
         document_topic_prior_weight=float(config["document_topic_prior_weight"]),
         topic_initial_indices=checkpoint["topic_initial_indices"],

@@ -78,6 +78,8 @@ def load_protocol() -> dict[str, Any]:
         raise ValueError("the document mixture weight is fixed to three quarters")
     if float(protocol["model"].get("token_type_balance", 0.0)) != 0.25:
         raise ValueError("the token type balance is fixed to one quarter")
+    if protocol["model"].get("normalize_token_type_evidence") is not True:
+        raise ValueError("token type evidence must be vocabulary-size normalized")
     if float(protocol["model"]["beta_temperature"]) != 0.18:
         raise ValueError("the decoder temperature is fixed to 0.18")
     if int(protocol["optimization"]["maximum_epochs"]) != 40:

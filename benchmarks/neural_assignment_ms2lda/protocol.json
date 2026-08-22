@@ -61,6 +61,7 @@
     "top_k": 2,
     "beta_temperature": 0.18,
     "token_type_balance": 0.25,
+    "normalize_token_type_evidence": true,
     "document_mixture_weight": 0.75,
     "document_topic_prior_weight": 1.0,
     "sinkhorn_epsilon": 0.05,

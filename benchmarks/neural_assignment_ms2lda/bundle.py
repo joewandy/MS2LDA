@@ -85,19 +85,29 @@ def package_bundle(run_dir: str | Path, output_dir: str | Path) -> dict[str, Any
     shutil.copy2(run / "evaluation/neural/complete.json", output / "evaluation.json")
     shutil.copy2(run / "chemical/neural/complete.json", output / "chemistry.json")
     write_json(output / "provenance.json", _portable_provenance(run, selected))
-    balance = float(read_json(protocol_path)["model"].get("token_type_balance", 0.0))
+    model_config = read_json(protocol_path)["model"]
+    balance = float(model_config.get("token_type_balance", 0.0))
+    normalized_type_evidence = bool(
+        model_config.get("normalize_token_type_evidence", False)
+    )
     unbalanced_derivation = (
         "softmax(2 * normalized_topics @ normalized_projected_tokens.T "
         "/ beta_temperature)"
     )
+    if not balance:
+        beta_derivation = unbalanced_derivation
+    elif normalized_type_evidence:
+        beta_derivation = (
+            f"mean_type_evidence_with_{balance:g}_pull_to_equal_fragment_loss_mass"
+        )
+    else:
+        beta_derivation = (
+            f"summed_type_evidence_with_{balance:g}_pull_to_equal_fragment_loss_mass"
+        )
     manifest = {
         "schema_version": "neural-ms2lda/model-bundle-v1",
         "selected_epoch": int(selected["epoch"]),
-        "beta_derivation": (
-            f"softmax_with_{balance:g}_pull_to_equal_fragment_loss_mass"
-            if balance
-            else unbalanced_derivation
-        ),
+        "beta_derivation": beta_derivation,
         "files": {
             name: {
                 "bytes": (output / name).stat().st_size,
@@ -139,6 +149,9 @@ def load_bundle(
         router_hidden_dimensions=int(config["router_hidden_dimensions"]),
         beta_temperature=float(config["beta_temperature"]),
         token_type_balance=float(config.get("token_type_balance", 0.0)),
+        normalize_token_type_evidence=bool(
+            config.get("normalize_token_type_evidence", False)
+        ),
         document_mixture_weight=float(config.get("document_mixture_weight", 0.0)),
         document_topic_prior_weight=float(
             config.get(
