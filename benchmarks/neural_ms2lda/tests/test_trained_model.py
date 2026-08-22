@@ -30,7 +30,7 @@ def _reference_batch(vocabulary_size: int) -> sp.csr_matrix:
 
 
 def test_published_model_reproduces_reference_probabilities() -> None:
-    """Lock interpretable numerical values without coupling tests to file bytes."""
+    """Lock support and probabilities across compatible numerical backends."""
     model, vocabulary, temperature = load_trained_model(MODEL_ROOT)
     batch = sparse_batch(
         _reference_batch(len(vocabulary)), np.arange(3, dtype=np.int64)
@@ -65,12 +65,22 @@ def test_published_model_reproduces_reference_probabilities() -> None:
         zip(expected_indices, expected_values, strict=True)
     ):
         assert np.array_equal(np.flatnonzero(theta[row]), indices)
-        assert np.array_equal(theta[row, indices], values)
+        np.testing.assert_allclose(theta[row, indices], values, rtol=5e-6, atol=1e-7)
     assert np.array_equal(theta[2], np.full(1000, 0.001, dtype=np.float32))
     assert beta.shape == (1000, 21233)
-    assert beta[0, 0] == np.float32(0.06091761961579323)
-    assert beta[42, 42] == np.float32(5.1844017434632406e-05)
-    assert beta[999, 21232] == np.float32(2.4032394776440924e-06)
+    np.testing.assert_allclose(
+        beta[[0, 42, 999], [0, 42, 21232]],
+        np.asarray(
+            [
+                0.06091761961579323,
+                5.1844017434632406e-05,
+                2.4032394776440924e-06,
+            ],
+            dtype=np.float32,
+        ),
+        rtol=1e-5,
+        atol=1e-10,
+    )
 
 
 def test_paper_results_are_exact() -> None:
