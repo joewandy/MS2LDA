@@ -81,7 +81,11 @@ jobs:
       - name: Regenerate report inputs
         run: |
           python scripts/generate_neural_ms2lda_report.py
-          git diff --exit-code -- docs/research/generated
+          report_drift="$(git status --porcelain --untracked-files=all -- docs/research/generated)"
+          if [ -n "$report_drift" ]; then
+            echo "$report_drift"
+            exit 1
+          fi
       - uses: xu-cheng/latex-action@v3
         with:
           root_file: neural_ms2lda_report.tex

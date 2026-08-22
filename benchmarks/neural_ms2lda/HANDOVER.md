@@ -141,7 +141,7 @@ ruff check --select E,F,I benchmarks/neural_ms2lda \
 
 pytest -q benchmarks/neural_ms2lda/tests
 python scripts/generate_neural_ms2lda_report.py
-git diff --exit-code -- docs/research/generated
+test -z "$(git status --porcelain --untracked-files=all -- docs/research/generated)"
 ```
 
 Also run the upstream regression suite with `NUMBA_DISABLE_JIT=1`, build and
