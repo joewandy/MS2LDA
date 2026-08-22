@@ -10,7 +10,6 @@ import torch
 
 from benchmarks.neural_ms2lda.artifacts import load_protocol
 from benchmarks.neural_ms2lda.spectra import PeakGroup, SpectrumRecord
-from benchmarks.neural_ms2lda.utils import file_sha256
 
 
 def spectrum_record(identifier: str, words: list[str]) -> SpectrumRecord:
@@ -21,18 +20,12 @@ def spectrum_record(identifier: str, words: list[str]) -> SpectrumRecord:
     )
     return SpectrumRecord(
         spectrum_id=identifier,
-        feature_id=identifier,
         smiles="CCO",
-        supplied_inchikey="LFQSCWFLJHTTHZ-UHFFFAOYSA-N",
         connectivity_key=identifier,
         scaffold_key="",
         split_group=identifier,
         precursor_mz=300.0,
         peak_groups=groups,
-        declared_num_peaks=len(groups),
-        parsed_num_peaks=len(groups),
-        compound_name=identifier,
-        metadata={},
     )
 
 
@@ -55,13 +48,7 @@ def token_features(
 def mini_protocol(mgf: Path) -> dict[str, Any]:
     """Shrink only capacities and iteration counts for a fast end-to-end test."""
     protocol = copy.deepcopy(load_protocol())
-    protocol["input_files"] = {
-        "mgf": {
-            "relative_path": mgf.name,
-            "bytes": mgf.stat().st_size,
-            "sha256": file_sha256(mgf),
-        }
-    }
+    protocol["input_files"] = {"mgf": mgf.name}
     protocol["preprocessing"].update(
         {
             "expected_spectra": 18,
@@ -84,7 +71,6 @@ def mini_protocol(mgf: Path) -> dict[str, Any]:
             "num_topics": 4,
             "projection_dimensions": 8,
             "router_hidden_dimensions": 8,
-            "sinkhorn_iterations": 10,
         }
     )
     protocol["views"]["pairs"] = 2
@@ -101,9 +87,8 @@ def mini_protocol(mgf: Path) -> dict[str, Any]:
         {
             "routing_temperature_anneal_epochs": 2,
             "sinkhorn_weight_hold_epochs": 0,
-            "sinkhorn_weight_end_epoch": 2,
+            "sinkhorn_iterations": 10,
             "recycle_patience_validations": 10,
-            "recycle_through_epoch": 2,
         }
     )
     protocol["cooccurrence_regularization"].update(
@@ -169,7 +154,7 @@ def write_mini_mgf(path: Path) -> None:
 
 
 def chemistry_result(topics: int = 4) -> dict[str, Any]:
-    """Return the smallest valid paper-facing chemistry manifest."""
+    """Return the smallest valid paper-facing chemistry result."""
     return {
         "topics": topics,
         "annotation_coverage": 0.5,

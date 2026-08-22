@@ -156,7 +156,7 @@ deepmol.egg-info
 
 *.png
 !docs/research/figures/*.png
-!docs/research/neural_ms2lda_checkpoint.pdf
+!docs/research/neural_ms2lda_report.pdf
 !benchmarks/neural_ms2lda/results/
 !benchmarks/neural_ms2lda/results/**
 *.tsv

@@ -121,6 +121,8 @@ class NeuralMS2LDA(nn.Module):
         if len(topic_initial_indices) != num_topics:
             msg = "topic initialization does not match topic count"
             raise ValueError(msg)
+        if num_topics < TOPICS_PER_TOKEN:
+            raise ValueError("the top-2 router requires at least two topics")
         self.num_topics = int(num_topics)
         self.vocabulary_size = int(token_features.shape[0])
         self.input_dimensions = int(token_features.shape[1])
@@ -300,9 +302,7 @@ class NeuralMS2LDA(nn.Module):
         document_logits = document_routes @ topics.T
         logits = local_logits + document_logits[batch.row_ids]
         soft = nnf.softmax(logits / float(temperature), dim=1)
-        indices = torch.topk(
-            soft, k=min(TOPICS_PER_TOKEN, self.num_topics), dim=1
-        ).indices
+        indices = torch.topk(soft, k=TOPICS_PER_TOKEN, dim=1).indices
         values = torch.gather(soft, 1, indices)
         values = values / values.sum(dim=1, keepdim=True).clamp_min(1e-12)
         hard = torch.zeros_like(soft).scatter(1, indices, values)

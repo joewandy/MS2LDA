@@ -1,8 +1,8 @@
 Seed; topics; CPU threads & 42; 1000; 6 \\
 Token features & 48 SGNS + 14 Fourier + 2 type = 64 dimensions \\
-SGNS & 5 epochs; 8 pairs/document; 5 negatives; power 0.75; lr 0.01 \\
+SGNS & SparseAdam; 5 epochs; 8 pairs/document; 5 negatives; power 0.75; batch 8192; lr 0.01 \\
 Projection; router hidden & 128; 256 \\
-Decoder & temperature 0.18; type pull 0.25 \\
+Decoder & temperature 0.18; mean channel evidence; equal-mass pull 0.25 \\
 Router & top-2; additive document evidence; gate exponent 0.75 \\
 Views & 4 pairs; 80\% physical peak groups/view \\
 AdamW & lr 0.001; weight decay 0.0001; gradient clip 5.0 \\
@@ -10,9 +10,9 @@ Batches and epochs & router 128; topic 512; 4 topic updates/epoch; 40 epochs \\
 Loss weights & local 0.25; view consistency 0.1; NPMI 1.0; separation 5.0 \\
 Routing temperature & 0.5 to 0.1 over 30 epochs \\
 Sinkhorn & epsilon 0.05; 5 iterations; weight 0.25 to 0.05 \\
-NPMI graph & min DF 10; min pair 3; 16 neighbours; min NPMI 0.0 \\
+NPMI graph & min DF 10; min pair 3; 16 neighbours; positive NPMI \\
 Prototype separation & 8 neighbours; margin 0.3 \\
 Recycling & usage $<0.1$ of uniform for 3 validations; max 2/topic \\
-Tomotopy & alpha 0.6; eta 0.1; step 50; max 5000; inference 100 \\
-MAG/SOS & top 20 motif tokens; membership $\geq 0.5$; cluster cosine 0.9 \\
+Tomotopy & alpha 0.6; eta 0.1; parallel 3; step 50; max 5000; stop 10 changes $<0.005$; inference 100 \\
+MAG/SOS & top 20 motif tokens; search 1000; 10 unique molecules; membership $\geq 0.5$; cluster cosine 0.9; fingerprint consensus 0.8 \\
 \bottomrule

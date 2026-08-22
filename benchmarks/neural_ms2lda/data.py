@@ -13,11 +13,9 @@ from typing import TYPE_CHECKING, Any
 import numpy as np
 import scipy.sparse as sp
 import torch
+from torch import nn
+from torch.nn import functional as nnf
 
-from .inputs import (
-    config_from_protocol,
-    resolve_input_paths,
-)
 from .spectra import (
     PeakGroup,
     assign_scaffold_splits,
@@ -25,14 +23,15 @@ from .spectra import (
     build_training_vocabulary,
     completion_document,
     filtered_words,
+    input_paths,
     load_records,
+    preprocessing_config,
     renormalize_peak_groups,
     split_records,
 )
 from .utils import (
-    file_sha256,
+    atomic_save_numpy,
     read_json,
-    verify_output_hashes,
     write_json,
     write_jsonl,
 )
@@ -60,7 +59,6 @@ class ViewPair:
 
     left: sp.csr_matrix
     right: sp.csr_matrix
-    pair_index: int
 
 
 def load_csr(path: str | Path) -> sp.csr_matrix:
@@ -188,6 +186,132 @@ def corpus_frequencies(matrix: sp.csr_matrix) -> np.ndarray:
     return np.asarray(matrix.sum(axis=0)).ravel().astype(np.float64)
 
 
+MAX_PAIR_RESAMPLES = 8
+
+
+class _Sgns(nn.Module):
+    """Two embedding tables trained by skip-gram negative sampling."""
+
+    def __init__(self, vocabulary_size: int, dimensions: int) -> None:
+        super().__init__()
+        self.source = nn.Embedding(vocabulary_size, dimensions, sparse=True)
+        self.context = nn.Embedding(vocabulary_size, dimensions, sparse=True)
+        nn.init.uniform_(self.source.weight, -0.5 / dimensions, 0.5 / dimensions)
+        nn.init.zeros_(self.context.weight)
+
+    def forward(
+        self,
+        source: torch.Tensor,
+        context: torch.Tensor,
+        negatives: torch.Tensor,
+    ) -> torch.Tensor:
+        source_values = self.source(source)
+        positive = torch.sum(source_values * self.context(context), dim=1)
+        negative = torch.einsum("bd,bnd->bn", source_values, self.context(negatives))
+        return -(nnf.logsigmoid(positive) + nnf.logsigmoid(-negative).sum(dim=1)).mean()
+
+
+def _positive_pairs(
+    matrix: sp.csr_matrix,
+    *,
+    pairs_per_document: int,
+    seed: int,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Sample deterministic, count-weighted within-spectrum token pairs."""
+    rng = np.random.default_rng(seed)
+    total = matrix.shape[0] * pairs_per_document
+    sources = np.empty(total, dtype=np.int64)
+    contexts = np.empty(total, dtype=np.int64)
+    cursor = 0
+    for row in range(matrix.shape[0]):
+        start, stop = matrix.indptr[row], matrix.indptr[row + 1]
+        words = matrix.indices[start:stop]
+        counts = matrix.data[start:stop].astype(np.float64, copy=False)
+        if not len(words):
+            continue
+        probability = counts / counts.sum()
+        left = rng.choice(words, size=pairs_per_document, p=probability)
+        right = rng.choice(words, size=pairs_per_document, p=probability)
+        if len(words) > 1:
+            same = left == right
+            attempts = 0
+            while np.any(same) and attempts < MAX_PAIR_RESAMPLES:
+                right[same] = rng.choice(words, size=int(same.sum()), p=probability)
+                same = left == right
+                attempts += 1
+            if np.any(same):
+                positions = {int(word): index for index, word in enumerate(words)}
+                right[same] = [
+                    words[(positions[int(word)] + 1) % len(words)]
+                    for word in left[same]
+                ]
+        count = len(left)
+        sources[cursor : cursor + count] = left
+        contexts[cursor : cursor + count] = right
+        cursor += count
+    return sources[:cursor], contexts[:cursor]
+
+
+def train_token_features(
+    output_dir: str | Path,
+    matrix: sp.csr_matrix,
+    vocabulary: list[str],
+    protocol: dict[str, Any],
+    *,
+    seed: int,
+) -> dict[str, Any]:
+    """Train SGNS, append mass/type features, and write the fixed token table."""
+    output = Path(output_dir)
+    complete_path = output / "complete.json"
+    features_path = output / "features.npy"
+    if complete_path.is_file() and features_path.is_file():
+        return read_json(complete_path)
+    output.mkdir(parents=True, exist_ok=True)
+    config = protocol["sgns"]
+    torch.manual_seed(seed)
+    model = _Sgns(matrix.shape[1], int(config["dimensions"]))
+    optimizer = torch.optim.SparseAdam(
+        model.parameters(), lr=float(config["learning_rate"])
+    )
+    frequencies = corpus_frequencies(matrix)
+    negative_probability = np.power(frequencies, float(config["negative_power"]))
+    negative_probability /= negative_probability.sum()
+    for epoch in range(int(config["epochs"])):
+        sources, contexts = _positive_pairs(
+            matrix,
+            pairs_per_document=int(config["positive_pairs_per_document"]),
+            seed=seed + 1009 * epoch,
+        )
+        rng = np.random.default_rng(seed + 2027 * epoch)
+        order = rng.permutation(len(sources))
+        for begin in range(0, len(order), int(config["batch_size"])):
+            selected = order[begin : begin + int(config["batch_size"])]
+            negatives = rng.choice(
+                matrix.shape[1],
+                size=(len(selected), int(config["negative_samples"])),
+                p=negative_probability,
+            )
+            optimizer.zero_grad(set_to_none=True)
+            loss = model(
+                torch.from_numpy(sources[selected]),
+                torch.from_numpy(contexts[selected]),
+                torch.from_numpy(negatives),
+            )
+            if not torch.isfinite(loss):
+                raise FloatingPointError("SGNS produced a non-finite loss")
+            loss.backward()
+            optimizer.step()
+    embeddings = 0.5 * (model.source.weight.detach() + model.context.weight.detach())
+    embeddings = nnf.normalize(embeddings, dim=1).cpu().numpy().astype(np.float32)
+    features = build_token_features(embeddings, vocabulary, protocol["token_features"])
+    atomic_save_numpy(features_path, features)
+    result = {
+        "feature_dimensions": int(features.shape[1]),
+    }
+    write_json(complete_path, result)
+    return result
+
+
 def prototype_seeding_weights(matrix: sp.csr_matrix) -> np.ndarray:
     """Return sqrt-corpus-frequency times squared-IDF seeding weights."""
     frequencies = corpus_frequencies(matrix)
@@ -245,17 +369,15 @@ def prepare_data(  # noqa: PLR0915
     output = directory / "data"
     complete_path = output / "complete.json"
     if complete_path.is_file():
-        result = read_json(complete_path)
-        verify_output_hashes(output, result)
-        return result
-    config = config_from_protocol(protocol)
-    mgf = resolve_input_paths(protocol, data_root)["mgf"]
+        return read_json(complete_path)
+    config = preprocessing_config(protocol)
+    mgf = input_paths(protocol, data_root)["mgf"]
     records, parsing = load_records(mgf, config)
     prep = protocol["preprocessing"]
     assignments, split_summary = assign_scaffold_splits(
         records,
         fractions=tuple(map(float, prep["split_fractions"])),
-        seed=int(prep["split_seed"]),
+        seed=int(protocol["seed"]),
     )
     leakage = audit_split_disjointness(records, assignments)
     vocabulary, vocabulary_summary = build_training_vocabulary(
@@ -268,27 +390,15 @@ def prepare_data(  # noqa: PLR0915
     vocabulary_set = set(vocabulary)
     output.mkdir(parents=True, exist_ok=True)
     matrices: dict[str, sp.csr_matrix] = {}
-    identifiers: dict[str, list[str]] = {}
     heldout_rows: dict[str, list[dict[str, Any]]] = {
         "validation": [],
         "test": [],
     }
-    split_rows: list[dict[str, Any]] = []
-    for record in records:
-        split = assignments[record.spectrum_id]
-        split_rows.append(
-            {
-                "spectrum_id": record.spectrum_id,
-                "split": split,
-                "connectivity_key": record.connectivity_key,
-                "scaffold_key": record.scaffold_key,
-                "split_group": record.split_group,
-            }
-        )
+    training_records = []
     for split in ("train", "validation", "test"):
         selected = split_records(records, assignments, split)
-        identifiers[split] = [record.spectrum_id for record in selected]
         if split == "train":
+            training_records = selected
             matrices["train"] = _matrix(
                 [filtered_words(record, vocabulary_set) for record in selected],
                 vocabulary,
@@ -298,13 +408,13 @@ def prepare_data(  # noqa: PLR0915
         observed_documents: list[list[str]] = []
         completion_documents: list[list[str]] = []
         for record in selected:
-            completion = completion_document(
+            observed_groups, completion_groups = completion_document(
                 record,
                 observed_fraction=float(prep["completion_observed_fraction"]),
-                seed=int(prep["completion_seed"]),
+                seed=int(protocol["seed"]),
             )
             observed_groups = renormalize_peak_groups(
-                completion.observed_groups,
+                observed_groups,
                 precursor_mz=record.precursor_mz,
                 significant_digits=config.significant_digits,
             )
@@ -312,10 +422,11 @@ def prepare_data(  # noqa: PLR0915
                 token for group in observed_groups for token in group.tokens
             ]
             full_words = filtered_words(record, vocabulary_set)
+            raw_completion_words = [
+                token for group in completion_groups for token in group.tokens
+            ]
             completion_words = [
-                token
-                for token in completion.completion_words
-                if token in vocabulary_set
+                token for token in raw_completion_words if token in vocabulary_set
             ]
             observed_filtered = [
                 token for token in observed_words if token in vocabulary_set
@@ -332,18 +443,34 @@ def prepare_data(  # noqa: PLR0915
                     "scaffold_key": record.scaffold_key,
                     "observed_oov_tokens": len(observed_words) - len(observed_filtered),
                     "completion_oov_tokens": (
-                        len(completion.completion_words) - len(completion_words)
+                        len(raw_completion_words) - len(completion_words)
                     ),
                 }
             )
         matrices[f"{split}_full"] = _matrix(full_documents, vocabulary)
         matrices[f"{split}_observed"] = _matrix(observed_documents, vocabulary)
         matrices[f"{split}_completion"] = _matrix(completion_documents, vocabulary)
-    outputs: list[Path] = []
+    view_config = protocol["views"]
+    for pair_index in range(int(view_config["pairs"])):
+        for side in ("left", "right"):
+            documents = [
+                _view_words(
+                    record,
+                    seed=int(protocol["seed"]),
+                    pair_index=pair_index,
+                    side=side,
+                    retained_fraction=float(
+                        view_config["retained_peak_group_fraction"]
+                    ),
+                    significant_digits=config.significant_digits,
+                )
+                for record in training_records
+            ]
+            matrices[f"view_{pair_index}_{side}"] = _matrix(documents, vocabulary)
+
     for name, matrix in matrices.items():
         path = output / f"{name}.npz"
         _atomic_save_npz(path, matrix)
-        outputs.append(path)
     vocabulary_path = output / "vocabulary.json"
     write_json(
         vocabulary_path,
@@ -352,26 +479,14 @@ def prepare_data(  # noqa: PLR0915
             **vocabulary_summary,
         },
     )
-    identifiers_path = output / "identifiers.json"
-    write_json(identifiers_path, identifiers)
-    split_path = output / "split_manifest.jsonl"
-    heldout_paths = []
     for split, rows in heldout_rows.items():
         path = output / f"{split}_records.jsonl"
         write_jsonl(path, rows)
-        heldout_paths.append(path)
-    write_jsonl(split_path, split_rows)
-    outputs.extend((vocabulary_path, identifiers_path, *heldout_paths, split_path))
     result = {
-        "raw_mgf": {"path": str(mgf), "sha256": file_sha256(mgf)},
         "parsing": parsing,
         "split": split_summary,
         "leakage_audit": leakage,
         "vocabulary": vocabulary_summary,
-        "matrix_shapes": {
-            name: list(matrix.shape) for name, matrix in matrices.items()
-        },
-        "output_sha256": {path.name: file_sha256(path) for path in outputs},
     }
     write_json(complete_path, result)
     return result
@@ -440,105 +555,18 @@ def _view_words(  # noqa: PLR0913
     return [token for group in normalized for token in group.tokens]
 
 
-def prepare_training_views(
-    run_dir: str | Path,
-    *,
-    counts_dir: str | Path,
-    data_root: str | Path,
-    protocol: dict[str, Any],
-) -> dict[str, Any]:
-    """Rebuild four chemistry-free paired views from frozen physical peaks."""
-    directory = Path(run_dir).expanduser().resolve()
-    counts = Path(counts_dir).expanduser().resolve()
-    output = directory / "training_views"
-    complete_path = output / "complete.json"
-    if complete_path.is_file():
-        result = read_json(complete_path)
-        verify_output_hashes(output, result)
-        return result
-
-    config = config_from_protocol(protocol)
-    mgf = resolve_input_paths(protocol, data_root)["mgf"]
-    if file_sha256(mgf) != str(protocol["input_files"]["mgf"]["sha256"]):
-        raise ValueError("frozen raw MGF changed before view construction")
-    records, parsing = load_records(mgf, config)
-    by_id = {record.spectrum_id: record for record in records}
-    identifiers = read_json(counts / "identifiers.json")["train"]
-    selected = [by_id[str(identifier)] for identifier in identifiers]
-    vocabulary = load_vocabulary(counts)
-    frozen_train = load_csr(counts / "train.npz")
-    rebuilt_train = _matrix([record.words for record in selected], vocabulary)
-    if rebuilt_train.shape != frozen_train.shape or (rebuilt_train != frozen_train).nnz:
-        msg = "raw peak groups do not reproduce the frozen train counts"
-        raise ValueError(msg)
-
-    output.mkdir(parents=True, exist_ok=True)
-    view_config = protocol["views"]
-    outputs: list[Path] = []
-    pair_summaries = []
-    for pair_index in range(int(view_config["pairs"])):
-        summary: dict[str, Any] = {"pair_index": pair_index}
-        for side in ("left", "right"):
-            documents = [
-                _view_words(
-                    record,
-                    seed=int(protocol["seed"]),
-                    pair_index=pair_index,
-                    side=side,
-                    retained_fraction=float(
-                        view_config["retained_peak_group_fraction"],
-                    ),
-                    significant_digits=config.significant_digits,
-                )
-                for record in selected
-            ]
-            matrix = _matrix(documents, vocabulary)
-            path = output / f"pair_{pair_index}_{side}.npz"
-            _atomic_save_npz(path, matrix)
-            outputs.append(path)
-            summary[side] = {
-                "shape": list(matrix.shape),
-                "nnz": int(matrix.nnz),
-                "token_mass": float(matrix.sum()),
-                "empty_documents": int(np.sum(np.diff(matrix.indptr) == 0)),
-            }
-        pair_summaries.append(summary)
-    result = {
-        "raw_mgf": {
-            "path": str(mgf),
-            "sha256": file_sha256(mgf),
-        },
-        "train_identifiers_sha256": file_sha256(counts / "identifiers.json"),
-        "frozen_train_counts_reproduced_exactly": True,
-        "retained_peak_group_fraction": float(
-            view_config["retained_peak_group_fraction"],
-        ),
-        "pairs": pair_summaries,
-        "raw_parser_summary": {
-            "parsed_blocks": int(parsing["parsed_blocks"]),
-            "retained_spectra": int(parsing["retained_spectra"]),
-        },
-        "output_sha256": {path.name: file_sha256(path) for path in outputs},
-    }
-    write_json(complete_path, result)
-    return result
-
-
 def load_view_pairs(run_dir: str | Path, protocol: dict[str, Any]) -> list[ViewPair]:
-    """Load all verified paired training views."""
-    output = Path(run_dir).expanduser().resolve() / "training_views"
-    complete = read_json(output / "complete.json")
-    verify_output_hashes(output, complete)
+    """Load the paired training views created during the single MGF pass."""
+    output = Path(run_dir).expanduser().resolve() / "data"
     pairs = []
     for pair_index in range(int(protocol["views"]["pairs"])):
         paths = {
-            side: output / f"pair_{pair_index}_{side}.npz" for side in ("left", "right")
+            side: output / f"view_{pair_index}_{side}.npz" for side in ("left", "right")
         }
         pairs.append(
             ViewPair(
                 left=load_csr(paths["left"]),
                 right=load_csr(paths["right"]),
-                pair_index=pair_index,
             ),
         )
     return pairs

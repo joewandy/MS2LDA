@@ -1,8 +1,7 @@
-"""Small atomic I/O and provenance helpers for the bounded study."""
+"""Small atomic I/O helpers shared by the reproducibility workflow."""
 
 from __future__ import annotations
 
-import hashlib
 import json
 import os
 from collections.abc import Iterable
@@ -11,31 +10,6 @@ from typing import Any
 
 import numpy as np
 import torch
-
-
-def canonical_json_bytes(value: Any) -> bytes:
-    """Serialize a JSON-compatible value deterministically."""
-    return json.dumps(
-        value,
-        sort_keys=True,
-        separators=(",", ":"),
-        ensure_ascii=True,
-        allow_nan=False,
-    ).encode("utf-8")
-
-
-def object_sha256(value: Any) -> str:
-    """Hash one canonical JSON value."""
-    return hashlib.sha256(canonical_json_bytes(value)).hexdigest()
-
-
-def file_sha256(path: str | Path) -> str:
-    """Hash a file without loading it all into memory."""
-    digest = hashlib.sha256()
-    with Path(path).open("rb") as handle:
-        for block in iter(lambda: handle.read(8 * 1024 * 1024), b""):
-            digest.update(block)
-    return digest.hexdigest()
 
 
 def read_json(path: str | Path) -> Any:
@@ -66,24 +40,19 @@ def write_jsonl(path: str | Path, rows: Iterable[Any]) -> None:
     try:
         with temporary.open("wb") as handle:
             for row in rows:
-                handle.write(canonical_json_bytes(row) + b"\n")
+                encoded = json.dumps(
+                    row,
+                    sort_keys=True,
+                    separators=(",", ":"),
+                    ensure_ascii=True,
+                    allow_nan=False,
+                ).encode("utf-8")
+                handle.write(encoded + b"\n")
             handle.flush()
             os.fsync(handle.fileno())
         temporary.replace(destination)
     finally:
         temporary.unlink(missing_ok=True)
-
-
-def verify_output_hashes(directory: str | Path, manifest: dict[str, Any]) -> None:
-    """Verify every artifact in a standard stage output map."""
-    root = Path(directory)
-    hashes = manifest.get("output_sha256")
-    if not isinstance(hashes, dict) or not hashes:
-        raise ValueError("stage manifest has no output hashes")
-    for name, digest in hashes.items():
-        path = root / name
-        if not path.is_file() or file_sha256(path) != digest:
-            raise ValueError(f"artifact changed: {path}")
 
 
 def atomic_save_numpy(path: str | Path, value: np.ndarray) -> None:
@@ -102,7 +71,7 @@ def atomic_save_numpy(path: str | Path, value: np.ndarray) -> None:
 
 
 def atomic_torch_save(path: str | Path, value: Any) -> None:
-    """Atomically save a PyTorch checkpoint."""
+    """Atomically save a PyTorch state object."""
     destination = Path(path)
     destination.parent.mkdir(parents=True, exist_ok=True)
     temporary = destination.with_name(f".{destination.name}.{os.getpid()}.tmp")

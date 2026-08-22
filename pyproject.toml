@@ -55,7 +55,7 @@ exclude = [
     # MotifDB entire folder (now fetched at runtime)
   "MS2LDA/MotifDB/**",
 
-  # Research checkpoint tooling remains clone-runnable, not part of the API.
+  # Research tooling remains clone-runnable, not part of the public API.
   "scripts/download_msnlib_validation_assets.py",
   "scripts/generate_neural_ms2lda_report.py"
 ]

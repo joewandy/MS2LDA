@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 import statistics
 import time
 from pathlib import Path
@@ -11,13 +10,10 @@ from typing import Any, Sequence
 import numpy as np
 
 from .data import load_csr, load_heldout_records, load_vocabulary
-from .metrics import completion_metrics
+from .objectives import completion_metrics
 from .utils import (
     atomic_save_numpy,
-    file_sha256,
-    object_sha256,
     read_json,
-    verify_output_hashes,
     write_json,
 )
 
@@ -74,8 +70,8 @@ def _align_beta(
     return aligned.astype(np.float32, copy=False)
 
 
-def _alpha_evidence(model: Any, config: dict[str, Any]) -> dict[str, Any]:
-    """Validate the learned asymmetric alpha and record its initialization."""
+def _validate_alpha(model: Any) -> None:
+    """Check the learned asymmetric alpha used for held-out inference."""
     alpha = np.asarray(model.alpha, dtype=np.float64)
     if alpha.shape != (int(model.k),) or not np.isfinite(alpha).all():
         raise ValueError("loaded Tomotopy alpha vector is invalid")
@@ -83,13 +79,6 @@ def _alpha_evidence(model: Any, config: dict[str, Any]) -> dict[str, Any]:
         raise ValueError("loaded Tomotopy alpha vector is not positive")
     if int(model.optim_interval) != ALPHA_OPTIMIZATION_INTERVAL:
         raise ValueError("loaded Tomotopy alpha optimization interval differs")
-    return {
-        "initial_value": float(config["alpha"]),
-        "optimization_interval": int(model.optim_interval),
-        "learned_vector_sha256": object_sha256(alpha.tolist()),
-        "learned_minimum": float(alpha.min()),
-        "learned_maximum": float(alpha.max()),
-    }
 
 
 def _model_beta(model: Any, vocabulary: Sequence[str]) -> np.ndarray:
@@ -164,13 +153,7 @@ def _latency(
     median = float(statistics.median(per_spectrum))
     return {
         "documents": len(documents),
-        "repeats": len(durations),
-        "median_seconds_per_spectrum": median,
         "median_spectra_per_second": 1.0 / median,
-        "p95_seconds_per_spectrum": float(np.percentile(per_spectrum, 95)),
-        "inference_iterations": iterations,
-        "workers": workers,
-        "parallel": 1,
     }
 
 
@@ -180,16 +163,12 @@ def train_tomotopy(  # noqa: PLR0915
     *,
     heartbeat: Any = None,
 ) -> dict[str, Any]:
-    """Train or exactly resume the paper-matched K=1000 LDA comparator."""
+    """Train the paper-matched K=1000 LDA comparator."""
     directory = Path(run_dir).expanduser().resolve()
     output = directory / "tomotopy"
     complete_path = output / "complete.json"
-    if complete_path.is_file():
-        result = read_json(complete_path)
-        verify_output_hashes(output, result)
-        if file_sha256(output / "model.bin") != result["model_sha256"]:
-            raise ValueError("Tomotopy model changed")
-        return result
+    if complete_path.is_file() and (output / "model.bin").is_file():
+        return read_json(complete_path)
 
     tp = _tomotopy()
     output.mkdir(parents=True, exist_ok=True)
@@ -199,45 +178,22 @@ def train_tomotopy(  # noqa: PLR0915
     config = protocol["tomotopy"]
     topics = int(protocol["model"]["num_topics"])
     workers = int(protocol["cpu_threads"])
-    context_sha256 = object_sha256(
-        {
-            "seed": int(protocol["seed"]),
-            "cpu_threads": workers,
-            "tomotopy": config,
-            "train_sha256": file_sha256(data / "train.npz"),
-            "vocabulary_sha256": file_sha256(data / "vocabulary.json"),
-        }
+    model = tp.LDAModel(
+        k=topics,
+        # The shared vocabulary has already applied the paper's min_df=3;
+        # retaining every supplied column avoids filtering it a second time.
+        min_df=1,
+        min_cf=0,
+        rm_top=0,
+        alpha=float(config["alpha"]),
+        eta=float(config["eta"]),
+        seed=int(protocol["seed"]),
     )
-    checkpoint_binary = output / "checkpoint.bin"
-    checkpoint_metadata = output / "checkpoint.json"
-    if checkpoint_metadata.is_file():
-        metadata = read_json(checkpoint_metadata)
-        if metadata["context_sha256"] != context_sha256:
-            raise ValueError("Tomotopy checkpoint context changed")
-        if file_sha256(checkpoint_binary) != metadata["model_sha256"]:
-            raise ValueError("Tomotopy checkpoint binary changed")
-        model = tp.LDAModel.load(str(checkpoint_binary))
-        history = list(metadata["history"])
-        trained = int(history[-1]["iteration"])
-        elapsed_before = float(history[-1]["cumulative_training_seconds"])
-    else:
-        model = tp.LDAModel(
-            k=topics,
-            # The shared vocabulary has already applied the paper's min_df=3;
-            # retaining every supplied column avoids filtering it a second time.
-            min_df=1,
-            min_cf=0,
-            rm_top=0,
-            alpha=float(config["alpha"]),
-            eta=float(config["eta"]),
-            seed=int(protocol["seed"]),
-        )
-        model.optim_interval = ALPHA_OPTIMIZATION_INTERVAL
-        for words in train_words:
-            model.add_doc(words)
-        history = []
-        trained = 0
-        elapsed_before = 0.0
+    model.optim_interval = ALPHA_OPTIMIZATION_INTERVAL
+    for words in train_words:
+        model.add_doc(words)
+    history = []
+    trained = 0
 
     started = time.perf_counter()
     maximum = int(config["maximum_iterations"])
@@ -245,7 +201,7 @@ def train_tomotopy(  # noqa: PLR0915
         step = min(int(config["step_size"]), maximum - trained)
         model.train(step, workers=workers, parallel=int(config["parallel"]))
         trained += step
-        elapsed = elapsed_before + time.perf_counter() - started
+        elapsed = time.perf_counter() - started
         history.append(
             {
                 "iteration": trained,
@@ -253,17 +209,6 @@ def train_tomotopy(  # noqa: PLR0915
                 "perplexity": float(model.perplexity),
                 "cumulative_training_seconds": elapsed,
             }
-        )
-        temporary = output / f".checkpoint.{os.getpid()}.tmp"
-        model.save(str(temporary))
-        os.replace(temporary, checkpoint_binary)
-        write_json(
-            checkpoint_metadata,
-            {
-                "context_sha256": context_sha256,
-                "model_sha256": file_sha256(checkpoint_binary),
-                "history": history,
-            },
         )
         if heartbeat is not None:
             heartbeat(
@@ -283,19 +228,13 @@ def train_tomotopy(  # noqa: PLR0915
     final_model = output / "model.bin"
     model.save(str(final_model))
     result = {
-        "topic_count": int(model.k),
         "training_iterations": trained,
         "converged": _converged(
             history,
             window=int(config["convergence_window"]),
             threshold=float(config["convergence_threshold"]),
         ),
-        "training_workers": workers,
-        "training_parallel": int(config["parallel"]),
         "training_seconds_total": float(history[-1]["cumulative_training_seconds"]),
-        "alpha": _alpha_evidence(model, config),
-        "model_sha256": file_sha256(final_model),
-        "output_sha256": {"model.bin": file_sha256(final_model)},
     }
     write_json(complete_path, result)
     return result
@@ -314,16 +253,9 @@ def evaluate_tomotopy(  # noqa: PLR0915
     group = "validation_evaluation" if split == "validation" else "evaluation"
     output = directory / group / "tomotopy"
     complete_path = output / "complete.json"
-    training = read_json(directory / "tomotopy/complete.json")
     model_path = directory / "tomotopy/model.bin"
-    if file_sha256(model_path) != training["model_sha256"]:
-        raise ValueError("Tomotopy model changed after training")
     if complete_path.is_file():
-        result = read_json(complete_path)
-        verify_output_hashes(output, result)
-        if result["model_sha256"] != training["model_sha256"]:
-            raise ValueError("Tomotopy evaluation source changed")
-        return result
+        return read_json(complete_path)
 
     tp = _tomotopy()
     model = tp.LDAModel.load(str(model_path))
@@ -333,7 +265,7 @@ def evaluate_tomotopy(  # noqa: PLR0915
         raise ValueError("loaded Tomotopy topic count differs")
     if not np.isclose(float(model.eta), float(config["eta"])):
         raise ValueError("loaded Tomotopy eta differs")
-    alpha = _alpha_evidence(model, config)
+    _validate_alpha(model)
     workers = int(protocol["cpu_threads"])
     iterations = int(config["inference_iterations"])
     data = directory / "data"
@@ -344,11 +276,10 @@ def evaluate_tomotopy(  # noqa: PLR0915
     records = load_heldout_records(data, split)
     observed_words = _documents(observed, vocabulary)
     full_words = _documents(full, vocabulary)
-    started = time.perf_counter()
     beta = _model_beta(model, vocabulary)
     theta = _infer_theta(model, observed_words, iterations=iterations, workers=workers)
     full_theta = _infer_theta(model, full_words, iterations=iterations, workers=workers)
-    completion_summary, _ = completion_metrics(theta, beta, completion, records)
+    completion_summary = completion_metrics(theta, beta, completion, records)
     stable = all(np.isfinite(values).all() for values in (beta, theta, full_theta))
     stable = stable and np.isfinite(completion_summary["nll_per_token"])
     if not stable:
@@ -372,20 +303,7 @@ def evaluate_tomotopy(  # noqa: PLR0915
     result = {
         "method": "tomotopy",
         "split": split,
-        "topic_count": int(model.k),
-        "model_sha256": training["model_sha256"],
-        "stable": True,
-        "training_iterations": int(training["training_iterations"]),
-        "training_seconds_total": float(training["training_seconds_total"]),
-        "training_workers": int(training["training_workers"]),
-        "training_parallel": int(training["training_parallel"]),
-        "inference_workers": workers,
-        "inference_parallel": 1,
-        "inference_iterations": iterations,
-        "alpha": alpha,
         "metrics": metrics,
-        "evaluation_seconds": time.perf_counter() - started,
-        "output_sha256": {name: file_sha256(output / name) for name in arrays},
     }
     write_json(complete_path, result)
     return result

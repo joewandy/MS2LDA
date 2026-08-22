@@ -41,15 +41,11 @@ def _main() -> int:
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
-    run = commands.add_parser("run", help="run or exactly resume the workflow")
+    run = commands.add_parser("run", help="run the workflow")
     run.add_argument("--data-root", required=True, type=Path)
     run.add_argument("--run", required=True, type=Path)
     status = commands.add_parser("status", help="show progress")
     status.add_argument("--run", required=True, type=Path)
-    verify = commands.add_parser("verify", help="verify provenance and artifacts")
-    verify.add_argument("--run", required=True, type=Path)
-    verify.add_argument("--data-root", type=Path)
-    verify.add_argument("--large-inputs", action="store_true")
     return parser
 
 
@@ -64,14 +60,6 @@ def main(argv: Sequence[str] | None = None) -> int:
         from .pipeline import status
 
         result = status(args.run)
-    else:
-        from .artifacts import verify_run
-
-        result = verify_run(
-            args.run,
-            data_root=args.data_root,
-            verify_large_inputs=args.large_inputs,
-        )
     sys.stdout.write(json.dumps(result, indent=2, sort_keys=True) + "\n")
     return 0
 

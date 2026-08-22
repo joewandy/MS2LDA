@@ -1,4 +1,4 @@
-name: Neural MS2LDA checkpoint
+name: Neural MS2LDA
 
 on:
   push:
@@ -28,13 +28,13 @@ jobs:
           black --check benchmarks/neural_ms2lda
           scripts/download_msnlib_validation_assets.py
           scripts/generate_neural_ms2lda_report.py
-      - name: Ruff focused correctness checks
+      - name: Ruff
         run: >-
-          ruff check --select E9,F63,F7,F82,I
+          ruff check --select E,F,I
           benchmarks/neural_ms2lda
           scripts/download_msnlib_validation_assets.py
           scripts/generate_neural_ms2lda_report.py
-      - name: Neural checkpoint tests
+      - name: Neural model tests
         run: pytest -q benchmarks/neural_ms2lda/tests
 
   upstream-regression:
@@ -52,14 +52,14 @@ jobs:
           # Upstream metadata currently resolves spec2vec 0.8.1 with matchms
           # 0.33.1, although that Spec2Vec release imports removed MatchMS APIs.
           # Tomotopy 0.14 also aborts on the upstream zero-topic regression.
-          # Use the already validated compatibility set for regression coverage.
+          # Use the validated dependency pins for regression coverage.
           python -m pip install matchms==0.29.0 spec2vec==0.9.1 tomotopy==0.13.0
       - name: Upstream regression tests
         # These four upstream modules already fail at the frozen upstream SHA:
         # callbacks (Dash API drift), corpus/integration (stale public API
         # expectations), and utils (network-dependent downloader mocks).
         run: >-
-          pytest -q tests
+          NUMBA_DISABLE_JIT=1 pytest -q tests
           --ignore=tests/test_callbacks.py
           --ignore=tests/test_generate_corpus.py
           --ignore=tests/test_integration.py
@@ -78,11 +78,11 @@ jobs:
       TZ: UTC
     steps:
       - uses: actions/checkout@v4
-      - name: Verify committed report manifest
+      - name: Regenerate report inputs
         run: |
           python -m pip install numpy matplotlib
-          python scripts/generate_neural_ms2lda_report.py --verify-manifest
+          python scripts/generate_neural_ms2lda_report.py
       - uses: xu-cheng/latex-action@v3
         with:
-          root_file: neural_ms2lda_checkpoint.tex
+          root_file: neural_ms2lda_report.tex
           working_directory: docs/research

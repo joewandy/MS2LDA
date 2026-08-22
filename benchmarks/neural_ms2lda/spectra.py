@@ -11,8 +11,6 @@ from typing import Any, Iterable, Sequence
 
 import numpy as np
 
-from .inputs import PreprocessingConfig
-
 
 @dataclass(frozen=True)
 class PeakGroup:
@@ -29,18 +27,12 @@ class SpectrumRecord:
     """Validated spectrum plus evaluation-only chemical metadata."""
 
     spectrum_id: str
-    feature_id: str
     smiles: str
-    supplied_inchikey: str
     connectivity_key: str
     scaffold_key: str
     split_group: str
     precursor_mz: float
     peak_groups: tuple[PeakGroup, ...]
-    declared_num_peaks: int | None
-    parsed_num_peaks: int
-    compound_name: str
-    metadata: dict[str, str]
 
     @property
     def words(self) -> list[str]:
@@ -49,20 +41,50 @@ class SpectrumRecord:
 
 
 @dataclass(frozen=True)
-class CompletionDocument:
-    """Observed and completion peak groups for one held-out spectrum."""
+class PreprocessingConfig:
+    """MGF cleaning values consumed by the parser."""
 
-    spectrum_id: str
-    observed_groups: tuple[PeakGroup, ...]
-    completion_groups: tuple[PeakGroup, ...]
+    expected_spectra: int
+    min_mz: float
+    max_mz: float
+    max_fragments: int
+    min_fragments: int
+    min_intensity: float
+    max_intensity: float
+    significant_digits: int
 
-    @property
-    def observed_words(self) -> list[str]:
-        return [token for group in self.observed_groups for token in group.tokens]
+    def __post_init__(self) -> None:
+        if self.expected_spectra < 1:
+            raise ValueError("expected_spectra must be positive")
+        if not 0 <= self.min_mz < self.max_mz:
+            raise ValueError("invalid m/z interval")
+        if not 0 <= self.min_intensity <= self.max_intensity:
+            raise ValueError("invalid intensity interval")
+        if self.max_fragments < self.min_fragments or self.min_fragments < 1:
+            raise ValueError("invalid fragment-count interval")
+        if self.significant_digits < 0:
+            raise ValueError("significant_digits cannot be negative")
 
-    @property
-    def completion_words(self) -> list[str]:
-        return [token for group in self.completion_groups for token in group.tokens]
+
+def preprocessing_config(protocol: dict[str, Any]) -> PreprocessingConfig:
+    """Extract the parser settings from the study protocol."""
+    settings = protocol["preprocessing"]
+    return PreprocessingConfig(
+        **{name: settings[name] for name in PreprocessingConfig.__dataclass_fields__}
+    )
+
+
+def input_paths(protocol: dict[str, Any], data_root: str | Path) -> dict[str, Path]:
+    """Resolve declared input files below ``data_root`` without allowing escape."""
+    root = Path(data_root).expanduser().resolve()
+    paths = {
+        name: (root / str(relative_path)).resolve()
+        for name, relative_path in protocol["input_files"].items()
+    }
+    for name, path in paths.items():
+        if root not in path.parents:
+            raise ValueError(f"input escapes data root: {name}")
+    return paths
 
 
 def _metadata_key(key: str) -> str:
@@ -216,8 +238,6 @@ def _structure_keys(smiles: str, supplied_inchikey: str) -> tuple[str, str, str]
 def load_records(
     path: str | Path,
     config: PreprocessingConfig,
-    *,
-    require_expected_count: bool = True,
 ) -> tuple[list[SpectrumRecord], dict[str, Any]]:
     """Parse, clean, structurally validate, and identify the full MSnLib MGF."""
     records: list[SpectrumRecord] = []
@@ -271,21 +291,15 @@ def load_records(
         records.append(
             SpectrumRecord(
                 spectrum_id=spectrum_id,
-                feature_id=metadata["feature_id"],
                 smiles=metadata["smiles"],
-                supplied_inchikey=metadata["inchikey"],
                 connectivity_key=connectivity,
                 scaffold_key=scaffold,
                 split_group=split_group,
                 precursor_mz=precursor_mz,
                 peak_groups=groups,
-                declared_num_peaks=declared,
-                parsed_num_peaks=len(mz),
-                compound_name=compound_name,
-                metadata=metadata,
             )
         )
-    if require_expected_count and len(seen_ids) != config.expected_spectra:
+    if len(seen_ids) != config.expected_spectra:
         raise ValueError(
             f"expected {config.expected_spectra} input spectra, found {len(seen_ids)}"
         )
@@ -365,7 +379,7 @@ def audit_split_disjointness(
         missing = expected - set(assignments)
         extra = set(assignments) - expected
         raise ValueError(
-            f"split manifest mismatch; missing={len(missing)} extra={len(extra)}"
+            f"split assignment mismatch; missing={len(missing)} extra={len(extra)}"
         )
     compound_splits: dict[str, set[str]] = defaultdict(set)
     group_splits: dict[str, set[str]] = defaultdict(set)
@@ -380,9 +394,8 @@ def audit_split_disjointness(
     ]
     leaked_groups = [key for key, values in group_splits.items() if len(values) > 1]
     if leaked_compounds or leaked_groups:
-        raise ValueError(
-            f"split leakage: compounds={len(leaked_compounds)} groups={len(leaked_groups)}"
-        )
+        details = f"compounds={len(leaked_compounds)} groups={len(leaked_groups)}"
+        raise ValueError(f"split leakage: {details}")
     return {
         "leaked_compounds": 0,
         "leaked_groups": 0,
@@ -459,7 +472,7 @@ def completion_document(
     *,
     observed_fraction: float,
     seed: int,
-) -> CompletionDocument:
+) -> tuple[tuple[PeakGroup, ...], tuple[PeakGroup, ...]]:
     """Split physical peak groups deterministically without fragment/loss leakage."""
     if len(record.peak_groups) < 2:
         raise ValueError("document completion requires at least two retained peaks")
@@ -480,7 +493,7 @@ def completion_document(
         for group in record.peak_groups
         if group.original_index not in observed_ids
     )
-    return CompletionDocument(record.spectrum_id, observed, completion)
+    return observed, completion
 
 
 def renormalize_peak_groups(

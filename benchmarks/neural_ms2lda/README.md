@@ -1,28 +1,17 @@
-# Neural MS2LDA research checkpoint
+# Neural MS2LDA study
 
-This directory contains one supported research model: a collapse-resistant,
-fully neural hierarchical MS2LDA with 1,000 topics. A train-only co-occurrence
-graph shapes topic words, a nearest-topic margin preserves distinct topics,
-and a local-document product-of-experts router concentrates each spectrum in
-one pass. A fixed document gate sharpens the final spectrum mixture, while a
-soft token-type balance keeps fragments and neutral losses jointly represented
-in topic words. Mean-normalized channel evidence removes fragment/loss
-vocabulary-size bias before that balance. It discovers topics without a
-Tomotopy teacher, DreaMS, variational Bayes, chemistry labels, or test-set
-information. Tomotopy K=1000 is trained separately from the same frozen
-training split as the established post-training comparator. Both methods use
-the same six-thread allowance.
+This directory contains one research model: a collapse-resistant neural
+MS2LDA with 1,000 topics and one-pass document inference. Fixed train-only token
+features and learned topic prototypes define both the contextual top-2 router
+and the fragment/loss-balanced decoder. Paired views, balanced assignments, a
+positive-NPMI graph, prototype separation, and deterministic dead-topic
+recycling protect the large topic inventory during training.
 
-The complete resumable workflow is:
+Tomotopy is trained independently from the same training split as the
+comparator. Both methods use six CPU threads. Validation evaluation and MAG
+scoring finish before the workflow opens the test matrices.
 
-```text
-download -> verify -> scaffold split -> first-seen training vocabulary
-         -> train-only SGNS -> neural training -> Tomotopy comparison
-         -> leakage-filtered MAG chemistry -> report
-```
-
-Create the two pinned environments and acquire the checksum-locked public data
-(about 3.6 GB of archives plus extracted files) with:
+Create the two environments and acquire the public inputs:
 
 ```bash
 conda env create -f environment-neural-ms2lda.yml
@@ -31,26 +20,25 @@ conda run -n ms2lda-neural python scripts/download_msnlib_validation_assets.py \
   --data-root /path/to/MSnLib-assets
 ```
 
-Run or resume the complete workflow directly with:
+Run the study:
 
 ```bash
-python -m benchmarks.neural_ms2lda run \
+conda run -n ms2lda-neural python -m benchmarks.neural_ms2lda run \
   --data-root /path/to/MSnLib-assets \
   --run /path/to/run
 ```
 
-Use `status --run ...` for a compact progress snapshot and `verify --run ...`
-to recheck the immutable protocol, hashes, code provenance, and manifests. The
-module entry point pins the numerical runtime to six CPU threads before
-importing numerical libraries. Neural selection is fixed in advance to epoch
-40; the workflow completes both validation evaluations before opening the test
-split.
+`status --run /path/to/run` prints current progress. An interrupted fit restarts
+from its deterministic initialization.
 
-The committed bundle and paper-style report are research artifacts. They do
-not change the public MS2LDA application defaults. The single seed-42 result is
-not multi-seed confirmation or evidence to replace the production backend.
+The published model artifact contains only `weights.pt`, `model.json`, and
+`vocabulary.json`. `results.json` is the sole numerical source for the report.
+Regenerate its figures, tables, and prose macros with:
 
-Regenerate the paper figures and table from committed evidence with
-`python scripts/generate_neural_ms2lda_report.py`. After compiling the LaTeX,
-write or verify the report hash manifest with `--write-manifest` or
-`--verify-manifest`, respectively.
+```bash
+python scripts/generate_neural_ms2lda_report.py
+```
+
+This is a single-dataset, single-seed research result. It does not change the
+public MS2LDA application defaults or establish that the neural model should
+replace the production Tomotopy backend.

@@ -4,14 +4,12 @@ from __future__ import annotations
 
 import heapq
 from dataclasses import dataclass
-from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import torch
 
 from .data import ViewPair, iter_row_batches, sparse_batch
-from .metrics import completion_metrics
 from .model import infer_theta
 from .objectives import (
     cooccurrence_topic_loss,
@@ -20,7 +18,6 @@ from .objectives import (
     topic_block_loss,
     topic_separation_loss,
 )
-from .utils import atomic_torch_save
 
 if TYPE_CHECKING:
     import scipy.sparse as sp
@@ -70,29 +67,6 @@ class HardContextQueue:
             return torch.empty((0, 0), dtype=torch.float32)
         return torch.stack([item[2] for item in selected])
 
-    def state_dict(self) -> dict[str, Any]:
-        """Serialize queue order as part of the exact-resume checkpoint."""
-        return {
-            "capacity": self.capacity,
-            "serial": self.serial,
-            "items": [
-                {"loss": loss, "serial": serial, "context": context}
-                for loss, serial, context in self.heap
-            ],
-        }
-
-    @classmethod
-    def from_state_dict(cls, state: dict[str, Any]) -> HardContextQueue:
-        """Restore heap contents and tie-breaking serial numbers exactly."""
-        queue = cls.empty(int(state["capacity"]))
-        queue.serial = int(state["serial"])
-        queue.heap = [
-            (float(row["loss"]), int(row["serial"]), row["context"])
-            for row in state["items"]
-        ]
-        heapq.heapify(queue.heap)
-        return queue
-
 
 def routing_temperature(epoch: int, protocol: dict[str, Any]) -> float:
     """Linearly anneal the fixed top-2 routing temperature."""
@@ -112,7 +86,7 @@ def sinkhorn_weight(epoch: int, protocol: dict[str, Any]) -> float:
     start = float(config["sinkhorn_weight_start"])
     hold = int(config["sinkhorn_weight_hold_epochs"])
     end = float(config["sinkhorn_weight_end"])
-    end_epoch = int(config["sinkhorn_weight_end_epoch"])
+    end_epoch = int(protocol["optimization"]["maximum_epochs"])
     if epoch < hold:
         return start
     progress = min(max((epoch - hold) / max(end_epoch - hold, 1), 0.0), 1.0)
@@ -120,53 +94,31 @@ def sinkhorn_weight(epoch: int, protocol: dict[str, Any]) -> float:
 
 
 @torch.inference_mode()
-def validation_metrics(
+def validation_topic_usage(
     model: torch.nn.Module,
     *,
-    validation_observed: sp.csr_matrix,
-    validation_completion: sp.csr_matrix,
     validation_full: sp.csr_matrix,
-    validation_records: list[dict[str, Any]],
     protocol: dict[str, Any],
     epoch: int,
-) -> dict[str, Any]:
-    """Calculate completion NLL and topic usage without touching test data."""
+) -> np.ndarray:
+    """Return mean full-spectrum topic usage for dead-topic detection."""
     batch_size = int(protocol["optimization"]["batch_size"])
     temperature = routing_temperature(epoch, protocol)
-    beta = model.topic_word_distribution().cpu().numpy().astype(np.float32)
-    observed_theta = infer_theta(
-        model,
-        validation_observed,
-        batch_size=batch_size,
-        temperature=temperature,
-    )
     full_theta = infer_theta(
         model,
         validation_full,
         batch_size=batch_size,
         temperature=temperature,
     )
-    completion, _ = completion_metrics(
-        observed_theta,
-        beta,
-        validation_completion,
-        validation_records,
-    )
-    return {
-        "document_completion": completion,
-        "_usage": full_theta.mean(axis=0).astype(np.float32),
-    }
+    return full_theta.mean(axis=0).astype(np.float32)
 
 
 @dataclass
 class TrainingState:
-    """All mutable state required for exact epoch-boundary continuation."""
+    """Mutable quantities shared by the alternating optimization phases."""
 
     model: torch.nn.Module
     optimizer: torch.optim.Optimizer
-    epoch_start: int
-    elapsed_before: float
-    history: list[dict[str, Any]]
     underuse_streak: np.ndarray
     recycle_counts: np.ndarray
     context_queue: HardContextQueue
@@ -183,14 +135,14 @@ def _entry_losses(output: Any, batch: Any, beta: torch.Tensor) -> torch.Tensor:
 def _weighted_topic_separation(
     model: torch.nn.Module,
     config: dict[str, Any],
-) -> tuple[torch.Tensor, torch.Tensor]:
-    """Return the supported nearest-topic margin and its weighted loss."""
+) -> torch.Tensor:
+    """Return the weighted nearest-topic margin loss."""
     loss = topic_separation_loss(
         model,
         neighbors=int(config["neighbors"]),
         margin=float(config["margin"]),
     )
-    return loss, float(config["weight"]) * loss
+    return float(config["weight"]) * loss
 
 
 def _apply_gradient_step(
@@ -198,18 +150,16 @@ def _apply_gradient_step(
     total: torch.Tensor,
     *,
     clip_norm: float,
-    loss_failure: str,
-    gradient_failure: str,
-) -> str | None:
-    """Apply one finite, clipped optimizer step or return its failure reason."""
+    phase: str,
+) -> None:
+    """Apply one finite, clipped optimizer step or fail immediately."""
     if not torch.isfinite(total):
-        return loss_failure
+        raise FloatingPointError(f"non-finite {phase} loss")
     total.backward()
     gradient_norm = torch.nn.utils.clip_grad_norm_(state.model.parameters(), clip_norm)
     if not torch.isfinite(gradient_norm):
-        return gradient_failure
+        raise FloatingPointError(f"non-finite {phase} gradient")
     state.optimizer.step()
-    return None
 
 
 def router_phase(  # noqa: PLR0913
@@ -221,10 +171,9 @@ def router_phase(  # noqa: PLR0913
     temperature: float,
     balance_weight: float,
     protocol: dict[str, Any],
-) -> str | None:
+) -> None:
     """Update routing parameters while treating the current decoder as fixed."""
     optimization = protocol["optimization"]
-    model_config = protocol["model"]
     separation_config = protocol["topic_separation"]
     with torch.no_grad():
         cached_beta = state.model.topic_word_distribution().detach()
@@ -245,22 +194,17 @@ def router_phase(  # noqa: PLR0913
             temperature=temperature,
             sinkhorn_weight=balance_weight,
             consistency_weight=float(optimization["theta_consistency_weight"]),
-            sinkhorn_epsilon=float(model_config["sinkhorn_epsilon"]),
-            sinkhorn_iterations=int(model_config["sinkhorn_iterations"]),
+            sinkhorn_epsilon=float(protocol["anti_collapse"]["sinkhorn_epsilon"]),
+            sinkhorn_iterations=int(protocol["anti_collapse"]["sinkhorn_iterations"]),
         )
-        separation, weighted_separation = _weighted_topic_separation(
-            state.model, separation_config
-        )
+        weighted_separation = _weighted_topic_separation(state.model, separation_config)
         total = terms.total + weighted_separation
-        failure = _apply_gradient_step(
+        _apply_gradient_step(
             state,
             total,
-            clip_norm=float(model_config["gradient_clip_norm"]),
-            loss_failure="non_finite_router_loss",
-            gradient_failure="non_finite_router_gradient",
+            clip_norm=float(optimization["gradient_clip_norm"]),
+            phase="router",
         )
-        if failure is not None:
-            return failure
 
         # Hard contexts are ranked under the same fixed decoder used for this
         # router block, making later prototype replacement deterministic.
@@ -274,7 +218,6 @@ def router_phase(  # noqa: PLR0913
                     routed.route_embeddings,
                     limit=32,
                 )
-    return None
 
 
 def topic_phase(  # noqa: PLR0913
@@ -286,10 +229,9 @@ def topic_phase(  # noqa: PLR0913
     temperature: float,
     graph_tensor: torch.Tensor,
     protocol: dict[str, Any],
-) -> str | None:
+) -> None:
     """Update prototypes and decoder while treating token routes as fixed."""
     optimization = protocol["optimization"]
-    model_config = protocol["model"]
     graph_config = protocol["cooccurrence_regularization"]
     topic_rows = list(
         iter_row_batches(
@@ -311,7 +253,7 @@ def topic_phase(  # noqa: PLR0913
             temperature=temperature,
             local_decoder_weight=float(optimization["local_decoder_weight"]),
         )
-        separation, weighted_separation = _weighted_topic_separation(
+        weighted_separation = _weighted_topic_separation(
             state.model, protocol["topic_separation"]
         )
         cooccurrence = cooccurrence_topic_loss(
@@ -319,51 +261,29 @@ def topic_phase(  # noqa: PLR0913
         )
         weighted_cooccurrence = float(graph_config["weight"]) * cooccurrence
         total = terms.total + weighted_cooccurrence + weighted_separation
-        failure = _apply_gradient_step(
+        _apply_gradient_step(
             state,
             total,
-            clip_norm=float(model_config["gradient_clip_norm"]),
-            loss_failure="non_finite_topic_loss",
-            gradient_failure="non_finite_topic_gradient",
+            clip_norm=float(optimization["gradient_clip_norm"]),
+            phase="topic",
         )
-        if failure is not None:
-            return failure
-    return None
 
 
 def validate_and_recycle(  # noqa: PLR0913
     state: TrainingState,
     *,
-    output: Path,
-    validation_observed: sp.csr_matrix,
-    validation_completion: sp.csr_matrix,
     validation_full: sp.csr_matrix,
-    validation_records: list[dict[str, Any]],
     protocol: dict[str, Any],
     epoch: int,
-) -> tuple[dict[str, Any], list[int]]:
-    """Evaluate one scheduled epoch, save it, and recycle persistently dead topics."""
-    validation = validation_metrics(
+) -> None:
+    """Measure usage at one scheduled epoch and recycle persistently dead topics."""
+    usage = validation_topic_usage(
         state.model,
-        validation_observed=validation_observed,
-        validation_completion=validation_completion,
         validation_full=validation_full,
-        validation_records=validation_records,
         protocol=protocol,
         epoch=epoch,
     )
-    usage = np.asarray(validation.pop("_usage"), dtype=np.float64)
-    checkpoint_path = output / "validation_checkpoints" / f"epoch_{epoch:04d}.pt"
-    atomic_torch_save(
-        checkpoint_path,
-        {
-            "model": state.model.state_dict(),
-            "epoch": epoch,
-            "validation": validation,
-            "routing_temperature": routing_temperature(epoch, protocol),
-        },
-    )
-
+    usage = np.asarray(usage, dtype=np.float64)
     anti_collapse = protocol["anti_collapse"]
     num_topics = int(protocol["model"]["num_topics"])
     underused = usage < (
@@ -375,12 +295,8 @@ def validate_and_recycle(  # noqa: PLR0913
         (state.underuse_streak >= int(anti_collapse["recycle_patience_validations"]))
         & (state.recycle_counts < int(anti_collapse["maximum_recycles_per_topic"]))
     )
-    if (
-        not len(eligible)
-        or epoch > int(anti_collapse["recycle_through_epoch"])
-        or not len(state.context_queue.heap)
-    ):
-        return validation, []
+    if not len(eligible) or not len(state.context_queue.heap):
+        return
 
     # A persistent under-use streak, never one noisy batch, triggers reuse of
     # the highest-loss stored token context. Ties are deterministic by index.
@@ -388,7 +304,7 @@ def validate_and_recycle(  # noqa: PLR0913
     replacements = state.context_queue.pop_highest(len(ordered))
     ordered = ordered[: len(replacements)]
     if not len(ordered):
-        return validation, []
+        return
     indices = torch.from_numpy(ordered.astype(np.int64, copy=False))
     recycle_dead_prototypes(
         state.model,
@@ -396,7 +312,5 @@ def validate_and_recycle(  # noqa: PLR0913
         topic_indices=indices,
         replacements=replacements,
     )
-    recycled = ordered.tolist()
     state.recycle_counts[ordered] += 1
     state.underuse_streak[ordered] = 0
-    return validation, recycled

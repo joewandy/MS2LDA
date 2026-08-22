@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
-import time
+import sys
 from collections import defaultdict
 from collections.abc import Sequence
 from functools import cache
@@ -14,7 +14,6 @@ from typing import Any
 import numpy as np
 
 from .data import load_heldout_records
-from .inputs import resolve_input_paths
 from .mag import (
     build_filtered_mag_index,
     consensus_fingerprint,
@@ -23,10 +22,9 @@ from .mag import (
     optimized_feature_count,
     topic_spectra,
 )
+from .spectra import input_paths
 from .utils import (
-    file_sha256,
     read_json,
-    verify_output_hashes,
     write_json,
     write_jsonl,
 )
@@ -92,7 +90,7 @@ def _topic_scores(  # noqa: PLR0913
     annotations: list[dict[str, Any]],
     threshold: float,
     fingerprint_threshold: float,
-) -> tuple[list[dict[str, Any]], list[dict[str, Any]], dict[str, Any]]:
+) -> dict[str, Any]:
     """Apply the corrected compound-balanced SOS definition."""
     associated = _associated_record_indices(theta, threshold=threshold)
     fingerprint_fn = cache(maccs_fingerprint)
@@ -102,14 +100,11 @@ def _topic_scores(  # noqa: PLR0913
         return consensus_fingerprint(values, cutoff)
 
     fingerprints: dict[str, np.ndarray | None] = {}
-    metadata: dict[str, dict[str, Any]] = {}
     for record in records:
         fingerprints.setdefault(
             record["connectivity_key"], fingerprint_fn(record["smiles"])
         )
-        metadata.setdefault(record["connectivity_key"], record)
     rows: list[dict[str, Any]] = []
-    compound_rows: list[dict[str, Any]] = []
     for annotation in annotations:
         topic_id = int(annotation["topic_id"])
         annotation_fp = (
@@ -129,17 +124,6 @@ def _topic_scores(  # noqa: PLR0913
             if annotation_fp is not None
             else []
         )
-        if annotation_fp is not None:
-            for connectivity, fingerprint in unique.items():
-                record = metadata[connectivity]
-                compound_rows.append(
-                    {
-                        "topic_id": topic_id,
-                        "connectivity_key": connectivity,
-                        "scaffold_key": record["scaffold_key"],
-                        "sos": _calculate_sos(annotation_fp, fingerprint),
-                    }
-                )
         rows.append(
             {
                 "topic_id": topic_id,
@@ -151,33 +135,27 @@ def _topic_scores(  # noqa: PLR0913
         )
     eligible = [row for row in rows if row["eligible"]]
     values = [float(row["sos"]) for row in eligible]
-    return (
-        rows,
-        compound_rows,
-        {
-            "membership_threshold": threshold,
-            "eligible_topics": len(eligible),
-            "total_topics": len(annotations),
-            "sos_evaluable_coverage": len(eligible) / len(annotations),
-            "associated_spectra": sum(row["associated_spectra"] for row in rows),
-            "topic_compound_associations": sum(
-                row["associated_molecules"] for row in rows
-            ),
-            "mean_sos": float(np.mean(values)) if values else None,
-            "median_sos": float(np.median(values)) if values else None,
-            "sos_bands": _sos_bands(values),
-        },
-    )
+    return {
+        "membership_threshold": threshold,
+        "eligible_topics": len(eligible),
+        "total_topics": len(annotations),
+        "associated_spectra": sum(row["associated_spectra"] for row in rows),
+        "mean_sos": float(np.mean(values)) if values else None,
+        "median_sos": float(np.median(values)) if values else None,
+        "sos_bands": _sos_bands(values),
+    }
 
 
-def _verified_chemical_inputs(
+def _chemical_inputs(
     protocol: dict[str, Any], data_root: str | Path
 ) -> dict[str, Path]:
-    """Resolve and hash-check every frozen Spec2Vec/MAG dependency."""
-    inputs = resolve_input_paths(protocol, data_root)
+    """Resolve the three Spec2Vec/MAG inputs required by annotation."""
+    inputs = input_paths(protocol, data_root)
     for name in ("spec2vec_model", "spec2vec_db", "spec2vec_embeddings"):
-        if file_sha256(inputs[name]) != protocol["input_files"][name]["sha256"]:
-            raise ValueError(f"frozen chemical input changed: {name}")
+        if not inputs[name].is_file():
+            raise FileNotFoundError(
+                f"required chemical input is missing: {inputs[name]}"
+            )
     return inputs
 
 
@@ -232,8 +210,6 @@ def _annotate_topics(
 
     annotations: list[dict[str, Any]] = []
     for topic_id, (motif, match) in enumerate(zip(spectra, matches, strict=True)):
-        cluster_error = ""
-        optimization_error = ""
         clustered_smiles: list[str] = []
         clustered_spectra: list[Any] = []
         try:
@@ -249,7 +225,7 @@ def _annotate_topics(
             )
             clustered_smiles = clustered_smiles_rows[0] if clustered_smiles_rows else []
         except Exception as exc:  # noqa: BLE001
-            cluster_error = f"{type(exc).__name__}: {exc}"
+            print(f"MAG clustering failed for topic {topic_id}: {exc}", file=sys.stderr)
         optimized_count = 0
         if clustered_spectra and clustered_smiles:
             try:
@@ -260,16 +236,15 @@ def _annotate_topics(
                     optimized[0] if optimized else None
                 )
             except Exception as exc:  # noqa: BLE001
-                optimization_error = f"{type(exc).__name__}: {exc}"
+                print(
+                    f"MAG optimization failed for topic {topic_id}: {exc}",
+                    file=sys.stderr,
+                )
         annotations.append(
             {
                 "topic_id": topic_id,
                 "clustered_smiles": clustered_smiles,
                 "optimized_feature_count": optimized_count,
-                "cluster_error": cluster_error,
-                "optimization_error": optimization_error,
-                "retrieved_smiles": match[0],
-                "retrieved_scores": match[2],
             }
         )
     return annotations
@@ -293,16 +268,11 @@ def _shared_annotations(
     annotations_path = output / "annotations.jsonl"
     complete_path = output / "complete.json"
     beta_path = directory / "validation_evaluation" / method / "beta.npy"
-    beta_sha256 = file_sha256(beta_path)
-    if complete_path.is_file():
-        result = read_json(complete_path)
-        verify_output_hashes(output, result)
-        if result["beta_sha256"] != beta_sha256:
-            raise ValueError("annotated topic-word distribution changed")
-        return _read_jsonl(annotations_path), result
+    if complete_path.is_file() and annotations_path.is_file():
+        return _read_jsonl(annotations_path), read_json(complete_path)
 
-    inputs = _verified_chemical_inputs(protocol, data_root)
-    index_manifest = build_filtered_mag_index(
+    inputs = _chemical_inputs(protocol, data_root)
+    index_summary = build_filtered_mag_index(
         directory,
         data_root=data_root,
         protocol=protocol,
@@ -316,7 +286,6 @@ def _shared_annotations(
         int(protocol["chemistry"]["motif_spectrum_top_n"]),
         significant_digits=int(protocol["preprocessing"]["significant_digits"]),
     )
-    started = time.perf_counter()
     spec2vec, matches = _mag_matches(directory, inputs, spectra, protocol)
     annotations = _annotate_topics(spectra, matches, spec2vec, protocol)
     write_jsonl(annotations_path, annotations)
@@ -327,17 +296,7 @@ def _shared_annotations(
             row["optimized_feature_count"] > 0 for row in annotations
         )
         / len(annotations),
-        "cluster_failures": sum(bool(row["cluster_error"]) for row in annotations),
-        "optimization_failures": sum(
-            bool(row["optimization_error"]) for row in annotations
-        ),
-        "heldout_compounds_excluded_from_mag": index_manifest["retained_leak_rows"]
-        == 0,
-        "annotation_seconds": time.perf_counter() - started,
-        "beta_sha256": beta_sha256,
-        "output_sha256": {
-            annotations_path.name: file_sha256(annotations_path),
-        },
+        "heldout_compounds_excluded_from_mag": index_summary["retained_leak_rows"] == 0,
     }
     write_json(complete_path, result)
     return annotations, result
@@ -362,12 +321,9 @@ def run_chemical_scoring(
     evaluation_group = "evaluation" if split == "test" else "validation_evaluation"
     output = directory / group / method
     if (output / "complete.json").is_file():
-        result = read_json(output / "complete.json")
-        verify_output_hashes(output, result)
-        return result
+        return read_json(output / "complete.json")
     data = directory / "data"
     evaluation = directory / evaluation_group / method
-    verify_output_hashes(evaluation, read_json(evaluation / "complete.json"))
     theta_path = evaluation / f"{split}_full_theta.npy"
     theta = np.load(theta_path, mmap_mode="r")
     records = load_heldout_records(data, split)
@@ -379,7 +335,7 @@ def run_chemical_scoring(
         data_root=data_root,
         protocol=protocol,
     )
-    topic_rows, compound_rows, summary = _topic_scores(
+    summary = _topic_scores(
         theta=theta,
         records=records,
         annotations=annotations,
@@ -387,30 +343,15 @@ def run_chemical_scoring(
         fingerprint_threshold=float(protocol["chemistry"]["mag_fingerprint_threshold"]),
     )
     output.mkdir(parents=True, exist_ok=True)
-    rows_by_name = {
-        "topic_scores.jsonl": topic_rows,
-        "compound_scores.jsonl": compound_rows,
-    }
-    for name, rows in rows_by_name.items():
-        write_jsonl(output / name, rows)
-    write_json(output / "summary.json", summary)
     result = {
         "method": method,
         "split": split,
         "topics": len(annotations),
         "annotation_coverage": annotation["annotation_coverage"],
-        "cluster_failures": annotation["cluster_failures"],
-        "optimization_failures": annotation["optimization_failures"],
         "high_confidence_chemistry": summary,
         "heldout_compounds_excluded_from_mag": annotation[
             "heldout_compounds_excluded_from_mag"
         ],
-        "annotation_sha256": file_sha256(
-            directory / "mag/annotations" / method / "complete.json"
-        ),
-        "output_sha256": {
-            name: file_sha256(output / name) for name in (*rows_by_name, "summary.json")
-        },
     }
     write_json(output / "complete.json", result)
     return result
@@ -432,7 +373,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         args.run,
         method=args.method,
         data_root=args.data_root,
-        protocol=read_json(args.run / "protocol.resolved.json"),
+        protocol=read_json(args.run / "protocol.json"),
         split=args.split,
     )
     print(json.dumps(result, indent=2, sort_keys=True))

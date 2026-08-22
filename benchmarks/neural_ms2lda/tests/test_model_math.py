@@ -10,12 +10,8 @@ import pytest
 import scipy.sparse as sp
 import torch
 
-from benchmarks.neural_ms2lda.artifacts import load_bundle, load_protocol
+from benchmarks.neural_ms2lda.artifacts import load_protocol, load_trained_model
 from benchmarks.neural_ms2lda.chemical import _sos_bands
-from benchmarks.neural_ms2lda.cooccurrence import (
-    positive_npmi_graph,
-    torch_sparse_graph,
-)
 from benchmarks.neural_ms2lda.data import (
     select_view_peak_groups,
     sparse_batch,
@@ -29,10 +25,12 @@ from benchmarks.neural_ms2lda.model import (
 from benchmarks.neural_ms2lda.objectives import (
     balanced_sinkhorn_targets,
     cooccurrence_topic_loss,
+    positive_npmi_graph,
     recycle_dead_prototypes,
     router_block_loss,
     topic_block_loss,
     topic_separation_loss,
+    torch_sparse_graph,
 )
 from benchmarks.neural_ms2lda.optimization import (
     _weighted_topic_separation,
@@ -43,7 +41,6 @@ from benchmarks.neural_ms2lda.spectra import (
     audit_split_disjointness,
     build_training_vocabulary,
 )
-from benchmarks.neural_ms2lda.training import _selection
 
 from ._support import spectrum_record, token_features
 
@@ -253,7 +250,7 @@ def test_train_only_regularizers_supply_finite_topic_gradients() -> None:
             dtype=np.float32,
         )
     )
-    graph, _ = positive_npmi_graph(
+    graph = positive_npmi_graph(
         matrix,
         minimum_document_frequency=1,
         minimum_pair_frequency=1,
@@ -273,49 +270,48 @@ def test_train_only_regularizers_supply_finite_topic_gradients() -> None:
     assert torch.isfinite(model.topic_prototypes.grad).all()
 
 
-def test_final_epoch_selection_ignores_better_earlier_validation() -> None:
-    selected = _selection(
-        [
-            {"epoch": 2, "validation": {"nll": 1.0}},
-            {"epoch": 40, "validation": {"nll": 100.0}},
-        ],
-        load_protocol(),
-    )
-    assert selected["selection_rule"] == "fixed_final_epoch"
-    assert selected["epoch"] == 40
-    assert selected["validation"] == {"nll": 100.0}
-
-
-def test_protocol_and_bundle_expose_only_the_final_architecture() -> None:
+def test_protocol_and_model_artifact_expose_only_the_current_architecture() -> None:
     protocol = load_protocol()
     assert protocol["cpu_threads"] == 6
     assert protocol["model"] == {
         "num_topics": 1000,
         "projection_dimensions": 128,
         "router_hidden_dimensions": 256,
-        "top_k": 2,
         "beta_temperature": 0.18,
-        "token_type_balance": 0.25,
-        "document_mixture_weight": 0.75,
-        "sinkhorn_epsilon": 0.05,
-        "sinkhorn_iterations": 5,
-        "gradient_clip_norm": 5.0,
     }
     assert "num_topics" not in protocol["tomotopy"]
     model, _ = initialize_model(token_features(20), num_topics=4, protocol=protocol)
     separation_config = copy.deepcopy(protocol["topic_separation"])
     separation_config["neighbors"] = 2
-    result, weighted = _weighted_topic_separation(model, separation_config)
-    assert torch.allclose(weighted, float(separation_config["weight"]) * result)
+    weighted = _weighted_topic_separation(model, separation_config)
+    expected = float(separation_config["weight"]) * topic_separation_loss(
+        model,
+        neighbors=int(separation_config["neighbors"]),
+        margin=float(separation_config["margin"]),
+    )
+    assert torch.allclose(weighted, expected)
 
-    bundle = Path(__file__).parents[1] / "results/seed42/model_bundle"
-    bundled_model, vocabulary, manifest = load_bundle(bundle)
-    assert bundled_model.num_topics == 1000
+    artifact = Path(__file__).parents[1] / "results/seed42/trained_model"
+    trained_model, vocabulary, temperature = load_trained_model(artifact)
+    assert trained_model.num_topics == 1000
     assert DOCUMENT_MIXTURE_EXPONENT == 0.75
     assert TOKEN_TYPE_BALANCE == 0.25
     assert TOPICS_PER_TOKEN == 2
-    assert manifest["selected_epoch"] == 40
-    assert len(vocabulary) == bundled_model.vocabulary_size
+    assert temperature == 0.1
+    assert len(vocabulary) == trained_model.vocabulary_size
+
+
+def test_report_constants_match_the_executable_model() -> None:
+    """Prevent the paper's displayed model from drifting from the implementation."""
+    report = (
+        Path(__file__).parents[3] / "docs/research/neural_ms2lda_report.tex"
+    ).read_text(encoding="utf-8")
+    protocol = load_protocol()
+    assert rf"\tau_\beta={protocol['model']['beta_temperature']}" in report
+    assert rf"\lambda={TOKEN_TYPE_BALANCE}" in report
+    assert rf"\gamma={DOCUMENT_MIXTURE_EXPONENT}" in report
+    assert TOPICS_PER_TOKEN == 2
+    assert "Only the two largest entries" in report
 
 
 def test_sos_bands_include_boundaries_exactly_once() -> None:

@@ -3,19 +3,187 @@
 from __future__ import annotations
 
 import math
+import os
 from dataclasses import dataclass
+from pathlib import Path
 from typing import TYPE_CHECKING
 
+import numpy as np
+import scipy.sparse as sp
 import torch
 from torch import nn
 from torch.nn import functional as nnf
 
 from .model import AssignmentOutput, NeuralMS2LDA
+from .utils import read_json, write_json
 
 if TYPE_CHECKING:
+    from typing import Any
+
+    import scipy.sparse as sp
+
     from .data import SparseBatch
 
 MATRIX_DIMENSIONS = 2
+PROBABILITY_FLOOR = 1e-12
+MIN_GRAPH_DIMENSION = 2
+
+
+def completion_metrics(
+    theta: np.ndarray,
+    beta: np.ndarray,
+    completion: sp.csr_matrix,
+    records: list[dict[str, Any]],
+) -> dict[str, Any]:
+    """Score held-out token counts under the exact mixture ``theta @ beta``."""
+    total_loss = 0.0
+    in_vocabulary = 0
+    out_of_vocabulary = 0
+    eligible = 0
+    for row in range(completion.shape[0]):
+        start, stop = completion.indptr[row], completion.indptr[row + 1]
+        words = completion.indices[start:stop]
+        counts = completion.data[start:stop]
+        token_count = int(counts.sum())
+        out_of_vocabulary += int(records[row]["completion_oov_tokens"])
+        if not token_count:
+            continue
+        probability = theta[row] @ beta[:, words]
+        total_loss -= float(
+            np.sum(counts * np.log(np.clip(probability, PROBABILITY_FLOOR, None)))
+        )
+        in_vocabulary += token_count
+        eligible += 1
+    total = in_vocabulary + out_of_vocabulary
+    return {
+        "nll_per_token": total_loss / in_vocabulary,
+        "in_vocabulary_tokens": in_vocabulary,
+        "out_of_vocabulary_tokens": out_of_vocabulary,
+        "oov_fraction": out_of_vocabulary / total,
+        "eligible_documents": eligible,
+        "total_documents": completion.shape[0],
+    }
+
+
+def positive_npmi_graph(  # noqa: C901, PLR0915
+    matrix: sp.csr_matrix,
+    *,
+    minimum_document_frequency: int,
+    minimum_pair_frequency: int,
+    maximum_neighbors: int,
+    minimum_npmi: float,
+) -> sp.csr_matrix:
+    """Build the mutual-neighbour positive-NPMI graph from training documents."""
+    if min(matrix.shape) < MIN_GRAPH_DIMENSION:
+        raise ValueError("co-occurrence graph needs at least two documents and words")
+    if minimum_document_frequency < 1 or minimum_pair_frequency < 1:
+        raise ValueError("co-occurrence frequency thresholds must be positive")
+    if maximum_neighbors < 1:
+        raise ValueError("maximum_neighbors must be positive")
+
+    binary = matrix.tocsr().astype(np.float32, copy=True)
+    binary.data.fill(1.0)
+    document_frequency = np.asarray(binary.sum(axis=0)).ravel().astype(np.float64)
+    pair_counts = (binary.T @ binary).tocsr()
+    pair_counts.setdiag(0)
+    pair_counts.eliminate_zeros()
+    documents = float(matrix.shape[0])
+    graph_rows = []
+    graph_columns = []
+    graph_values = []
+    for row in range(pair_counts.shape[0]):
+        if document_frequency[row] < minimum_document_frequency:
+            continue
+        start, stop = pair_counts.indptr[row], pair_counts.indptr[row + 1]
+        columns = pair_counts.indices[start:stop].astype(np.int64, copy=False)
+        counts = pair_counts.data[start:stop].astype(np.float64, copy=False)
+        eligible = (counts >= minimum_pair_frequency) & (
+            document_frequency[columns] >= minimum_document_frequency
+        )
+        if not np.any(eligible):
+            continue
+        columns = columns[eligible]
+        counts = counts[eligible]
+        joint = counts / documents
+        independent = (
+            document_frequency[row] * document_frequency[columns] / documents**2
+        )
+        scores = np.empty_like(joint)
+        certain = joint >= 1.0
+        scores[certain] = 1.0
+        uncertain = ~certain
+        scores[uncertain] = np.log(joint[uncertain] / independent[uncertain]) / -np.log(
+            joint[uncertain]
+        )
+        finite = np.isfinite(scores) & (scores > float(minimum_npmi))
+        if not np.any(finite):
+            continue
+        columns = columns[finite]
+        scores = scores[finite]
+        order = np.lexsort((columns, -scores))[:maximum_neighbors]
+        columns = columns[order]
+        scores = scores[order]
+        graph_rows.append(np.full(len(columns), row, dtype=np.int64))
+        graph_columns.append(columns)
+        graph_values.append(scores.astype(np.float32, copy=False))
+    if not graph_rows:
+        raise RuntimeError("co-occurrence thresholds produced an empty graph")
+    directed = sp.csr_matrix(
+        (
+            np.concatenate(graph_values),
+            (np.concatenate(graph_rows), np.concatenate(graph_columns)),
+        ),
+        shape=(matrix.shape[1], matrix.shape[1]),
+        dtype=np.float32,
+    )
+    graph = directed.minimum(directed.T).tocsr()
+    graph.setdiag(0)
+    graph.eliminate_zeros()
+    if graph.nnz == 0:
+        raise RuntimeError("mutual-neighbour pruning produced an empty graph")
+    if not np.isfinite(graph.data).all():
+        raise FloatingPointError("co-occurrence graph contains non-finite weights")
+    return graph
+
+
+def prepare_cooccurrence_graph(
+    run_dir: str | Path,
+    *,
+    train: sp.csr_matrix,
+    protocol: dict[str, Any],
+) -> sp.csr_matrix:
+    """Create or reuse the train-only NPMI graph for one run."""
+    directory = Path(run_dir) / "cooccurrence_graph"
+    graph_path = directory / "positive_npmi_graph.npz"
+    complete_path = directory / "complete.json"
+    config = protocol["cooccurrence_regularization"]
+    if complete_path.is_file():
+        if read_json(complete_path)["config"] != config:
+            raise ValueError("co-occurrence graph configuration changed")
+        return sp.load_npz(graph_path).tocsr()
+    graph = positive_npmi_graph(
+        train,
+        minimum_document_frequency=int(config["minimum_document_frequency"]),
+        minimum_pair_frequency=int(config["minimum_pair_frequency"]),
+        maximum_neighbors=int(config["maximum_neighbors"]),
+        minimum_npmi=float(config["minimum_npmi"]),
+    )
+    directory.mkdir(parents=True, exist_ok=True)
+    temporary = directory / ".positive_npmi_graph.tmp.npz"
+    sp.save_npz(temporary, graph, compressed=True)
+    os.replace(temporary, graph_path)
+    write_json(complete_path, {"config": config})
+    return graph
+
+
+def torch_sparse_graph(graph: sp.csr_matrix) -> torch.Tensor:
+    """Convert a SciPy graph to a coalesced CPU sparse tensor."""
+    values = graph.tocoo()
+    indices = torch.from_numpy(
+        np.vstack((values.row, values.col)).astype(np.int64, copy=False)
+    )
+    weights = torch.from_numpy(values.data.astype(np.float32, copy=False))
+    return torch.sparse_coo_tensor(indices, weights, values.shape).coalesce()
 
 
 @dataclass(frozen=True)
@@ -23,9 +191,6 @@ class RouterLossTerms:
     """Differentiable router objective and its two routed views."""
 
     total: torch.Tensor
-    completion: torch.Tensor
-    sinkhorn: torch.Tensor
-    consistency: torch.Tensor
     left: AssignmentOutput
     right: AssignmentOutput
 
@@ -35,8 +200,6 @@ class TopicLossTerms:
     """Decoder/prototype objective evaluated at fixed assignments."""
 
     total: torch.Tensor
-    completion: torch.Tensor
-    local_decoder: torch.Tensor
     beta: torch.Tensor
 
 
@@ -163,9 +326,6 @@ def router_block_loss(  # noqa: PLR0913
     total = completion + sinkhorn_weight * sinkhorn + consistency_weight * consistency
     return RouterLossTerms(
         total=total,
-        completion=completion,
-        sinkhorn=sinkhorn,
-        consistency=consistency,
         left=left,
         right=right,
     )
@@ -221,8 +381,6 @@ def topic_block_loss(  # noqa: PLR0913
     )
     return TopicLossTerms(
         total=completion + float(local_decoder_weight) * local,
-        completion=completion,
-        local_decoder=local,
         beta=beta,
     )
 
