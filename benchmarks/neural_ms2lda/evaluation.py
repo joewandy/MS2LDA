@@ -19,8 +19,8 @@ from .utils import atomic_save_numpy, read_json, write_json
 PROBABILITY_FLOOR = 1e-12
 
 
-def _mixture_safety(theta: np.ndarray) -> tuple[int, float]:
-    """Return the two collapse diagnostics retained in the report appendix."""
+def _normalized_mixtures(theta: np.ndarray) -> np.ndarray:
+    """Return row-normalized mixtures with a uniform empty-row fallback."""
     values = np.asarray(theta, dtype=np.float64)
     totals = values.sum(axis=1, keepdims=True)
     values = np.divide(
@@ -30,8 +30,18 @@ def _mixture_safety(theta: np.ndarray) -> tuple[int, float]:
         where=totals > PROBABILITY_FLOOR,
     )
     values[totals[:, 0] <= PROBABILITY_FLOOR] = 1.0 / values.shape[1]
-    active = int((values.mean(axis=0) >= 1.0 / values.shape[1]).sum())
-    entropy = -np.sum(values * np.log(np.clip(values, PROBABILITY_FLOOR, None)), axis=1)
+    return values
+
+
+def _mixture_safety(
+    observed_theta: np.ndarray,
+    full_theta: np.ndarray,
+) -> tuple[int, float]:
+    """Measure corpus activity from observed halves and entropy from full spectra."""
+    observed = _normalized_mixtures(observed_theta)
+    full = _normalized_mixtures(full_theta)
+    active = int((observed.mean(axis=0) >= 1.0 / observed.shape[1]).sum())
+    entropy = -np.sum(full * np.log(np.clip(full, PROBABILITY_FLOOR, None)), axis=1)
     return active, float(np.median(np.exp(entropy)))
 
 
@@ -108,7 +118,7 @@ def evaluate_neural(
         atomic_save_numpy(output / "beta.npy", beta)
         metrics = {"validation_document_completion": completion_summary}
     else:
-        active, effective_median = _mixture_safety(theta)
+        active, effective_median = _mixture_safety(theta, full_theta)
         metrics = {
             "test_document_completion": completion_summary,
             "active_topics": {"corpus_active_topics": active},

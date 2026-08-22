@@ -1,4 +1,4 @@
-"""Generate all numerical LaTeX fragments and figures from ``results.json``."""
+"""Generate all numerical LaTeX fragments from ``results.json``."""
 
 from __future__ import annotations
 
@@ -7,14 +7,11 @@ from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import Any
 
-import matplotlib.pyplot as plt
-
 REPO = Path(__file__).resolve().parents[1]
 PACKAGE = REPO / "benchmarks/neural_ms2lda"
 RESULTS = PACKAGE / "results/seed42/results.json"
 PROTOCOL = PACKAGE / "protocol.json"
 DOCS = REPO / "docs/research"
-FIGURES = DOCS / "figures"
 GENERATED = DOCS / "generated"
 
 
@@ -49,88 +46,6 @@ def _evidence() -> tuple[dict[str, Any], dict[str, Any]]:
             ):
                 raise ValueError("useful motif count must equal the two upper bands")
     return evidence, protocol
-
-
-def _save(figure: plt.Figure, name: str) -> None:
-    FIGURES.mkdir(parents=True, exist_ok=True)
-    figure.savefig(FIGURES / name, dpi=200, bbox_inches="tight", facecolor="white")
-    plt.close(figure)
-
-
-def model_overview() -> None:
-    """Draw the implemented forward model and its training-only safeguards."""
-    figure, axis = plt.subplots(figsize=(12.0, 5.0))
-    axis.set_xlim(0, 12)
-    axis.set_ylim(0, 5)
-    axis.axis("off")
-    forward = (
-        (0.2, "Fixed token features\nSGNS + mass + type", "#dbeafe"),
-        (2.65, "Shared geometry\n$z_w$, $q_k$", "#bfdbfe"),
-        (5.1, "Contextual top-2\ntoken routes", "#bfdbfe"),
-        (7.55, "Token mass $M_d$\n$\\times\\,g_d^{0.75}$", "#fde68a"),
-        (10.0, "One-pass $\\theta_d$\nand $p(w\\mid d)$", "#d1fae5"),
-    )
-    for x, label, color in forward:
-        axis.add_patch(
-            plt.Rectangle((x, 3.15), 1.85, 0.95, facecolor=color, edgecolor="#334155")
-        )
-        axis.text(x + 0.925, 3.625, label, ha="center", va="center", fontsize=9)
-    for start, end in ((2.05, 2.65), (4.5, 5.1), (6.95, 7.55), (9.4, 10.0)):
-        axis.annotate(
-            "",
-            xy=(end, 3.625),
-            xytext=(start, 3.625),
-            arrowprops={"arrowstyle": "->", "color": "#334155"},
-        )
-    axis.add_patch(
-        plt.Rectangle((2.65, 1.55), 4.3, 0.95, facecolor="#ede9fe", edgecolor="#334155")
-    )
-    axis.text(
-        4.8,
-        2.025,
-        "Shared decoder $\\beta$: cosine logits\n"
-        "$\\to$ mean fragment/loss evidence\n"
-        "$\\to$ 25% pull toward equal channel mass",
-        ha="center",
-        va="center",
-        fontsize=8.3,
-    )
-    axis.annotate(
-        "",
-        xy=(3.55, 3.15),
-        xytext=(3.55, 2.5),
-        arrowprops={"arrowstyle": "<->", "color": "#334155"},
-    )
-    axis.annotate(
-        "",
-        xy=(10.0, 2.025),
-        xytext=(6.95, 2.025),
-        arrowprops={"arrowstyle": "->", "color": "#334155"},
-    )
-    safeguards = (
-        "weighted k-means++\ninitialization",
-        "temperature annealing\n+ Sinkhorn usage",
-        "positive-NPMI graph\n+ prototype margin",
-        "hard-context\ndead-topic recycling",
-    )
-    axis.text(6.0, 1.28, "Training-only anti-collapse", ha="center", weight="bold")
-    for index, label in enumerate(safeguards):
-        x = 0.35 + index * 2.9
-        axis.add_patch(
-            plt.Rectangle(
-                (x, 0.25), 2.55, 0.75, facecolor="#f1f5f9", edgecolor="#94a3b8"
-            )
-        )
-        axis.text(x + 1.275, 0.625, label, ha="center", va="center", fontsize=8)
-    axis.text(
-        6.0,
-        4.7,
-        "The same forward model is used for training and inference",
-        ha="center",
-        weight="bold",
-        color="#1e3a8a",
-    )
-    _save(figure, "model_overview.png")
 
 
 def _table_rows(split: str):
@@ -394,8 +309,6 @@ def generated_text(evidence: dict[str, Any], protocol: dict[str, Any]) -> None:
 
 def generate() -> None:
     evidence, protocol = _evidence()
-    plt.rcParams.update({"font.family": "DejaVu Sans", "font.size": 9})
-    model_overview()
     generated_text(evidence, protocol)
 
 

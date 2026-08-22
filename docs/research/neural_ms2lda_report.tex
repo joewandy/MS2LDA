@@ -3,7 +3,6 @@
 \usepackage[T1]{fontenc}
 \usepackage{lmodern}
 \usepackage{microtype}
-\usepackage{graphicx}
 \usepackage{booktabs}
 \usepackage{longtable}
 \usepackage{array}
@@ -12,7 +11,6 @@
 \usepackage[hidelinks]{hyperref}
 \usepackage{enumitem}
 \usepackage{fancyhdr}
-\graphicspath{{figures/}}
 \definecolor{accent}{HTML}{1D4ED8}
 \hypersetup{colorlinks=true,linkcolor=accent,urlcolor=accent,citecolor=accent}
 \input{generated/results_macros.tex}
@@ -28,6 +26,12 @@
 \newcommand{\normalize}{\operatorname{normalize}}
 \newcommand{\logsumexp}{\operatorname{logsumexp}}
 \newcommand{\stopgrad}{\operatorname{stopgrad}}
+\newcommand{\modelbox}[2]{%
+  \fcolorbox{black!55}{#1}{%
+    \parbox[c][1.05cm][c]{0.145\textwidth}{\centering\footnotesize #2}}}
+\newcommand{\guardbox}[1]{%
+  \fcolorbox{black!35}{gray!6}{%
+    \parbox[c][0.85cm][c]{0.205\textwidth}{\centering\scriptsize #1}}}
 
 \title{A One-Pass, Collapse-Resistant Neural Topic Model\\
 for Mass2Motif Discovery}
@@ -251,7 +255,31 @@ not change its probabilities.
 
 \begin{figure}[ht]
   \centering
-  \includegraphics[width=\textwidth]{model_overview.png}
+  \textbf{The same forward model is used for training and inference}\par\smallskip
+  \modelbox{blue!8}{Fixed token features\\SGNS, mass, type}
+  $\rightarrow$
+  \modelbox{blue!14}{Shared geometry\\$z_w,\widehat q_k$}
+  $\rightarrow$
+  \modelbox{blue!14}{Contextual top-2\\token routes}
+  $\rightarrow$
+  \modelbox{yellow!18}{Token mass $M_d$\\$\times\,g_d^{0.75}$}
+  $\rightarrow$
+  \modelbox{green!12}{One-pass $\theta_d$\\and $p(w\mid d)$}
+
+  \medskip
+  \fcolorbox{black!55}{violet!8}{%
+    \parbox[c][1.0cm][c]{0.55\textwidth}{\centering\footnotesize
+      Shared decoder $\beta$: cosine logits $\rightarrow$
+      mean fragment/loss evidence $\rightarrow$
+      25\% pull toward equal channel mass}}
+  $\longrightarrow$ one-pass token probabilities
+
+  \medskip
+  \textbf{Training-only anti-collapse}\par\smallskip
+  \guardbox{Weighted spherical\\$k$-means++ initialization}\hfill
+  \guardbox{Temperature annealing\\and Sinkhorn usage}\hfill
+  \guardbox{Positive-NPMI graph\\and prototype margin}\hfill
+  \guardbox{Hard-context\\dead-topic recycling}
   \caption{The implemented model. Fixed train-only features and learned
   prototypes define both the one-pass router and balanced decoder. The lower
   row contains training-only safeguards and is absent from inference.}

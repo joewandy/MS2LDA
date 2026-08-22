@@ -29,7 +29,8 @@ conda run -n ms2lda-neural python -m benchmarks.neural_ms2lda run \
 ```
 
 `status --run /path/to/run` prints current progress. An interrupted fit restarts
-from its deterministic initialization.
+from its deterministic initialization. A run directory remains bound to the
+data root used when it was created; start a new run if the inputs move.
 
 The published model artifact contains only `weights.pt`, `model.json`, and
 `vocabulary.json`. `results.json` is the sole numerical source for the report.
@@ -42,3 +43,7 @@ python scripts/generate_neural_ms2lda_report.py
 This is a single-dataset, single-seed research result. It does not change the
 public MS2LDA application defaults or establish that the neural model should
 replace the production Tomotopy backend.
+
+For repository navigation, scientific guardrails, and the predeclared next
+step, read [HANDOVER.md](HANDOVER.md). The next research task is a
+validation-only ablation study; it is documented there but has not been run.

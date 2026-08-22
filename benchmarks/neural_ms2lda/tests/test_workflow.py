@@ -20,6 +20,7 @@ from benchmarks.neural_ms2lda import __main__ as module_entry
 from benchmarks.neural_ms2lda import chemical, pipeline
 from benchmarks.neural_ms2lda.artifacts import (
     build_results,
+    initialize_run,
     load_protocol,
     load_trained_model,
 )
@@ -31,7 +32,7 @@ from benchmarks.neural_ms2lda.data import (
     prepare_data,
     train_token_features,
 )
-from benchmarks.neural_ms2lda.evaluation import evaluate_neural
+from benchmarks.neural_ms2lda.evaluation import _mixture_safety, evaluate_neural
 from benchmarks.neural_ms2lda.mag import _connectivity_key, build_filtered_mag_index
 from benchmarks.neural_ms2lda.tomotopy import (
     _converged,
@@ -52,6 +53,46 @@ def test_module_entry_pins_numerical_threads_before_dispatch(monkeypatch: Any) -
     assert {os.environ[name] for name in module_entry.THREAD_ENVIRONMENT_VARIABLES} == {
         "6"
     }
+
+
+def test_run_is_bound_to_its_original_data_root(tmp_path: Path) -> None:
+    protocol = load_protocol()
+
+    def data_root(name: str) -> Path:
+        root = tmp_path / name
+        mgf = root / protocol["input_files"]["mgf"]
+        mgf.parent.mkdir(parents=True)
+        mgf.touch()
+        return root
+
+    first = data_root("first")
+    second = data_root("second")
+    run = tmp_path / "run"
+    initialize_run(run, data_root=first)
+    assert (run / "data_root.txt").read_text(encoding="utf-8") == f"{first}\n"
+    initialize_run(run, data_root=first)
+    with pytest.raises(ValueError, match="differs from the original"):
+        initialize_run(run, data_root=second)
+
+
+def test_old_stage_outputs_are_not_silently_adopted(tmp_path: Path) -> None:
+    protocol = load_protocol()
+    data_root = tmp_path / "inputs"
+    mgf = data_root / protocol["input_files"]["mgf"]
+    mgf.parent.mkdir(parents=True)
+    mgf.touch()
+    run = tmp_path / "run"
+    (run / "data").mkdir(parents=True)
+    with pytest.raises(ValueError, match="lacks a data-root binding"):
+        initialize_run(run, data_root=data_root)
+
+
+def test_mixture_safety_uses_full_spectra_for_effective_topic_count() -> None:
+    observed = np.asarray([[1.0, 0.0], [0.5, 0.5]])
+    full = np.full((2, 2), 0.5)
+    active, effective_median = _mixture_safety(observed, full)
+    assert active == 1
+    assert effective_median == pytest.approx(2.0)
 
 
 def _prepare_mini_training_scaffold(
