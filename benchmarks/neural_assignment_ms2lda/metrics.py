@@ -1,4 +1,3 @@
-# ruff: noqa: PLR2004
 """Evaluation metrics aligned to the corrected Tomotopy benchmark."""
 
 from __future__ import annotations
@@ -12,6 +11,8 @@ import numpy as np
 if TYPE_CHECKING:
     import scipy.sparse as sp
 
+PROBABILITY_FLOOR = 1e-12
+
 
 def normalize_rows(values: np.ndarray) -> np.ndarray:
     """Return finite probability rows."""
@@ -21,9 +22,9 @@ def normalize_rows(values: np.ndarray) -> np.ndarray:
         matrix,
         denominator,
         out=np.zeros_like(matrix),
-        where=denominator > 1e-12,
+        where=denominator > PROBABILITY_FLOOR,
     )
-    result[denominator[:, 0] <= 1e-12] = 1.0 / matrix.shape[1]
+    result[denominator[:, 0] <= PROBABILITY_FLOOR] = 1.0 / matrix.shape[1]
     return result
 
 
@@ -47,7 +48,7 @@ def active_topic_metrics(
 def effective_topic_summary(theta: np.ndarray) -> dict[str, float]:
     """Summarize entropy-derived effective topics per spectrum."""
     values = normalize_rows(theta)
-    entropy = -np.sum(values * np.log(np.clip(values, 1e-12, None)), axis=1)
+    entropy = -np.sum(values * np.log(np.clip(values, PROBABILITY_FLOOR, None)), axis=1)
     effective = np.exp(entropy)
     maximum = values.max(axis=1)
     return {
@@ -88,7 +89,9 @@ def completion_metrics(
         if not token_count:
             continue
         probabilities = theta[row] @ beta[:, words]
-        loss = -float(np.sum(counts * np.log(np.clip(probabilities, 1e-12, None))))
+        loss = -float(
+            np.sum(counts * np.log(np.clip(probabilities, PROBABILITY_FLOOR, None)))
+        )
         losses[row] = loss / token_count
         total_loss += loss
         in_vocabulary += token_count

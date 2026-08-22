@@ -1,4 +1,3 @@
-# ruff: noqa: PLR2004
 """Capacity-aware topic inventory diagnostics for comparing different K values."""
 
 from __future__ import annotations
@@ -8,12 +7,15 @@ from typing import Any
 
 import numpy as np
 
+MATRIX_DIMENSIONS = 2
+
 
 def _top_word_summary(
     beta: np.ndarray,
     indices: np.ndarray,
     top_n: int,
 ) -> dict[str, Any]:
+    """Summarize top-word reuse for an explicitly selected topic subset."""
     if not len(indices):
         return {
             "topics": 0,
@@ -50,7 +52,11 @@ def topic_inventory_summary(
     """
     topics = np.asarray(beta, dtype=np.float64)
     weights = np.asarray(usage, dtype=np.float64)
-    if topics.ndim != 2 or weights.ndim != 1 or len(weights) != len(topics):
+    if (
+        topics.ndim != MATRIX_DIMENSIONS
+        or weights.ndim != 1
+        or len(weights) != len(topics)
+    ):
         msg = "beta and corpus topic usage do not align"
         raise ValueError(msg)
     if not len(topics) or topics.shape[1] == 0:

@@ -21,14 +21,15 @@ from .data import (
     prepare_training_views,
 )
 from .embeddings import train_sgns
-from .evaluation import evaluate_neural
+from .evaluation import evaluate_neural, evaluate_neural_validation
 from .report import build_machine_report
-from .tomotopy import evaluate_tomotopy_reference
+from .tomotopy import evaluate_tomotopy, train_tomotopy
 from .training import train_model
 from .utils import read_json, write_json
 
 
 def _heartbeat(directory: Path, **details: Any) -> None:
+    """Atomically expose the latest long-running stage without loading arrays."""
     write_json(
         directory / "heartbeat.json",
         {"pid": os.getpid(), "torch_cpu_threads": torch.get_num_threads(), **details},
@@ -36,6 +37,7 @@ def _heartbeat(directory: Path, **details: Any) -> None:
 
 
 def _configure_threads(count: int) -> None:
+    """Apply one CPU-thread allowance to PyTorch and numerical backends."""
     torch.set_num_threads(int(count))
     with contextlib.suppress(RuntimeError):
         torch.set_num_interop_threads(1)
@@ -55,11 +57,13 @@ def _chemical_subprocess(
     method: str,
     data_root: str | Path,
     cpu_threads: int,
+    split: str,
 ) -> None:
+    """Run MAG in its pinned environment while preserving the thread contract."""
     conda = shutil.which("conda")
     if conda is None:
         raise FileNotFoundError("conda is required for the pinned MAG environment")
-    log = directory / "logs" / f"chemical_{method}.log"
+    log = directory / "logs" / f"chemical_{split}_{method}.log"
     log.parent.mkdir(parents=True, exist_ok=True)
     environment = os.environ.copy()
     environment["NUMBA_CACHE_DIR"] = str(directory / "runtime_cache/numba")
@@ -89,6 +93,8 @@ def _chemical_subprocess(
         str(Path(data_root).expanduser().resolve()),
         "--method",
         method,
+        "--split",
+        split,
     ]
     with log.open("a", encoding="utf-8") as handle:
         subprocess.run(
@@ -105,14 +111,12 @@ def run_pipeline(
     run_dir: str | Path,
     *,
     data_root: str | Path,
-    tomotopy_reference_run: str | Path,
 ) -> dict[str, Any]:
     """Run or exactly resume acquisition-independent processing through report."""
     directory = Path(run_dir).expanduser().resolve()
     initialize_run(
         directory,
         data_root=data_root,
-        tomotopy_reference_run=tomotopy_reference_run,
     )
     protocol = read_json(directory / "protocol.resolved.json")
     cpu_threads = int(protocol["cpu_threads"])
@@ -153,23 +157,39 @@ def run_pipeline(
         protocol=protocol,
         heartbeat=lambda **details: _heartbeat(directory, **details),
     )
-    _heartbeat(directory, stage="evaluate_neural")
-    evaluate_neural(directory, protocol)
-    _heartbeat(directory, stage="evaluate_tomotopy_reference")
-    evaluate_tomotopy_reference(
+    _heartbeat(directory, stage="train_tomotopy")
+    train_tomotopy(
         directory,
         protocol,
-        reference_run=tomotopy_reference_run,
         heartbeat=lambda **details: _heartbeat(directory, **details),
     )
+    _heartbeat(directory, stage="evaluate_validation_neural")
+    evaluate_neural_validation(directory, protocol)
+    _heartbeat(directory, stage="evaluate_validation_tomotopy")
+    evaluate_tomotopy(directory, protocol, split="validation")
     for method in ("neural", "tomotopy"):
-        if not (directory / "chemical" / method / "complete.json").is_file():
-            _heartbeat(directory, stage="chemical", method=method)
+        if not (directory / "validation_chemical" / method / "complete.json").is_file():
+            _heartbeat(directory, stage="chemical", split="validation", method=method)
             _chemical_subprocess(
                 directory,
                 method=method,
                 data_root=data_root,
                 cpu_threads=cpu_threads,
+                split="validation",
+            )
+    _heartbeat(directory, stage="evaluate_test_neural")
+    evaluate_neural(directory, protocol)
+    _heartbeat(directory, stage="evaluate_test_tomotopy")
+    evaluate_tomotopy(directory, protocol, split="test")
+    for method in ("neural", "tomotopy"):
+        if not (directory / "chemical" / method / "complete.json").is_file():
+            _heartbeat(directory, stage="chemical", split="test", method=method)
+            _chemical_subprocess(
+                directory,
+                method=method,
+                data_root=data_root,
+                cpu_threads=cpu_threads,
+                split="test",
             )
     report = build_machine_report(directory)
     write_json(
@@ -199,6 +219,14 @@ def status(run_dir: str | Path) -> dict[str, Any]:
         "token_features": directory / "token_features/complete.json",
         "initialization": directory / "initialization/complete.json",
         "neural_model": directory / "model/complete.json",
+        "tomotopy_model": directory / "tomotopy/complete.json",
+        "neural_validation": directory / "validation_evaluation/neural/complete.json",
+        "tomotopy_validation": directory
+        / "validation_evaluation/tomotopy/complete.json",
+        "neural_validation_chemistry": directory
+        / "validation_chemical/neural/complete.json",
+        "tomotopy_validation_chemistry": directory
+        / "validation_chemical/tomotopy/complete.json",
         "neural_evaluation": directory / "evaluation/neural/complete.json",
         "tomotopy_evaluation": directory / "evaluation/tomotopy/complete.json",
         "neural_chemistry": directory / "chemical/neural/complete.json",

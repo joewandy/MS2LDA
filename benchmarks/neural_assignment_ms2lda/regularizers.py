@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import torch
-from torch.nn import functional as F
+from torch.nn import functional as nnf
 
 from .model import NeuralAssignmentMS2LDA
 
@@ -55,12 +55,12 @@ def nearest_neighbor_topic_constraint(
         raise ValueError("nearest-neighbour count must be between zero and K")
     if not -1.0 < margin < 1.0:
         raise ValueError("topic-separation margin must be inside (-1, 1)")
-    topics = F.normalize(model.topic_prototypes, dim=1)
+    topics = nnf.normalize(model.topic_prototypes, dim=1)
     similarities = topics @ topics.T
     diagonal = torch.eye(model.num_topics, dtype=torch.bool, device=similarities.device)
     off_diagonal = similarities.masked_fill(diagonal, float("-inf"))
     nearest = torch.topk(off_diagonal, k=int(neighbors), dim=1).values
-    violations = F.relu(nearest - float(margin))
+    violations = nnf.relu(nearest - float(margin))
     loss = torch.mean(torch.square(violations))
     with torch.no_grad():
         closest = nearest[:, 0]

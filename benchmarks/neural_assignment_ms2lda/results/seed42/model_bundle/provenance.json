@@ -1,12 +1,18 @@
 {
+  "artifact_notes": {
+    "checkpoint_weights_unchanged_during_cleanup": true,
+    "warm_in_memory_batch_inference_remeasured_cpu_threads": 6
+  },
   "discovery_audit": {
-    "forbidden_dependencies_found": []
+    "chemistry_fields_in_training": [],
+    "forbidden_dependencies_found": [],
+    "fully_neural": true,
+    "test_information_in_training": false,
+    "tomotopy_role": "independent post-training comparator"
   },
   "environment": {
     "machine": "arm64",
     "packages": {
-      "faiss-cpu": null,
-      "matchms": null,
       "numpy": "1.25.2",
       "rdkit": "2024.9.6",
       "scipy": "1.13.1",
@@ -22,40 +28,19 @@
       "sha256": "c1a2389754e630590111bde8f50403c9d90081d3f3427bc63defef0b9714682f"
     }
   },
-  "packaging_source_sha256": "86aad28e11f1c2e0172ac0d3fbf14f9e6fe215466f0b9ef2c0c5030168402807",
-  "protocol_sha256": "d65ccff7e2b8adae8a87e9f1e23cd45e46668743512518e447567a2256417c16",
+  "protocol_sha256": "c215315b4e51ec13169e711e2a1cdc9dd5120b6b49e44bf1ab04395af4379f36",
   "run_source_sha256": {
-    "benchmarks/msnlib_validation/__init__.py": "c68630c0fe06bb3e685e839b189c70f45f11593e5eb2484d78c521ba9be6f532",
-    "benchmarks/msnlib_validation/chemical.py": "43b5dc804983c96e17d676611b831b24a6b779643336f40d0dfcad8206f72bf1",
-    "benchmarks/msnlib_validation/config.py": "8e41a658539abf120d7b12dafb2d89adcdddafb4e46216873dbaa8043f305ce6",
-    "benchmarks/msnlib_validation/data.py": "dfb46db0211e6ef0e0a8d7b5240e238f730ae0004592325f0371e685222604d6",
-    "benchmarks/msnlib_validation/mag.py": "27e12e3883fb2898828061b1e769ac9a7a2543319f41e2c7f1a6026344cb7556",
-    "benchmarks/msnlib_validation/metrics.py": "b2106f798792348619940fcc9a5fcc68d4f81327141e16f2d0776c86e63b33e8",
-    "benchmarks/neural_assignment_ms2lda/__init__.py": "37504c5dd7842098593a007858146d026f3a9cf050cf17d077d9a1e53ff787ae",
-    "benchmarks/neural_assignment_ms2lda/__main__.py": "a8cb3efcbbfc836fae3ef68a41e73c0aa84d52f0ad8d6c2fadd1a62037695e64",
-    "benchmarks/neural_assignment_ms2lda/bundle.py": "86aad28e11f1c2e0172ac0d3fbf14f9e6fe215466f0b9ef2c0c5030168402807",
-    "benchmarks/neural_assignment_ms2lda/chemical.py": "5c19fe0fe2c1b6097596b9a135c068ec99df6f4c9166635c3232a0ac02ec2030",
-    "benchmarks/neural_assignment_ms2lda/cli.py": "8afd29708182269019a76af1f96504cc54caaba2170c3537ad658c7d7931d568",
-    "benchmarks/neural_assignment_ms2lda/config.py": "c4cbda7c7c9c58a4fe76e4351578537733aecd5d6b0979cd317d236877ea5ae6",
-    "benchmarks/neural_assignment_ms2lda/cooccurrence.py": "ad03aa48adae946af7b2e4f59bf454af4abc475dc63d359de08f1626a7132d2e",
-    "benchmarks/neural_assignment_ms2lda/core.py": "96eadc6d64a67040a92c46be12bf45835588e769f781f1def293b5a0510e4838",
-    "benchmarks/neural_assignment_ms2lda/data.py": "acc617979a352218c73de9ef5e331b2a2c05b85326d43d722ab42d543ea83d6b",
-    "benchmarks/neural_assignment_ms2lda/development.py": "7e9b7e4a5acc588deb88af8074ca074349136d0e108ffbe70c5900bd1fff16e9",
-    "benchmarks/neural_assignment_ms2lda/embeddings.py": "282e1ba260e5a71677f2304921499aa81cde164d6f93306de955418d6c61299e",
-    "benchmarks/neural_assignment_ms2lda/evaluation.py": "9f39072086a7777fc4d855a1f23cb67eba4078a95b0ae040daae46b47e173029",
-    "benchmarks/neural_assignment_ms2lda/inventory.py": "2b6ebbdf7f1e7ef9ae891ac3614ef213870eca78f9dac8af7246d837330db4fc",
-    "benchmarks/neural_assignment_ms2lda/metrics.py": "64713d7857bab2df5fc83c7bb681928017115ce58edad856760f45de4946fc8c",
-    "benchmarks/neural_assignment_ms2lda/model.py": "e1d37a9e09059d320c531c18549277f2e28b0f17d47a27dc22f4dd1f2fc301e8",
-    "benchmarks/neural_assignment_ms2lda/orchestrator.py": "b50efafd867836f60ddb222e46085ec8eb739ccc9295a7d68b41667cd60fee57",
-    "benchmarks/neural_assignment_ms2lda/regularizers.py": "6d3334443274bea972c393d049a2a8929314a2e02c26d9b5fc0f0feddb31a72a",
-    "benchmarks/neural_assignment_ms2lda/report.py": "aadf148f6ff5be00181e26390f0dd650aab60304827992f1f461b8cd72bd2b88",
-    "benchmarks/neural_assignment_ms2lda/tomotopy.py": "90e97bcfd5df28dd7d866bdd1a374394b75714b1bf473382fefcde34166fe151",
-    "benchmarks/neural_assignment_ms2lda/training.py": "98c56810e0d60d587efcffadaf5ae04aaa012e3210c3ba99345027a39be2f88f",
-    "benchmarks/neural_assignment_ms2lda/utils.py": "b5318594dc2cad0572561efb39c5771ff85ad828b1dbb63e68d8194120038cd5",
-    "scripts/download_msnlib_validation_assets.py": "8a82fbba1a594d4643124fd64bd10321525fe23a2e6332467b28fd323f5f383e",
-    "scripts/generate_neural_ms2lda_report.py": "09f9ae060dee399665b6bc8edc90af038231c9a63afdd3892dd7b80181efbd7c",
-    "scripts/run_neural_ms2lda.sh": "134d5c08a914cec2b490c7545c213ecffccc14aa611fa422b13b48150d317927"
+    "training_source_manifest": "3eb4b592ec69df9c29c052485bf4869e01ada9cb9b31ac13f37ce58546f7dc23"
   },
   "schema_version": "neural-ms2lda/portable-provenance-v1",
-  "selected_checkpoint_sha256": "3a9e5a153ecf856f868607fc3a5b37211bd37b510cb847acc3cb765ff815c06d"
+  "selected_checkpoint_sha256": "639c1f37c613d908b59e3a85b7dc701e33a3f92fd7476a3257b47298143dfbc6",
+  "source_artifact_sha256": {
+    "data/train.npz": "b4808f341864ba1df246a5093992f52397c2f96e0b48b23245b9b17e30aa5b52",
+    "data/validation_completion.npz": "f75245b599bc3c087aad97ff7247112d422ec0ab87418c5f96b0a889b2f661f0",
+    "data/validation_full.npz": "51888951815f448d0527a6a876be345cfe76ab346d9e97bada9a186e8857fab2",
+    "data/validation_observed.npz": "76afa43a3540d91edd4dd7e851afe10c65e3d67bcf06007c83eac1d9b6e15bff",
+    "data/vocabulary.json": "8e7bf7ba06a9a2fbd75326d9e7b44eb973bdec5557da195c6678a654d93ee308",
+    "token_features/features.npy": "4d6f7fac13b56d3e619a96059a0ee8229c7bb6278458f1cdf6df75d12291fe93",
+    "training_views/complete.json": "7baa4780edb403b57060c5e142b175793b1cc9714371b59c1c9c6da58172d8d4"
+  }
 }

@@ -59,8 +59,9 @@
     "projection_dimensions": 128,
     "router_hidden_dimensions": 256,
     "top_k": 2,
-    "beta_temperature": 0.2,
-    "document_mixture_weight": 0.5,
+    "beta_temperature": 0.18,
+    "token_type_balance": 0.25,
+    "document_mixture_weight": 0.75,
     "document_topic_prior_weight": 1.0,
     "sinkhorn_epsilon": 0.05,
     "sinkhorn_iterations": 5,
@@ -113,7 +114,6 @@
     "latency_repeats": 5
   },
   "tomotopy": {
-    "num_topics": 1000,
     "alpha": 0.6,
     "eta": 0.1,
     "maximum_iterations": 5000,

@@ -1,4 +1,4 @@
-"""Exact-resume training for the supported neural topic model."""
+"""Exact-resume orchestration for the supported neural topic model."""
 
 from __future__ import annotations
 
@@ -10,44 +10,19 @@ import numpy as np
 import torch
 
 from .cooccurrence import prepare_cooccurrence_graph, torch_sparse_graph
-from .core import (
-    HardContextQueue,
-    fresh_model,
-    routing_temperature,
-    sinkhorn_weight,
-    validation_metrics,
-)
-from .data import ViewPair, iter_row_batches, sparse_batch
-from .inventory import topic_inventory_summary
-from .model import recycle_dead_prototypes, router_block_loss, topic_block_loss
-from .regularizers import (
-    cooccurrence_topic_constraint,
-    nearest_neighbor_topic_constraint,
+from .core import HardContextQueue, fresh_model, routing_temperature, sinkhorn_weight
+from .data import ViewPair
+from .training_steps import (
+    LOSS_NAMES,
+    TrainingState,
+    router_phase,
+    topic_phase,
+    validate_and_recycle,
 )
 from .utils import atomic_torch_save, file_sha256, peak_rss_bytes, read_json, write_json
 
 if TYPE_CHECKING:
     import scipy.sparse as sp
-
-
-def _entry_losses(output: Any, beta: torch.Tensor) -> torch.Tensor:
-    topics = output.theta[output.row_ids]
-    words = beta[:, output.token_indices].T
-    probability = torch.sum(topics * words, dim=1).clamp_min(1e-12)
-    return -torch.log(probability)
-
-
-def _weighted_topic_separation(
-    model: torch.nn.Module,
-    config: dict[str, Any],
-) -> tuple[Any, torch.Tensor]:
-    """Return the supported nearest-topic margin and its weighted loss."""
-    result = nearest_neighbor_topic_constraint(
-        model,
-        neighbors=int(config["neighbors"]),
-        margin=float(config["margin"]),
-    )
-    return result, float(config["weight"]) * result.loss
 
 
 def _selection(
@@ -68,34 +43,156 @@ def _selection(
 
 def _checkpoint_payload(
     *,
-    model: torch.nn.Module,
-    optimizer: torch.optim.Optimizer,
+    state: TrainingState,
     epoch: int,
-    global_step: int,
     elapsed_seconds: float,
-    history: list[dict[str, Any]],
-    underuse_streak: np.ndarray,
-    recycle_counts: np.ndarray,
-    recycle_events: list[dict[str, Any]],
-    context_queue: HardContextQueue,
 ) -> dict[str, Any]:
+    """Capture every mutable state needed to continue at an epoch boundary."""
     return {
         "schema_version": "neural-ms2lda/training-checkpoint-v1",
-        "model": model.state_dict(),
-        "optimizer": optimizer.state_dict(),
+        "model": state.model.state_dict(),
+        "optimizer": state.optimizer.state_dict(),
         "epoch": int(epoch),
-        "global_step": int(global_step),
+        "global_step": int(state.global_step),
         "elapsed_seconds": float(elapsed_seconds),
-        "history": history,
-        "underuse_streak": underuse_streak,
-        "recycle_counts": recycle_counts,
-        "recycle_events": recycle_events,
-        "context_queue": context_queue.state_dict(),
+        "history": state.history,
+        "underuse_streak": state.underuse_streak,
+        "recycle_counts": state.recycle_counts,
+        "recycle_events": state.recycle_events,
+        "context_queue": state.context_queue.state_dict(),
         "torch_rng_state": torch.get_rng_state(),
     }
 
 
-def train_model(
+def _completed_result(
+    output: Path, graph_manifest: dict[str, Any]
+) -> dict[str, Any] | None:
+    """Return an already completed result only after checking its dependencies."""
+    complete_path = output / "complete.json"
+    if not complete_path.is_file():
+        return None
+    result = read_json(complete_path)
+    if result["cooccurrence_graph"] != graph_manifest:
+        raise ValueError("model co-occurrence graph provenance changed")
+    selected = output / result["selected"]["checkpoint"]
+    if file_sha256(selected) != result["selected"]["checkpoint_sha256"]:
+        raise ValueError("selected model checkpoint changed")
+    return result
+
+
+def _initialize_training_state(
+    root: Path,
+    output: Path,
+    protocol: dict[str, Any],
+) -> TrainingState:
+    """Build the optimizer state or restore its exact epoch-boundary snapshot."""
+    seed = int(protocol["seed"])
+    num_topics = int(protocol["model"]["num_topics"])
+    torch.manual_seed(seed)
+    model = fresh_model(root, protocol)
+    optimization = protocol["optimization"]
+    optimizer = torch.optim.AdamW(
+        model.parameters(),
+        lr=float(optimization["learning_rate"]),
+        weight_decay=float(optimization["weight_decay"]),
+    )
+    state = TrainingState(
+        model=model,
+        optimizer=optimizer,
+        epoch_start=0,
+        global_step=0,
+        elapsed_before=0.0,
+        history=[],
+        underuse_streak=np.zeros(num_topics, dtype=np.int64),
+        recycle_counts=np.zeros(num_topics, dtype=np.int64),
+        recycle_events=[],
+        context_queue=HardContextQueue.empty(max(4 * num_topics, 512)),
+    )
+    latest_path = output / "checkpoint_latest.pt"
+    if latest_path.is_file():
+        checkpoint = torch.load(latest_path, map_location="cpu", weights_only=False)
+        state.model.load_state_dict(checkpoint["model"])
+        state.optimizer.load_state_dict(checkpoint["optimizer"])
+        state.epoch_start = int(checkpoint["epoch"])
+        state.global_step = int(checkpoint["global_step"])
+        state.elapsed_before = float(checkpoint["elapsed_seconds"])
+        state.history = list(checkpoint["history"])
+        state.underuse_streak = checkpoint["underuse_streak"]
+        state.recycle_counts = checkpoint["recycle_counts"]
+        state.recycle_events = list(checkpoint["recycle_events"])
+        state.context_queue = HardContextQueue.from_state_dict(
+            checkpoint["context_queue"]
+        )
+        torch.set_rng_state(checkpoint["torch_rng_state"])
+    maximum_epochs = int(optimization["maximum_epochs"])
+    if state.epoch_start > maximum_epochs:
+        raise ValueError("checkpoint is beyond the resolved maximum epoch")
+    return state
+
+
+def _mean_losses(
+    totals: dict[str, float], *, router_batches: int, topic_updates: int
+) -> dict[str, float]:
+    """Normalize each accumulated loss by the phase that generated it."""
+    return {
+        "router_total": totals["router_total"] / max(router_batches, 1),
+        "router_base": totals["router_base"] / max(router_batches, 1),
+        "router_separation": totals["router_separation"] / max(router_batches, 1),
+        "completion": totals["completion"] / max(router_batches + topic_updates, 1),
+        "sinkhorn": totals["sinkhorn"] / max(router_batches, 1),
+        "consistency": totals["consistency"] / max(router_batches, 1),
+        "topic_base": totals["topic_base"] / max(topic_updates, 1),
+        "local_decoder": totals["local_decoder"] / max(topic_updates, 1),
+        "cooccurrence": totals["cooccurrence"] / max(topic_updates, 1),
+        "topic_separation": totals["topic_separation"] / max(topic_updates, 1),
+    }
+
+
+def _record_epoch(  # noqa: PLR0913
+    state: TrainingState,
+    *,
+    output: Path,
+    epoch: int,
+    pair_index: int,
+    elapsed: float,
+    temperature: float,
+    balance_weight: float,
+    totals: dict[str, float],
+    router_batches: int,
+    topic_updates: int,
+    diagnostics: dict[str, float],
+    validation: dict[str, Any] | None,
+    recycled: list[int],
+    stable: bool,
+) -> None:
+    """Persist the auditable epoch row and exact mutable continuation state."""
+    state.history.append(
+        {
+            "epoch": epoch,
+            "global_step": state.global_step,
+            "view_pair": pair_index,
+            "elapsed_seconds": elapsed,
+            "routing_temperature": temperature,
+            "sinkhorn_weight": balance_weight,
+            "losses": _mean_losses(
+                totals,
+                router_batches=router_batches,
+                topic_updates=topic_updates,
+            ),
+            "regularizer_diagnostics": diagnostics,
+            "validation": validation,
+            "recycled_topics": recycled,
+            "stable": stable,
+        }
+    )
+    atomic_torch_save(
+        output / "checkpoint_latest.pt",
+        _checkpoint_payload(state=state, epoch=epoch, elapsed_seconds=elapsed),
+    )
+    write_json(output / "history.json", state.history)
+
+
+def train_model(  # noqa: PLR0913
     run_dir: str | Path,
     *,
     train: sp.csr_matrix,
@@ -111,206 +208,59 @@ def train_model(
     root = Path(run_dir)
     output = root / "model"
     output.mkdir(parents=True, exist_ok=True)
-    graph_config = protocol["cooccurrence_regularization"]
-    separation_config = protocol["topic_separation"]
     graph, graph_manifest = prepare_cooccurrence_graph(
         root, train=train, protocol=protocol
     )
-    graph_tensor = torch_sparse_graph(graph)
-    complete_path = output / "complete.json"
-    if complete_path.is_file():
-        result = read_json(complete_path)
-        if result["cooccurrence_graph"] != graph_manifest:
-            raise ValueError("model co-occurrence graph provenance changed")
-        selected = output / result["selected"]["checkpoint"]
-        if file_sha256(selected) != result["selected"]["checkpoint_sha256"]:
-            raise ValueError("selected model checkpoint changed")
-        return result
+    completed = _completed_result(output, graph_manifest)
+    if completed is not None:
+        return completed
 
-    seed = int(protocol["seed"])
+    graph_tensor = torch_sparse_graph(graph)
+    state = _initialize_training_state(root, output, protocol)
     num_topics = int(protocol["model"]["num_topics"])
     maximum_epochs = int(protocol["optimization"]["maximum_epochs"])
     validation_interval = int(protocol["optimization"]["validation_interval"])
-    torch.manual_seed(seed)
-    model = fresh_model(root, protocol)
-    optimization = protocol["optimization"]
-    model_config = protocol["model"]
-    anti_collapse = protocol["anti_collapse"]
-    optimizer = torch.optim.AdamW(
-        model.parameters(),
-        lr=float(optimization["learning_rate"]),
-        weight_decay=float(optimization["weight_decay"]),
-    )
-    latest_path = output / "checkpoint_latest.pt"
-    epoch_start = 0
-    global_step = 0
-    elapsed_before = 0.0
-    history: list[dict[str, Any]] = []
-    underuse_streak = np.zeros(num_topics, dtype=np.int64)
-    recycle_counts = np.zeros(num_topics, dtype=np.int64)
-    recycle_events: list[dict[str, Any]] = []
-    context_queue = HardContextQueue.empty(max(4 * num_topics, 512))
-    if latest_path.is_file():
-        checkpoint = torch.load(latest_path, map_location="cpu", weights_only=False)
-        model.load_state_dict(checkpoint["model"])
-        optimizer.load_state_dict(checkpoint["optimizer"])
-        epoch_start = int(checkpoint["epoch"])
-        global_step = int(checkpoint["global_step"])
-        elapsed_before = float(checkpoint["elapsed_seconds"])
-        history = list(checkpoint["history"])
-        underuse_streak = checkpoint["underuse_streak"]
-        recycle_counts = checkpoint["recycle_counts"]
-        recycle_events = list(checkpoint["recycle_events"])
-        context_queue = HardContextQueue.from_state_dict(checkpoint["context_queue"])
-        torch.set_rng_state(checkpoint["torch_rng_state"])
-    if epoch_start > maximum_epochs:
-        raise ValueError("checkpoint is beyond the resolved maximum epoch")
-
     started = time.perf_counter()
-    stable = True
-    stop_reason = "maximum_epochs"
-    top_k = int(model_config["top_k"])
-    for epoch in range(epoch_start, maximum_epochs):
-        model.train()
+    failure: str | None = None
+    top_k = int(protocol["model"]["top_k"])
+    for epoch in range(state.epoch_start, maximum_epochs):
+        state.model.train()
         pair = views[epoch % len(views)]
         temperature = routing_temperature(epoch, protocol)
         balance_weight = sinkhorn_weight(epoch, protocol)
-        totals = {
-            "router_total": 0.0,
-            "router_base": 0.0,
-            "router_separation": 0.0,
-            "completion": 0.0,
-            "sinkhorn": 0.0,
-            "consistency": 0.0,
-            "topic_base": 0.0,
-            "local_decoder": 0.0,
-            "cooccurrence": 0.0,
-            "topic_separation": 0.0,
-        }
-        router_batches = 0
+        totals = dict.fromkeys(LOSS_NAMES, 0.0)
+        router_batches, failure = router_phase(
+            state,
+            train=train,
+            pair=pair,
+            epoch=epoch,
+            temperature=temperature,
+            balance_weight=balance_weight,
+            top_k=top_k,
+            protocol=protocol,
+            totals=totals,
+        )
         topic_updates = 0
-        regularizer_diagnostics: dict[str, float] = {}
-        with torch.no_grad():
-            cached_beta = model.topic_word_distribution().detach()
-        for rows in iter_row_batches(
-            train.shape[0],
-            batch_size=int(optimization["batch_size"]),
-            shuffle=True,
-            seed=seed + epoch,
-        ):
-            left_batch = sparse_batch(pair.left, rows)
-            right_batch = sparse_batch(pair.right, rows)
-            optimizer.zero_grad(set_to_none=True)
-            terms = router_block_loss(
-                model,
-                left_batch,
-                right_batch,
-                cached_beta=cached_beta,
+        diagnostics: dict[str, float] = {}
+        if failure is None:
+            topic_updates, diagnostics, failure = topic_phase(
+                state,
+                train=train,
+                pair=pair,
+                epoch=epoch,
                 temperature=temperature,
                 top_k=top_k,
-                sinkhorn_weight=balance_weight,
-                consistency_weight=float(optimization["theta_consistency_weight"]),
-                sinkhorn_epsilon=float(model_config["sinkhorn_epsilon"]),
-                sinkhorn_iterations=int(model_config["sinkhorn_iterations"]),
+                graph_tensor=graph_tensor,
+                protocol=protocol,
+                totals=totals,
             )
-            router_separation, weighted_router_separation = _weighted_topic_separation(
-                model,
-                separation_config,
-            )
-            router_total = terms.total + weighted_router_separation
-            if not torch.isfinite(router_total):
-                stable = False
-                stop_reason = "non_finite_router_loss"
-                break
-            router_total.backward()
-            gradient_norm = torch.nn.utils.clip_grad_norm_(
-                model.parameters(), float(model_config["gradient_clip_norm"])
-            )
-            if not torch.isfinite(gradient_norm):
-                stable = False
-                stop_reason = "non_finite_router_gradient"
-                break
-            optimizer.step()
-            with torch.no_grad():
-                for routed in (terms.left, terms.right):
-                    context_queue.add(
-                        _entry_losses(routed, cached_beta),
-                        routed.route_embeddings,
-                        limit=32,
-                    )
-            totals["router_total"] += float(router_total.detach())
-            totals["router_base"] += float(terms.total.detach())
-            totals["router_separation"] += float(router_separation.loss.detach())
-            totals["completion"] += float(terms.completion.detach())
-            totals["sinkhorn"] += float(terms.sinkhorn.detach())
-            totals["consistency"] += float(terms.consistency.detach())
-            router_batches += 1
-            global_step += 1
-
-        if stable:
-            topic_rows = list(
-                iter_row_batches(
-                    train.shape[0],
-                    batch_size=int(optimization["topic_update_batch_size"]),
-                    shuffle=True,
-                    seed=seed + 100_003 + epoch,
-                )
-            )
-            for update in range(int(optimization["topic_updates_per_epoch"])):
-                rows = topic_rows[update % len(topic_rows)]
-                left_batch = sparse_batch(pair.left, rows)
-                right_batch = sparse_batch(pair.right, rows)
-                optimizer.zero_grad(set_to_none=True)
-                terms = topic_block_loss(
-                    model,
-                    left_batch,
-                    right_batch,
-                    temperature=temperature,
-                    top_k=top_k,
-                    local_decoder_weight=float(optimization["local_decoder_weight"]),
-                )
-                separation, weighted_separation = _weighted_topic_separation(
-                    model,
-                    separation_config,
-                )
-                cooccurrence = cooccurrence_topic_constraint(
-                    model, graph_tensor, beta=terms.beta
-                )
-                weighted_cooccurrence = (
-                    float(graph_config["weight"]) * cooccurrence.loss
-                )
-                total = terms.total + weighted_cooccurrence + weighted_separation
-                if not torch.isfinite(total):
-                    stable = False
-                    stop_reason = "non_finite_topic_loss"
-                    break
-                total.backward()
-                gradient_norm = torch.nn.utils.clip_grad_norm_(
-                    model.parameters(), float(model_config["gradient_clip_norm"])
-                )
-                if not torch.isfinite(gradient_norm):
-                    stable = False
-                    stop_reason = "non_finite_topic_gradient"
-                    break
-                optimizer.step()
-                totals["topic_base"] += float(terms.total.detach())
-                totals["completion"] += float(terms.completion.detach())
-                totals["local_decoder"] += float(terms.local_decoder.detach())
-                totals["cooccurrence"] += float(cooccurrence.loss.detach())
-                totals["topic_separation"] += float(separation.loss.detach())
-                regularizer_diagnostics = {
-                    **separation.diagnostics,
-                    **cooccurrence.diagnostics,
-                }
-                topic_updates += 1
-                global_step += 1
-
         epochs_completed = epoch + 1
         validation = None
         recycled: list[int] = []
-        if stable and epochs_completed % validation_interval == 0:
-            validation = validation_metrics(
-                model,
+        if failure is None and epochs_completed % validation_interval == 0:
+            validation, recycled = validate_and_recycle(
+                state,
+                output=output,
                 train=train,
                 validation_observed=validation_observed,
                 validation_completion=validation_completion,
@@ -318,136 +268,55 @@ def train_model(
                 validation_records=validation_records,
                 protocol=protocol,
                 epoch=epochs_completed,
-                include_npmi=True,
+                top_k=top_k,
             )
-            usage = np.asarray(validation.pop("_usage"), dtype=np.float64)
-            with torch.inference_mode():
-                beta = model.topic_word_distribution().cpu().numpy()
-            validation["topic_inventory"] = topic_inventory_summary(
-                beta, usage, top_n=int(protocol["evaluation"]["topic_top_n"])
-            )
-            checkpoint_path = (
-                output / "validation_checkpoints" / f"epoch_{epochs_completed:04d}.pt"
-            )
-            atomic_torch_save(
-                checkpoint_path,
-                {
-                    "schema_version": "neural-ms2lda/selected-model-v1",
-                    "model": model.state_dict(),
-                    "epoch": epochs_completed,
-                    "validation": validation,
-                    "routing_temperature": routing_temperature(
-                        epochs_completed, protocol
-                    ),
-                    "top_k": top_k,
-                },
-            )
-            underused = usage < (
-                float(anti_collapse["recycle_usage_fraction_of_uniform"]) / num_topics
-            )
-            underuse_streak[underused] += 1
-            underuse_streak[~underused] = 0
-            eligible = np.flatnonzero(
-                (underuse_streak >= int(anti_collapse["recycle_patience_validations"]))
-                & (recycle_counts < int(anti_collapse["maximum_recycles_per_topic"]))
-            )
-            if (
-                len(eligible)
-                and epochs_completed <= int(anti_collapse["recycle_through_epoch"])
-                and len(context_queue.heap)
-            ):
-                ordered = eligible[np.lexsort((eligible, usage[eligible]))]
-                replacements = context_queue.pop_highest(len(ordered))
-                ordered = ordered[: len(replacements)]
-                if len(ordered):
-                    indices = torch.from_numpy(ordered.astype(np.int64, copy=False))
-                    recycle_dead_prototypes(
-                        model,
-                        optimizer,
-                        topic_indices=indices,
-                        replacements=replacements,
-                    )
-                    recycled = ordered.tolist()
-                    recycle_counts[ordered] += 1
-                    underuse_streak[ordered] = 0
-                    recycle_events.append(
-                        {"epoch": epochs_completed, "topic_indices": recycled}
-                    )
-
-        elapsed = elapsed_before + time.perf_counter() - started
-        row = {
-            "epoch": epochs_completed,
-            "global_step": global_step,
-            "view_pair": pair.pair_index,
-            "elapsed_seconds": elapsed,
-            "routing_temperature": temperature,
-            "sinkhorn_weight": balance_weight,
-            "losses": {
-                "router_total": totals["router_total"] / max(router_batches, 1),
-                "router_base": totals["router_base"] / max(router_batches, 1),
-                "router_separation": totals["router_separation"]
-                / max(router_batches, 1),
-                "completion": totals["completion"]
-                / max(router_batches + topic_updates, 1),
-                "sinkhorn": totals["sinkhorn"] / max(router_batches, 1),
-                "consistency": totals["consistency"] / max(router_batches, 1),
-                "topic_base": totals["topic_base"] / max(topic_updates, 1),
-                "local_decoder": totals["local_decoder"] / max(topic_updates, 1),
-                "cooccurrence": totals["cooccurrence"] / max(topic_updates, 1),
-                "topic_separation": totals["topic_separation"] / max(topic_updates, 1),
-            },
-            "regularizer_diagnostics": regularizer_diagnostics,
-            "validation": validation,
-            "recycled_topics": recycled,
-            "stable": stable,
-        }
-        history.append(row)
-        atomic_torch_save(
-            latest_path,
-            _checkpoint_payload(
-                model=model,
-                optimizer=optimizer,
-                epoch=epochs_completed,
-                global_step=global_step,
-                elapsed_seconds=elapsed,
-                history=history,
-                underuse_streak=underuse_streak,
-                recycle_counts=recycle_counts,
-                recycle_events=recycle_events,
-                context_queue=context_queue,
-            ),
+        elapsed = state.elapsed_before + time.perf_counter() - started
+        _record_epoch(
+            state,
+            output=output,
+            epoch=epochs_completed,
+            pair_index=pair.pair_index,
+            elapsed=elapsed,
+            temperature=temperature,
+            balance_weight=balance_weight,
+            totals=totals,
+            router_batches=router_batches,
+            topic_updates=topic_updates,
+            diagnostics=diagnostics,
+            validation=validation,
+            recycled=recycled,
+            stable=failure is None,
         )
-        write_json(output / "history.json", history)
         if heartbeat is not None:
             heartbeat(
                 stage="train_neural",
                 epoch=epochs_completed,
                 maximum_epochs=maximum_epochs,
                 elapsed_seconds=elapsed,
-                stable=stable,
+                stable=failure is None,
             )
-        if not stable:
+        if failure is not None:
             break
 
-    if not stable:
-        raise RuntimeError(f"neural training failed: {stop_reason}")
-    selected = _selection(history, protocol)
+    if failure is not None:
+        raise RuntimeError(f"neural training failed: {failure}")
+    selected = _selection(state.history, protocol)
     selected_path = output / selected["checkpoint"]
     selected["checkpoint_sha256"] = file_sha256(selected_path)
     write_json(output / "selected.json", selected)
     result = {
         "schema_version": "neural-ms2lda/training-complete-v1",
         "num_topics": num_topics,
-        "epochs_completed": int(history[-1]["epoch"]),
+        "epochs_completed": int(state.history[-1]["epoch"]),
         "stable": True,
-        "stop_reason": stop_reason,
-        "elapsed_seconds": float(history[-1]["elapsed_seconds"]),
+        "stop_reason": "maximum_epochs",
+        "elapsed_seconds": float(state.history[-1]["elapsed_seconds"]),
         "selected": selected,
-        "recycle_count_total": int(recycle_counts.sum()),
+        "recycle_count_total": int(state.recycle_counts.sum()),
         "cooccurrence_graph": graph_manifest,
         "peak_rss_bytes": peak_rss_bytes(),
     }
-    write_json(complete_path, result)
+    write_json(output / "complete.json", result)
     return result
 
 

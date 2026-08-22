@@ -15,7 +15,6 @@ def _parser() -> argparse.ArgumentParser:
     run = commands.add_parser("run", help="run or exactly resume the full workflow")
     run.add_argument("--data-root", required=True, type=Path)
     run.add_argument("--run", required=True, type=Path)
-    run.add_argument("--tomotopy-reference-run", required=True, type=Path)
     status = commands.add_parser("status", help="show progress")
     status.add_argument("--run", required=True, type=Path)
     verify = commands.add_parser("verify", help="verify provenance and artifacts")
@@ -33,7 +32,6 @@ def main(argv: Sequence[str] | None = None) -> int:
         result = run_pipeline(
             args.run,
             data_root=args.data_root,
-            tomotopy_reference_run=args.tomotopy_reference_run,
         )
     elif args.command == "status":
         from .orchestrator import status

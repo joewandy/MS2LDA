@@ -1,4 +1,4 @@
-"""Machine-readable evidence report assembled only from frozen manifests."""
+"""Assemble the paper-facing comparison from verified run manifests."""
 
 from __future__ import annotations
 
@@ -8,94 +8,127 @@ from typing import Any
 from .utils import file_sha256, read_json, write_json
 
 
-def _method_row(
-    result: dict[str, Any],
-    chemistry: dict[str, Any],
-    *,
-    training: dict[str, Any] | None = None,
-) -> dict[str, Any]:
-    metrics = result["metrics"]
-    dominant = chemistry["dominant_topic_chemistry"]
-    confident = chemistry["high_confidence_chemistry"]
-    row = {
-        "method": result["method"],
-        "topics": int(result["topic_count"]),
-        "test_nll": float(metrics["test_document_completion"]["nll_per_token"]),
-        "top_word_diversity": float(metrics["top_word_diversity"]),
-        "mean_npmi": float(metrics["word_cooccurrence_npmi"]["mean_npmi"]),
-        "undefined_pair_fraction": float(
-            metrics["word_cooccurrence_npmi"]["undefined_pair_fraction"]
-        ),
-        "active_topics": int(metrics["active_topics"]["corpus_active_topics"]),
-        "effective_topics_median": float(
-            metrics["full_spectrum_mixture"]["effective_topic_count_median"]
-        ),
-        "spectra_per_second": float(
-            metrics["cached_latency"]["median_spectra_per_second"]
-        ),
-        "annotation_coverage": float(chemistry["annotation_coverage"]),
-        "annotated_topics": int(
+def _chemistry_summary(chemistry: dict[str, Any]) -> dict[str, Any]:
+    """Keep only the motif-inventory and SOS quantities used in the report."""
+    high_confidence = chemistry["high_confidence_chemistry"]
+    bands = high_confidence["sos_bands"]
+    useful = int(bands["high_gt_0_8"] + bands["intermediate_0_6_to_0_8"])
+    return {
+        "optimized_motifs": int(
             round(float(chemistry["annotation_coverage"]) * chemistry["topics"])
         ),
-        "dominant_eligible_topics": int(dominant["eligible_topics"]),
-        "dominant_mean_sos": dominant["mean_sos"],
-        "high_confidence_eligible_topics": int(confident["eligible_topics"]),
-        "high_confidence_mean_sos": confident["mean_sos"],
-        "high_confidence_associated_spectra": int(confident["associated_spectra"]),
-        "inference_workers": int(
-            result.get("inference_workers", result.get("cpu_threads", 1))
-        ),
-        "pipeline_peak_rss_bytes": int(
-            result.get("source_peak_rss_bytes", result["peak_rss_bytes"])
-        ),
+        "annotation_coverage": float(chemistry["annotation_coverage"]),
+        "high_confidence_evaluable_motifs": int(high_confidence["eligible_topics"]),
+        "useful_high_confidence_motifs": useful,
+        "sos_bands": bands,
+        "mean_sos": high_confidence["mean_sos"],
+        "median_sos": high_confidence["median_sos"],
     }
-    inventory = metrics["topic_inventory"]
-    row["mass99_distinct_topic_equivalents"] = float(
-        inventory["mass_coverages"]["mass_99"]["distinct_topic_equivalents"]
-    )
-    if training is None:
-        row["training_seconds"] = float(result["training_seconds_total"])
-        row["training_workers"] = int(result["training_workers"])
-        row["training_reused"] = bool(result["training_reused"])
-    else:
-        row["training_seconds"] = float(training["elapsed_seconds"])
-        row["training_workers"] = int(result["cpu_threads"])
-        row["training_reused"] = False
-        row["pipeline_peak_rss_bytes"] = int(training["peak_rss_bytes"])
-    return row
+
+
+def _split_summary(
+    evaluation: dict[str, Any], chemistry: dict[str, Any], *, split: str
+) -> dict[str, Any]:
+    """Combine held-out completion and chemistry for one named split."""
+    completion = evaluation["metrics"][f"{split}_document_completion"]
+    return {
+        "completion_nll_per_token": float(completion["nll_per_token"]),
+        **_chemistry_summary(chemistry),
+    }
+
+
+def _method_row(  # noqa: PLR0913
+    *,
+    method: str,
+    validation: dict[str, Any],
+    validation_chemistry: dict[str, Any],
+    test: dict[str, Any],
+    test_chemistry: dict[str, Any],
+    fitting_seconds: float,
+    fitting_workers: int,
+) -> dict[str, Any]:
+    """Return one concise, method-agnostic result row."""
+    return {
+        "method": method,
+        "topics": int(test["topic_count"]),
+        "fitting_seconds": float(fitting_seconds),
+        "fitting_workers": int(fitting_workers),
+        "validation": _split_summary(
+            validation, validation_chemistry, split="validation"
+        ),
+        "test": _split_summary(test, test_chemistry, split="test"),
+        "warm_in_memory_batch_inference": test["metrics"][
+            "warm_in_memory_batch_inference"
+        ],
+    }
 
 
 def build_machine_report(run_dir: str | Path) -> dict[str, Any]:
-    """Build the final comparison from completed evaluation artifacts."""
+    """Build the final comparison from the complete self-contained run."""
     directory = Path(run_dir).expanduser().resolve()
-    neural = read_json(directory / "evaluation/neural/complete.json")
-    comparator = read_json(directory / "evaluation/tomotopy/complete.json")
-    neural_training = read_json(directory / "model/complete.json")
     protocol = read_json(directory / "protocol.resolved.json")
-    neural_chemistry = read_json(directory / "chemical/neural/complete.json")
-    comparator_chemistry = read_json(directory / "chemical/tomotopy/complete.json")
-    rows = [
-        _method_row(neural, neural_chemistry, training=neural_training),
-        _method_row(comparator, comparator_chemistry),
+    neural_training = read_json(directory / "model/complete.json")
+    tomotopy_training = read_json(directory / "tomotopy/complete.json")
+
+    paths = {
+        "neural_validation": directory / "validation_evaluation/neural/complete.json",
+        "tomotopy_validation": directory
+        / "validation_evaluation/tomotopy/complete.json",
+        "neural_validation_chemistry": directory
+        / "validation_chemical/neural/complete.json",
+        "tomotopy_validation_chemistry": directory
+        / "validation_chemical/tomotopy/complete.json",
+        "neural_test": directory / "evaluation/neural/complete.json",
+        "tomotopy_test": directory / "evaluation/tomotopy/complete.json",
+        "neural_test_chemistry": directory / "chemical/neural/complete.json",
+        "tomotopy_test_chemistry": directory / "chemical/tomotopy/complete.json",
+    }
+    evidence = {name: read_json(path) for name, path in paths.items()}
+    methods = [
+        _method_row(
+            method="neural",
+            validation=evidence["neural_validation"],
+            validation_chemistry=evidence["neural_validation_chemistry"],
+            test=evidence["neural_test"],
+            test_chemistry=evidence["neural_test_chemistry"],
+            fitting_seconds=float(neural_training["elapsed_seconds"]),
+            fitting_workers=int(protocol["cpu_threads"]),
+        ),
+        _method_row(
+            method="tomotopy",
+            validation=evidence["tomotopy_validation"],
+            validation_chemistry=evidence["tomotopy_validation_chemistry"],
+            test=evidence["tomotopy_test"],
+            test_chemistry=evidence["tomotopy_test_chemistry"],
+            fitting_seconds=float(tomotopy_training["training_seconds_total"]),
+            fitting_workers=int(tomotopy_training["training_workers"]),
+        ),
     ]
+    source_paths = {
+        "protocol": directory / "protocol.resolved.json",
+        "neural_training": directory / "model/complete.json",
+        "tomotopy_training": directory / "tomotopy/complete.json",
+        **paths,
+    }
     result = {
         "schema_version": "neural-ms2lda/research-report-v1",
         "title": "Neural MS2LDA on MSnLib",
         "evidence_scope": "single-seed applied-method reproducibility checkpoint",
-        "headline": "A controlled K=1000, six-thread comparison on seed 42.",
         "comparison_contract": {
             "seed": int(protocol["seed"]),
             "topics": int(protocol["model"]["num_topics"]),
             "cpu_threads": int(protocol["cpu_threads"]),
-            "neural_selected_epoch": int(neural["selected_epoch"]),
-            "tomotopy_inference_iterations": int(comparator["inference_iterations"]),
-            "tomotopy_training_reused": True,
+            "neural_selected_epoch": int(evidence["neural_test"]["selected_epoch"]),
+            "tomotopy_inference_iterations": int(
+                protocol["tomotopy"]["inference_iterations"]
+            ),
+            "tomotopy_training_reused": False,
         },
-        "methods": rows,
+        "methods": methods,
         "training_contract": {
             "unsupervised": True,
             "tomotopy_teacher": False,
-            "dreams_input": False,
+            "pretrained_spectrum_encoder": False,
             "variational_bayes": False,
             "chemistry_labels": False,
             "test_information": False,
@@ -103,24 +136,10 @@ def build_machine_report(run_dir: str | Path) -> dict[str, Any]:
         "limitations": [
             "single fixed seed",
             "research checkpoint rather than production replacement",
-            "cached CPU throughput compares native inference algorithms rather than equal operation counts",
-            "Tomotopy training is reused while its held-out inference is recomputed",
+            "warm resident-model throughput compares different native inference algorithms",
         ],
         "source_sha256": {
-            "protocol": file_sha256(directory / "protocol.resolved.json"),
-            "neural_training": file_sha256(directory / "model/complete.json"),
-            "neural_evaluation": file_sha256(
-                directory / "evaluation/neural/complete.json"
-            ),
-            "tomotopy_evaluation": file_sha256(
-                directory / "evaluation/tomotopy/complete.json"
-            ),
-            "neural_chemistry": file_sha256(
-                directory / "chemical/neural/complete.json"
-            ),
-            "tomotopy_chemistry": file_sha256(
-                directory / "chemical/tomotopy/complete.json"
-            ),
+            name: file_sha256(path) for name, path in source_paths.items()
         },
     }
     write_json(directory / "report/report.json", result)
