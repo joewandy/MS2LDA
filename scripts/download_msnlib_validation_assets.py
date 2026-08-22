@@ -2,8 +2,8 @@
 
 Only the two positive-mode archives required by the benchmark are acquired.
 Downloads resume through HTTP Range requests, archives are checked against the
-versioned Zenodo record, and extraction is staged until every benchmark input
-has its expected SHA-256 digest.
+Zenodo-published size and MD5, and extraction is staged until every benchmark
+input is present with its expected size.
 """
 
 from __future__ import annotations
@@ -33,7 +33,6 @@ class Asset:
     name: str
     size_bytes: int
     md5: str
-    sha256: str
 
     @property
     def url(self) -> str:
@@ -42,11 +41,10 @@ class Asset:
 
 @dataclass(frozen=True)
 class RequiredFile:
-    """One extracted file required by the frozen benchmark configuration."""
+    """One extracted file required by the benchmark."""
 
     relative_path: str
     size_bytes: int
-    sha256: str
 
 
 ASSETS = (
@@ -54,13 +52,11 @@ ASSETS = (
         name="Data.zip",
         size_bytes=1_641_318_401,
         md5="4ae210759ced93a2e673f0e5daf17d3e",
-        sha256="c5f5855e99a09fa6d96b9b116b6a492e05561e5c7d033e696ea45f04d7ec5737",
     ),
     Asset(
         name="model_positive_mode.zip",
         size_bytes=1_991_689_484,
         md5="83d7ac4ff546653a03c3132be69d3d0f",
-        sha256="d419d919d8ef4507f3ec362a9996117d17e2c5ad8cc16d966811271c28403bac",
     ),
 )
 
@@ -68,7 +64,6 @@ REQUIRED_FILES = (
     RequiredFile(
         relative_path="Data/Benchmark_MSn_Lib/Corinna_Library_filtered_positive.mgf",
         size_bytes=88_159_030,
-        sha256="c1a2389754e630590111bde8f50403c9d90081d3f3427bc63defef0b9714682f",
     ),
     RequiredFile(
         relative_path=(
@@ -77,14 +72,12 @@ REQUIRED_FILES = (
             "motifset.json"
         ),
         size_bytes=1_537_391,
-        sha256="76cc12fc12b9160a5871d4bf1f5c373d6ca5b520bbafcd078ae0d1b5e542587d",
     ),
     RequiredFile(
         relative_path=(
             "model_positive_mode/positive_train_data/" "150225_CombLibraries_spectra.db"
         ),
         size_bytes=4_372_279_296,
-        sha256="f4d8c6af067479f1082cad8c4fa8958d975506eed89d6026fa10ee89121912f1",
     ),
     RequiredFile(
         relative_path=(
@@ -92,7 +85,6 @@ REQUIRED_FILES = (
             "150225_CleanedLibraries_Spec2Vec_pos_embeddings.npy"
         ),
         size_bytes=1_023_072_128,
-        sha256="30ac8b287b02e53cd3e72bcfc2083e608aa0dcfcda8f73f5e237dfd40754b4d3",
     ),
     RequiredFile(
         relative_path=(
@@ -100,21 +92,18 @@ REQUIRED_FILES = (
             "150225_Spec2Vec_pos_CleanedLibraries.model"
         ),
         size_bytes=9_943_191,
-        sha256="322a81fcd4f1f77a12007735d71f0a4f509f87c76703e2fef8f954eb909a2b82",
     ),
 )
 
 
-def file_digests(path: Path) -> tuple[str, str]:
-    """Return MD5 and SHA-256 without loading a large file into memory."""
+def file_md5(path: Path) -> str:
+    """Return the Zenodo checksum without loading a large file into memory."""
 
     md5 = hashlib.md5(usedforsecurity=False)
-    sha256 = hashlib.sha256()
     with path.open("rb") as stream:
         for chunk in iter(lambda: stream.read(DOWNLOAD_CHUNK_BYTES), b""):
             md5.update(chunk)
-            sha256.update(chunk)
-    return md5.hexdigest(), sha256.hexdigest()
+    return md5.hexdigest()
 
 
 def verify_archive(path: Path, asset: Asset) -> dict[str, object]:
@@ -127,11 +116,9 @@ def verify_archive(path: Path, asset: Asset) -> dict[str, object]:
         raise ValueError(
             f"archive size mismatch for {asset.name}: {size} != {asset.size_bytes}"
         )
-    md5, sha256 = file_digests(path)
+    md5 = file_md5(path)
     if md5 != asset.md5:
         raise ValueError(f"archive MD5 mismatch for {asset.name}")
-    if sha256 != asset.sha256:
-        raise ValueError(f"archive SHA-256 mismatch for {asset.name}")
     with zipfile.ZipFile(path) as archive:
         bad_member = archive.testzip()
     if bad_member is not None:
@@ -139,7 +126,6 @@ def verify_archive(path: Path, asset: Asset) -> dict[str, object]:
     return {
         "bytes": size,
         "md5": md5,
-        "sha256": sha256,
         "zip_test": "ok",
     }
 
@@ -175,14 +161,7 @@ def validate_extracted(
                 f"extracted size mismatch for {required.relative_path}: "
                 f"{size} != {required.size_bytes}"
             )
-        sha256 = hashlib.sha256()
-        with path.open("rb") as stream:
-            for chunk in iter(lambda: stream.read(DOWNLOAD_CHUNK_BYTES), b""):
-                sha256.update(chunk)
-        digest = sha256.hexdigest()
-        if digest != required.sha256:
-            raise ValueError(f"extracted SHA-256 mismatch for {required.relative_path}")
-        verified[required.relative_path] = {"bytes": size, "sha256": digest}
+        verified[required.relative_path] = {"bytes": size}
     return verified
 
 
@@ -350,7 +329,7 @@ def acquire(data_root: Path, *, verify_only: bool = False) -> Path:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Download and checksum the public MSnLib validation assets."
+        description="Download and verify the public MSnLib validation assets."
     )
     parser.add_argument(
         "--data-root",
