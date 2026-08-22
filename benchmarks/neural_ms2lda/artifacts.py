@@ -37,6 +37,15 @@ def initialize_run(run_dir: str | Path, *, data_root: str | Path) -> dict[str, A
     mgf = data / protocol["input_files"]["mgf"]
     if not mgf.is_file():
         raise FileNotFoundError(f"required MGF is missing: {mgf}")
+    binding = directory / "data_root.txt"
+    if binding.is_file():
+        if binding.read_text(encoding="utf-8").strip() != str(data):
+            raise ValueError("run data root differs from the original location")
+    else:
+        stage_outputs = [path for path in directory.iterdir() if path != resolved]
+        if stage_outputs:
+            raise ValueError("existing run lacks a data-root binding; start a new run")
+        binding.write_text(f"{data}\n", encoding="utf-8")
     return protocol
 
 

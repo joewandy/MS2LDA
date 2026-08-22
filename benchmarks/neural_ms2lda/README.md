@@ -29,7 +29,8 @@ conda run -n ms2lda-neural python -m benchmarks.neural_ms2lda run \
 ```
 
 `status --run /path/to/run` prints current progress. An interrupted fit restarts
-from its deterministic initialization.
+from its deterministic initialization. A run directory remains bound to the
+data root used when it was created; start a new run if the inputs move.
 
 The published model artifact contains only `weights.pt`, `model.json`, and
 `vocabulary.json`. `results.json` is the sole numerical source for the report.

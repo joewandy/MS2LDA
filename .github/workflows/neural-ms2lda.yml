@@ -82,6 +82,7 @@ jobs:
         run: |
           python -m pip install numpy matplotlib
           python scripts/generate_neural_ms2lda_report.py
+          git diff --exit-code -- docs/research/generated docs/research/figures
       - uses: xu-cheng/latex-action@v3
         with:
           root_file: neural_ms2lda_report.tex
