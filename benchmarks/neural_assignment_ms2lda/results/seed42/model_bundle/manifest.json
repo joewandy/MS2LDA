@@ -1,25 +1,25 @@
 {
-  "beta_derivation": "softmax_with_0.25_pull_to_equal_fragment_loss_mass",
+  "beta_derivation": "mean_type_evidence_with_0.25_pull_to_equal_fragment_loss_mass",
   "files": {
     "chemistry.json": {
-      "bytes": 2626,
-      "sha256": "34d06a19f0ef0892e29f7d1815cd85ab8e2aa5e8e5a1df601636559efaf0d6f1"
+      "bytes": 2647,
+      "sha256": "520e5bde85fdbbd4f2a6f958f2a9c5d731cf1e54beee318d7bdd872acb8ca893"
     },
     "evaluation.json": {
-      "bytes": 4641,
-      "sha256": "c73ab6152157b5897988246a1d4e1c20672d98d5be10e4a8c4a9a8cf53903d68"
+      "bytes": 4630,
+      "sha256": "7b7984dc69e73c87c1a6f6c4a10ae38f4ea00da8241d12af3464a818e2fbd743"
     },
     "model.pt": {
       "bytes": 6382949,
-      "sha256": "90d7cb11f4f8717a8b028130b118e3bf47ddd136eb576b3f8a388745305be33d"
+      "sha256": "639c1f37c613d908b59e3a85b7dc701e33a3f92fd7476a3257b47298143dfbc6"
     },
     "protocol.json": {
-      "bytes": 3946,
-      "sha256": "c7ad4b2b6b809daf426b6aff2e4e11d1aac87a1649ee8eaa95b9e7f7e1cf8943"
+      "bytes": 3989,
+      "sha256": "6370b99aa6e87ecbdd9081d1278bdc688aa5f0ab340c1c47aa4a200e21d0f552"
     },
     "provenance.json": {
-      "bytes": 3108,
-      "sha256": "328b355100c590ff43060353b73e6e0a08bdc0f0f94c1da9c0efb3c7bd200720"
+      "bytes": 3068,
+      "sha256": "02668690a22c16318c39de1ef602f669d865de07132dae6815e04556e8d4f98c"
     },
     "vocabulary.json": {
       "bytes": 399546,

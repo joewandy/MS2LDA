@@ -20,11 +20,11 @@
 \fancyhf{}
 \setlength{\headheight}{14pt}
 \setlength{\headsep}{18pt}
-\lhead{Neural MS2LDA balanced-gate experiment}
+\lhead{Neural MS2LDA mean-evidence experiment}
 \rhead{Seed 42, K=1000, six CPU threads}
 \cfoot{\thepage}
 \setlist{nosep,leftmargin=*}
-\title{Soft fragment--loss balancing closes the seed-42 neural MS2LDA motif gap}
+\title{Mean token-type evidence closes the seed-42 neural MS2LDA annotation gap}
 \author{MS2LDA research checkpoint}
 \date{22 August 2026}
 
@@ -32,33 +32,33 @@
 \maketitle
 
 \begin{abstract}
-We tested one small correction to the document-gated neural MS2LDA architecture
-after diagnosing that its topics were strongly divided by token type: 453 of
-1,000 topics had no fragment among their 20 highest-probability words. The
-candidate preserves word rankings within fragments and neutral losses while
-pulling each type's total topic mass 25 percent toward an equal split. It uses
-the same one-pass router and a fixed three-quarter document gate. Seed 42,
-1,000 topics, six CPU threads, data, token features, initialization, losses,
-and final epoch 40 remain fixed. On leakage-filtered validation data, useful
+We tested one small correction to the accepted document-gated neural MS2LDA
+architecture. Its fragment and neutral-loss channel evidence was computed with
+a log-sum-exp, which rewards a channel merely for having a larger vocabulary.
+The candidate instead subtracts the log vocabulary size, making the evidence a
+mean on the log scale before the existing soft fragment--loss balance. The
+one-pass router, three-quarter document gate, seed 42, 1,000 topics, six CPU
+threads, data, token features, initialization, losses, and final epoch 40 all
+remain fixed. On leakage-filtered validation data, MAG annotation coverage rose
+from 51.5 to 66.3 percent, surpassing Tomotopy's 60.7 percent. Useful
 high-confidence motifs---topics associated at probability at least 0.5 with
-compound-balanced structure overlap score (SOS) at least 0.6---increased from
-20 to 148, compared with 138 for Tomotopy. MAG annotation coverage reached
-51.5 percent, mean SOS was 0.6418, and validation NLL was 8.4963. Every
-predeclared validation gate passed. The locked checkpoint was then evaluated
-once on test, where it produced 211 useful motifs versus Tomotopy's 186, with
-nearly identical mean SOS. This is a substantial single-seed research result,
-not multi-seed confirmation or evidence to replace the production backend.
+compound-balanced structure overlap score (SOS) at least 0.6---rose from 148
+to 185, versus 138 for Tomotopy. Mean SOS was 0.6323 and validation NLL was
+8.5014, so every predeclared gate passed. The locked checkpoint was then
+evaluated once on test, where it retained 66.3 percent coverage and produced
+234 useful motifs versus Tomotopy's 186. This is a substantial single-seed
+research result, not multi-seed confirmation or evidence to replace the
+production backend.
 \end{abstract}
 
 \section{Question and frozen comparison}
 
 MS2LDA treats spectra as documents, fragments and neutral losses as words, and
-recurring word distributions as Mass2Motifs \cite{vanderhooft2016}. The previous
-neural checkpoint had better completion likelihood and faster direct inference
-than the established Tomotopy model, but far fewer chemically annotated and
-useful high-confidence motifs. Adding document evidence raised confidence, yet
-the first gated candidate still optimized only 420 motifs and produced 83
-useful high-confidence motifs, versus Tomotopy's 607 and 138.
+recurring word distributions as Mass2Motifs \cite{vanderhooft2016}. The accepted
+balanced-gated neural checkpoint already had better completion likelihood and
+more useful high-confidence motifs than Tomotopy, but its broad MAG annotation
+coverage remained lower: 515 of 1,000 motifs versus 607. This experiment targets
+only that remaining gap.
 
 The comparison fixes seed 42, 1,000 requested topics, six CPU threads, the
 training/validation split, vocabulary, token features, deterministic
@@ -69,23 +69,21 @@ and test compound connectivity keys.
 
 \section{Failure mode and minimal correction}
 
-The failed gated model was not primarily short of confidence. Its topic-word
-distributions separated fragments from neutral losses too strongly. Among each
-topic's 20 highest-probability words, 453 topics contained no fragment and 330
-contained only fragments; Tomotopy had just 27 fragment-free topics. Because
-MAG motif optimization benefits from joint fragment--loss evidence, increasing
-the gate weight alone raised useful motifs but did not repair annotation
-breadth.
+The accepted decoder first combined the logits within each token-type
+vocabulary. For type $t$, raw log-sum-exp evidence grows with $|V_t|$ even when
+the average word evidence is identical. Unequal fragment and neutral-loss
+vocabulary sizes could therefore bias the subsequent channel softmax for a
+reason unrelated to the spectrum or topic.
 
-Let $m_k$ be the original total fragment probability in topic $k$. The
-candidate replaces it with
+The candidate replaces summed type evidence with
 \[
-\widetilde m_k=(1-\lambda)m_k+\lambda/2,\qquad \lambda=0.25.
+e_t=\log\sum_{w\in V_t}\exp(\ell_w)-\log|V_t|.
 \]
-It rescales fragment and loss probabilities to these two totals while
-preserving all rankings within each token type. This is a soft constraint:
-topics may remain fragment- or loss-heavy, but neither type is allowed to
-vanish as easily. It adds no learned parameter or loss.
+The existing softmax and 25 percent pull toward equal fragment--loss mass are
+then applied unchanged. This preserves word rankings within each type, uses an
+equal neutral channel prior, and adds no learned parameter, encoder, or loss.
+When the option is absent or false, the exact legacy summed-evidence calculation
+is retained.
 
 After count-weighted token aggregation, document evidence is applied as
 \[
@@ -102,9 +100,9 @@ mixture.
 \begin{figure}[ht]
   \centering
   \includegraphics[width=\textwidth]{architecture.png}
-  \caption{The accepted correction has two parameter-free parts: a fixed
-  document gate for confident spectrum mixtures and a soft token-type balance
-  for joint fragment--loss motif content.}
+  \caption{The candidate retains the fixed document gate and soft token-type
+  balance, but makes fragment and neutral-loss evidence comparable by removing
+  vocabulary-size bias before the channel softmax.}
   \label{fig:architecture}
 \end{figure}
 
@@ -118,18 +116,20 @@ over unique compounds within each topic. Eligible topics are divided into high
 ($>0.8$), intermediate ($0.6$--$0.8$, inclusive), and low ($<0.6$) bands.
 
 The primary outcome is the number of high-confidence motifs with SOS at least
-0.6. Acceptance required all of the following:
+0.6. The unchanged checkpoint was first decoded with the new rule. Its frozen
+diagnostic reached 61.0 percent coverage and validation NLL 8.5042, so the one
+allowed full retraining proceeded. Acceptance then required all of the
+following:
 \begin{itemize}
-  \item closing at least 50 percent of the current-neural--Tomotopy useful-motif gap;
-  \item MAG annotation coverage of at least 49.6 percent;
-  \item mean high-confidence SOS no more than 0.02 below the current neural model;
+  \item MAG annotation coverage of at least 60.7 percent;
+  \item at least 148 useful high-confidence motifs;
+  \item mean high-confidence SOS of at least 0.6318;
   \item validation NLL no greater than 8.5266; and
   \item finite, stable training and evaluation.
 \end{itemize}
 
-The initially proposed 5,571-second fitting-time condition had already been
-demoted to descriptive context. The candidate nevertheless completed in
-3,571.5 seconds and would pass that original condition.
+Runtime was descriptive rather than an acceptance gate. The candidate completed
+in 4,720.0 seconds, below the recorded 5,571-second context threshold.
 
 \section{Validation results}
 
@@ -140,11 +140,11 @@ demoted to descriptive context. The candidate nevertheless completed in
 \begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.43\textwidth}rrr@{}}
 \caption{Validation-only paper-relevant comparison.}\label{tab:comparison}\\
 \toprule
-Metric & Current neural & Balanced-gated neural & Tomotopy \\
+Metric & Current neural & Mean-evidence neural & Tomotopy \\
 \midrule
 \endfirsthead
 \toprule
-Metric & Current neural & Balanced-gated neural & Tomotopy \\
+Metric & Current neural & Mean-evidence neural & Tomotopy \\
 \midrule
 \endhead
 \input{generated/final_comparison_table.tex}
@@ -155,8 +155,8 @@ Metric & Current neural & Balanced-gated neural & Tomotopy \\
   \centering
   \includegraphics[width=\textwidth]{final_comparison.png}
   \caption{Headline validation outcomes and model-fitting time. The accepted
-  model exceeds Tomotopy's useful high-confidence motif count while retaining
-  the lower annotation coverage of the neural family.}
+  model exceeds Tomotopy on both useful high-confidence motifs and broad MAG
+  annotation coverage.}
   \label{fig:comparison}
 \end{figure}
 
@@ -170,21 +170,20 @@ Metric & Current neural & Balanced-gated neural & Tomotopy \\
   \label{fig:chemistry}
 \end{figure}
 
-The candidate increases high-confidence associated validation spectra from 87
-to 1,011 and SOS-evaluable high-confidence motifs from 42 to 252. Tomotopy has
-446 associated spectra and 206 evaluable motifs. Useful motifs increase from 20
-to 148, ten more than Tomotopy's 138. Relative to the original 118-motif gap,
-the candidate closes 108.5 percent.
+The candidate increases annotation coverage from 515 to 663 motifs, surpassing
+Tomotopy's 607. It closes 160.9 percent of the remaining 9.2-percentage-point
+coverage gap. High-confidence SOS-evaluable motifs rise from 252 to 312, versus
+206 for Tomotopy. Useful motifs rise from 148 to 185, 47 more than Tomotopy's
+138.
 
-Candidate mean SOS is 0.6418 versus 0.6227 for the current neural model, and
-median SOS rises from 0.5866 to 0.6477. Tomotopy remains higher on validation
-mean and median SOS at 0.6761 and 0.6854. The candidate's 51.5 percent MAG
-annotation coverage clears the 49.6 percent gate but remains 9.2 percentage
-points below Tomotopy's 60.7 percent.
+Candidate mean SOS is 0.6323 versus 0.6418 for the current neural model and
+0.6761 for Tomotopy. Median SOS is 0.6364, versus 0.6477 and 0.6854. This is the
+declared tradeoff: much broader annotatability with a modest validation SOS
+reduction that remains above the 0.6318 floor.
 
-Validation NLL is 8.4963, 1.64 percent above the current neural 8.3594 but below
-the 8.5266 safety limit. Training remains finite and stable with 313
-corpus-active topics. Fitting takes 59.5 minutes, versus 84.4 minutes for the
+Validation NLL is 8.5014, only 0.0051 above the current neural 8.4963 and below
+the 8.5266 safety limit. Training remains finite and stable with 321
+corpus-active topics. Fitting takes 78.7 minutes, versus 59.5 minutes for the
 current neural reference and 76.0 minutes for the reused Tomotopy source run.
 
 \section{Single locked test confirmation}
@@ -201,23 +200,22 @@ performed. No parameter changed after test access.
 \begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.56\textwidth}rr@{}}
 \caption{One-time held-out test confirmation.}\label{tab:test}\\
 \toprule
-Metric & Balanced-gated neural & Tomotopy \\
+Metric & Mean-evidence neural & Tomotopy \\
 \midrule
 \endfirsthead
 \toprule
-Metric & Balanced-gated neural & Tomotopy \\
+Metric & Mean-evidence neural & Tomotopy \\
 \midrule
 \endhead
 \input{generated/test_confirmation_table.tex}
 \end{longtable}
 \endgroup
 
-The test result confirms rather than reverses the validation conclusion. The
-candidate produces 211 useful high-confidence motifs versus Tomotopy's 186 and
-345 SOS-evaluable motifs versus 333. Mean SOS is effectively equal (0.6376
-versus 0.6369), while the candidate median is higher (0.6406 versus 0.6145).
-Candidate completion NLL is 8.5114 versus Tomotopy's 9.7569. Annotation coverage
-remains lower at 51.5 versus 60.7 percent.
+The test result confirms the breadth improvement. The candidate produces 234
+useful high-confidence motifs versus Tomotopy's 186 and 424 SOS-evaluable motifs
+versus 333. Annotation coverage is 66.3 versus 60.7 percent. Mean SOS is lower
+(0.6204 versus 0.6369), while the medians are nearly identical (0.6135 versus
+0.6145). Candidate completion NLL is 8.5226 versus Tomotopy's 9.7569.
 
 \clearpage
 \section{Secondary inference context}
@@ -231,29 +229,28 @@ remains lower at 51.5 versus 60.7 percent.
   \label{fig:speed}
 \end{figure}
 
-The accepted one-pass neural checkpoint processes 9,007 spectra/s in the fixed
+The accepted one-pass neural checkpoint processes 9,231 spectra/s in the fixed
 128-spectrum warm batch, versus 30.0 spectra/s for Tomotopy with 100 inference
-iterations, a 300-fold ratio. ``Warm in-memory batch inference'' means that the
+iterations, a 307-fold ratio. ``Warm in-memory batch inference'' means that the
 model and batch are already loaded and one warm-up has completed. It is usable
 for serving or repeated batches, but excludes file loading, preprocessing, and
 first-call setup.
 
 \section{Interpretation}
 
-The main neural failure was not merely diffuse document mixtures. It was the
-combination of confidence with a polarized topic-word inventory. The fixed
-document gate supplies the former; soft fragment--loss balancing repairs the
-latter without a new encoder, loss, or iterative inference step. Their
-combination exceeds Tomotopy on the chosen useful-motif count on validation and
-test while maintaining predictive fit.
+The remaining broad-coverage failure was a decoder accounting bias, not a need
+for a larger architecture. Mean-normalizing each token type's evidence removes
+that bias without a new encoder, loss, or iterative inference step. Combined
+with the existing gate and soft balance, it exceeds Tomotopy on annotation
+coverage and useful-motif count on validation and test while maintaining much
+better predictive fit.
 
-The remaining weakness is broad MAG annotatability: 515 of 1,000 neural motifs
-are optimized, compared with 607 for Tomotopy. Validation SOS among the useful
-set also remains somewhat lower. These are clear targets for later work, but
-they do not negate the present primary result. This remains one fixed-seed
-architecture experiment. Replication across seeds is a separate confirmation
-stage, and no claim is made that this research checkpoint replaces the
-production Tomotopy backend.
+The remaining weakness is SOS strength: broader candidate coverage includes
+more low-SOS topics, and test mean SOS is 0.0165 below Tomotopy. This is a clear
+tradeoff rather than evidence that every candidate motif is superior. The result
+remains one fixed-seed architecture experiment. Replication across seeds is a
+separate confirmation stage, and no claim is made that this research checkpoint
+replaces the production Tomotopy backend.
 
 \section{Reproducibility}
 
@@ -262,8 +259,8 @@ for training, all validation references, the gate decision, the test-access
 record, and both test evaluations. The candidate checkpoint is fixed at epoch
 40 with SHA-256:
 \begin{center}
-\small\texttt{90d7cb11f4f8717a8b028130b118e3bf}\\[-2pt]
-\texttt{47ddd136eb576b3f8a388745305be33d}
+\small\texttt{639c1f37c613d908b59e3a85b7dc701e}\\[-2pt]
+\texttt{33a3f92fd7476a3257b47298143dfbc6}
 \end{center}
 The test-access manifest confirms that selection was final before test.
 

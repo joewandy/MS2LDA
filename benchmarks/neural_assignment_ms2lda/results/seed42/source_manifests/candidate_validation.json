@@ -1,35 +1,35 @@
 {
-  "evaluation_seconds": 1.9806565409962786,
+  "evaluation_seconds": 2.1996033749892376,
   "method": "candidate_neural",
   "metrics": {
-    "distinct_high_confidence_topics": 413,
+    "distinct_high_confidence_topics": 432,
     "full_spectrum_mixture": {
-      "effective_topic_count_mean": 11.72681877628318,
-      "effective_topic_count_median": 7.897824883261888,
-      "effective_topic_count_p95": 33.64329965100548,
-      "maximum_topic_probability_maximum": 0.9913745175255686,
-      "maximum_topic_probability_median": 0.36900865983301906,
-      "maximum_topic_probability_p95": 0.7147190715266367
+      "effective_topic_count_mean": 11.828533443266792,
+      "effective_topic_count_median": 8.010885844046706,
+      "effective_topic_count_p95": 34.37306497333737,
+      "maximum_topic_probability_maximum": 0.9946896003897304,
+      "maximum_topic_probability_median": 0.36749464834395884,
+      "maximum_topic_probability_p95": 0.7269739298053831
     },
-    "high_confidence_spectra": 1011,
+    "high_confidence_spectra": 1019,
     "validation_document_completion": {
       "eligible_documents": 3888,
       "in_vocabulary_tokens": 1277983,
-      "nll_per_token": 8.496337315866649,
+      "nll_per_token": 8.501446912771746,
       "oov_fraction": 0.031355544236867795,
       "out_of_vocabulary_tokens": 41369,
       "total_documents": 3889
     }
   },
   "output_sha256": {
-    "beta.npy": "b5cee40025a08fafe493349c9050e5ecf05d998761c297ba5d0af588ad32c6cd",
-    "validation_completion_nll.npy": "29287ddc321d9d3de71d361f61522ad7ddb837dc6ceb387055cbc47194a1e976",
-    "validation_full_theta.npy": "3ef61091c4c48c290890a749ffc4c9025e6cd0dd3372ad5a3dafd1c7b5924622",
-    "validation_observed_theta.npy": "21a21e7b7cc884d5a608bc84dfe8f79b26380f59c4926c019bf3d4f3747a0cc2"
+    "beta.npy": "4ec04c2a5283e492685519a818ad1eb86e88e306a0e2ca83873ce7c7cef16877",
+    "validation_completion_nll.npy": "f7185ee2cfccbf58d4637af44f5f691844289851285d8cc21cd4995d0b548c44",
+    "validation_full_theta.npy": "8f22b0ed42e808e6838eaeb417068a85eea5fe9c998a6637537a278886cb7741",
+    "validation_observed_theta.npy": "6b07551477dc409d5b2f7d59eaf09134fa4a41d1ec16032a44610f19fd741d81"
   },
-  "peak_rss_bytes": 1304215552,
+  "peak_rss_bytes": 1194917888,
   "schema_version": "neural-ms2lda/validation-evaluation-v1",
-  "source_sha256": "90d7cb11f4f8717a8b028130b118e3bf47ddd136eb576b3f8a388745305be33d",
+  "source_sha256": "639c1f37c613d908b59e3a85b7dc701e33a3f92fd7476a3257b47298143dfbc6",
   "split": "validation",
   "stable": true,
   "topic_count": 1000

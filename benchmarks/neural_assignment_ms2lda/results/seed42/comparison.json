@@ -8,33 +8,15 @@
     "topics": 1000
   },
   "decision": "accepted",
-  "headline": "Soft fragment-loss balancing plus a fixed document gate closed 108.5% of the validation useful-motif gap and passed every gate.",
+  "headline": "Mean-normalized fragment-loss evidence closed 160.9% of the remaining validation MAG-coverage gap while increasing useful high-confidence motifs by 25.0%.",
   "methods": [
-    {
-      "annotation_coverage": 0.384,
-      "high_confidence_associated_spectra": 87,
-      "high_confidence_eligible_topics": 42,
-      "high_confidence_mean_sos": 0.622722366969358,
-      "high_confidence_median_sos": 0.5866188769414575,
-      "method": "current_neural",
-      "optimized_motifs": 384,
-      "sos_bands": {
-        "high_gt_0_8": 10,
-        "intermediate_0_6_to_0_8": 10,
-        "low_lt_0_6": 22
-      },
-      "topics": 1000,
-      "training_seconds": 5064.448707042002,
-      "useful_high_confidence_motifs": 20,
-      "validation_nll": 8.35941412640473
-    },
     {
       "annotation_coverage": 0.515,
       "high_confidence_associated_spectra": 1011,
       "high_confidence_eligible_topics": 252,
       "high_confidence_mean_sos": 0.6418071535466036,
       "high_confidence_median_sos": 0.6477481617647058,
-      "method": "candidate_neural",
+      "method": "current_neural",
       "optimized_motifs": 515,
       "sos_bands": {
         "high_gt_0_8": 43,
@@ -45,6 +27,24 @@
       "training_seconds": 3571.5121906249988,
       "useful_high_confidence_motifs": 148,
       "validation_nll": 8.496337315866649
+    },
+    {
+      "annotation_coverage": 0.663,
+      "high_confidence_associated_spectra": 1019,
+      "high_confidence_eligible_topics": 312,
+      "high_confidence_mean_sos": 0.6323301481310782,
+      "high_confidence_median_sos": 0.6363636363636365,
+      "method": "candidate_neural",
+      "optimized_motifs": 663,
+      "sos_bands": {
+        "high_gt_0_8": 49,
+        "intermediate_0_6_to_0_8": 136,
+        "low_lt_0_6": 127
+      },
+      "topics": 1000,
+      "training_seconds": 4719.976054917002,
+      "useful_high_confidence_motifs": 185,
+      "validation_nll": 8.501446912771746
     },
     {
       "annotation_coverage": 0.607,
@@ -66,61 +66,62 @@
     }
   ],
   "primary_outcome": {
-    "candidate_closed_fraction": 1.0847457627118644,
-    "candidate_motifs_beyond_tomotopy": 10,
-    "current_to_tomotopy_gap": 118,
+    "candidate_improvement_fraction": 0.25,
+    "candidate_motifs_beyond_current": 37,
+    "candidate_motifs_beyond_tomotopy": 47,
+    "coverage_gap_closed_fraction": 1.6086956521739137,
     "definition": "high-confidence motifs with compound-balanced SOS at least 0.6"
   },
   "safety_evidence": {
-    "candidate_checkpoint_sha256": "90d7cb11f4f8717a8b028130b118e3bf47ddd136eb576b3f8a388745305be33d",
+    "candidate_checkpoint_sha256": "639c1f37c613d908b59e3a85b7dc701e33a3f92fd7476a3257b47298143dfbc6",
     "candidate_stable": true,
     "candidate_test_accessed_after_acceptance": true,
     "gate_checks": {
       "annotation_coverage": true,
-      "gap_closed": true,
       "mean_high_confidence_sos": true,
       "stable": true,
+      "useful_high_confidence_motifs": true,
       "validation_nll": true
     }
   },
   "schema_version": "neural-ms2lda/research-report-v1",
   "secondary_warm_in_memory_batch_inference": {
-    "candidate_neural_spectra_per_second": 9006.763655946783,
+    "candidate_neural_spectra_per_second": 9230.991351567689,
     "note": "Held-out test-batch throughput after one warm-up; not an acceptance gate or end-to-end latency.",
-    "speedup_over_tomotopy": 299.7288870097065,
+    "speedup_over_tomotopy": 307.1907812274849,
     "tomotopy_spectra_per_second": 30.049701734805108
   },
   "source_sha256": {
-    "candidate_chemistry": "36b7b83b6b26a954de4a0168faa996867b51327a6261418e73a929eb46887293",
-    "candidate_evaluation": "845108984ffabc67ec6bd73980e4883c775dd5628d7ff20fccc8fff8bb9e90b9",
-    "candidate_test_access": "e35f71d554912ab3c4f264dd60c9eb78250df989f979fff9d977c62a236f69ff",
-    "candidate_test_chemistry": "34d06a19f0ef0892e29f7d1815cd85ab8e2aa5e8e5a1df601636559efaf0d6f1",
-    "candidate_test_evaluation": "c73ab6152157b5897988246a1d4e1c20672d98d5be10e4a8c4a9a8cf53903d68",
-    "candidate_training": "57fdada3090942a358276a112caf31844c021abbc11c3913ca0c4ea9a8afe6ea",
-    "current_chemistry": "eab10b548283c1177d5390f7a53bf12ac7d27649669341ca798d833d7cc36050",
-    "current_evaluation": "4d0ea27ef0c06a5934336dbb2384a31001eaa6466adb9563bb57a740287641b1",
+    "candidate_chemistry": "ca7905b2a68c78429c7d57a7e906b41c81717543c5842ffa8dc6c755e85f5020",
+    "candidate_evaluation": "f64e04d5e7ab2b2a3b0a8b8f7ba307060dacfbaa645658051d58a3bfdb00fa5d",
+    "candidate_test_access": "71e8fee553aa9f5a394daea19ad09ff1c6e525f2357889096c1a9e5d0031e932",
+    "candidate_test_chemistry": "520e5bde85fdbbd4f2a6f958f2a9c5d731cf1e54beee318d7bdd872acb8ca893",
+    "candidate_test_evaluation": "7b7984dc69e73c87c1a6f6c4a10ae38f4ea00da8241d12af3464a818e2fbd743",
+    "candidate_training": "88114b2de003e297fa3a8a32555e39d65e39a4e04bd203926d39454d3cd0300f",
+    "current_chemistry": "36b7b83b6b26a954de4a0168faa996867b51327a6261418e73a929eb46887293",
+    "current_evaluation": "845108984ffabc67ec6bd73980e4883c775dd5628d7ff20fccc8fff8bb9e90b9",
     "tomotopy_chemistry": "fc13208d12d8f539d01b4c169029a03126b225a47b915e27ec52452eb7272378",
     "tomotopy_evaluation": "562e252c3759d206755c2009425e6227967d164c8e7e70200abc12335b32fcbd",
     "tomotopy_test_chemistry": "3ed8d00e748a1517d4e49cb2ee89c5e84c7a408ec94b76b952c235c4d8332504",
     "tomotopy_test_evaluation": "a79f52b81bafb5a7eee640919033db737e8def85324d6386bcb25a6752400980",
-    "validation_gate": "b7cfe551f0d02a7d72410906c7fa0f6bbc96db2e87732d81e9c35786617d3642"
+    "validation_gate": "7519002959619cf6210195a0d3a54ae9fb70c26ff94a38110d6a7d3e460cf01e"
   },
   "test_confirmation": {
     "candidate_neural": {
-      "active_topics": 308,
-      "annotation_coverage": 0.515,
-      "high_confidence_associated_spectra": 2196,
-      "high_confidence_eligible_topics": 345,
-      "high_confidence_mean_sos": 0.6376113710631213,
-      "high_confidence_median_sos": 0.640625,
-      "optimized_motifs": 515,
+      "active_topics": 319,
+      "annotation_coverage": 0.663,
+      "high_confidence_associated_spectra": 2211,
+      "high_confidence_eligible_topics": 424,
+      "high_confidence_mean_sos": 0.6203718694686279,
+      "high_confidence_median_sos": 0.6134848484848485,
+      "optimized_motifs": 663,
       "sos_bands": {
         "high_gt_0_8": 58,
-        "intermediate_0_6_to_0_8": 153,
-        "low_lt_0_6": 134
+        "intermediate_0_6_to_0_8": 176,
+        "low_lt_0_6": 190
       },
-      "test_nll": 8.511420960005033,
-      "useful_high_confidence_motifs": 211
+      "test_nll": 8.522600207027194,
+      "useful_high_confidence_motifs": 234
     },
     "opened_after_validation_acceptance": true,
     "split": "test",

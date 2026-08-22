@@ -252,5 +252,36 @@ was locked before test access.
 The single test confirmation produced 211 useful motifs versus Tomotopy's 186,
 mean SOS 0.6376 versus 0.6369, and test NLL 8.5114 versus 9.7569. Neural MAG
 coverage remained lower (51.5 versus 60.7 percent). The architecture is
-accepted as the new seed-42 research checkpoint; multi-seed confirmation and
-any production-backend decision remain separate work.
+accepted as the seed-42 reference for the remaining coverage experiment below.
+
+## Mean-normalized token-type evidence
+
+The remaining failure was a vocabulary-size bias in the decoder's fragment and
+neutral-loss channel evidence. Raw log-sum-exp evidence grows with the number of
+words in a channel even when its average word evidence does not. The candidate
+therefore subtracts `log(|V_t|)` from each channel's log-sum-exp before the
+existing softmax and 0.25 pull toward equal fragment--loss mass. It adds only
+`model.normalize_token_type_evidence: true`; routing, topic prototypes, losses,
+MAG settings, and public APIs are unchanged. Missing or false retains exact
+legacy behavior.
+
+The accepted checkpoint decoded without retraining reached 61.0 percent
+validation coverage, 167 useful high-confidence motifs, mean SOS 0.6413, and
+NLL 8.5042. This passed the staged diagnostic and authorized one seed-42,
+K=1000, six-thread, epoch-40 retraining.
+
+The trained checkpoint
+`639c1f37c613d908b59e3a85b7dc701e33a3f92fd7476a3257b47298143dfbc6`
+passed every validation gate: 66.3 percent MAG coverage, 185 useful
+high-confidence motifs, mean SOS 0.6323, NLL 8.5014, and stable training.
+Tomotopy produced 60.7 percent coverage and 138 useful motifs; the prior neural
+reference produced 51.5 percent and 148. The candidate closed 160.9 percent of
+the remaining coverage gap and completed in 4,720.0 seconds.
+
+After the gate decision was recorded, the test matrices were linked exactly
+once. The candidate retained 66.3 percent coverage and produced 234 useful
+motifs, versus Tomotopy's 60.7 percent and 186. Test NLL was 8.5226 versus
+9.7569. Broader coverage came with weaker average SOS: 0.6204 versus 0.6369,
+although medians were nearly equal at 0.6135 and 0.6145. The mean-normalized
+model is the new seed-42 research checkpoint; multi-seed confirmation and any
+production-backend decision remain separate work.

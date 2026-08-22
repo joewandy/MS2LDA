@@ -6,7 +6,9 @@ graph shapes topic words, a nearest-topic margin preserves distinct topics,
 and a local-document product-of-experts router concentrates each spectrum in
 one pass. A fixed document gate sharpens the final spectrum mixture, while a
 soft token-type balance keeps fragments and neutral losses jointly represented
-in topic words. It discovers topics without a Tomotopy teacher, DreaMS,
+in topic words. Mean-normalized channel evidence removes fragment/loss
+vocabulary-size bias before that balance. It discovers topics without a
+Tomotopy teacher, DreaMS,
 variational Bayes, chemistry labels, or test-set information. Tomotopy K=1000
 is trained separately as the established post-training comparator. The
 comparison reuses a hash-verified six-worker Tomotopy training run and

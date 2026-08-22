@@ -1,4 +1,4 @@
-"""Generate the paper-focused balanced-gate comparison from hashed evidence."""
+"""Generate the paper-focused mean-evidence comparison from hashed evidence."""
 
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ FIGURES = DOCS / "figures"
 GENERATED = DOCS / "generated"
 MANIFEST = DOCS / "report_manifest.json"
 COLORS = ("#2563eb", "#f59e0b", "#64748b")
-LABELS = ("Current neural", "Balanced-gated neural", "Tomotopy")
+LABELS = ("Current neural", "Mean-evidence neural", "Tomotopy")
 
 
 def _json(path: Path) -> dict[str, Any]:
@@ -86,8 +86,8 @@ def architecture() -> None:
         weight="bold",
     )
     decoder_boxes = (
-        (0.1, "Neural topic-word\ndistribution", "#ede9fe"),
-        (3.0, "Preserve rankings within\nfragments and losses", "#ddd6fe"),
+        (0.1, "Neural topic-word\nlogits", "#ede9fe"),
+        (3.0, "Mean log evidence per\nfragment/loss vocabulary", "#ddd6fe"),
         (5.9, "Pull type mass 25%\ntoward 50:50", "#c4b5fd"),
         (8.8, "Joint fragment-loss\nmotifs", "#a78bfa"),
     )
@@ -184,7 +184,7 @@ def speed() -> None:
     )
     figure, axis = plt.subplots(figsize=(5.7, 3.7))
     bars = axis.bar(
-        ("Balanced-gated neural", "Tomotopy"),
+        ("Mean-evidence neural", "Tomotopy"),
         values,
         color=(COLORS[1], COLORS[2]),
     )

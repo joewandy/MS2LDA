@@ -61,6 +61,7 @@
     "document_mixture_weight": 0.75,
     "document_topic_prior_weight": 1.0,
     "gradient_clip_norm": 5.0,
+    "normalize_token_type_evidence": true,
     "num_topics": 1000,
     "projection_dimensions": 128,
     "router_hidden_dimensions": 256,

@@ -16,12 +16,14 @@ active `main`.
 | Baseline capacity arms | Increasing K enlarged the mass-carrying inventory while reducing global top-word diversity. | Diagnostic evidence that nominal K is not usable motif count. |
 | ERNTM K=300 | High diversity but a smaller non-redundant inventory than K=500. | Not selected. |
 | ERNTM K=500 | Best defensible compromise among diversity, usable inventory, likelihood, speed, and chemical evidence. | Selected checkpoint. |
-| Balanced-gated neural K=1000 | Soft fragment--loss balancing plus a fixed document gate produced 148 useful validation motifs and 211 test motifs, versus Tomotopy's 138 and 186; neural MAG coverage remained lower. | Selected seed-42 research checkpoint; multi-seed confirmation pending. |
+| Balanced-gated neural K=1000 | Soft fragment--loss balancing plus a fixed document gate produced 148 useful validation motifs and 211 test motifs, versus Tomotopy's 138 and 186; neural MAG coverage remained lower. | Former seed-42 checkpoint; retained as the reference for the mean-evidence experiment. |
+| Mean-evidence neural K=1000 | Correcting fragment/loss vocabulary-size bias raised validation MAG coverage from 51.5% to 66.3% and useful motifs from 148 to 185; test coverage remained 66.3% with 234 useful motifs. | Selected seed-42 research checkpoint; lower mean test SOS and multi-seed confirmation remain explicit caveats. |
 
 The decisive structural finding is that balanced routing and recycling prevent
 gross activity collapse, while ERNTM prototype separation reduces duplication.
-At K=1000, document gating supplies confident mixtures and soft fragment--loss
-balancing makes far more of that inventory chemically useful. The neural model
-still has lower broad MAG coverage than Tomotopy. Its research value is fully
-neural unsupervised discovery plus one-pass inference; this single-seed result
-does not establish production replacement.
+At K=1000, document gating supplies confident mixtures, soft fragment--loss
+balancing makes more of that inventory chemically useful, and mean-normalized
+type evidence removes the remaining vocabulary-size bias. The neural model now
+has higher broad MAG coverage than Tomotopy on this seed, but lower mean test
+SOS. Its research value is fully neural unsupervised discovery plus one-pass
+inference; this single-seed result does not establish production replacement.

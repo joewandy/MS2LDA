@@ -455,7 +455,10 @@ def test_committed_bundle_matches_supported_architecture() -> None:
     assert model.document_topic_prior_weight == 1.0
     assert model.document_mixture_weight == 0.75
     assert model.token_type_balance == 0.25
-    assert model.normalize_token_type_evidence is False
+    assert model.normalize_token_type_evidence is True
+    assert manifest["beta_derivation"] == (
+        "mean_type_evidence_with_0.25_pull_to_equal_fragment_loss_mass"
+    )
     assert len(vocabulary) == model.vocabulary_size
 
 

@@ -1,45 +1,44 @@
 {
   "checks": {
     "annotation_coverage": true,
-    "gap_closed": true,
     "mean_high_confidence_sos": true,
     "stable": true,
+    "useful_high_confidence_motifs": true,
     "validation_nll": true
   },
   "decision": "accepted",
   "measurements": {
-    "candidate_annotation_coverage": 0.515,
-    "candidate_mean_high_confidence_sos": 0.6418071535466036,
-    "candidate_training_seconds": 3571.5121906249988,
-    "candidate_validation_nll": 8.496337315866649,
-    "current_mean_high_confidence_sos": 0.622722366969358
+    "candidate_annotation_coverage": 0.663,
+    "candidate_mean_high_confidence_sos": 0.6323301481310782,
+    "candidate_training_seconds": 4719.976054917002,
+    "candidate_validation_nll": 8.501446912771746,
+    "current_mean_high_confidence_sos": 0.6418071535466036
   },
   "paper_outcome": {
-    "candidate_neural_useful_high_confidence_motifs": 148,
-    "closed_fraction": 1.0847457627118644,
-    "current_neural_useful_high_confidence_motifs": 20,
-    "tomotopy_useful_high_confidence_motifs": 138,
-    "validation_gap": 118
+    "candidate_change_from_current": 37,
+    "candidate_neural_useful_high_confidence_motifs": 185,
+    "current_neural_useful_high_confidence_motifs": 148,
+    "tomotopy_useful_high_confidence_motifs": 138
   },
   "reported_context": {
     "prior_10_percent_runtime_seconds": 5571.0,
     "training_within_prior_10_percent": true
   },
   "schema_version": "neural-ms2lda/validation-gate-v1",
-  "selected_checkpoint_sha256": "90d7cb11f4f8717a8b028130b118e3bf47ddd136eb576b3f8a388745305be33d",
+  "selected_checkpoint_sha256": "639c1f37c613d908b59e3a85b7dc701e33a3f92fd7476a3257b47298143dfbc6",
   "source_sha256": {
-    "candidate_neural_chemistry": "36b7b83b6b26a954de4a0168faa996867b51327a6261418e73a929eb46887293",
-    "candidate_selected": "6f7ed61ff6b9ca4ab7510efe9357ef43c83003e38f3163d51a383d533c01ca26",
-    "candidate_training": "57fdada3090942a358276a112caf31844c021abbc11c3913ca0c4ea9a8afe6ea",
-    "candidate_validation": "845108984ffabc67ec6bd73980e4883c775dd5628d7ff20fccc8fff8bb9e90b9",
-    "current_neural_chemistry": "eab10b548283c1177d5390f7a53bf12ac7d27649669341ca798d833d7cc36050",
+    "candidate_neural_chemistry": "ca7905b2a68c78429c7d57a7e906b41c81717543c5842ffa8dc6c755e85f5020",
+    "candidate_selected": "9b979d582671cdece18609a9a9adfdc25d6c853e09077699e31878620efae161",
+    "candidate_training": "88114b2de003e297fa3a8a32555e39d65e39a4e04bd203926d39454d3cd0300f",
+    "candidate_validation": "f64e04d5e7ab2b2a3b0a8b8f7ba307060dacfbaa645658051d58a3bfdb00fa5d",
+    "current_neural_chemistry": "36b7b83b6b26a954de4a0168faa996867b51327a6261418e73a929eb46887293",
     "tomotopy_chemistry": "fc13208d12d8f539d01b4c169029a03126b225a47b915e27ec52452eb7272378"
   },
   "test_evaluation_authorized": true,
   "thresholds": {
-    "maximum_mean_sos_drop": 0.02,
     "maximum_validation_nll": 8.5266,
-    "minimum_annotation_coverage": 0.496,
-    "minimum_gap_closed": 0.5
+    "minimum_annotation_coverage": 0.607,
+    "minimum_mean_sos": 0.6318,
+    "minimum_useful_high_confidence_motifs": 148
   }
 }
