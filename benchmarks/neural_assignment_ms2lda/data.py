@@ -1,4 +1,3 @@
-# ruff: noqa: PLR0913
 """Chemistry-free sparse inputs and physical peak-group training views."""
 
 from __future__ import annotations
@@ -258,7 +257,7 @@ def _atomic_save_npz(path: Path, matrix: sp.csr_matrix) -> None:
         temporary.unlink(missing_ok=True)
 
 
-def prepare_data(
+def prepare_data(  # noqa: PLR0915
     run_dir: str | Path, *, data_root: str | Path, protocol: dict[str, Any]
 ) -> dict[str, Any]:
     """Build the split, first-seen vocabulary, and sparse matrices from raw MGF."""
@@ -405,7 +404,7 @@ def _stable_rank(seed: int, *parts: object) -> str:
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
-def select_view_peak_groups(
+def select_view_peak_groups(  # noqa: PLR0913
     peak_groups: Sequence[PeakGroup],
     *,
     spectrum_id: str,
@@ -438,7 +437,7 @@ def select_view_peak_groups(
     return tuple(group for group in peak_groups if group.original_index in selected)
 
 
-def _view_words(
+def _view_words(  # noqa: PLR0913
     record: Any,
     *,
     seed: int,

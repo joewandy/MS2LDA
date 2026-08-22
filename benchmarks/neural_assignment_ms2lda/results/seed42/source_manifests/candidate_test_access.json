@@ -1,7 +1,0 @@
-{
-  "schema_version": "neural-ms2lda/test-access-v1",
-  "selected_epoch": 40,
-  "selected_model_sha256": "9b979d582671cdece18609a9a9adfdc25d6c853e09077699e31878620efae161",
-  "selection_final_before_test": true,
-  "selection_rule": "fixed_final_epoch"
-}

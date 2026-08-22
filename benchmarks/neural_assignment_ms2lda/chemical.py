@@ -5,9 +5,10 @@ from __future__ import annotations
 import argparse
 import json
 import time
+from collections.abc import Callable, Sequence
 from functools import cache
 from pathlib import Path
-from typing import Any, Callable, Sequence
+from typing import Any
 
 import numpy as np
 
@@ -39,17 +40,22 @@ from .utils import (
     write_jsonl,
 )
 
+SOS_USEFUL_THRESHOLD = 0.6
+SOS_HIGH_THRESHOLD = 0.8
+
 
 def _sos_bands(values: Sequence[float]) -> dict[str, int]:
     """Count eligible topic SOS values in the paper's fixed bands."""
     return {
-        "high_gt_0_8": sum(value > 0.8 for value in values),
-        "intermediate_0_6_to_0_8": sum(0.6 <= value <= 0.8 for value in values),
-        "low_lt_0_6": sum(value < 0.6 for value in values),
+        "high_gt_0_8": sum(value > SOS_HIGH_THRESHOLD for value in values),
+        "intermediate_0_6_to_0_8": sum(
+            SOS_USEFUL_THRESHOLD <= value <= SOS_HIGH_THRESHOLD for value in values
+        ),
+        "low_lt_0_6": sum(value < SOS_USEFUL_THRESHOLD for value in values),
     }
 
 
-def _topic_scores(
+def _topic_scores(  # noqa: PLR0913
     *,
     theta: np.ndarray,
     records: list[dict[str, Any]],
@@ -150,60 +156,28 @@ def _topic_scores(
     )
 
 
-def run_chemical_scoring(
-    run_dir: str | Path,
-    *,
-    method: str,
-    data_root: str | Path,
-    protocol: dict[str, Any],
-    split: str = "test",
-) -> dict[str, Any]:
-    """Annotate neural or comparator topics and score held-out compounds."""
-    allowed = {"neural", "current_neural", "candidate_neural", "tomotopy"}
-    if method not in allowed:
-        raise ValueError(f"chemical method must be one of {sorted(allowed)}")
-    if split not in {"validation", "test"}:
-        raise ValueError("chemical split must be validation or test")
-    directory = Path(run_dir).expanduser().resolve()
-    group = "chemical" if split == "test" else "validation_chemical"
-    evaluation_group = "evaluation" if split == "test" else "validation_evaluation"
-    output = directory / group / method
-    if (output / "complete.json").is_file():
-        result = read_json(output / "complete.json")
-        verify_output_hashes(output, result)
-        return result
-    import faiss
-
-    from MS2LDA.Add_On.Spec2Vec.annotation import calc_embeddings, load_s2v_model
-    from MS2LDA.Add_On.Spec2Vec.annotation_refined import (
-        hit_clustering,
-        motif_optimization,
-    )
-
+def _verified_chemical_inputs(
+    protocol: dict[str, Any], data_root: str | Path
+) -> dict[str, Path]:
+    """Resolve and hash-check every frozen Spec2Vec/MAG dependency."""
     inputs = resolve_input_paths(protocol, data_root)
     for name in ("spec2vec_model", "spec2vec_db", "spec2vec_embeddings"):
         if file_sha256(inputs[name]) != protocol["input_files"][name]["sha256"]:
             raise ValueError(f"frozen chemical input changed: {name}")
-    index_manifest = build_filtered_mag_index(
-        directory, data_root=data_root, protocol=protocol
-    )
-    data = directory / "data"
-    evaluation = directory / evaluation_group / method
-    verify_output_hashes(evaluation, read_json(evaluation / "complete.json"))
-    beta_path = evaluation / "beta.npy"
-    theta_path = evaluation / f"{split}_full_theta.npy"
-    beta = np.load(beta_path, mmap_mode="r")
-    theta = np.load(theta_path, mmap_mode="r")
-    vocabulary = list(map(str, read_json(data / "vocabulary.json")["vocabulary"]))
-    records = load_heldout_records(data, split)
-    if theta.shape[0] != len(records):
-        raise ValueError("full mixtures and held-out records differ")
-    spectra = topic_spectra(
-        beta,
-        vocabulary,
-        int(protocol["chemistry"]["motif_spectrum_top_n"]),
-        significant_digits=int(protocol["preprocessing"]["significant_digits"]),
-    )
+    return inputs
+
+
+def _mag_matches(
+    directory: Path,
+    inputs: dict[str, Path],
+    spectra: list[Any],
+    protocol: dict[str, Any],
+) -> tuple[Any, list[Any]]:
+    """Embed motif spectra and retrieve leakage-filtered library neighbours."""
+    import faiss
+
+    from MS2LDA.Add_On.Spec2Vec.annotation import calc_embeddings, load_s2v_model
+
     spec2vec = load_s2v_model(str(inputs["spec2vec_model"]))
     query_embeddings = calc_embeddings(spec2vec, spectra).astype(np.float32)
     index_root = directory / "mag/index"
@@ -215,7 +189,6 @@ def run_chemical_scoring(
     normalized = query_embeddings / np.maximum(
         np.linalg.norm(query_embeddings, axis=1, keepdims=True), 1e-12
     )
-    started = time.perf_counter()
     similarities, indices = index.search(
         normalized,
         min(int(protocol["chemistry"]["mag_search_k"]), index.ntotal),
@@ -228,6 +201,21 @@ def run_chemical_scoring(
         unique_molecules=int(protocol["chemistry"]["mag_unique_molecules"]),
         excluded_connectivity=excluded,
     )
+    return spec2vec, matches
+
+
+def _annotate_topics(
+    spectra: list[Any],
+    matches: list[Any],
+    spec2vec: Any,
+    protocol: dict[str, Any],
+) -> list[dict[str, Any]]:
+    """Cluster retrieved neighbours and optimize every motif independently."""
+    from MS2LDA.Add_On.Spec2Vec.annotation_refined import (
+        hit_clustering,
+        motif_optimization,
+    )
+
     annotations: list[dict[str, Any]] = []
     for topic_id, (motif, match) in enumerate(zip(spectra, matches, strict=True)):
         cluster_error = ""
@@ -270,6 +258,16 @@ def run_chemical_scoring(
                 "retrieved_scores": match[2],
             }
         )
+    return annotations
+
+
+def _association_outputs(
+    theta: np.ndarray,
+    records: list[dict[str, Any]],
+    annotations: list[dict[str, Any]],
+    protocol: dict[str, Any],
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
+    """Calculate each fixed association mode with shared fingerprint caches."""
     cached_fingerprint = cache(maccs_fingerprint)
 
     @cache
@@ -281,16 +279,15 @@ def run_chemical_scoring(
     summaries: list[dict[str, Any]] = []
     topic_rows: list[dict[str, Any]] = []
     compound_rows: list[dict[str, Any]] = []
+    chemistry = protocol["chemistry"]
     for mode in ASSOCIATION_MODES:
         rows, compounds, summary = _topic_scores(
             theta=theta,
             records=records,
             annotations=annotations,
             mode=mode,
-            threshold=float(protocol["chemistry"]["membership_threshold"]),
-            fingerprint_threshold=float(
-                protocol["chemistry"]["mag_fingerprint_threshold"]
-            ),
+            threshold=float(chemistry["membership_threshold"]),
+            fingerprint_threshold=float(chemistry["mag_fingerprint_threshold"]),
             fingerprint_fn=cached_fingerprint,
             consensus_fn=lambda values, threshold: cached_consensus(
                 tuple(values), threshold
@@ -299,6 +296,58 @@ def run_chemical_scoring(
         summaries.append(summary)
         topic_rows.extend({"association_mode": mode, **row} for row in rows)
         compound_rows.extend({"association_mode": mode, **row} for row in compounds)
+    return summaries, topic_rows, compound_rows
+
+
+def run_chemical_scoring(
+    run_dir: str | Path,
+    *,
+    method: str,
+    data_root: str | Path,
+    protocol: dict[str, Any],
+    split: str = "test",
+) -> dict[str, Any]:
+    """Annotate neural or comparator topics and score held-out compounds."""
+    allowed = {"neural", "tomotopy"}
+    if method not in allowed:
+        raise ValueError(f"chemical method must be one of {sorted(allowed)}")
+    if split not in {"validation", "test"}:
+        raise ValueError("chemical split must be validation or test")
+    directory = Path(run_dir).expanduser().resolve()
+    group = "chemical" if split == "test" else "validation_chemical"
+    evaluation_group = "evaluation" if split == "test" else "validation_evaluation"
+    output = directory / group / method
+    if (output / "complete.json").is_file():
+        result = read_json(output / "complete.json")
+        verify_output_hashes(output, result)
+        return result
+    inputs = _verified_chemical_inputs(protocol, data_root)
+    index_manifest = build_filtered_mag_index(
+        directory, data_root=data_root, protocol=protocol
+    )
+    data = directory / "data"
+    evaluation = directory / evaluation_group / method
+    verify_output_hashes(evaluation, read_json(evaluation / "complete.json"))
+    beta_path = evaluation / "beta.npy"
+    theta_path = evaluation / f"{split}_full_theta.npy"
+    beta = np.load(beta_path, mmap_mode="r")
+    theta = np.load(theta_path, mmap_mode="r")
+    vocabulary = list(map(str, read_json(data / "vocabulary.json")["vocabulary"]))
+    records = load_heldout_records(data, split)
+    if theta.shape[0] != len(records):
+        raise ValueError("full mixtures and held-out records differ")
+    spectra = topic_spectra(
+        beta,
+        vocabulary,
+        int(protocol["chemistry"]["motif_spectrum_top_n"]),
+        significant_digits=int(protocol["preprocessing"]["significant_digits"]),
+    )
+    started = time.perf_counter()
+    spec2vec, matches = _mag_matches(directory, inputs, spectra, protocol)
+    annotations = _annotate_topics(spectra, matches, spec2vec, protocol)
+    summaries, topic_rows, compound_rows = _association_outputs(
+        theta, records, annotations, protocol
+    )
     output.mkdir(parents=True, exist_ok=True)
     rows_by_name = {
         "annotations.jsonl": annotations,
@@ -345,7 +394,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--data-root", required=True, type=Path)
     parser.add_argument(
         "--method",
-        choices=("neural", "current_neural", "candidate_neural", "tomotopy"),
+        choices=("neural", "tomotopy"),
         required=True,
     )
     parser.add_argument("--split", choices=("validation", "test"), default="test")

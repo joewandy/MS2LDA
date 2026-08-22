@@ -47,9 +47,11 @@ class HardContextQueue:
 
     @classmethod
     def empty(cls, capacity: int) -> HardContextQueue:
+        """Create an empty queue with a fixed memory bound."""
         return cls(capacity=int(capacity), heap=[])
 
     def add(self, losses: torch.Tensor, contexts: torch.Tensor, *, limit: int) -> None:
+        """Retain the highest-loss normalized route contexts seen so far."""
         if not len(losses):
             return
         selected = torch.topk(
@@ -68,6 +70,7 @@ class HardContextQueue:
                 heapq.heapreplace(self.heap, item)
 
     def pop_highest(self, count: int) -> torch.Tensor:
+        """Remove and return up to ``count`` contexts in descending loss order."""
         selected = heapq.nlargest(min(int(count), len(self.heap)), self.heap)
         selected_ids = {serial for _, serial, _ in selected}
         self.heap = [item for item in self.heap if item[1] not in selected_ids]
@@ -77,6 +80,7 @@ class HardContextQueue:
         return torch.stack([item[2] for item in selected])
 
     def state_dict(self) -> dict[str, Any]:
+        """Serialize queue order as part of the exact-resume checkpoint."""
         return {
             "capacity": self.capacity,
             "serial": self.serial,
@@ -88,6 +92,7 @@ class HardContextQueue:
 
     @classmethod
     def from_state_dict(cls, state: dict[str, Any]) -> HardContextQueue:
+        """Restore heap contents and tie-breaking serial numbers exactly."""
         queue = cls.empty(int(state["capacity"]))
         queue.serial = int(state["serial"])
         queue.heap = [
@@ -206,10 +211,7 @@ def fresh_model(
         projection_dimensions=int(config["projection_dimensions"]),
         router_hidden_dimensions=int(config["router_hidden_dimensions"]),
         beta_temperature=float(config["beta_temperature"]),
-        token_type_balance=float(config.get("token_type_balance", 0.0)),
-        normalize_token_type_evidence=bool(
-            config.get("normalize_token_type_evidence", False)
-        ),
+        token_type_balance=float(config["token_type_balance"]),
         document_mixture_weight=float(config["document_mixture_weight"]),
         document_topic_prior_weight=float(config["document_topic_prior_weight"]),
         topic_initial_indices=checkpoint["topic_initial_indices"],
@@ -220,7 +222,7 @@ def fresh_model(
 
 
 @torch.inference_mode()
-def infer_theta(
+def infer_theta(  # noqa: PLR0913
     model: NeuralAssignmentMS2LDA,
     matrix: sp.csr_matrix,
     *,
@@ -270,7 +272,7 @@ def infer_theta(
 
 
 @torch.inference_mode()
-def validation_metrics(
+def validation_metrics(  # noqa: PLR0913
     model: NeuralAssignmentMS2LDA,
     *,
     train: sp.csr_matrix,

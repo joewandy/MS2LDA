@@ -1,7 +1,7 @@
 {
   "cpu_threads": 6,
   "evaluation_seconds": 10.585090291002416,
-  "method": "neural_cooccurrence_margin_hierarchical",
+  "method": "neural",
   "metrics": {
     "active_topics": {
       "corpus_active_topics": 319,
@@ -9,13 +9,13 @@
       "document_active_median": 8.0,
       "document_active_p95": 20.0
     },
-    "cached_latency": {
-      "cpu_threads": 4,
+    "warm_in_memory_batch_inference": {
+      "cpu_threads": 6,
       "documents": 128,
       "iterative_inference_steps": 0,
-      "median_seconds_per_spectrum": 0.00010833072656168952,
-      "median_spectra_per_second": 9230.991351567689,
-      "p95_seconds_per_spectrum": 0.0001120495420991574,
+      "median_seconds_per_spectrum": 0.00015256998437962466,
+      "median_spectra_per_second": 6554.369157643746,
+      "p95_seconds_per_spectrum": 0.0002143361952903433,
       "repeats": 5,
       "routing_passes": 1
     },

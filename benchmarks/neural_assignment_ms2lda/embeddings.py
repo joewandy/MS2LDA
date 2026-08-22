@@ -1,4 +1,3 @@
-# ruff: noqa: N812, PLR0915, PLR2004
 """Training-only skip-gram negative-sampling token embeddings."""
 
 from __future__ import annotations
@@ -10,7 +9,7 @@ from typing import TYPE_CHECKING, Any
 import numpy as np
 import torch
 from torch import nn
-from torch.nn import functional as F
+from torch.nn import functional as nnf
 
 from .data import corpus_frequencies
 from .utils import (
@@ -25,8 +24,12 @@ from .utils import (
 if TYPE_CHECKING:
     import scipy.sparse as sp
 
+MAX_PAIR_RESAMPLES = 8
+
 
 class _Sgns(nn.Module):
+    """Two-table skip-gram model with the negative-sampling objective."""
+
     def __init__(self, vocabulary_size: int, dimensions: int) -> None:
         super().__init__()
         self.source = nn.Embedding(vocabulary_size, dimensions, sparse=True)
@@ -41,12 +44,13 @@ class _Sgns(nn.Module):
         context: torch.Tensor,
         negatives: torch.Tensor,
     ) -> torch.Tensor:
+        """Return mean logistic loss for positive and sampled negative pairs."""
         source_values = self.source(source)
         context_values = self.context(context)
         positive = torch.sum(source_values * context_values, dim=1)
         negative_values = self.context(negatives)
         negative = torch.einsum("bd,bnd->bn", source_values, negative_values)
-        return -(F.logsigmoid(positive) + F.logsigmoid(-negative).sum(dim=1)).mean()
+        return -(nnf.logsigmoid(positive) + nnf.logsigmoid(-negative).sum(dim=1)).mean()
 
 
 def _positive_pairs(
@@ -55,6 +59,7 @@ def _positive_pairs(
     pairs_per_document: int,
     seed: int,
 ) -> tuple[np.ndarray, np.ndarray]:
+    """Sample count-weighted, deterministic within-spectrum token pairs."""
     rng = np.random.default_rng(seed)
     total = matrix.shape[0] * pairs_per_document
     sources = np.empty(total, dtype=np.int64)
@@ -72,7 +77,7 @@ def _positive_pairs(
         if len(words) > 1:
             same = left == right
             attempts = 0
-            while np.any(same) and attempts < 8:
+            while np.any(same) and attempts < MAX_PAIR_RESAMPLES:
                 right[same] = rng.choice(words, size=int(same.sum()), p=probability)
                 same = left == right
                 attempts += 1
@@ -90,8 +95,9 @@ def _positive_pairs(
 
 
 def _combined_embeddings(model: _Sgns) -> np.ndarray:
+    """Average source/context tables and project every token to the unit sphere."""
     values = 0.5 * (model.source.weight.detach() + model.context.weight.detach())
-    values = F.normalize(values, dim=1)
+    values = nnf.normalize(values, dim=1)
     return values.cpu().numpy().astype(np.float32)
 
 

@@ -10,7 +10,6 @@ from typing import Any
 import numpy as np
 import torch
 
-from .bundle import load_bundle
 from .core import infer_theta
 from .data import load_csr, load_heldout_records
 from .inventory import topic_inventory_summary
@@ -32,12 +31,11 @@ from .utils import (
 )
 
 
-def _validation_result(
+def _validation_result(  # noqa: PLR0913
     *,
     model: Any,
     data: Path,
     output: Path,
-    method: str,
     temperature: float,
     top_k: int,
     batch_size: int,
@@ -90,7 +88,7 @@ def _validation_result(
         atomic_save_numpy(output / name, values)
     result = {
         "schema_version": "neural-ms2lda/validation-evaluation-v1",
-        "method": method,
+        "method": "neural",
         "split": "validation",
         "topic_count": int(beta.shape[0]),
         "source_sha256": source_sha256,
@@ -112,8 +110,6 @@ def _validation_result(
 def evaluate_neural_validation(
     run_dir: str | Path,
     protocol: dict[str, Any],
-    *,
-    method: str = "candidate_neural",
 ) -> dict[str, Any]:
     """Evaluate a trained neural checkpoint without opening the test split."""
     directory = Path(run_dir).expanduser().resolve()
@@ -130,8 +126,7 @@ def evaluate_neural_validation(
     return _validation_result(
         model=model,
         data=directory / "data",
-        output=directory / "validation_evaluation" / method,
-        method=method,
+        output=directory / "validation_evaluation/neural",
         temperature=float(checkpoint["routing_temperature"]),
         top_k=int(checkpoint["top_k"]),
         batch_size=int(protocol["optimization"]["batch_size"]),
@@ -139,33 +134,8 @@ def evaluate_neural_validation(
     )
 
 
-def evaluate_bundle_validation(
-    run_dir: str | Path,
-    bundle_dir: str | Path,
-    protocol: dict[str, Any],
-    *,
-    method: str = "current_neural",
-) -> dict[str, Any]:
-    """Evaluate the committed pre-gate bundle on validation only."""
-    directory = Path(run_dir).expanduser().resolve()
-    bundle = Path(bundle_dir).expanduser().resolve()
-    model, _vocabulary, manifest = load_bundle(bundle)
-    saved_evaluation = read_json(bundle / "evaluation.json")
-    routing = saved_evaluation["metrics"]["routing"]
-    return _validation_result(
-        model=model,
-        data=directory / "data",
-        output=directory / "validation_evaluation" / method,
-        method=method,
-        temperature=float(routing["temperature"]),
-        top_k=int(routing["top_k"]),
-        batch_size=int(protocol["optimization"]["batch_size"]),
-        source_sha256=str(manifest["files"]["model.pt"]["sha256"]),
-    )
-
-
 @torch.inference_mode()
-def _latency(
+def _latency(  # noqa: PLR0913
     model: Any,
     matrix: Any,
     *,
@@ -174,6 +144,7 @@ def _latency(
     temperature: float,
     top_k: int,
 ) -> dict[str, Any]:
+    """Measure resident-model throughput after one unmeasured warm-up pass."""
     documents = min(int(subset_size), matrix.shape[0])
     subset = matrix[:documents].tocsr()
     infer_theta(
@@ -208,8 +179,17 @@ def _latency(
     }
 
 
-def evaluate_neural(run_dir: str | Path, protocol: dict[str, Any]) -> dict[str, Any]:
+def evaluate_neural(  # noqa: PLR0915
+    run_dir: str | Path, protocol: dict[str, Any]
+) -> dict[str, Any]:
     """Evaluate the selected checkpoint once on the untouched test split."""
+    expected_threads = int(protocol["cpu_threads"])
+    actual_threads = torch.get_num_threads()
+    if actual_threads != expected_threads:
+        raise ValueError(
+            "neural evaluation thread count differs from the protocol: "
+            f"expected {expected_threads}, observed {actual_threads}"
+        )
     directory = Path(run_dir).expanduser().resolve()
     output = directory / "evaluation/neural"
     complete_path = output / "complete.json"
@@ -306,7 +286,7 @@ def evaluate_neural(run_dir: str | Path, protocol: dict[str, Any]) -> dict[str, 
             beta, usage, top_n=int(protocol["evaluation"]["topic_top_n"])
         ),
         "routing": routing,
-        "cached_latency": _latency(
+        "warm_in_memory_batch_inference": _latency(
             model,
             test_observed,
             subset_size=int(protocol["evaluation"]["latency_subset_size"]),
@@ -334,7 +314,7 @@ def evaluate_neural(run_dir: str | Path, protocol: dict[str, Any]) -> dict[str, 
         atomic_save_numpy(output / name, values)
     result = {
         "schema_version": "neural-ms2lda/neural-evaluation-v1",
-        "method": "neural_cooccurrence_margin_hierarchical",
+        "method": "neural",
         "topic_count": int(beta.shape[0]),
         "selected_epoch": int(checkpoint["epoch"]),
         "cpu_threads": int(protocol["cpu_threads"]),

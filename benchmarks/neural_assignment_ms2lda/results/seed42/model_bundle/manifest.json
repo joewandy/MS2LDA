@@ -6,20 +6,20 @@
       "sha256": "520e5bde85fdbbd4f2a6f958f2a9c5d731cf1e54beee318d7bdd872acb8ca893"
     },
     "evaluation.json": {
-      "bytes": 4630,
-      "sha256": "7b7984dc69e73c87c1a6f6c4a10ae38f4ea00da8241d12af3464a818e2fbd743"
+      "bytes": 4613,
+      "sha256": "a17fb0897d7b89835610b4dfddc93ca5f8dd431e3ff299352ee7dce716bc80f6"
     },
     "model.pt": {
       "bytes": 6382949,
       "sha256": "639c1f37c613d908b59e3a85b7dc701e33a3f92fd7476a3257b47298143dfbc6"
     },
     "protocol.json": {
-      "bytes": 3989,
-      "sha256": "6370b99aa6e87ecbdd9081d1278bdc688aa5f0ab340c1c47aa4a200e21d0f552"
+      "bytes": 3922,
+      "sha256": "82569aecce2074214c87bd606d0e0b1aa48d35df1951c407a4aaed32df386e95"
     },
     "provenance.json": {
-      "bytes": 3068,
-      "sha256": "02668690a22c16318c39de1ef602f669d865de07132dae6815e04556e8d4f98c"
+      "bytes": 1902,
+      "sha256": "ddbc9bb40dcec5d62f1b3a13dc6b890acb61b1356476592e95bad21f2567b3a9"
     },
     "vocabulary.json": {
       "bytes": 399546,

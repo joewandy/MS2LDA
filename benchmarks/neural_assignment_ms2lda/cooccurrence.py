@@ -1,4 +1,3 @@
-# ruff: noqa: PLR0913
 """Train-only word co-occurrence graph construction for neural topic learning."""
 
 from __future__ import annotations
@@ -17,8 +16,10 @@ from .utils import file_sha256, read_json, verify_output_hashes, write_json
 if TYPE_CHECKING:
     from numpy.typing import NDArray
 
+MIN_GRAPH_DIMENSION = 2
 
-def positive_npmi_graph(
+
+def positive_npmi_graph(  # noqa: C901, PLR0915
     matrix: sp.csr_matrix,
     *,
     minimum_document_frequency: int,
@@ -27,7 +28,7 @@ def positive_npmi_graph(
     minimum_npmi: float,
 ) -> tuple[sp.csr_matrix, dict[str, Any]]:
     """Build a deterministic symmetric graph of strong train-document pairs."""
-    if matrix.shape[0] < 2 or matrix.shape[1] < 2:
+    if min(matrix.shape) < MIN_GRAPH_DIMENSION:
         raise ValueError("co-occurrence graph needs at least two documents and words")
     if minimum_document_frequency < 1 or minimum_pair_frequency < 1:
         raise ValueError("co-occurrence frequency thresholds must be positive")

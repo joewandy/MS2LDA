@@ -1,35 +1,18 @@
 {
+  "artifact_notes": {
+    "checkpoint_weights_unchanged_during_cleanup": true,
+    "warm_in_memory_batch_inference_remeasured_cpu_threads": 6
+  },
   "discovery_audit": {
     "chemistry_fields_in_training": [],
-    "development_hypothesis": "Vocabulary-size-normalized fragment and neutral-loss evidence closes the remaining MAG coverage gap without sacrificing useful motifs, SOS, or held-out completion fit",
     "forbidden_dependencies_found": [],
-    "frozen_source_artifact_sha256": {
-      "data/complete.json": "2c0d70233f8b18a75253f6e8c4f453d729ca683e5c475d423ac168b6095b1ad0",
-      "data/heldout_records.jsonl": "68fc8ceb5b106330086a76e2d8f713ea1cfbd1a8a3ada0bed1b12fe3b29bd1ba",
-      "data/split_manifest.jsonl": "9552fb69e379ba8d5a93a93f2a927d77708998b5daee4f72f99b9ffff8112ef5",
-      "data/train.npz": "b4808f341864ba1df246a5093992f52397c2f96e0b48b23245b9b17e30aa5b52",
-      "data/validation_completion.npz": "f75245b599bc3c087aad97ff7247112d422ec0ab87418c5f96b0a889b2f661f0",
-      "data/validation_full.npz": "51888951815f448d0527a6a876be345cfe76ab346d9e97bada9a186e8857fab2",
-      "data/validation_observed.npz": "76afa43a3540d91edd4dd7e851afe10c65e3d67bcf06007c83eac1d9b6e15bff",
-      "data/vocabulary.json": "8e7bf7ba06a9a2fbd75326d9e7b44eb973bdec5557da195c6678a654d93ee308",
-      "mag/index/excluded_connectivity_keys.json": "36ad6649271965ddc88e8c5c7484362e121887f204bbf8c5bf3fd27f6c624a70",
-      "mag/index/kept_original_ids.npy": "97c63d3da5e77877a7786993a0b5bc123f3e37161febf8b006628194c9f3485b",
-      "mag/index/manifest.json": "e0a0854450ca70e7a047c642ba940b3cc2a6afd43752177b2e87aa7346fe364a",
-      "mag/index/spec2vec_filtered.faiss": "845408fe7338135cb23cbe9023f5805c11dafcb8d028ca631fb1968292aef300",
-      "protocol.resolved.json": "5681f61ff0e97eb81bd6f7499347e73f864e9650ab8dad32e61d67b81a5f2b99",
-      "token_features/complete.json": "48fdb8db10d3e2f91f89bcd3c60ab1ddce787471b264d174acc8197c53749644",
-      "token_features/features.npy": "4d6f7fac13b56d3e619a96059a0ee8229c7bb6278458f1cdf6df75d12291fe93",
-      "training_views/complete.json": "7baa4780edb403b57060c5e142b175793b1cc9714371b59c1c9c6da58172d8d4"
-    },
     "fully_neural": true,
     "test_information_in_training": false,
-    "tomotopy_role": "post-training comparator only"
+    "tomotopy_role": "independent post-training comparator"
   },
   "environment": {
     "machine": "arm64",
     "packages": {
-      "faiss-cpu": null,
-      "matchms": null,
       "numpy": "1.25.2",
       "rdkit": "2024.9.6",
       "scipy": "1.13.1",
@@ -45,11 +28,19 @@
       "sha256": "c1a2389754e630590111bde8f50403c9d90081d3f3427bc63defef0b9714682f"
     }
   },
-  "packaging_source_sha256": "2772df7964a6acfdda23a783e63ba0f25863e15b662d866aad2abf9e8efac436",
-  "protocol_sha256": "fdad22179e1183824c091be4516f62786b88e6c77a1b3f3c3b53afad3b6e43ee",
+  "protocol_sha256": "c215315b4e51ec13169e711e2a1cdc9dd5120b6b49e44bf1ab04395af4379f36",
   "run_source_sha256": {
-    "development_code_manifest": "3eb4b592ec69df9c29c052485bf4869e01ada9cb9b31ac13f37ce58546f7dc23"
+    "training_source_manifest": "3eb4b592ec69df9c29c052485bf4869e01ada9cb9b31ac13f37ce58546f7dc23"
   },
   "schema_version": "neural-ms2lda/portable-provenance-v1",
-  "selected_checkpoint_sha256": "639c1f37c613d908b59e3a85b7dc701e33a3f92fd7476a3257b47298143dfbc6"
+  "selected_checkpoint_sha256": "639c1f37c613d908b59e3a85b7dc701e33a3f92fd7476a3257b47298143dfbc6",
+  "source_artifact_sha256": {
+    "data/train.npz": "b4808f341864ba1df246a5093992f52397c2f96e0b48b23245b9b17e30aa5b52",
+    "data/validation_completion.npz": "f75245b599bc3c087aad97ff7247112d422ec0ab87418c5f96b0a889b2f661f0",
+    "data/validation_full.npz": "51888951815f448d0527a6a876be345cfe76ab346d9e97bada9a186e8857fab2",
+    "data/validation_observed.npz": "76afa43a3540d91edd4dd7e851afe10c65e3d67bcf06007c83eac1d9b6e15bff",
+    "data/vocabulary.json": "8e7bf7ba06a9a2fbd75326d9e7b44eb973bdec5557da195c6678a654d93ee308",
+    "token_features/features.npy": "4d6f7fac13b56d3e619a96059a0ee8229c7bb6278458f1cdf6df75d12291fe93",
+    "training_views/complete.json": "7baa4780edb403b57060c5e142b175793b1cc9714371b59c1c9c6da58172d8d4"
+  }
 }

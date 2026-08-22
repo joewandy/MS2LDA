@@ -8,12 +8,10 @@ one pass. A fixed document gate sharpens the final spectrum mixture, while a
 soft token-type balance keeps fragments and neutral losses jointly represented
 in topic words. Mean-normalized channel evidence removes fragment/loss
 vocabulary-size bias before that balance. It discovers topics without a
-Tomotopy teacher, DreaMS,
-variational Bayes, chemistry labels, or test-set information. Tomotopy K=1000
-is trained separately as the established post-training comparator. The
-comparison reuses a hash-verified six-worker Tomotopy training run and
-recomputes its held-out inference with the same six-thread allowance as the
-neural model.
+Tomotopy teacher, DreaMS, variational Bayes, chemistry labels, or test-set
+information. Tomotopy K=1000 is trained separately from the same frozen
+training split as the established post-training comparator. Both methods use
+the same six-thread allowance.
 
 The complete resumable workflow is:
 
@@ -23,21 +21,43 @@ download -> verify -> scaffold split -> first-seen training vocabulary
          -> leakage-filtered MAG chemistry -> report
 ```
 
-Run or resume it with:
+Create the two pinned environments and acquire the checksum-locked public data
+(about 3.6 GB of archives plus extracted files) with:
+
+```bash
+conda env create -f environment-neural-ms2lda.yml
+conda env create -f environment-msnlib-mag.yml
+conda run -n ms2lda-neural python scripts/download_msnlib_validation_assets.py \
+  --data-root /path/to/MSnLib-assets
+```
+
+Run or resume the complete workflow directly with:
 
 ```bash
 python -m benchmarks.neural_assignment_ms2lda run \
   --data-root /path/to/MSnLib-assets \
-  --run /path/to/run \
-  --tomotopy-reference-run /path/to/frozen-tomotopy-run
+  --run /path/to/run
+```
+
+For an unattended run, use the wrapper (its `start` and `resume` actions are
+equivalent because every completed stage is hash-verified and reused):
+
+```bash
+export NEURAL_MS2LDA_DATA=/path/to/MSnLib-assets
+export NEURAL_MS2LDA_RUN=/path/to/run
+export NEURAL_MS2LDA_ENV=ms2lda-neural
+scripts/run_neural_ms2lda.sh start
+scripts/run_neural_ms2lda.sh status
+scripts/run_neural_ms2lda.sh verify
 ```
 
 Use `status --run ...` for a compact progress snapshot and `verify --run ...`
 to recheck the immutable protocol, hashes, code provenance, and manifests. The
-unattended shell wrapper in `scripts/run_neural_ms2lda.sh` pins the numerical
-runtime to six CPU threads. Neural selection is fixed in advance to epoch 40.
-Architecture development is validation-only; a candidate can access test data
-once only after every frozen validation gate passes.
+module entry point and unattended shell wrapper in
+`scripts/run_neural_ms2lda.sh` pin the numerical runtime to six CPU threads
+before importing numerical libraries. Neural selection is fixed in advance to
+epoch 40; the workflow completes both validation evaluations before opening
+the test split.
 
 The committed bundle and paper-style report are research artifacts. They do
 not change the public MS2LDA application defaults. The single seed-42 result is
