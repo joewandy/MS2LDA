@@ -8,6 +8,11 @@
       "mean_sos": 0.6237704189510398,
       "median_sos": 0.6197826086956522,
       "membership_threshold": null,
+      "sos_bands": {
+        "high_gt_0_8": 57,
+        "intermediate_0_6_to_0_8": 278,
+        "low_lt_0_6": 263
+      },
       "sos_evaluable_coverage": 0.598,
       "topic_compound_associations": 7729,
       "total_topics": 1000
@@ -19,6 +24,11 @@
       "mean_sos": 0.6369010145188874,
       "median_sos": 0.6145454545454546,
       "membership_threshold": 0.5,
+      "sos_bands": {
+        "high_gt_0_8": 66,
+        "intermediate_0_6_to_0_8": 120,
+        "low_lt_0_6": 147
+      },
       "sos_evaluable_coverage": 0.333,
       "topic_compound_associations": 954,
       "total_topics": 1000
@@ -32,6 +42,11 @@
     "mean_sos": 0.6237704189510398,
     "median_sos": 0.6197826086956522,
     "membership_threshold": null,
+    "sos_bands": {
+      "high_gt_0_8": 57,
+      "intermediate_0_6_to_0_8": 278,
+      "low_lt_0_6": 263
+    },
     "sos_evaluable_coverage": 0.598,
     "topic_compound_associations": 7729,
     "total_topics": 1000
@@ -44,20 +59,26 @@
     "mean_sos": 0.6369010145188874,
     "median_sos": 0.6145454545454546,
     "membership_threshold": 0.5,
+    "sos_bands": {
+      "high_gt_0_8": 66,
+      "intermediate_0_6_to_0_8": 120,
+      "low_lt_0_6": 147
+    },
     "sos_evaluable_coverage": 0.333,
     "topic_compound_associations": 954,
     "total_topics": 1000
   },
-  "mag_seconds": 26.341742832999444,
+  "mag_seconds": 23.08139508399472,
   "method": "tomotopy",
   "optimization_failures": 0,
   "output_sha256": {
     "annotations.jsonl": "4c0090f173dc9cba697e0f7ded9e221c55247b19bfaa6e73dbd02295e16919b2",
     "compound_scores.jsonl": "ed67d503afbbaafe1fac3345f7f94dba583ac910d4eeeda9622ff98b771c89ce",
-    "summaries.json": "a824f367a22ebf311c7469cc3ddc95cb0118c6cadcd593ef0f24315f192969a2",
+    "summaries.json": "b3e9fee4f09ac82e9d9ce23a7f3b166aff46d5acaa9d4b6933f12bcaade0a53a",
     "topic_scores.jsonl": "3820dd47af1f9ba55625e4850adc6cc2b91773ee89be5bf0d3458f35a25f65d4"
   },
-  "peak_rss_bytes": 1921695744,
+  "peak_rss_bytes": 1963868160,
   "schema_version": "neural-ms2lda/chemical-evaluation-v1",
+  "split": "test",
   "topics": 1000
 }

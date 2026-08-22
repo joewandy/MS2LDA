@@ -57,7 +57,8 @@
     }
   },
   "model": {
-    "beta_temperature": 0.2,
+    "beta_temperature": 0.18,
+    "document_mixture_weight": 0.75,
     "document_topic_prior_weight": 1.0,
     "gradient_clip_norm": 5.0,
     "num_topics": 1000,
@@ -65,6 +66,7 @@
     "router_hidden_dimensions": 256,
     "sinkhorn_epsilon": 0.05,
     "sinkhorn_iterations": 5,
+    "token_type_balance": 0.25,
     "top_k": 2
   },
   "optimization": {

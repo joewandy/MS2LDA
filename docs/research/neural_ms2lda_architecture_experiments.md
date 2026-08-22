@@ -217,3 +217,40 @@ the one-time test confirmation.
 Post-lock software cleanup removed inactive experiment switches and unused
 descriptive protocol fields. This did not change the accepted checkpoint or
 any measurement recorded above.
+
+## K=1000 paper-gap campaign: confidence and token-type balance
+
+The later paper-aligned campaign fixed seed 42, K=1000, six threads, the same
+data and initialization, and final epoch 40. Its primary outcome was the number
+of validation motifs associated at probability at least 0.5 with
+compound-balanced SOS at least 0.6. The current neural reference produced 20
+such motifs and Tomotopy produced 138. Candidate test data remained unavailable
+until all validation gates passed.
+
+The first document gate (`document_mixture_weight=0.5`) raised useful motifs to
+83 but optimized only 42.0 percent of topics, below the 49.6 percent coverage
+gate. Stronger and stop-gradient gates raised confidence further but did not
+repair breadth: the strongest useful-motif count was 151 with 44.8 percent
+coverage and validation NLL 8.5421.
+
+Topic inspection exposed the structural cause. In the stop-gradient model, 453
+topics had no fragment among their 20 highest-probability words and 330 were
+pure fragment; only 27 Tomotopy topics were fragment-free. A hard 50:50
+fragment--loss decoder confirmed the diagnosis by reaching 86.6 percent MAG
+coverage and 284 useful motifs, but its NLL degraded to 8.6746. This arm was
+rejected as an intentionally strong diagnostic, not tuned further.
+
+The accepted correction preserves the learned word ranking within fragments
+and losses while pulling their total topic mass one quarter toward 50:50. With
+the fixed document gate moderated to 0.75 and decoder temperature fixed at
+0.18, the epoch-40 run achieved validation NLL 8.4963, 51.5 percent annotation
+coverage, and 148 useful high-confidence motifs. Mean high-confidence SOS was
+0.6418. All gates passed, and the selected checkpoint
+`90d7cb11f4f8717a8b028130b118e3bf47ddd136eb576b3f8a388745305be33d`
+was locked before test access.
+
+The single test confirmation produced 211 useful motifs versus Tomotopy's 186,
+mean SOS 0.6376 versus 0.6369, and test NLL 8.5114 versus 9.7569. Neural MAG
+coverage remained lower (51.5 versus 60.7 percent). The architecture is
+accepted as the new seed-42 research checkpoint; multi-seed confirmation and
+any production-backend decision remain separate work.

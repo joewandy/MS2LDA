@@ -1,4 +1,4 @@
-"""Generate the paper-focused document-gate comparison from hashed evidence."""
+"""Generate the paper-focused balanced-gate comparison from hashed evidence."""
 
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ FIGURES = DOCS / "figures"
 GENERATED = DOCS / "generated"
 MANIFEST = DOCS / "report_manifest.json"
 COLORS = ("#2563eb", "#f59e0b", "#64748b")
-LABELS = ("Current neural", "Document-gated neural", "Tomotopy")
+LABELS = ("Current neural", "Balanced-gated neural", "Tomotopy")
 
 
 def _json(path: Path) -> dict[str, Any]:
@@ -53,43 +53,56 @@ def _methods() -> list[dict[str, Any]]:
 
 
 def architecture() -> None:
-    figure, axis = plt.subplots(figsize=(11.0, 3.3))
+    figure, axis = plt.subplots(figsize=(11.0, 4.4))
     axis.set_xlim(0, 12)
-    axis.set_ylim(0, 3.3)
+    axis.set_ylim(0, 4.4)
     axis.axis("off")
     boxes = (
-        (0.2, "Sparse\nspectrum", "#dbeafe"),
-        (2.25, "Top-2 token\nrouting", "#bfdbfe"),
-        (4.3, "Token topic\nmass", "#bfdbfe"),
-        (6.35, "Document\nsoftmax", "#fef3c7"),
-        (8.4, "Multiply by\n$g_d^{0.5}$", "#fde68a"),
-        (10.45, "Normalized\n$\\theta_d$", "#d1fae5"),
+        (0.1, "Sparse\nspectrum", "#dbeafe"),
+        (2.5, "Top-2 token\nrouting", "#bfdbfe"),
+        (4.9, "Token topic\nmass", "#bfdbfe"),
+        (7.3, "Fixed document\ngate $g_d^{0.75}$", "#fde68a"),
+        (9.7, "Normalized\n$\\theta_d$", "#d1fae5"),
     )
     for x, label, color in boxes:
         axis.add_patch(
-            plt.Rectangle((x, 1.2), 1.55, 1.0, facecolor=color, edgecolor="#334155")
+            plt.Rectangle((x, 2.25), 1.9, 0.9, facecolor=color, edgecolor="#334155")
         )
-        axis.text(x + 0.775, 1.7, label, ha="center", va="center")
-    for x in (1.75, 3.8, 5.85, 7.9, 9.95):
+        axis.text(x + 0.95, 2.7, label, ha="center", va="center")
+    for start, end in ((2.0, 2.5), (4.4, 4.9), (6.8, 7.3), (9.2, 9.7)):
         axis.annotate(
-            "", xy=(x + 0.5, 1.7), xytext=(x, 1.7), arrowprops={"arrowstyle": "->"}
+            "",
+            xy=(end, 2.7),
+            xytext=(start, 2.7),
+            arrowprops={"arrowstyle": "->"},
         )
     axis.text(
         6,
-        2.8,
+        3.85,
         r"$g_d=\mathrm{softmax}(\mathrm{document\ logits}/T)$, "
-        r"$\theta_d=\mathrm{normalize}(\mathrm{token\ mass}\,g_d^{0.5})$",
+        r"$\theta_d=\mathrm{normalize}(\mathrm{token\ mass}\,g_d^{0.75})$",
         ha="center",
         fontsize=11,
         weight="bold",
     )
-    axis.text(
-        6,
-        0.55,
-        "The gate adds no encoder or loss; zero token support and empty-spectrum fallback are preserved.",
-        ha="center",
-        color="#334155",
+    decoder_boxes = (
+        (0.1, "Neural topic-word\ndistribution", "#ede9fe"),
+        (3.0, "Preserve rankings within\nfragments and losses", "#ddd6fe"),
+        (5.9, "Pull type mass 25%\ntoward 50:50", "#c4b5fd"),
+        (8.8, "Joint fragment-loss\nmotifs", "#a78bfa"),
     )
+    for x, label, color in decoder_boxes:
+        axis.add_patch(
+            plt.Rectangle((x, 0.45), 2.3, 0.9, facecolor=color, edgecolor="#334155")
+        )
+        axis.text(x + 1.15, 0.9, label, ha="center", va="center")
+    for start, end in ((2.4, 3.0), (5.3, 5.9), (8.2, 8.8)):
+        axis.annotate(
+            "",
+            xy=(end, 0.9),
+            xytext=(start, 0.9),
+            arrowprops={"arrowstyle": "->"},
+        )
     _save(figure, "architecture.png")
 
 
@@ -166,12 +179,14 @@ def chemistry() -> None:
 def speed() -> None:
     evidence = _comparison()["secondary_warm_in_memory_batch_inference"]
     values = (
-        evidence["current_neural_spectra_per_second"],
+        evidence["candidate_neural_spectra_per_second"],
         evidence["tomotopy_spectra_per_second"],
     )
     figure, axis = plt.subplots(figsize=(5.7, 3.7))
     bars = axis.bar(
-        ("Current neural", "Tomotopy"), values, color=(COLORS[0], COLORS[2])
+        ("Balanced-gated neural", "Tomotopy"),
+        values,
+        color=(COLORS[1], COLORS[2]),
     )
     axis.set_yscale("log")
     axis.set_ylabel("Warm in-memory batch inference (spectra/s)")
@@ -225,6 +240,41 @@ def tables() -> None:
     (GENERATED / "final_comparison_table.tex").write_text(
         body + "\n\\bottomrule\n", encoding="utf-8"
     )
+    confirmation = _comparison()["test_confirmation"]
+    test_rows = (confirmation["candidate_neural"], confirmation["tomotopy"])
+    test_metrics = (
+        ("Optimized motifs", lambda row: str(row["optimized_motifs"])),
+        (
+            "High-confidence SOS-evaluable motifs",
+            lambda row: str(row["high_confidence_eligible_topics"]),
+        ),
+        ("SOS high ($>0.8$)", lambda row: str(row["sos_bands"]["high_gt_0_8"])),
+        (
+            "SOS intermediate ($0.6$--$0.8$)",
+            lambda row: str(row["sos_bands"]["intermediate_0_6_to_0_8"]),
+        ),
+        ("SOS low ($<0.6$)", lambda row: str(row["sos_bands"]["low_lt_0_6"])),
+        (
+            "Useful high-confidence motifs (SOS $\\geq0.6$)",
+            lambda row: str(row["useful_high_confidence_motifs"]),
+        ),
+        (
+            "Mean high-confidence SOS",
+            lambda row: f"{row['high_confidence_mean_sos']:.4f}",
+        ),
+        (
+            "Median high-confidence SOS",
+            lambda row: f"{row['high_confidence_median_sos']:.4f}",
+        ),
+        ("Held-out completion NLL", lambda row: f"{row['test_nll']:.4f}"),
+    )
+    test_body = "\n".join(
+        f"{name} & " + " & ".join(render(row) for row in test_rows) + " \\\\"
+        for name, render in test_metrics
+    )
+    (GENERATED / "test_confirmation_table.tex").write_text(
+        test_body + "\n\\bottomrule\n", encoding="utf-8"
+    )
 
 
 def _generate() -> None:
@@ -246,6 +296,11 @@ def _manifest_files() -> tuple[list[Path], list[Path]]:
         "current_chemistry": SOURCES / "current_validation_chemistry.json",
         "tomotopy_chemistry": SOURCES / "tomotopy_validation_chemistry.json",
         "validation_gate": SOURCES / "validation_gate.json",
+        "candidate_test_evaluation": SOURCES / "candidate_test.json",
+        "candidate_test_access": SOURCES / "candidate_test_access.json",
+        "candidate_test_chemistry": SOURCES / "candidate_test_chemistry.json",
+        "tomotopy_test_evaluation": SOURCES / "tomotopy_evaluation.json",
+        "tomotopy_test_chemistry": SOURCES / "tomotopy_chemistry.json",
     }
     declared = _comparison()["source_sha256"]
     for name, path in sources.items():
@@ -262,6 +317,7 @@ def _manifest_files() -> tuple[list[Path], list[Path]]:
         FIGURES / "final_comparison.png",
         FIGURES / "inference_speed.png",
         GENERATED / "final_comparison_table.tex",
+        GENERATED / "test_confirmation_table.tex",
         DOCS / "neural_ms2lda_checkpoint.tex",
         DOCS / "neural_ms2lda_checkpoint.pdf",
     ]

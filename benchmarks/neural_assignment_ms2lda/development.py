@@ -140,6 +140,8 @@ def _validate_frozen_protocol(source: dict[str, Any], current: dict[str, Any]) -
                 "document_mixture_weight",
                 "document_topic_prior_weight",
                 "num_topics",
+                "beta_temperature",
+                "token_type_balance",
             }
             if section == "model"
             else set()

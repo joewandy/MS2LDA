@@ -1,25 +1,25 @@
 {
-  "beta_derivation": "softmax(2 * normalized_topics @ normalized_projected_tokens.T / beta_temperature)",
+  "beta_derivation": "softmax_with_0.25_pull_to_equal_fragment_loss_mass",
   "files": {
     "chemistry.json": {
-      "bytes": 2149,
-      "sha256": "d8c259b140181c02876c9ae1eeade0478fa4b216827c67ac7f47ab9d44e0f60d"
+      "bytes": 2626,
+      "sha256": "34d06a19f0ef0892e29f7d1815cd85ab8e2aa5e8e5a1df601636559efaf0d6f1"
     },
     "evaluation.json": {
-      "bytes": 4647,
-      "sha256": "fa43163f15514d2e420b38e09ecdfaaba5a5a352fcfc9d17f0e475e5b8f8ecf0"
+      "bytes": 4641,
+      "sha256": "c73ab6152157b5897988246a1d4e1c20672d98d5be10e4a8c4a9a8cf53903d68"
     },
     "model.pt": {
       "bytes": 6382949,
-      "sha256": "3a9e5a153ecf856f868607fc3a5b37211bd37b510cb847acc3cb765ff815c06d"
+      "sha256": "90d7cb11f4f8717a8b028130b118e3bf47ddd136eb576b3f8a388745305be33d"
     },
     "protocol.json": {
-      "bytes": 3876,
-      "sha256": "a47bcfc3739165cb7a1b22e65aa27274e7dfb41e20d91fa65ab82f9af16e6161"
+      "bytes": 3946,
+      "sha256": "c7ad4b2b6b809daf426b6aff2e4e11d1aac87a1649ee8eaa95b9e7f7e1cf8943"
     },
     "provenance.json": {
-      "bytes": 4494,
-      "sha256": "d964ab470c5ae088915c1039c538fd745a837e8cd19004693acb36c39606a5f1"
+      "bytes": 3108,
+      "sha256": "328b355100c590ff43060353b73e6e0a08bdc0f0f94c1da9c0efb3c7bd200720"
     },
     "vocabulary.json": {
       "bytes": 399546,

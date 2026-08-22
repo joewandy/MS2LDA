@@ -149,6 +149,7 @@ class NeuralAssignmentMS2LDA(nn.Module):
         projection_dimensions: int,
         router_hidden_dimensions: int,
         beta_temperature: float,
+        token_type_balance: float,
         document_mixture_weight: float,
         document_topic_prior_weight: float,
         topic_initial_indices: torch.Tensor,
@@ -166,9 +167,21 @@ class NeuralAssignmentMS2LDA(nn.Module):
         self.input_dimensions = int(token_features.shape[1])
         self.projection_dimensions = int(projection_dimensions)
         self.beta_temperature = float(beta_temperature)
+        self.token_type_balance = float(token_type_balance)
+        if not 0.0 <= self.token_type_balance <= 1.0:
+            msg = "token type balance must be between zero and one"
+            raise ValueError(msg)
         self.document_mixture_weight = float(document_mixture_weight)
         self.document_topic_prior_weight = float(document_topic_prior_weight)
         self.register_buffer("token_features", token_features.detach().clone())
+        type_features = token_features[:, -2:]
+        fragment_mask = type_features[:, 0] > type_features[:, 1]
+        if self.token_type_balance and (
+            not torch.any(fragment_mask) or torch.all(fragment_mask)
+        ):
+            msg = "token type balancing requires fragments and losses"
+            raise ValueError(msg)
+        self.register_buffer("fragment_mask", fragment_mask, persistent=False)
 
         with torch.random.fork_rng(devices=[]):
             torch.manual_seed(int(seed))
@@ -206,7 +219,28 @@ class NeuralAssignmentMS2LDA(nn.Module):
         )
         topics = F.normalize(self.topic_prototypes, dim=1)
         logits = 2.0 * topics @ tokens.T / self.beta_temperature
-        return F.softmax(logits, dim=1)
+        balance = self.token_type_balance
+        if not balance:
+            return F.softmax(logits, dim=1)
+        fragment_logits = logits[:, self.fragment_mask]
+        loss_logits = logits[:, ~self.fragment_mask]
+        type_logits = torch.cat(
+            (
+                torch.logsumexp(fragment_logits, dim=1, keepdim=True),
+                torch.logsumexp(loss_logits, dim=1, keepdim=True),
+            ),
+            dim=1,
+        )
+        fragment_mass = F.softmax(type_logits, dim=1)[:, :1]
+        balanced_fragment_mass = (1.0 - balance) * fragment_mass + 0.5 * balance
+        probabilities = torch.empty_like(logits)
+        probabilities[:, self.fragment_mask] = balanced_fragment_mass * F.softmax(
+            fragment_logits, dim=1
+        )
+        probabilities[:, ~self.fragment_mask] = (
+            1.0 - balanced_fragment_mass
+        ) * F.softmax(loss_logits, dim=1)
+        return probabilities
 
     def _route_embeddings(
         self,
@@ -240,7 +274,7 @@ class NeuralAssignmentMS2LDA(nn.Module):
         temperature: float = 1.0,
         document_mixture_weight: float = 0.0,
     ) -> torch.Tensor:
-        """Combine count-weighted token mass with shared document evidence."""
+        """Combine count-weighted token mass with fixed document evidence."""
         topic_mass = assignments.new_zeros((documents, assignments.shape[1]))
         topic_mass.index_add_(0, row_ids, assignments * weights.unsqueeze(1))
         mixture_weight = float(document_mixture_weight)
@@ -248,7 +282,7 @@ class NeuralAssignmentMS2LDA(nn.Module):
             if document_logits is None or document_logits.shape != topic_mass.shape:
                 msg = "document logits must match document topic mass"
                 raise ValueError(msg)
-            gate = F.softmax(document_logits / float(temperature), dim=1)
+            gate = F.softmax(document_logits / float(temperature), dim=1).detach()
             topic_mass = topic_mass * gate.pow(mixture_weight)
         totals = topic_mass.sum(dim=1, keepdim=True)
         theta = topic_mass / totals.clamp_min(1e-12)
@@ -516,6 +550,7 @@ def initialize_model(
         projection_dimensions=int(model_config["projection_dimensions"]),
         router_hidden_dimensions=int(model_config["router_hidden_dimensions"]),
         beta_temperature=float(model_config["beta_temperature"]),
+        token_type_balance=float(model_config.get("token_type_balance", 0.0)),
         document_mixture_weight=float(model_config["document_mixture_weight"]),
         document_topic_prior_weight=float(model_config["document_topic_prior_weight"]),
         topic_initial_indices=initial_indices,

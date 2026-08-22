@@ -16,9 +16,12 @@ active `main`.
 | Baseline capacity arms | Increasing K enlarged the mass-carrying inventory while reducing global top-word diversity. | Diagnostic evidence that nominal K is not usable motif count. |
 | ERNTM K=300 | High diversity but a smaller non-redundant inventory than K=500. | Not selected. |
 | ERNTM K=500 | Best defensible compromise among diversity, usable inventory, likelihood, speed, and chemical evidence. | Selected checkpoint. |
+| Balanced-gated neural K=1000 | Soft fragment--loss balancing plus a fixed document gate produced 148 useful validation motifs and 211 test motifs, versus Tomotopy's 138 and 186; neural MAG coverage remained lower. | Selected seed-42 research checkpoint; multi-seed confirmation pending. |
 
 The decisive structural finding is that balanced routing and recycling prevent
 gross activity collapse, while ERNTM prototype separation reduces duplication.
-They do not yield Tomotopy parity: the neural model remains weaker on NPMI and
-chemically evaluable coverage. Its research value is fully neural unsupervised
-discovery plus one-pass inference.
+At K=1000, document gating supplies confident mixtures and soft fragment--loss
+balancing makes far more of that inventory chemically useful. The neural model
+still has lower broad MAG coverage than Tomotopy. Its research value is fully
+neural unsupervised discovery plus one-pass inference; this single-seed result
+does not establish production replacement.

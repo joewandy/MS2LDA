@@ -22,7 +22,30 @@ BUNDLE_FILES = (
 
 def _portable_provenance(run: Path, selected: dict[str, Any]) -> dict[str, Any]:
     """Retain scientific provenance without local paths or user metadata."""
-    lock = read_json(run / "run.lock.json")
+    development_path = run / "development.lock.json"
+    if development_path.is_file():
+        development = read_json(development_path)
+        source = Path(development["source_run"])
+        visited = {run.resolve()}
+        while not (source / "run.lock.json").is_file():
+            resolved = source.resolve()
+            if resolved in visited:
+                raise ValueError("development provenance contains a cycle")
+            visited.add(resolved)
+            source = Path(read_json(source / "development.lock.json")["source_run"])
+        lock = read_json(source / "run.lock.json")
+        protocol_sha256 = development["protocol_sha256"]
+        source_sha256 = {"development_code_manifest": development["code_sha256"]}
+        discovery_audit = {
+            **lock.get("discovery_audit", {}),
+            "development_hypothesis": development["hypothesis"],
+            "frozen_source_artifact_sha256": development["source_artifact_sha256"],
+        }
+    else:
+        lock = read_json(run / "run.lock.json")
+        protocol_sha256 = lock["protocol_sha256"]
+        source_sha256 = lock["code"]
+        discovery_audit = lock.get("discovery_audit", {})
     inputs = {
         name: {
             key: details[key]
@@ -34,17 +57,17 @@ def _portable_provenance(run: Path, selected: dict[str, Any]) -> dict[str, Any]:
     environment = lock.get("environment", {})
     return {
         "schema_version": "neural-ms2lda/portable-provenance-v1",
-        "protocol_sha256": lock["protocol_sha256"],
+        "protocol_sha256": protocol_sha256,
         "selected_checkpoint_sha256": selected["checkpoint_sha256"],
         "inputs": inputs,
-        "run_source_sha256": lock["code"],
+        "run_source_sha256": source_sha256,
         "packaging_source_sha256": file_sha256(Path(__file__)),
         "environment": {
             "python": str(environment.get("python", "")).split(" | ", 1)[0],
             "machine": environment.get("machine"),
             "packages": environment.get("packages", {}),
         },
-        "discovery_audit": lock.get("discovery_audit", {}),
+        "discovery_audit": discovery_audit,
     }
 
 
@@ -62,10 +85,19 @@ def package_bundle(run_dir: str | Path, output_dir: str | Path) -> dict[str, Any
     shutil.copy2(run / "evaluation/neural/complete.json", output / "evaluation.json")
     shutil.copy2(run / "chemical/neural/complete.json", output / "chemistry.json")
     write_json(output / "provenance.json", _portable_provenance(run, selected))
+    balance = float(read_json(protocol_path)["model"].get("token_type_balance", 0.0))
+    unbalanced_derivation = (
+        "softmax(2 * normalized_topics @ normalized_projected_tokens.T "
+        "/ beta_temperature)"
+    )
     manifest = {
         "schema_version": "neural-ms2lda/model-bundle-v1",
         "selected_epoch": int(selected["epoch"]),
-        "beta_derivation": "softmax(2 * normalized_topics @ normalized_projected_tokens.T / beta_temperature)",
+        "beta_derivation": (
+            f"softmax_with_{balance:g}_pull_to_equal_fragment_loss_mass"
+            if balance
+            else unbalanced_derivation
+        ),
         "files": {
             name: {
                 "bytes": (output / name).stat().st_size,
@@ -106,6 +138,7 @@ def load_bundle(
         projection_dimensions=int(config["projection_dimensions"]),
         router_hidden_dimensions=int(config["router_hidden_dimensions"]),
         beta_temperature=float(config["beta_temperature"]),
+        token_type_balance=float(config.get("token_type_balance", 0.0)),
         document_mixture_weight=float(config.get("document_mixture_weight", 0.0)),
         document_topic_prior_weight=float(
             config.get(

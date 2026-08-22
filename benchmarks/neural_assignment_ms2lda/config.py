@@ -74,8 +74,12 @@ def load_protocol() -> dict[str, Any]:
         raise ValueError("the supported router is fixed to top-2")
     if float(protocol["model"]["document_topic_prior_weight"]) != 1.0:
         raise ValueError("the document topic prior weight is fixed to one")
-    if float(protocol["model"]["document_mixture_weight"]) != 0.5:
-        raise ValueError("the document mixture weight is fixed to one half")
+    if float(protocol["model"]["document_mixture_weight"]) != 0.75:
+        raise ValueError("the document mixture weight is fixed to three quarters")
+    if float(protocol["model"].get("token_type_balance", 0.0)) != 0.25:
+        raise ValueError("the token type balance is fixed to one quarter")
+    if float(protocol["model"]["beta_temperature"]) != 0.18:
+        raise ValueError("the decoder temperature is fixed to 0.18")
     if int(protocol["optimization"]["maximum_epochs"]) != 40:
         raise ValueError("the reproducibility run is fixed to 40 epochs")
     return protocol

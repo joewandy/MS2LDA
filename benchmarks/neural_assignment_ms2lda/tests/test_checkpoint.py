@@ -18,7 +18,11 @@ from benchmarks.msnlib_validation.data import (
     build_training_vocabulary,
 )
 from benchmarks.neural_assignment_ms2lda import config as neural_config
-from benchmarks.neural_assignment_ms2lda.bundle import load_bundle, package_bundle
+from benchmarks.neural_assignment_ms2lda.bundle import (
+    _portable_provenance,
+    load_bundle,
+    package_bundle,
+)
 from benchmarks.neural_assignment_ms2lda.chemical import _sos_bands
 from benchmarks.neural_assignment_ms2lda.config import load_protocol
 from benchmarks.neural_assignment_ms2lda.cooccurrence import (
@@ -106,6 +110,15 @@ def _record(identifier: str, words: list[str]) -> SpectrumRecord:
     )
 
 
+def _token_features(tokens: int, dimensions: int = 64) -> torch.Tensor:
+    """Return synthetic features with the production fragment/loss contract."""
+    features = torch.randn(tokens, dimensions)
+    features[:, -2:] = 0.0
+    features[::2, -2] = 1.0
+    features[1::2, -1] = 1.0
+    return torch.nn.functional.normalize(features, dim=1)
+
+
 def test_first_seen_training_vocabulary() -> None:
     records = [
         _record("a", ["frag@2.0", "frag@1.0", "frag@2.0"]),
@@ -150,7 +163,7 @@ def test_training_views_keep_physical_peak_groups_atomic() -> None:
 
 def test_sinkhorn_top2_topic_gradients_and_recycling() -> None:
     protocol = load_protocol()
-    features = torch.nn.functional.normalize(torch.randn(20, 64), dim=1)
+    features = _token_features(20)
     from benchmarks.neural_assignment_ms2lda.model import initialize_model
 
     model, _ = initialize_model(features, num_topics=4, protocol=protocol)
@@ -186,9 +199,40 @@ def test_sinkhorn_top2_topic_gradients_and_recycling() -> None:
         replacements=torch.randn(1, model.projection_dimensions),
     )
     assert not torch.equal(before[0], model.topic_prototypes.detach()[0])
-    targets = balanced_sinkhorn_targets(torch.randn(40, 4), epsilon=0.2, iterations=100)
+    generator = torch.Generator().manual_seed(42)
+    targets = balanced_sinkhorn_targets(
+        torch.randn(40, 4, generator=generator), epsilon=0.2, iterations=100
+    )
     assert torch.allclose(targets.sum(dim=1), torch.ones(40), atol=1e-5)
     assert torch.allclose(targets.sum(dim=0), torch.full((4,), 10.0), atol=1e-5)
+
+
+def test_decoder_softly_balances_token_types_with_gradients() -> None:
+    protocol = load_protocol()
+    legacy_protocol = copy.deepcopy(protocol)
+    legacy_protocol["model"]["token_type_balance"] = 0.0
+    from benchmarks.neural_assignment_ms2lda.model import initialize_model
+
+    features = _token_features(20)
+    model, _ = initialize_model(features, num_topics=4, protocol=protocol)
+    legacy, _ = initialize_model(features, num_topics=4, protocol=legacy_protocol)
+    beta = model.topic_word_distribution()
+    legacy_beta = legacy.topic_word_distribution()
+    legacy_fragment_mass = legacy_beta[:, ::2].sum(dim=1)
+    expected_fragment_mass = 0.75 * legacy_fragment_mass + 0.125
+    assert torch.allclose(beta.sum(dim=1), torch.ones(4), atol=1e-6)
+    assert torch.allclose(beta[:, ::2].sum(dim=1), expected_fragment_mass, atol=1e-6)
+    (-torch.log(beta[:, 0]).mean()).backward()
+    assert model.topic_prototypes.grad is not None
+    assert torch.isfinite(model.topic_prototypes.grad).all()
+
+    tokens = legacy.projected_tokens()
+    topics = torch.nn.functional.normalize(legacy.topic_prototypes, dim=1)
+    expected_legacy = torch.softmax(
+        2.0 * topics @ tokens.T / legacy.beta_temperature,
+        dim=1,
+    )
+    assert torch.equal(legacy_beta, expected_legacy)
 
 
 def test_positive_npmi_graph_supplies_topic_gradients() -> None:
@@ -220,7 +264,7 @@ def test_positive_npmi_graph_supplies_topic_gradients() -> None:
 
     from benchmarks.neural_assignment_ms2lda.model import initialize_model
 
-    features = torch.nn.functional.normalize(torch.randn(6, 64), dim=1)
+    features = _token_features(6)
     model, _ = initialize_model(features, num_topics=4, protocol=protocol)
     result = cooccurrence_topic_constraint(model, torch_sparse_graph(graph))
     result.loss.backward()
@@ -245,7 +289,7 @@ def test_nearest_neighbor_constraint_penalizes_close_topics() -> None:
     protocol = load_protocol()
     from benchmarks.neural_assignment_ms2lda.model import initialize_model
 
-    features = torch.nn.functional.normalize(torch.randn(20, 64), dim=1)
+    features = _token_features(20)
     model, _ = initialize_model(features, num_topics=4, protocol=protocol)
     with torch.no_grad():
         model.topic_prototypes[1] = model.topic_prototypes[0] + 0.01
@@ -261,7 +305,7 @@ def test_hierarchical_router_adds_one_shared_document_score() -> None:
     protocol = load_protocol()
     from benchmarks.neural_assignment_ms2lda.model import initialize_model
 
-    features = torch.nn.functional.normalize(torch.randn(20, 64), dim=1)
+    features = _token_features(20)
     model, _ = initialize_model(features, num_topics=4, protocol=protocol)
     matrix = sp.csr_matrix(np.eye(2, 20, dtype=np.float32) + 1.0)
     batch = sparse_batch(matrix, np.arange(2, dtype=np.int64))
@@ -276,11 +320,11 @@ def test_hierarchical_router_adds_one_shared_document_score() -> None:
     assert torch.isfinite(hierarchical.theta).all()
 
 
-def test_document_gate_normalization_support_empty_fallback_and_gradients() -> None:
+def test_document_gate_normalization_support_and_fixed_evidence() -> None:
     protocol = load_protocol()
     from benchmarks.neural_assignment_ms2lda.model import initialize_model
 
-    features = torch.nn.functional.normalize(torch.randn(8, 64), dim=1)
+    features = _token_features(8)
     model, _ = initialize_model(features, num_topics=4, protocol=protocol)
     assignments = torch.tensor(
         [[0.6, 0.4, 0.0, 0.0], [0.2, 0.8, 0.0, 0.0]],
@@ -306,15 +350,14 @@ def test_document_gate_normalization_support_empty_fallback_and_gradients() -> N
     assert torch.allclose(gated[1], torch.full((4,), 0.25))
     gated[0, 0].backward()
     assert assignments.grad is not None and torch.isfinite(assignments.grad).all()
-    assert logits.grad is not None and torch.isfinite(logits.grad).all()
-    assert torch.count_nonzero(logits.grad) > 0
+    assert logits.grad is None
 
 
 def test_zero_document_gate_weight_exactly_recovers_token_mixture() -> None:
     protocol = load_protocol()
     from benchmarks.neural_assignment_ms2lda.model import initialize_model
 
-    features = torch.nn.functional.normalize(torch.randn(8, 64), dim=1)
+    features = _token_features(8)
     model, _ = initialize_model(features, num_topics=4, protocol=protocol)
     assignments = torch.softmax(torch.randn(5, 4), dim=1)
     row_ids = torch.tensor([0, 0, 1, 1, 1])
@@ -395,7 +438,8 @@ def test_committed_bundle_matches_supported_architecture() -> None:
     assert manifest["schema_version"] == "neural-ms2lda/model-bundle-v1"
     assert model.num_topics == 1000
     assert model.document_topic_prior_weight == 1.0
-    assert model.document_mixture_weight == 0.0
+    assert model.document_mixture_weight == 0.75
+    assert model.token_type_balance == 0.25
     assert len(vocabulary) == model.vocabulary_size
 
 
@@ -403,12 +447,14 @@ def test_protocol_exposes_one_active_topic_architecture() -> None:
     protocol = load_protocol()
     assert protocol["cpu_threads"] == 6
     assert protocol["model"]["num_topics"] == 1000
-    assert protocol["model"]["document_mixture_weight"] == 0.5
+    assert protocol["model"]["document_mixture_weight"] == 0.75
+    assert protocol["model"]["beta_temperature"] == 0.18
+    assert protocol["model"]["token_type_balance"] == 0.25
     assert "development_gates" not in protocol
     assert "workers" not in protocol["tomotopy"]
     from benchmarks.neural_assignment_ms2lda.model import initialize_model
 
-    features = torch.nn.functional.normalize(torch.randn(20, 64), dim=1)
+    features = _token_features(20)
     model, _ = initialize_model(features, num_topics=4, protocol=protocol)
     config = copy.deepcopy(protocol["topic_separation"])
     config["neighbors"] = 2
@@ -558,6 +604,35 @@ def test_development_uses_the_single_supported_topic_capacity() -> None:
     assert protocol["model"]["num_topics"] == 1000
     assert protocol["cpu_threads"] == 6
     _validate_frozen_protocol(source, protocol)
+
+
+def test_development_run_has_portable_bundle_provenance(tmp_path: Path) -> None:
+    source = tmp_path / "source"
+    run = tmp_path / "candidate"
+    write_json(
+        source / "run.lock.json",
+        {
+            "inputs": {"mgf": {"bytes": 3, "sha256": "input"}},
+            "environment": {"python": "3.11", "machine": "arm64"},
+            "discovery_audit": {"forbidden_dependencies_found": []},
+        },
+    )
+    write_json(
+        run / "development.lock.json",
+        {
+            "source_run": str(source),
+            "protocol_sha256": "protocol",
+            "code_sha256": "code",
+            "hypothesis": "soft balance",
+            "source_artifact_sha256": {"data/train.npz": "train"},
+        },
+    )
+    result = _portable_provenance(run, {"checkpoint_sha256": "checkpoint"})
+    assert result["protocol_sha256"] == "protocol"
+    assert result["run_source_sha256"] == {"development_code_manifest": "code"}
+    assert result["inputs"]["mgf"]["sha256"] == "input"
+    assert result["discovery_audit"]["development_hypothesis"] == "soft balance"
+    assert str(source) not in json.dumps(result)
 
 
 def test_verify_run_checks_cooccurrence_graph(tmp_path: Path) -> None:
@@ -955,7 +1030,7 @@ def test_miniature_mgf_through_report_and_bundle(tmp_path: Path) -> None:
     loaded, vocabulary, manifest = load_bundle(bundle)
     assert loaded.num_topics == 4
     assert loaded.document_topic_prior_weight == 1.0
-    assert loaded.document_mixture_weight == 0.5
+    assert loaded.document_mixture_weight == 0.75
     assert len(vocabulary) == train.shape[1]
     assert manifest["selected_epoch"] == 2
     provenance_text = (bundle / "provenance.json").read_text(encoding="utf-8")
