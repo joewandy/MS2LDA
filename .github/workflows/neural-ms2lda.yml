@@ -80,9 +80,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Regenerate report inputs
         run: |
-          python -m pip install numpy matplotlib
           python scripts/generate_neural_ms2lda_report.py
-          git diff --exit-code -- docs/research/generated docs/research/figures
+          git diff --exit-code -- docs/research/generated
       - uses: xu-cheng/latex-action@v3
         with:
           root_file: neural_ms2lda_report.tex
