@@ -65,22 +65,18 @@ def mini_protocol(mgf: Path) -> dict[str, Any]:
             "batch_size": 32,
         }
     )
-    protocol["token_features"]["fourier_frequencies"] = [1]
     protocol["model"].update(
         {
             "num_topics": 4,
             "projection_dimensions": 8,
-            "router_hidden_dimensions": 8,
         }
     )
-    protocol["views"]["pairs"] = 2
     protocol["optimization"].update(
         {
             "batch_size": 4,
             "topic_update_batch_size": 4,
             "topic_updates_per_epoch": 1,
             "maximum_epochs": 2,
-            "validation_interval": 1,
         }
     )
     protocol["anti_collapse"].update(
@@ -88,7 +84,6 @@ def mini_protocol(mgf: Path) -> dict[str, Any]:
             "routing_temperature_anneal_epochs": 2,
             "sinkhorn_weight_hold_epochs": 0,
             "sinkhorn_iterations": 10,
-            "recycle_patience_validations": 10,
         }
     )
     protocol["cooccurrence_regularization"].update(

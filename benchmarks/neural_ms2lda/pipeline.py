@@ -18,7 +18,6 @@ from .artifacts import (
 )
 from .data import (
     load_csr,
-    load_view_pairs,
     load_vocabulary,
     prepare_data,
     train_token_features,
@@ -38,8 +37,9 @@ def _heartbeat(directory: Path, **details: Any) -> None:
 
 
 def _configure_threads(count: int) -> None:
-    """Apply one CPU-thread allowance to PyTorch and numerical backends."""
+    """Apply the CPU allowance and deterministic PyTorch execution."""
     torch.set_num_threads(int(count))
+    torch.use_deterministic_algorithms(True)
     with contextlib.suppress(RuntimeError):
         torch.set_num_interop_threads(1)
     for name in (
@@ -133,13 +133,9 @@ def run_pipeline(
         protocol,
         seed=int(protocol["seed"]),
     )
-    views = load_view_pairs(directory, protocol)
-    validation_full = load_csr(data / "validation_full.npz")
     train_model(
         directory,
         train=train,
-        views=views,
-        validation_full=validation_full,
         protocol=protocol,
         heartbeat=lambda **details: _heartbeat(directory, **details),
     )

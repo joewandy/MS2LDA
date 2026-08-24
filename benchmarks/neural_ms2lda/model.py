@@ -17,7 +17,6 @@ if TYPE_CHECKING:
 
 
 TOPICS_PER_TOKEN = 2
-TOKEN_TYPE_BALANCE = 0.25
 DOCUMENT_MIXTURE_EXPONENT = 0.75
 
 
@@ -28,64 +27,6 @@ class AssignmentOutput:
     theta: torch.Tensor
     assignments: torch.Tensor
     logits: torch.Tensor
-    route_embeddings: torch.Tensor
-
-
-def deterministic_kmeans_plus_plus(
-    features: torch.Tensor,
-    *,
-    clusters: int,
-    seed: int,
-    weights: torch.Tensor | None = None,
-) -> torch.Tensor:
-    """Choose D-squared prototype seeds without Lloyd refinement."""
-    if features.ndim != 2 or not features.numel():
-        msg = "k-means++ features must be a non-empty matrix"
-        raise ValueError(msg)
-    observations = features.shape[0]
-    if not 0 < clusters <= observations:
-        msg = "cluster count must not exceed feature count"
-        raise ValueError(msg)
-    values = nnf.normalize(features.detach().to(dtype=torch.float64), dim=1)
-    probabilities = (
-        torch.ones(observations, dtype=torch.float64)
-        if weights is None
-        else weights.detach().to(dtype=torch.float64).clamp_min(0)
-    )
-    if float(probabilities.sum()) <= 0:
-        msg = "k-means++ weights must have positive mass"
-        raise ValueError(msg)
-    generator = torch.Generator(device="cpu").manual_seed(int(seed))
-    first = int(
-        torch.multinomial(
-            probabilities,
-            num_samples=1,
-            generator=generator,
-        ),
-    )
-    selected = [first]
-    closest = (2.0 - 2.0 * (values @ values[first])).clamp_min(0.0)
-    closest[first] = 0.0
-    for _ in range(1, clusters):
-        sampling = closest * probabilities
-        sampling[torch.tensor(selected)] = 0.0
-        if float(sampling.sum()) <= 1e-15:
-            remaining = torch.ones(observations, dtype=torch.bool)
-            remaining[torch.tensor(selected)] = False
-            next_index = int(torch.flatnonzero(remaining)[0])
-        else:
-            next_index = int(
-                torch.multinomial(
-                    sampling,
-                    num_samples=1,
-                    generator=generator,
-                ),
-            )
-        selected.append(next_index)
-        distance = (2.0 - 2.0 * (values @ values[next_index])).clamp_min(0.0)
-        closest = torch.minimum(closest, distance)
-        closest[torch.tensor(selected)] = 0.0
-    return torch.tensor(selected, dtype=torch.int64)
 
 
 class NeuralMS2LDA(nn.Module):
@@ -109,7 +50,6 @@ class NeuralMS2LDA(nn.Module):
         *,
         num_topics: int,
         projection_dimensions: int,
-        router_hidden_dimensions: int,
         beta_temperature: float,
         topic_initial_indices: torch.Tensor,
         seed: int,
@@ -146,14 +86,12 @@ class NeuralMS2LDA(nn.Module):
                 bias=False,
             )
             nn.init.orthogonal_(self.token_projection.weight)
-            self.context_router = nn.Sequential(
-                nn.Linear(2 * self.projection_dimensions, router_hidden_dimensions),
-                nn.GELU(),
-                nn.LayerNorm(router_hidden_dimensions),
-                nn.Linear(router_hidden_dimensions, self.projection_dimensions),
+            self.context_projection = nn.Linear(
+                self.projection_dimensions,
+                self.projection_dimensions,
+                bias=False,
             )
-            nn.init.normal_(self.context_router[-1].weight, mean=0.0, std=0.01)
-            nn.init.zeros_(self.context_router[-1].bias)
+            nn.init.eye_(self.context_projection.weight)
 
         with torch.no_grad():
             projected = self.projected_tokens()
@@ -172,11 +110,8 @@ class NeuralMS2LDA(nn.Module):
 
         For topic ``k`` and token ``w``, the unnormalized log evidence is a
         temperature-scaled cosine similarity. Fragment and neutral-loss
-        channels are normalized separately. Their channel evidence is the
-        log-mean-exp, rather than log-sum-exp, so a larger vocabulary cannot
-        acquire probability mass merely by containing more words. The final
-        channel mass is pulled by 0.25 toward an equal split,
-        while rankings within each channel remain unchanged.
+        channels are normalized separately and each receives exactly half of
+        the probability mass. Rankings within each channel are unchanged.
 
         Returns:
             A ``[num_topics, vocabulary_size]`` row-stochastic tensor.
@@ -188,28 +123,9 @@ class NeuralMS2LDA(nn.Module):
         logits = 2.0 * topics @ tokens.T / self.beta_temperature
         fragment_logits = logits[:, self.fragment_mask]
         loss_logits = logits[:, ~self.fragment_mask]
-        type_logits = torch.cat(
-            (
-                torch.logsumexp(fragment_logits, dim=1, keepdim=True),
-                torch.logsumexp(loss_logits, dim=1, keepdim=True),
-            ),
-            dim=1,
-        )
-        vocabulary_sizes = type_logits.new_tensor(
-            (fragment_logits.shape[1], loss_logits.shape[1]),
-        )
-        type_logits = type_logits - torch.log(vocabulary_sizes).unsqueeze(0)
-        fragment_mass = nnf.softmax(type_logits, dim=1)[:, :1]
-        balanced_fragment_mass = (
-            1.0 - TOKEN_TYPE_BALANCE
-        ) * fragment_mass + 0.5 * TOKEN_TYPE_BALANCE
         probabilities = torch.empty_like(logits)
-        probabilities[:, self.fragment_mask] = balanced_fragment_mass * nnf.softmax(
-            fragment_logits, dim=1
-        )
-        probabilities[:, ~self.fragment_mask] = (
-            1.0 - balanced_fragment_mass
-        ) * nnf.softmax(loss_logits, dim=1)
+        probabilities[:, self.fragment_mask] = 0.5 * nnf.softmax(fragment_logits, dim=1)
+        probabilities[:, ~self.fragment_mask] = 0.5 * nnf.softmax(loss_logits, dim=1)
         return probabilities
 
     def _route_embeddings(
@@ -221,7 +137,7 @@ class NeuralMS2LDA(nn.Module):
 
         For every observed token, the context is the count-weighted document
         sum with that token occurrence removed. This leave-one-out construction
-        prevents the context MLP from trivially copying the token it routes.
+        prevents the context projection from trivially copying the token it routes.
         The document vector uses the unnormalized count-weighted sum followed by
         row normalization, matching the equations in the scientific report.
         """
@@ -236,7 +152,7 @@ class NeuralMS2LDA(nn.Module):
             batch.document_totals[batch.row_ids] - batch.weights
         ).clamp_min(1.0)
         context = context_numerator / context_denominator.unsqueeze(1)
-        correction = self.context_router(torch.cat((token_values, context), dim=1))
+        correction = self.context_projection(context)
         token_routes = nnf.normalize(token_values + correction, dim=1)
         document_routes = nnf.normalize(document_sums, dim=1)
         return token_routes, document_routes
@@ -319,7 +235,6 @@ class NeuralMS2LDA(nn.Module):
             theta=theta,
             assignments=assignments,
             logits=logits,
-            route_embeddings=routes,
         )
 
     @staticmethod
@@ -376,36 +291,20 @@ def initialize_model(
     *,
     num_topics: int,
     protocol: dict[str, Any],
-    seeding_weights: np.ndarray | None = None,
 ) -> tuple[NeuralMS2LDA, torch.Tensor]:
-    """Create the deterministic frequency/IDF-weighted k-means++ seed state."""
+    """Create the deterministic seed-42 uniform prototype state."""
     seed = int(protocol["seed"])
     model_config = protocol["model"]
-    with torch.random.fork_rng(devices=[]):
-        torch.manual_seed(seed + int(num_topics))
-        temporary_projection = nn.Linear(
-            int(token_features.shape[1]),
-            int(model_config["projection_dimensions"]),
-            bias=False,
-        )
-        nn.init.orthogonal_(temporary_projection.weight)
-    projected = nnf.normalize(temporary_projection(token_features), dim=1)
-    weights = (
-        torch.from_numpy(np.asarray(seeding_weights, dtype=np.float64))
-        if seeding_weights is not None
-        else None
-    )
-    initial_indices = deterministic_kmeans_plus_plus(
-        projected,
-        clusters=int(num_topics),
-        seed=seed + 4049 + int(num_topics),
-        weights=weights,
-    )
+    if not 0 < int(num_topics) <= len(token_features):
+        raise ValueError("topic count must not exceed vocabulary size")
+    generator = torch.Generator(device="cpu").manual_seed(seed)
+    initial_indices = torch.randperm(len(token_features), generator=generator)[
+        : int(num_topics)
+    ]
     model = NeuralMS2LDA(
         token_features,
         num_topics=int(num_topics),
         projection_dimensions=int(model_config["projection_dimensions"]),
-        router_hidden_dimensions=int(model_config["router_hidden_dimensions"]),
         beta_temperature=float(model_config["beta_temperature"]),
         topic_initial_indices=initial_indices,
         seed=seed + int(num_topics),

@@ -84,14 +84,12 @@ def load_trained_model(
     vocabulary = list(map(str, read_json(root / "vocabulary.json")))
     features = state["token_features"]
     topics, projection_dimensions = state["topic_prototypes"].shape
-    hidden_dimensions = state["context_router.0.weight"].shape[0]
     if len(vocabulary) != features.shape[0]:
         raise ValueError("vocabulary and token features differ in length")
     model = NeuralMS2LDA(
         features,
         num_topics=int(topics),
         projection_dimensions=int(projection_dimensions),
-        router_hidden_dimensions=int(hidden_dimensions),
         beta_temperature=float(settings["beta_temperature"]),
         topic_initial_indices=torch.arange(int(topics), dtype=torch.int64),
         seed=0,
@@ -214,9 +212,7 @@ def build_results(run_dir: str | Path) -> dict[str, Any]:
                 }
                 for method in ("neural", "tomotopy")
             },
-            "neural_recycled_topics_during_training": int(
-                neural_training["recycled_topics"]
-            ),
+            "neural_recycled_topics_during_training": 0,
             "neural_test_corpus_active_topics": int(
                 neural_test["active_topics"]["corpus_active_topics"]
             ),

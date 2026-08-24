@@ -18,13 +18,12 @@
 \fancyhf{}
 \setlength{\headheight}{14pt}
 \setlength{\headsep}{18pt}
-\lhead{Collapse-resistant neural MS2LDA}
+\lhead{Simplified neural MS2LDA}
 \rhead{Seed \StudySeed, $K=\StudyTopics$, \StudyThreads{} CPU threads}
 \cfoot{\thepage}
 \setlist{nosep,leftmargin=*}
 \newcommand{\softmax}{\operatorname{softmax}}
 \newcommand{\normalize}{\operatorname{normalize}}
-\newcommand{\logsumexp}{\operatorname{logsumexp}}
 \newcommand{\stopgrad}{\operatorname{stopgrad}}
 \newcommand{\modelbox}[2]{%
   \fcolorbox{black!55}{#1}{%
@@ -47,10 +46,12 @@ while retaining a broad inventory of chemically interpretable fragment and
 neutral-loss patterns. We present a neural probabilistic topic model in which
 one sparse top-2 routing pass replaces iterative document-level inference.
 Fixed, train-only token features and learned topic prototypes define both the
-router and the topic--word decoder. Mean-normalized fragment/loss evidence
-removes a vocabulary-size bias, while balanced assignments, paired views,
-positive-NPMI structure, prototype separation, and dead-topic recycling address
-topic collapse. We compare the model with Tomotopy LDA using the same
+router and the topic--word decoder. Fragment and neutral-loss channels receive
+equal probability mass, while balanced assignments, positive-NPMI structure,
+and prototype separation address topic collapse. A validation-only seed-42
+ablation removed unnecessary feature, view, reconstruction, initialization,
+and recycling mechanisms and replaced the context MLP with one linear map. We
+compare the resulting model with Tomotopy LDA using the same
 \StudyTopics{} topics, seed \StudySeed, \StudyThreads{} CPU threads, scaffold
 split, and leakage-filtered MAG protocol. On validation, the neural model
 produces \NeuralValidationOptimized{} optimized motifs and
@@ -59,8 +60,9 @@ produces \NeuralValidationOptimized{} optimized motifs and
 On test, the corresponding useful-motif counts are \NeuralTestUseful{} and
 \TomotopyTestUseful{}. Tomotopy retains higher mean structure overlap score
 (SOS), so the result is a breadth--purity trade-off rather than uniform
-superiority. Fitting times are similar (\NeuralFitMinutes{} versus
-\TomotopyFitMinutes{} minutes). This is a single-dataset, single-seed research
+superiority. Recorded core fitting time is lower for the neural model
+(\NeuralFitMinutes{} versus \TomotopyFitMinutes{} minutes). This is a
+single-dataset, single-seed research
 comparison, not a claim that the neural model should replace the production
 backend.
 \end{abstract}
@@ -87,10 +89,9 @@ better.
 We address these problems with one shared prototype geometry. It defines a
 fragment/loss-balanced topic--word distribution and a contextual top-2 router
 whose aggregated assignments form the document mixture in one pass. The
-training objective combines cross-view prediction with complementary safeguards
-against usage, geometric, and co-occurrence collapse. This report states the
-complete model and evaluation protocol directly; a reader should not need the
-preceding architecture experiments to reproduce the method.
+training objective combines full-spectrum likelihood with safeguards against
+usage, geometric, and co-occurrence collapse. This report states the complete
+selected model and evaluation protocol directly.
 
 \section{Methods}
 
@@ -133,7 +134,7 @@ called once after validation evaluation and MAG scoring are complete.
 
 \subsection{Fixed token features}
 
-Each token has a fixed feature vector $x_w\in\mathbb{R}^{64}$. Its first 48
+Each token has a fixed feature vector $x_w\in\mathbb{R}^{50}$. Its first 48
 coordinates are skip-gram negative-sampling (SGNS) embeddings trained only on
 training documents \cite{mikolov2013}. For five epochs, eight count-weighted
 positive pairs are sampled per document; each positive pair uses five negatives
@@ -141,25 +142,14 @@ drawn with probability proportional to corpus frequency raised to $0.75$.
 Source embeddings are initialized uniformly on $[-0.5/48,0.5/48]$ and context
 embeddings at zero. SparseAdam uses learning rate 0.01 and batches of 8,192
 pairs. Source and context embeddings are averaged and normalized after the
-fifth epoch.
-
-If $m_w$ denotes token mass, fourteen Fourier coordinates encode mass at
-$f\in\{1,2,4,8,16,32,64\}$:
-\begin{equation}
-  \phi_f(m_w)=\left[
-    \sin\!\left(2\pi f m_w/1000\right),
-    \cos\!\left(2\pi f m_w/1000\right)
-  \right].
-\end{equation}
-The Fourier block is divided by $\sqrt{7}$. Two final one-hot coordinates mark
-fragment versus neutral loss. Concatenating the normalized SGNS vector, Fourier
-block, and type indicators gives 64 coordinates; the complete vector is
-normalized again. Molecular labels and pretrained spectrum encoders are not
-used.
+fifth epoch. Two final one-hot coordinates mark fragment versus neutral loss.
+The normalized SGNS vector and type indicators are concatenated and normalized
+again. Token-mass Fourier features, molecular labels, and pretrained spectrum
+encoders are not used.
 
 \subsection{Shared topic geometry and balanced decoder}
 
-A learned bias-free matrix $W\in\mathbb{R}^{128\times64}$ projects the fixed
+A learned bias-free matrix $W\in\mathbb{R}^{128\times50}$ projects the fixed
 features, and every topic has a learned prototype $q_k\in\mathbb{R}^{128}$:
 \begin{equation}
   z_w=\normalize(Wx_w),\qquad \widehat q_k=\normalize(q_k).
@@ -173,30 +163,18 @@ logits are temperature-scaled cosine similarities,
   \label{eq:decoder-logits}
 \end{equation}
 
-Let $V_F$ and $V_L$ denote the fragment and neutral-loss vocabularies. Channel
-evidence is a log mean exponential, not a log sum exponential:
+Let $V_F$ and $V_L$ denote the fragment and neutral-loss vocabularies. Each
+channel receives exactly one half of the topic probability mass, and a softmax
+within that channel determines token rankings:
 \begin{equation}
-  e_{kt}=\logsumexp_{w\in V_t}(\ell_{kw})-\log|V_t|,
-  \qquad
-  \pi_{kt}=\softmax_{t\in\{F,L\}}(e_{kt}).
-  \label{eq:type-evidence}
-\end{equation}
-The subtraction removes the $\log|V_t|$ multiplicity advantage: if all token
-logits are equal, the two channels receive equal evidence even when their
-vocabularies differ in size. A fixed $\lambda=0.25$ pulls the inferred channel
-mass toward one half,
-\begin{equation}
-  \widetilde\pi_{kt}=(1-\lambda)\pi_{kt}+\frac{\lambda}{2},
-\end{equation}
-and the row-stochastic decoder is
-\begin{equation}
-  \beta_{kw}=\widetilde\pi_{k,t(w)}
+  \beta_{kw}=\frac{1}{2}
   \frac{\exp(\ell_{kw})}
        {\sum_{v\in V_{t(w)}}\exp(\ell_{kv})}.
   \label{eq:beta}
 \end{equation}
-Thus $\sum_w\beta_{kw}=1$, rankings within each channel are unchanged, and the
-channel correction adds no learned parameter.
+Thus $\sum_w\beta_{kw}=1$, vocabulary size cannot change channel mass, rankings
+within each channel are unchanged, and the channel correction adds no learned
+parameter.
 
 \subsection{Contextual top-2 router and document mixture}
 
@@ -208,13 +186,13 @@ is
   \frac{s_d-c_{dw}z_w}{\max(\sum_v c_{dv}-c_{dw},1)}.
   \label{eq:context}
 \end{equation}
-A two-layer MLP (linear, GELU, layer normalization, linear) with a 256-unit
-hidden layer gives
+A learned bias-free matrix $C\in\mathbb{R}^{128\times128}$ gives
 \begin{equation}
-  h_{dw}=\normalize\!\left(z_w+\operatorname{MLP}
-  ([z_w;\bar z_{d\setminus w}])\right),
+  h_{dw}=\normalize\!\left(z_w+C\bar z_{d\setminus w}\right),
   \qquad u_d=\normalize(s_d).
 \end{equation}
+$C$ is initialized to the identity, so the initial correction is the normalized
+leave-one-out context itself.
 Local and document evidence are added before routing:
 \begin{equation}
   a_{dwk}=h_{dw}^{\top}\widehat q_k+u_d^{\top}\widehat q_k,
@@ -256,7 +234,7 @@ not change its probabilities.
 \begin{figure}[ht]
   \centering
   \textbf{The same forward model is used for training and inference}\par\smallskip
-  \modelbox{blue!8}{Fixed token features\\SGNS, mass, type}
+  \modelbox{blue!8}{Fixed token features\\SGNS and type}
   $\rightarrow$
   \modelbox{blue!14}{Shared geometry\\$z_w,\widehat q_k$}
   $\rightarrow$
@@ -270,44 +248,33 @@ not change its probabilities.
   \fcolorbox{black!55}{violet!8}{%
     \parbox[c][1.0cm][c]{0.55\textwidth}{\centering\footnotesize
       Shared decoder $\beta$: cosine logits $\rightarrow$
-      mean fragment/loss evidence $\rightarrow$
-      25\% pull toward equal channel mass}}
+      separate fragment/loss softmax $\rightarrow$
+      fixed 50/50 channel mass}}
   $\longrightarrow$ one-pass token probabilities
 
   \medskip
   \textbf{Training-only anti-collapse}\par\smallskip
-  \guardbox{Weighted spherical\\$k$-means++ initialization}\hfill
+  \guardbox{Seeded uniform\\prototype selection}\hfill
   \guardbox{Temperature annealing\\and Sinkhorn usage}\hfill
-  \guardbox{Positive-NPMI graph\\and prototype margin}\hfill
-  \guardbox{Hard-context\\dead-topic recycling}
+  \guardbox{Positive-NPMI\\co-occurrence graph}\hfill
+  \guardbox{Prototype\\separation margin}
   \caption{The implemented model. Fixed train-only features and learned
   prototypes define both the one-pass router and balanced decoder. The lower
   row contains training-only safeguards and is absent from inference.}
   \label{fig:model}
 \end{figure}
 
-\subsection{Alternating paired-view objective}
-
-Four deterministic view pairs are constructed from each training spectrum.
-Each side retains 80 percent of whole physical peak groups (while withholding at
-least one when possible) and is renormalized independently. Epochs cycle through
-the four pairs.
+\subsection{Alternating full-spectrum objective}
 
 Optimization alternates two gradient blocks using one AdamW optimizer. In the
-\emph{router block}, $\beta$ is cached and detached. Each partial view predicts
-the other, while Sinkhorn targets and Jensen--Shannon agreement regularize the
-router:
-\begin{align}
-  \mathcal L_{\mathrm{router}}={}&
-  \tfrac12\left[
-    \mathcal L_{\mathrm{comp}}(\theta^A,X^B)+
-    \mathcal L_{\mathrm{comp}}(\theta^B,X^A)
-  \right]
-  +\omega_S\mathcal L_{\mathrm{Sinkhorn}} \notag\\
-  &+0.1\operatorname{JS}(\theta^A,\theta^B)
+\emph{router block}, $\beta$ is cached and detached. One full-spectrum route is
+optimized with likelihood, Sinkhorn targets, and prototype separation:
+\begin{equation}
+  \mathcal L_{\mathrm{router}}=
+  \mathcal L_{\mathrm{comp}}+\omega_S\mathcal L_{\mathrm{Sinkhorn}}
   +5\mathcal L_{\mathrm{sep}}.
   \label{eq:router-loss}
-\end{align}
+\end{equation}
 For a mini-batch with $N$ routed entries, log-space Sinkhorn iteration projects
 $\exp(a/\varepsilon)$, with $\varepsilon=0.05$, to detached targets $Q$ whose
 rows sum to one and whose columns sum to $N/K$ \cite{cuturi2013,caron2020}.
@@ -319,30 +286,21 @@ In the \emph{topic block}, routes are recomputed without gradients and held
 fixed. Decoder geometry is then optimized with
 \begin{equation}
   \mathcal L_{\mathrm{topic}}=
-  \mathcal L_{\mathrm{comp}}+0.25\mathcal L_{\mathrm{local}}
-  +\mathcal L_{\mathrm{NPMI}}+5\mathcal L_{\mathrm{sep}},
+  \mathcal L_{\mathrm{comp}}+\mathcal L_{\mathrm{NPMI}}
+  +5\mathcal L_{\mathrm{sep}},
   \label{eq:topic-loss}
 \end{equation}
-where
-\begin{equation}
-  \mathcal L_{\mathrm{local}}=-
-  \frac{1}{\sum_{dw}c_{dw}}
-  \sum_{dw}c_{dw}\sum_k\stopgrad(r_{dwk})\log\beta_{kw}.
-\end{equation}
-This term asks each routed topic to emit the token assigned to it. A full router
-pass with batch size 128 is followed by four topic-block updates with batch size
-512 per epoch.
+using the same full training spectra. A full router pass with batch size 128 is
+followed by four topic-block updates with batch size 512 per epoch.
 
 \subsection{Anti-collapse design}
 
 The safeguards target different collapse modes; removing one is not equivalent
 to strengthening another.
 \begin{enumerate}
-  \item \textbf{Dispersed initialization.} Topic prototypes use deterministic
-  spherical $k$-means++ seeding without Lloyd updates. Token sampling weight is
-  $\sqrt{\mathrm{CF}_w}\,\mathrm{IDF}_w^2$, where
-  $\mathrm{IDF}_w=\log[(1+D)/(1+\mathrm{DF}_w)]$. This retains common evidence
-  while favouring distinctive tokens.
+  \item \textbf{Deterministic initialization.} Seed \StudySeed{} selects
+  \StudyTopics{} distinct projected training tokens uniformly without
+  replacement. No clustering or frequency weighting is used.
 
   \item \textbf{Annealed sparse routing.} Routing temperature falls linearly
   from 0.5 to 0.1 over 30 epochs. Early soft assignments permit exploration;
@@ -378,15 +336,8 @@ to strengthening another.
   \end{equation}
   This detects geometric duplication that usage balance cannot detect.
 
-  \item \textbf{Dead-topic recycling.} Every second epoch, validation
-  full-spectrum usage is measured. A topic below $0.1/K$ mean usage for three
-  consecutive checks is replaced by a stored high-loss routing context. The
-  bounded queue retains at most $4K$ contexts and admits the 32 highest-loss
-  contexts from each routed view and mini-batch. The replaced prototype's Adam
-  state is cleared. A topic can be recycled at most twice;
-  \NeuralRecycledTopics{} replacements occurred in this run.
-
-  \item \textbf{Numerical controls.} Non-finite losses or gradients stop
+  \item \textbf{Numerical controls.} PyTorch deterministic algorithms are
+  required under the six-thread allowance. Non-finite losses or gradients stop
   training immediately, and gradient norm is clipped to 5.0. Training always
   runs to the predeclared epoch \FinalEpoch; no validation-metric model search
   is performed.
@@ -394,6 +345,23 @@ to strengthening another.
 
 AdamW uses learning rate $10^{-3}$, weight decay $10^{-4}$, and seed
 \StudySeed. Table~\ref{tab:hyperparameters} lists the complete settings.
+
+\subsection{Validation-only architecture selection}
+
+The committed seed-42 model was loaded and its validation likelihood and
+MAG/SOS values were reproduced without retraining. Components were then removed
+one at a time, with every candidate trained from the same deterministic
+initialization. Test matrices and records were unavailable to candidate runs.
+The selected model removes view consistency, local reconstruction, dead-topic
+recycling, Fourier coordinates, paired views, weighted $k$-means++ seeding, and
+adaptive channel mass, and replaces the context MLP with the linear map $C$.
+It retains the document evidence and gate, top-2 routing, Sinkhorn targets,
+positive-NPMI loss, prototype separation, and alternating optimization. The
+first lock replay exposed nondeterministic parallel gradients, so strict
+deterministic PyTorch execution was enabled and U7 was trained again as a
+corrected candidate before an independent lock confirmation. The selection was
+frozen before one final test evaluation. The complete ordered validation
+evidence is stored in the accompanying ablation ledger.
 
 \subsection{Comparator and evaluation}
 
@@ -470,7 +438,7 @@ The neural model yields \NeuralValidationOptimized{} optimized motifs versus
 \TomotopyValidationEvaluable{}. Useful-motif counts are
 \NeuralValidationUseful{} and \TomotopyValidationUseful{}, respectively. The
 broader neural inventory has lower mean SOS (\NeuralValidationSOS{} versus
-\TomotopyValidationSOS{}). Model-fitting times are close:
+\TomotopyValidationSOS{}). Recorded core fitting time is lower:
 \NeuralFitMinutes{} minutes for neural MS2LDA and \TomotopyFitMinutes{} minutes
 for Tomotopy.
 
@@ -505,20 +473,17 @@ reported in Table~\ref{tab:test}.
 
 \section{Discussion}
 
-Mean-normalized type evidence resolves a specific probabilistic bias rather than
-adding network capacity. Log-sum-exp channel evidence contains a
-$\log|V_t|$ term; removing it makes fragment and neutral-loss evidence
-comparable before the fixed equal-mass pull. Because the correction introduces
-no learned parameter, it is less dataset-specific than increasing encoder size
-or adding another loss.
+The fixed 50/50 channel decoder resolves vocabulary-size bias without estimating
+a channel-mass mechanism. It is both simpler and easier to interpret than the
+original adaptive blend, while retaining within-channel cosine rankings.
 
 Parity is metric-dependent. The neural model produces more optimized,
 high-confidence evaluable, and useful motifs, predicts withheld tokens with
-lower NLL (Appendix~\ref{sec:secondary}), and fits in similar time. Tomotopy has
-higher mean validation and test SOS. The neural result is therefore broader,
-not uniformly purer. A single seed was used deliberately to improve and inspect
-one architecture without averaging away its failure modes, but this design does
-not measure uncertainty across initializations or datasets.
+lower NLL (Appendix~\ref{sec:secondary}), and has lower recorded core fitting
+time. Tomotopy has higher mean validation and test SOS. The neural result is
+therefore broader, not uniformly purer. A single seed was used deliberately to
+improve and inspect one architecture without averaging away its failure modes,
+but this design does not measure uncertainty across initializations or datasets.
 
 The most consequential future extension is a jointly trained spectrum-level
 encoder. The current $u_d$ is a normalized sum of projected token embeddings; a
@@ -539,15 +504,14 @@ substructure.
 
 \section{Conclusion}
 
-A shared prototype geometry, one-pass contextual routing, mean-normalized
-fragment/loss evidence, and complementary anti-collapse training produce a
+A shared prototype geometry, one-pass contextual routing, fixed equal
+fragment/loss mass, and complementary anti-collapse training produce a
 broad neural Mass2Motif inventory with strong predictive fit. Under the fixed
 seed-\StudySeed, $K=\StudyTopics$, \StudyThreads-thread protocol, neural MS2LDA
 exceeds Tomotopy in optimized and useful motif counts, while Tomotopy retains
 higher mean SOS. The next scientific step is replication across datasets and
 seeds, not further adaptation to the evaluated test split.
 
-\clearpage
 \appendix
 \section{Exact hyperparameters}
 

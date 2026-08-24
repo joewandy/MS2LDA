@@ -11,7 +11,6 @@ from typing import TYPE_CHECKING
 import numpy as np
 import scipy.sparse as sp
 import torch
-from torch import nn
 from torch.nn import functional as nnf
 
 from .model import AssignmentOutput, NeuralMS2LDA
@@ -188,11 +187,10 @@ def torch_sparse_graph(graph: sp.csr_matrix) -> torch.Tensor:
 
 @dataclass(frozen=True)
 class RouterLossTerms:
-    """Differentiable router objective and its two routed views."""
+    """Differentiable router objective and its routed full-spectrum batch."""
 
     total: torch.Tensor
-    left: AssignmentOutput
-    right: AssignmentOutput
+    output: AssignmentOutput
 
 
 @dataclass(frozen=True)
@@ -269,148 +267,57 @@ def balanced_sinkhorn_targets(
     return plan * observations
 
 
-def _theta_consistency(left: torch.Tensor, right: torch.Tensor) -> torch.Tensor:
-    """Return the Jensen-Shannon divergence between paired-view mixtures."""
-    midpoint = 0.5 * (left + right)
-    left_kl = torch.sum(
-        left
-        * (torch.log(left.clamp_min(1e-12)) - torch.log(midpoint.clamp_min(1e-12))),
-        dim=1,
-    )
-    right_kl = torch.sum(
-        right
-        * (torch.log(right.clamp_min(1e-12)) - torch.log(midpoint.clamp_min(1e-12))),
-        dim=1,
-    )
-    return 0.5 * torch.mean(left_kl + right_kl)
-
-
-def router_block_loss(  # noqa: PLR0913
+def router_block_loss(
     model: NeuralMS2LDA,
-    left_batch: SparseBatch,
-    right_batch: SparseBatch,
+    batch: SparseBatch,
     *,
     cached_beta: torch.Tensor,
     temperature: float,
     sinkhorn_weight: float,
-    consistency_weight: float,
     sinkhorn_epsilon: float,
     sinkhorn_iterations: int,
 ) -> RouterLossTerms:
-    """Optimize routing with completion, balanced usage, and view agreement.
+    """Optimize full-spectrum routing with likelihood and balanced usage.
 
-    ``beta`` is detached for this block. Cross-view completion teaches each
-    partial spectrum to predict the other; Sinkhorn targets resist collapse;
-    Jensen-Shannon consistency makes the paired views represent one spectrum.
+    ``beta`` is detached for this block. Sinkhorn targets resist topic collapse.
     """
-    left = model.route(left_batch, temperature=temperature, straight_through=True)
-    right = model.route(right_batch, temperature=temperature, straight_through=True)
-    completion = 0.5 * (
-        model.sparse_completion_nll(left.theta, cached_beta, right_batch)
-        + model.sparse_completion_nll(right.theta, cached_beta, left_batch)
+    output = model.route(batch, temperature=temperature, straight_through=True)
+    completion = model.sparse_completion_nll(
+        output.theta,
+        cached_beta,
+        batch,
     )
-    sinkhorn_terms = []
-    for routed in (left, right):
-        with torch.no_grad():
-            targets = balanced_sinkhorn_targets(
-                routed.logits.detach(),
-                epsilon=sinkhorn_epsilon,
-                iterations=sinkhorn_iterations,
-            )
-        log_probabilities = nnf.log_softmax(routed.logits / float(temperature), dim=1)
-        sinkhorn_terms.append(
-            -torch.mean(torch.sum(targets * log_probabilities, dim=1))
+    with torch.no_grad():
+        targets = balanced_sinkhorn_targets(
+            output.logits.detach(),
+            epsilon=sinkhorn_epsilon,
+            iterations=sinkhorn_iterations,
         )
-    sinkhorn = 0.5 * (sinkhorn_terms[0] + sinkhorn_terms[1])
-    consistency = _theta_consistency(left.theta, right.theta)
-    total = completion + sinkhorn_weight * sinkhorn + consistency_weight * consistency
-    return RouterLossTerms(
-        total=total,
-        left=left,
-        right=right,
-    )
+    log_probabilities = nnf.log_softmax(output.logits / float(temperature), dim=1)
+    balance = -torch.mean(torch.sum(targets * log_probabilities, dim=1))
+    total = completion + sinkhorn_weight * balance
+    return RouterLossTerms(total=total, output=output)
 
 
-def _local_decoder_loss(
-    beta: torch.Tensor,
-    output: AssignmentOutput,
-    batch: SparseBatch,
-) -> torch.Tensor:
-    """Make a routed topic emit the token that selected it."""
-    log_emission = torch.log(beta[:, batch.indices].T.clamp_min(1e-12))
-    per_token = -torch.sum(output.assignments.detach() * log_emission, dim=1)
-    return torch.sum(batch.weights * per_token) / batch.weights.sum().clamp_min(1.0)
-
-
-def topic_block_loss(  # noqa: PLR0913
+def topic_block_loss(
     model: NeuralMS2LDA,
-    left_batch: SparseBatch,
-    right_batch: SparseBatch,
+    batch: SparseBatch,
     *,
     temperature: float,
-    local_decoder_weight: float,
 ) -> TopicLossTerms:
     """Optimize topic geometry against fixed one-pass assignments.
 
     Detaching the routes makes this the decoder/prototype half of an alternating
-    optimization. Cross-view completion supplies the probabilistic objective;
-    the smaller local term keeps each selected prototype faithful to its token.
+    optimization. Full-spectrum likelihood supplies the probabilistic objective.
     """
     with torch.no_grad():
         projected = model.projected_tokens()
-        left = model.route(
-            left_batch,
-            temperature=temperature,
-            straight_through=False,
-            projected_tokens=projected,
-        )
-        right = model.route(
-            right_batch,
+        output = model.route(
+            batch,
             temperature=temperature,
             straight_through=False,
             projected_tokens=projected,
         )
     beta = model.topic_word_distribution()
-    completion = 0.5 * (
-        model.sparse_completion_nll(left.theta.detach(), beta, right_batch)
-        + model.sparse_completion_nll(right.theta.detach(), beta, left_batch)
-    )
-    local = 0.5 * (
-        _local_decoder_loss(beta, left, left_batch)
-        + _local_decoder_loss(beta, right, right_batch)
-    )
-    return TopicLossTerms(
-        total=completion + float(local_decoder_weight) * local,
-        beta=beta,
-    )
-
-
-def _reset_optimizer_rows(
-    optimizer: torch.optim.Optimizer,
-    parameter: nn.Parameter,
-    rows: torch.Tensor,
-) -> None:
-    """Clear Adam-like state for deterministically replaced parameter rows."""
-    state = optimizer.state.get(parameter, {})
-    with torch.no_grad():
-        for value in state.values():
-            if torch.is_tensor(value) and value.shape == parameter.shape:
-                value[rows] = 0
-
-
-def recycle_dead_prototypes(
-    model: NeuralMS2LDA,
-    optimizer: torch.optim.Optimizer,
-    *,
-    topic_indices: torch.Tensor,
-    replacements: torch.Tensor,
-) -> None:
-    """Replace named underused prototypes and clear their stale optimizer state."""
-    expected = (len(topic_indices), model.projection_dimensions)
-    if topic_indices.ndim != 1 or replacements.shape != expected:
-        raise ValueError("recycling indices and replacements do not align")
-    if len(torch.unique(topic_indices)) != len(topic_indices):
-        raise ValueError("a prototype cannot be recycled twice in one operation")
-    with torch.no_grad():
-        model.topic_prototypes[topic_indices] = nnf.normalize(replacements, dim=1)
-    _reset_optimizer_rows(optimizer, model.topic_prototypes, topic_indices)
+    completion = model.sparse_completion_nll(output.theta.detach(), beta, batch)
+    return TopicLossTerms(total=completion, beta=beta)

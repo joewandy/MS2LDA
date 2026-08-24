@@ -27,7 +27,6 @@ from benchmarks.neural_ms2lda.artifacts import (
 from benchmarks.neural_ms2lda.data import (
     load_csr,
     load_heldout_records,
-    load_view_pairs,
     load_vocabulary,
     prepare_data,
     train_token_features,
@@ -110,13 +109,9 @@ def _prepare_mini_training_scaffold(
     )
 
 
-def _mini_training_arguments(run: Path, protocol: dict[str, Any]) -> dict[str, Any]:
+def _mini_training_arguments(run: Path) -> dict[str, Any]:
     data = run / "data"
-    return {
-        "train": load_csr(data / "train.npz"),
-        "views": load_view_pairs(run, protocol),
-        "validation_full": load_csr(data / "validation_full.npz"),
-    }
+    return {"train": load_csr(data / "train.npz")}
 
 
 def test_training_interface_exposes_no_test_inputs() -> None:
@@ -142,7 +137,6 @@ def test_pipeline_finishes_validation_before_test(
     monkeypatch.setattr(pipeline, "load_csr", lambda path: object())
     monkeypatch.setattr(pipeline, "load_vocabulary", lambda path: [])
     monkeypatch.setattr(pipeline, "train_token_features", lambda *args, **kwargs: None)
-    monkeypatch.setattr(pipeline, "load_view_pairs", lambda *args: [])
     monkeypatch.setattr(pipeline, "train_model", lambda *args, **kwargs: None)
     monkeypatch.setattr(pipeline, "train_tomotopy", lambda *args, **kwargs: None)
 
@@ -323,7 +317,8 @@ def test_miniature_mgf_through_results_and_model(tmp_path: Path) -> None:
     run = tmp_path / "run"
     write_json(run / "protocol.json", protocol)
     _prepare_mini_training_scaffold(run, data_root=tmp_path, protocol=protocol)
-    train_model(run, protocol=protocol, **_mini_training_arguments(run, protocol))
+    train_model(run, protocol=protocol, **_mini_training_arguments(run))
+    assert torch.are_deterministic_algorithms_enabled()
     original_threads = torch.get_num_threads()
     try:
         torch.set_num_threads(6)

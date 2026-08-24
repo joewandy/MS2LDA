@@ -1,0 +1,958 @@
+[
+  {
+    "code_path_reduction": "none",
+    "experiment": "control",
+    "failure_note": "",
+    "gates": {
+      "evaluable_motifs": true,
+      "mean_sos": true,
+      "numerically_stable": true,
+      "optimized_motifs": true,
+      "useful_motifs": true,
+      "validation_nll": true
+    },
+    "metrics": {
+      "annotation_coverage": 0.663,
+      "evaluable_motifs": 312,
+      "mean_sos": 0.6323301481310782,
+      "median_sos": 0.6363636363636365,
+      "optimized_motifs": 663,
+      "useful_motifs": 185,
+      "validation_nll": 8.501446915398489
+    },
+    "parameter_count_reduction": 0,
+    "removed_component": null,
+    "retained": true,
+    "retained_removals": [],
+    "training_seconds": 4719.976054917002,
+    "training_status": "not_retrained",
+    "validation_evaluation_seconds": 1.9266713749966584,
+    "validation_mag_seconds": 48.93879829200159
+  },
+  {
+    "code_path_reduction": "document gate",
+    "experiment": "A1",
+    "failure_note": "evaluable_motifs, useful_motifs, mean_sos",
+    "gates": {
+      "evaluable_motifs": false,
+      "mean_sos": false,
+      "numerically_stable": true,
+      "optimized_motifs": true,
+      "useful_motifs": false,
+      "validation_nll": true
+    },
+    "metrics": {
+      "annotation_coverage": 0.684,
+      "evaluable_motifs": 40,
+      "mean_sos": 0.6176835031164324,
+      "median_sos": 0.5959183673469388,
+      "optimized_motifs": 684,
+      "useful_motifs": 20,
+      "validation_nll": 8.404908394997728
+    },
+    "parameter_count_reduction": 0,
+    "removed_component": "0.75 document gate",
+    "retained": false,
+    "retained_removals": [],
+    "training_seconds": 5401.288167292005,
+    "training_status": "complete",
+    "validation_evaluation_seconds": 3.0044360830215737,
+    "validation_mag_seconds": 55.94183412499842
+  },
+  {
+    "code_path_reduction": "document evidence in token logits",
+    "experiment": "A2",
+    "failure_note": "validation_nll",
+    "gates": {
+      "evaluable_motifs": true,
+      "mean_sos": true,
+      "numerically_stable": true,
+      "optimized_motifs": true,
+      "useful_motifs": true,
+      "validation_nll": false
+    },
+    "metrics": {
+      "annotation_coverage": 0.674,
+      "evaluable_motifs": 345,
+      "mean_sos": 0.6308933198171176,
+      "median_sos": 0.6428571428571429,
+      "optimized_motifs": 674,
+      "useful_motifs": 200,
+      "validation_nll": 8.717825634170174
+    },
+    "parameter_count_reduction": 0,
+    "removed_component": "additive document evidence",
+    "retained": false,
+    "retained_removals": [],
+    "training_seconds": 4730.318146333011,
+    "training_status": "complete",
+    "validation_evaluation_seconds": 3.2780964999983553,
+    "validation_mag_seconds": 60.542880459019216
+  },
+  {
+    "code_path_reduction": "context-router parameters",
+    "experiment": "A3",
+    "failure_note": "optimized_motifs, evaluable_motifs, useful_motifs, validation_nll",
+    "gates": {
+      "evaluable_motifs": false,
+      "mean_sos": true,
+      "numerically_stable": true,
+      "optimized_motifs": false,
+      "useful_motifs": false,
+      "validation_nll": false
+    },
+    "metrics": {
+      "annotation_coverage": 0.546,
+      "evaluable_motifs": 287,
+      "mean_sos": 0.6300913070024787,
+      "median_sos": 0.6270833333333333,
+      "optimized_motifs": 546,
+      "useful_motifs": 162,
+      "validation_nll": 8.834773399210485
+    },
+    "parameter_count_reduction": 99200,
+    "removed_component": "context MLP",
+    "retained": false,
+    "retained_removals": [],
+    "training_seconds": 4695.708232959005,
+    "training_status": "complete",
+    "validation_evaluation_seconds": 3.0881839169887826,
+    "validation_mag_seconds": 63.981693334004376
+  },
+  {
+    "code_path_reduction": "top-2 to top-1 routing",
+    "experiment": "A4",
+    "failure_note": "evaluable_motifs, useful_motifs, validation_nll",
+    "gates": {
+      "evaluable_motifs": false,
+      "mean_sos": true,
+      "numerically_stable": true,
+      "optimized_motifs": true,
+      "useful_motifs": false,
+      "validation_nll": false
+    },
+    "metrics": {
+      "annotation_coverage": 0.681,
+      "evaluable_motifs": 105,
+      "mean_sos": 0.6453234718511469,
+      "median_sos": 0.6473859844271412,
+      "optimized_motifs": 681,
+      "useful_motifs": 64,
+      "validation_nll": 8.578034743690424
+    },
+    "parameter_count_reduction": 0,
+    "removed_component": "second token assignment",
+    "retained": false,
+    "retained_removals": [],
+    "training_seconds": 4317.149493834004,
+    "training_status": "complete",
+    "validation_evaluation_seconds": 2.5740069999883417,
+    "validation_mag_seconds": 45.322832083009416
+  },
+  {
+    "code_path_reduction": "channel-mass pull",
+    "experiment": "B1",
+    "failure_note": "optimized_motifs, evaluable_motifs, useful_motifs",
+    "gates": {
+      "evaluable_motifs": false,
+      "mean_sos": true,
+      "numerically_stable": true,
+      "optimized_motifs": false,
+      "useful_motifs": false,
+      "validation_nll": true
+    },
+    "metrics": {
+      "annotation_coverage": 0.532,
+      "evaluable_motifs": 266,
+      "mean_sos": 0.6402228955851376,
+      "median_sos": 0.6426846100759144,
+      "optimized_motifs": 532,
+      "useful_motifs": 160,
+      "validation_nll": 8.492755820273427
+    },
+    "parameter_count_reduction": 0,
+    "removed_component": "0.25 equal-channel pull",
+    "retained": false,
+    "retained_removals": [],
+    "training_seconds": 3603.8151284999913,
+    "training_status": "complete",
+    "validation_evaluation_seconds": 2.5589645830041263,
+    "validation_mag_seconds": 47.040333417011425
+  },
+  {
+    "code_path_reduction": "global decoder softmax",
+    "experiment": "B2",
+    "failure_note": "optimized_motifs, evaluable_motifs, useful_motifs",
+    "gates": {
+      "evaluable_motifs": false,
+      "mean_sos": true,
+      "numerically_stable": true,
+      "optimized_motifs": false,
+      "useful_motifs": false,
+      "validation_nll": true
+    },
+    "metrics": {
+      "annotation_coverage": 0.44,
+      "evaluable_motifs": 213,
+      "mean_sos": 0.6467066083526696,
+      "median_sos": 0.6551724137931034,
+      "optimized_motifs": 440,
+      "useful_motifs": 133,
+      "validation_nll": 8.47291118915129
+    },
+    "parameter_count_reduction": 0,
+    "removed_component": "channel-aware decoding",
+    "retained": false,
+    "retained_removals": [],
+    "training_seconds": 3422.337315791985,
+    "training_status": "complete",
+    "validation_evaluation_seconds": 2.5581860420061275,
+    "validation_mag_seconds": 44.602313291979954
+  },
+  {
+    "code_path_reduction": "view-consistency loss",
+    "experiment": "C1",
+    "failure_note": "evaluable_motifs, useful_motifs, validation_nll",
+    "gates": {
+      "evaluable_motifs": false,
+      "mean_sos": true,
+      "numerically_stable": true,
+      "optimized_motifs": true,
+      "useful_motifs": false,
+      "validation_nll": false
+    },
+    "metrics": {
+      "annotation_coverage": 0.651,
+      "evaluable_motifs": 288,
+      "mean_sos": 0.6314612239095312,
+      "median_sos": 0.6363636363636364,
+      "optimized_motifs": 651,
+      "useful_motifs": 166,
+      "validation_nll": 8.54190462606662
+    },
+    "parameter_count_reduction": 0,
+    "removed_component": "Jensen-Shannon consistency",
+    "retained": false,
+    "retained_removals": [],
+    "training_seconds": 4717.794367041002,
+    "training_status": "complete",
+    "validation_evaluation_seconds": 5.2614503749937285,
+    "validation_mag_seconds": 81.41455395900994
+  },
+  {
+    "code_path_reduction": "local reconstruction loss",
+    "experiment": "C2",
+    "failure_note": "",
+    "gates": {
+      "evaluable_motifs": true,
+      "mean_sos": true,
+      "numerically_stable": true,
+      "optimized_motifs": true,
+      "useful_motifs": true,
+      "validation_nll": true
+    },
+    "metrics": {
+      "annotation_coverage": 0.68,
+      "evaluable_motifs": 320,
+      "mean_sos": 0.643560020862075,
+      "median_sos": 0.6440092165898618,
+      "optimized_motifs": 680,
+      "useful_motifs": 195,
+      "validation_nll": 8.491701052279677
+    },
+    "parameter_count_reduction": 0,
+    "removed_component": "local decoder reconstruction",
+    "retained": true,
+    "retained_removals": [
+      "C2"
+    ],
+    "training_seconds": 3828.035874000023,
+    "training_status": "complete",
+    "validation_evaluation_seconds": 2.709383584005991,
+    "validation_mag_seconds": 47.718360749975545
+  },
+  {
+    "code_path_reduction": "co-occurrence graph and loss",
+    "experiment": "C3",
+    "failure_note": "evaluable_motifs, useful_motifs",
+    "gates": {
+      "evaluable_motifs": false,
+      "mean_sos": true,
+      "numerically_stable": true,
+      "optimized_motifs": true,
+      "useful_motifs": false,
+      "validation_nll": true
+    },
+    "metrics": {
+      "annotation_coverage": 0.661,
+      "evaluable_motifs": 212,
+      "mean_sos": 0.6280906703234139,
+      "median_sos": 0.6267857142857143,
+      "optimized_motifs": 661,
+      "useful_motifs": 120,
+      "validation_nll": 8.4897964966185
+    },
+    "parameter_count_reduction": 0,
+    "removed_component": "positive-NPMI loss",
+    "retained": false,
+    "retained_removals": [
+      "C2"
+    ],
+    "training_seconds": 3513.7305957500066,
+    "training_status": "complete",
+    "validation_evaluation_seconds": 2.520199708000291,
+    "validation_mag_seconds": 46.55955591698876
+  },
+  {
+    "code_path_reduction": "separation loss",
+    "experiment": "C4",
+    "failure_note": "optimized_motifs, evaluable_motifs, useful_motifs",
+    "gates": {
+      "evaluable_motifs": false,
+      "mean_sos": true,
+      "numerically_stable": true,
+      "optimized_motifs": false,
+      "useful_motifs": false,
+      "validation_nll": true
+    },
+    "metrics": {
+      "annotation_coverage": 0.632,
+      "evaluable_motifs": 278,
+      "mean_sos": 0.6379899957715734,
+      "median_sos": 0.6390151515151514,
+      "optimized_motifs": 632,
+      "useful_motifs": 169,
+      "validation_nll": 8.45207855017025
+    },
+    "parameter_count_reduction": 0,
+    "removed_component": "prototype separation",
+    "retained": false,
+    "retained_removals": [
+      "C2"
+    ],
+    "training_seconds": 3509.4324435000017,
+    "training_status": "complete",
+    "validation_evaluation_seconds": 2.730872874992201,
+    "validation_mag_seconds": 46.29932991598616
+  },
+  {
+    "code_path_reduction": "Sinkhorn target computation",
+    "experiment": "C5",
+    "failure_note": "evaluable_motifs, useful_motifs",
+    "gates": {
+      "evaluable_motifs": false,
+      "mean_sos": true,
+      "numerically_stable": true,
+      "optimized_motifs": true,
+      "useful_motifs": false,
+      "validation_nll": true
+    },
+    "metrics": {
+      "annotation_coverage": 0.678,
+      "evaluable_motifs": 237,
+      "mean_sos": 0.6280051140576948,
+      "median_sos": 0.6174863387978142,
+      "optimized_motifs": 678,
+      "useful_motifs": 125,
+      "validation_nll": 8.476652578235766
+    },
+    "parameter_count_reduction": 0,
+    "removed_component": "Sinkhorn targets",
+    "retained": false,
+    "retained_removals": [
+      "C2"
+    ],
+    "training_seconds": 1892.7783536250063,
+    "training_status": "complete",
+    "validation_evaluation_seconds": 2.56944708400988,
+    "validation_mag_seconds": 45.70353595900815
+  },
+  {
+    "code_path_reduction": "usage validation and recycling",
+    "experiment": "C6",
+    "failure_note": "",
+    "gates": {
+      "evaluable_motifs": true,
+      "mean_sos": true,
+      "numerically_stable": true,
+      "optimized_motifs": true,
+      "useful_motifs": true,
+      "validation_nll": true
+    },
+    "metrics": {
+      "annotation_coverage": 0.661,
+      "evaluable_motifs": 305,
+      "mean_sos": 0.6393268722274318,
+      "median_sos": 0.6317829457364342,
+      "optimized_motifs": 661,
+      "useful_motifs": 184,
+      "validation_nll": 8.494234905031453
+    },
+    "parameter_count_reduction": 0,
+    "removed_component": "dead-topic recycling",
+    "retained": true,
+    "retained_removals": [
+      "C2",
+      "C6"
+    ],
+    "training_seconds": 3754.523426291009,
+    "training_status": "complete",
+    "validation_evaluation_seconds": 3.301727624988416,
+    "validation_mag_seconds": 56.260362000000896
+  },
+  {
+    "code_path_reduction": "seeded uniform prototype selection",
+    "experiment": "C7",
+    "failure_note": "",
+    "gates": {
+      "evaluable_motifs": true,
+      "mean_sos": true,
+      "numerically_stable": true,
+      "optimized_motifs": true,
+      "useful_motifs": true,
+      "validation_nll": true
+    },
+    "metrics": {
+      "annotation_coverage": 0.665,
+      "evaluable_motifs": 291,
+      "mean_sos": 0.6404145634579437,
+      "median_sos": 0.6341463414634146,
+      "optimized_motifs": 665,
+      "useful_motifs": 176,
+      "validation_nll": 8.502985816624651
+    },
+    "parameter_count_reduction": 0,
+    "removed_component": "weighted spherical k-means++",
+    "retained": true,
+    "retained_removals": [
+      "C2",
+      "C6",
+      "C7"
+    ],
+    "training_seconds": 3942.0431757500046,
+    "training_status": "complete",
+    "validation_evaluation_seconds": 2.5192709580005612,
+    "validation_mag_seconds": 48.831574250012636
+  },
+  {
+    "code_path_reduction": "SGNS feature block",
+    "experiment": "D1",
+    "failure_note": "evaluable_motifs, useful_motifs, validation_nll",
+    "gates": {
+      "evaluable_motifs": false,
+      "mean_sos": true,
+      "numerically_stable": true,
+      "optimized_motifs": true,
+      "useful_motifs": false,
+      "validation_nll": false
+    },
+    "metrics": {
+      "annotation_coverage": 0.793,
+      "evaluable_motifs": 71,
+      "mean_sos": 0.6262564576132607,
+      "median_sos": 0.6296296296296295,
+      "optimized_motifs": 793,
+      "useful_motifs": 41,
+      "validation_nll": 9.322127501120464
+    },
+    "parameter_count_reduction": 6144,
+    "removed_component": "SGNS coordinates",
+    "retained": false,
+    "retained_removals": [
+      "C2",
+      "C6",
+      "C7"
+    ],
+    "training_seconds": 3406.6974317500135,
+    "training_status": "complete",
+    "validation_evaluation_seconds": 2.3237674580013845,
+    "validation_mag_seconds": 46.70754966599634
+  },
+  {
+    "code_path_reduction": "Fourier feature block",
+    "experiment": "D2",
+    "failure_note": "",
+    "gates": {
+      "evaluable_motifs": true,
+      "mean_sos": true,
+      "numerically_stable": true,
+      "optimized_motifs": true,
+      "useful_motifs": true,
+      "validation_nll": true
+    },
+    "metrics": {
+      "annotation_coverage": 0.839,
+      "evaluable_motifs": 373,
+      "mean_sos": 0.6513721758716517,
+      "median_sos": 0.65158371040724,
+      "optimized_motifs": 839,
+      "useful_motifs": 234,
+      "validation_nll": 8.693507809850882
+    },
+    "parameter_count_reduction": 1792,
+    "removed_component": "Fourier mass coordinates",
+    "retained": true,
+    "retained_removals": [
+      "C2",
+      "C6",
+      "C7",
+      "D2"
+    ],
+    "training_seconds": 3258.1482662089984,
+    "training_status": "complete",
+    "validation_evaluation_seconds": 2.453330999996979,
+    "validation_mag_seconds": 43.942781208024826
+  },
+  {
+    "code_path_reduction": "training-view data products",
+    "experiment": "E1",
+    "failure_note": "",
+    "gates": {
+      "evaluable_motifs": true,
+      "mean_sos": true,
+      "numerically_stable": true,
+      "optimized_motifs": true,
+      "useful_motifs": true,
+      "validation_nll": true
+    },
+    "metrics": {
+      "annotation_coverage": 0.873,
+      "evaluable_motifs": 404,
+      "mean_sos": 0.6571459246219287,
+      "median_sos": 0.6474449685534591,
+      "optimized_motifs": 873,
+      "useful_motifs": 262,
+      "validation_nll": 8.892201247906176
+    },
+    "parameter_count_reduction": 1792,
+    "removed_component": "paired partial views",
+    "retained": true,
+    "retained_removals": [
+      "C2",
+      "C6",
+      "C7",
+      "D2",
+      "E1"
+    ],
+    "training_seconds": 5040.024062084005,
+    "training_status": "complete",
+    "validation_evaluation_seconds": 2.3022207909962162,
+    "validation_mag_seconds": 44.06734704200062
+  },
+  {
+    "code_path_reduction": "separate router/topic phases",
+    "experiment": "E2",
+    "failure_note": "stopped after epoch 4 because projected training time was impractical",
+    "gates": {
+      "evaluable_motifs": false,
+      "mean_sos": false,
+      "numerically_stable": true,
+      "optimized_motifs": false,
+      "useful_motifs": false,
+      "validation_nll": false
+    },
+    "metrics": {
+      "annotation_coverage": null,
+      "evaluable_motifs": null,
+      "mean_sos": null,
+      "median_sos": null,
+      "optimized_motifs": null,
+      "useful_motifs": null,
+      "validation_nll": null
+    },
+    "parameter_count_reduction": 1792,
+    "removed_component": "alternating optimization",
+    "retained": false,
+    "retained_removals": [
+      "C2",
+      "C6",
+      "C7",
+      "D2",
+      "E1"
+    ],
+    "training_seconds": 1348.6375108330103,
+    "training_status": "stopped_for_runtime",
+    "validation_evaluation_seconds": 0.0,
+    "validation_mag_seconds": 0.0
+  },
+  {
+    "code_path_reduction": "zero Jensen-Shannon term and duplicate full-spectrum view routing",
+    "experiment": "I1_C1_after_E1",
+    "failure_note": "",
+    "gates": {
+      "evaluable_motifs": true,
+      "mean_sos": true,
+      "numerically_stable": true,
+      "optimized_motifs": true,
+      "useful_motifs": true,
+      "validation_nll": true
+    },
+    "metrics": {
+      "annotation_coverage": 0.873,
+      "evaluable_motifs": 404,
+      "mean_sos": 0.6571459246219287,
+      "median_sos": 0.6474449685534591,
+      "optimized_motifs": 873,
+      "useful_motifs": 262,
+      "validation_nll": 8.892201247906176
+    },
+    "parameter_count_reduction": 1792,
+    "removed_component": "Jensen-Shannon consistency under identical full-spectrum views",
+    "retained": true,
+    "retained_removals": [
+      "C1",
+      "C2",
+      "C6",
+      "C7",
+      "D2",
+      "E1"
+    ],
+    "training_seconds": 0.0,
+    "training_status": "algebraically_equivalent",
+    "validation_evaluation_seconds": 0.0,
+    "validation_mag_seconds": 0.0
+  },
+  {
+    "code_path_reduction": "Sinkhorn target computation",
+    "experiment": "I2_C5_after_C6",
+    "failure_note": "evaluable_motifs, useful_motifs, mean_sos",
+    "gates": {
+      "evaluable_motifs": false,
+      "mean_sos": false,
+      "numerically_stable": true,
+      "optimized_motifs": true,
+      "useful_motifs": false,
+      "validation_nll": true
+    },
+    "metrics": {
+      "annotation_coverage": 0.983,
+      "evaluable_motifs": 249,
+      "mean_sos": 0.6427776279907139,
+      "median_sos": 0.6410256410256411,
+      "optimized_motifs": 983,
+      "useful_motifs": 146,
+      "validation_nll": 8.789346012118335
+    },
+    "parameter_count_reduction": 1792,
+    "removed_component": "Sinkhorn targets",
+    "retained": false,
+    "retained_removals": [
+      "C1",
+      "C2",
+      "C6",
+      "C7",
+      "D2",
+      "E1"
+    ],
+    "training_seconds": 2862.327061332995,
+    "training_status": "complete",
+    "validation_evaluation_seconds": 3.6177601249946747,
+    "validation_mag_seconds": 58.587270916992566
+  },
+  {
+    "code_path_reduction": "fixed equal channel decoder",
+    "experiment": "U1",
+    "failure_note": "",
+    "gates": {
+      "evaluable_motifs": true,
+      "mean_sos": true,
+      "numerically_stable": true,
+      "optimized_motifs": true,
+      "useful_motifs": true,
+      "validation_nll": true
+    },
+    "metrics": {
+      "annotation_coverage": 0.836,
+      "evaluable_motifs": 427,
+      "mean_sos": 0.6533397610933607,
+      "median_sos": 0.6523809523809524,
+      "optimized_motifs": 836,
+      "useful_motifs": 272,
+      "validation_nll": 8.83073662054498
+    },
+    "parameter_count_reduction": 1792,
+    "removed_component": "adaptive channel-mass blend",
+    "retained": true,
+    "retained_removals": [
+      "C1",
+      "C2",
+      "C6",
+      "C7",
+      "D2",
+      "E1",
+      "U1"
+    ],
+    "training_seconds": 5724.196653499996,
+    "training_status": "complete",
+    "validation_evaluation_seconds": 3.299455750006018,
+    "validation_mag_seconds": 62.532756208005594
+  },
+  {
+    "code_path_reduction": "parameter-free mean-context residual",
+    "experiment": "U2",
+    "failure_note": "optimized_motifs, mean_sos, validation_nll",
+    "gates": {
+      "evaluable_motifs": true,
+      "mean_sos": false,
+      "numerically_stable": true,
+      "optimized_motifs": false,
+      "useful_motifs": true,
+      "validation_nll": false
+    },
+    "metrics": {
+      "annotation_coverage": 0.807,
+      "evaluable_motifs": 522,
+      "mean_sos": 0.626504695289521,
+      "median_sos": 0.6261363636363637,
+      "optimized_motifs": 807,
+      "useful_motifs": 293,
+      "validation_nll": 9.35277143330805
+    },
+    "parameter_count_reduction": 100992,
+    "removed_component": "context MLP",
+    "retained": false,
+    "retained_removals": [
+      "C1",
+      "C2",
+      "C6",
+      "C7",
+      "D2",
+      "E1",
+      "U1"
+    ],
+    "training_seconds": 4557.936913332989,
+    "training_status": "complete",
+    "validation_evaluation_seconds": 2.078773291024845,
+    "validation_mag_seconds": 45.480115208018105
+  },
+  {
+    "code_path_reduction": "one document-conditioning operation",
+    "experiment": "U3",
+    "failure_note": "evaluable_motifs, useful_motifs",
+    "gates": {
+      "evaluable_motifs": false,
+      "mean_sos": true,
+      "numerically_stable": true,
+      "optimized_motifs": true,
+      "useful_motifs": false,
+      "validation_nll": true
+    },
+    "metrics": {
+      "annotation_coverage": 0.836,
+      "evaluable_motifs": 354,
+      "mean_sos": 0.6643811639202293,
+      "median_sos": 0.6525044722719142,
+      "optimized_motifs": 836,
+      "useful_motifs": 227,
+      "validation_nll": 8.798543415635837
+    },
+    "parameter_count_reduction": 1792,
+    "removed_component": "separate additive document evidence and document gate",
+    "retained": false,
+    "retained_removals": [
+      "C1",
+      "C2",
+      "C6",
+      "C7",
+      "D2",
+      "E1",
+      "U1"
+    ],
+    "training_seconds": 4206.73815125,
+    "training_status": "complete",
+    "validation_evaluation_seconds": 2.3615310419991147,
+    "validation_mag_seconds": 45.037364582996815
+  },
+  {
+    "code_path_reduction": "mean-usage balance loss",
+    "experiment": "U4",
+    "failure_note": "evaluable_motifs, useful_motifs, mean_sos",
+    "gates": {
+      "evaluable_motifs": false,
+      "mean_sos": false,
+      "numerically_stable": true,
+      "optimized_motifs": true,
+      "useful_motifs": false,
+      "validation_nll": true
+    },
+    "metrics": {
+      "annotation_coverage": 0.907,
+      "evaluable_motifs": 271,
+      "mean_sos": 0.6380510460624986,
+      "median_sos": 0.636574074074074,
+      "optimized_motifs": 907,
+      "useful_motifs": 166,
+      "validation_nll": 8.876977740267474
+    },
+    "parameter_count_reduction": 1792,
+    "removed_component": "Sinkhorn targets",
+    "retained": false,
+    "retained_removals": [
+      "C1",
+      "C2",
+      "C6",
+      "C7",
+      "D2",
+      "E1",
+      "U1"
+    ],
+    "training_seconds": 2292.4032877080026,
+    "training_status": "complete",
+    "validation_evaluation_seconds": 2.4655697499983944,
+    "validation_mag_seconds": 43.76488387497375
+  },
+  {
+    "code_path_reduction": "shared NPMI spectral features",
+    "experiment": "U5",
+    "failure_note": "optimized_motifs, evaluable_motifs, useful_motifs, mean_sos",
+    "gates": {
+      "evaluable_motifs": false,
+      "mean_sos": false,
+      "numerically_stable": true,
+      "optimized_motifs": false,
+      "useful_motifs": false,
+      "validation_nll": true
+    },
+    "metrics": {
+      "annotation_coverage": 0.697,
+      "evaluable_motifs": 164,
+      "mean_sos": 0.618627709073855,
+      "median_sos": 0.6111111111111112,
+      "optimized_motifs": 697,
+      "useful_motifs": 93,
+      "validation_nll": 8.417363593294477
+    },
+    "parameter_count_reduction": 1792,
+    "removed_component": "SGNS feature training",
+    "retained": false,
+    "retained_removals": [
+      "C1",
+      "C2",
+      "C6",
+      "C7",
+      "D2",
+      "E1",
+      "U1"
+    ],
+    "training_seconds": 4417.91931287499,
+    "training_status": "complete",
+    "validation_evaluation_seconds": 2.5158174590033013,
+    "validation_mag_seconds": 50.88310058400384
+  },
+  {
+    "code_path_reduction": "one-parameter context residual",
+    "experiment": "U6",
+    "failure_note": "useful_motifs, mean_sos",
+    "gates": {
+      "evaluable_motifs": true,
+      "mean_sos": false,
+      "numerically_stable": true,
+      "optimized_motifs": true,
+      "useful_motifs": false,
+      "validation_nll": true
+    },
+    "metrics": {
+      "annotation_coverage": 0.851,
+      "evaluable_motifs": 393,
+      "mean_sos": 0.642172171419326,
+      "median_sos": 0.649706457925636,
+      "optimized_motifs": 851,
+      "useful_motifs": 246,
+      "validation_nll": 9.130137720085592
+    },
+    "parameter_count_reduction": 100991,
+    "removed_component": "context MLP",
+    "retained": false,
+    "retained_removals": [
+      "C1",
+      "C2",
+      "C6",
+      "C7",
+      "D2",
+      "E1",
+      "U1"
+    ],
+    "training_seconds": 3884.1994962499884,
+    "training_status": "complete",
+    "validation_evaluation_seconds": 2.09994220797671,
+    "validation_mag_seconds": 47.62034816600499
+  },
+  {
+    "code_path_reduction": "single linear context projection",
+    "experiment": "U7",
+    "failure_note": "original validation_nll gate; retained under the user-approved simplicity trade-off",
+    "gates": {
+      "evaluable_motifs": true,
+      "mean_sos": true,
+      "numerically_stable": true,
+      "optimized_motifs": true,
+      "useful_motifs": true,
+      "validation_nll": false
+    },
+    "metrics": {
+      "annotation_coverage": 0.853,
+      "evaluable_motifs": 396,
+      "mean_sos": 0.6366813215122081,
+      "median_sos": 0.6323809523809524,
+      "optimized_motifs": 853,
+      "useful_motifs": 234,
+      "validation_nll": 9.122051611660526
+    },
+    "parameter_count_reduction": 84608,
+    "removed_component": "context MLP",
+    "retained": true,
+    "retained_removals": [
+      "C1",
+      "C2",
+      "C6",
+      "C7",
+      "D2",
+      "E1",
+      "U1",
+      "U7"
+    ],
+    "training_seconds": 1845.4641570409876,
+    "training_status": "complete",
+    "validation_evaluation_seconds": 1.9782373330090195,
+    "validation_mag_seconds": 44.1704594999901
+  },
+  {
+    "code_path_reduction": "unconditional deterministic selected architecture",
+    "experiment": "locked_U7_retrain",
+    "failure_note": "original validation_nll gate; reproduced exactly under the approved simplicity trade-off",
+    "gates": {
+      "evaluable_motifs": true,
+      "mean_sos": true,
+      "numerically_stable": true,
+      "optimized_motifs": true,
+      "useful_motifs": true,
+      "validation_nll": false
+    },
+    "metrics": {
+      "annotation_coverage": 0.853,
+      "evaluable_motifs": 396,
+      "mean_sos": 0.6366813215122081,
+      "median_sos": 0.6323809523809524,
+      "optimized_motifs": 853,
+      "useful_motifs": 234,
+      "validation_nll": 9.122051611660526
+    },
+    "parameter_count_reduction": 84608,
+    "removed_component": "none (locked U7 reproducibility confirmation)",
+    "retained": true,
+    "retained_removals": [
+      "C1",
+      "C2",
+      "C6",
+      "C7",
+      "D2",
+      "E1",
+      "U1",
+      "U7"
+    ],
+    "training_seconds": 1911.3929620420095,
+    "training_status": "complete",
+    "validation_evaluation_seconds": 1.8801526250317693,
+    "validation_mag_seconds": 43.64093179197516
+  }
+]

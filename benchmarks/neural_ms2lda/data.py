@@ -1,10 +1,8 @@
-"""Chemistry-free sparse inputs and physical peak-group training views."""
+"""Chemistry-free sparse inputs and fixed train-only token features."""
 
 from __future__ import annotations
 
-import hashlib
 import json
-import math
 import os
 from dataclasses import dataclass
 from pathlib import Path
@@ -17,7 +15,6 @@ from torch import nn
 from torch.nn import functional as nnf
 
 from .spectra import (
-    PeakGroup,
     assign_scaffold_splits,
     audit_split_disjointness,
     build_training_vocabulary,
@@ -51,14 +48,6 @@ class SparseBatch:
     row_ids: torch.Tensor
     document_totals: torch.Tensor
     documents: int
-
-
-@dataclass(frozen=True)
-class ViewPair:
-    """Two deterministic 80-percent physical-peak views."""
-
-    left: sp.csr_matrix
-    right: sp.csr_matrix
 
 
 def load_csr(path: str | Path) -> sp.csr_matrix:
@@ -140,40 +129,30 @@ def iter_sparse_batches(
         yield sparse_batch(matrix, rows)
 
 
-def token_masses_and_types(vocabulary: Sequence[str]) -> tuple[np.ndarray, np.ndarray]:
-    """Parse fragment/loss identities without using chemical labels."""
-    masses = np.empty(len(vocabulary), dtype=np.float32)
+def token_types(vocabulary: Sequence[str]) -> np.ndarray:
+    """Return fragment/loss indicators without using chemical labels."""
     types = np.zeros((len(vocabulary), 2), dtype=np.float32)
     for index, token in enumerate(vocabulary):
         prefix, separator, value = token.partition("@")
         if not separator or prefix not in {"frag", "loss"}:
             msg = f"unsupported MS2LDA token: {token}"
             raise ValueError(msg)
-        masses[index] = float(value)
+        float(value)
         types[index, 0 if prefix == "frag" else 1] = 1.0
-    return masses, types
+    return types
 
 
 def build_token_features(
     sgns_embeddings: np.ndarray,
     vocabulary: Sequence[str],
-    feature_config: dict[str, Any],
 ) -> np.ndarray:
-    """Combine train-only SGNS, Fourier mass, and fragment/loss type features."""
+    """Combine train-only SGNS with fragment/loss type indicators."""
     embeddings = np.asarray(sgns_embeddings, dtype=np.float32).copy()
     if embeddings.shape[0] != len(vocabulary):
         msg = "SGNS embeddings and vocabulary do not align"
         raise ValueError(msg)
-    masses, token_types = token_masses_and_types(vocabulary)
-    scaled = masses / float(feature_config["mass_scale"])
-    columns = []
-    for frequency in feature_config["fourier_frequencies"]:
-        phase = 2.0 * math.pi * float(frequency) * scaled
-        columns.extend((np.sin(phase), np.cos(phase)))
-    fourier = np.stack(columns, axis=1).astype(np.float32)
     embeddings /= np.maximum(np.linalg.norm(embeddings, axis=1, keepdims=True), 1e-8)
-    fourier /= math.sqrt(fourier.shape[1] / 2.0)
-    combined = np.concatenate((embeddings, fourier, token_types), axis=1)
+    combined = np.concatenate((embeddings, token_types(vocabulary)), axis=1)
     combined /= np.maximum(np.linalg.norm(combined, axis=1, keepdims=True), 1e-8)
     if not np.all(np.isfinite(combined)):
         msg = "constructed token features are not finite"
@@ -303,26 +282,13 @@ def train_token_features(
             optimizer.step()
     embeddings = 0.5 * (model.source.weight.detach() + model.context.weight.detach())
     embeddings = nnf.normalize(embeddings, dim=1).cpu().numpy().astype(np.float32)
-    features = build_token_features(embeddings, vocabulary, protocol["token_features"])
+    features = build_token_features(embeddings, vocabulary)
     atomic_save_numpy(features_path, features)
     result = {
         "feature_dimensions": int(features.shape[1]),
     }
     write_json(complete_path, result)
     return result
-
-
-def prototype_seeding_weights(matrix: sp.csr_matrix) -> np.ndarray:
-    """Return sqrt-corpus-frequency times squared-IDF seeding weights."""
-    frequencies = corpus_frequencies(matrix)
-    document_frequency = np.diff(matrix.tocsc().indptr).astype(np.float64)
-    inverse_document_frequency = np.log(
-        (1.0 + matrix.shape[0]) / (1.0 + document_frequency),
-    )
-    weights = np.sqrt(frequencies) * np.square(inverse_document_frequency)
-    if not np.any(weights > 0):
-        return np.ones(matrix.shape[1], dtype=np.float64)
-    return weights
 
 
 def _matrix(
@@ -394,11 +360,9 @@ def prepare_data(  # noqa: PLR0915
         "validation": [],
         "test": [],
     }
-    training_records = []
     for split in ("train", "validation", "test"):
         selected = split_records(records, assignments, split)
         if split == "train":
-            training_records = selected
             matrices["train"] = _matrix(
                 [filtered_words(record, vocabulary_set) for record in selected],
                 vocabulary,
@@ -450,24 +414,6 @@ def prepare_data(  # noqa: PLR0915
         matrices[f"{split}_full"] = _matrix(full_documents, vocabulary)
         matrices[f"{split}_observed"] = _matrix(observed_documents, vocabulary)
         matrices[f"{split}_completion"] = _matrix(completion_documents, vocabulary)
-    view_config = protocol["views"]
-    for pair_index in range(int(view_config["pairs"])):
-        for side in ("left", "right"):
-            documents = [
-                _view_words(
-                    record,
-                    seed=int(protocol["seed"]),
-                    pair_index=pair_index,
-                    side=side,
-                    retained_fraction=float(
-                        view_config["retained_peak_group_fraction"]
-                    ),
-                    significant_digits=config.significant_digits,
-                )
-                for record in training_records
-            ]
-            matrices[f"view_{pair_index}_{side}"] = _matrix(documents, vocabulary)
-
     for name, matrix in matrices.items():
         path = output / f"{name}.npz"
         _atomic_save_npz(path, matrix)
@@ -490,83 +436,3 @@ def prepare_data(  # noqa: PLR0915
     }
     write_json(complete_path, result)
     return result
-
-
-def _stable_rank(seed: int, *parts: object) -> str:
-    payload = "\0".join((str(seed), *(str(part) for part in parts)))
-    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
-
-
-def select_view_peak_groups(  # noqa: PLR0913
-    peak_groups: Sequence[PeakGroup],
-    *,
-    spectrum_id: str,
-    seed: int,
-    pair_index: int,
-    side: str,
-    retained_fraction: float,
-) -> tuple[PeakGroup, ...]:
-    """Select whole physical peak groups deterministically for one view."""
-    if side not in {"left", "right"}:
-        msg = "view side must be left or right"
-        raise ValueError(msg)
-    if not peak_groups:
-        msg = "cannot mask a spectrum without peak groups"
-        raise ValueError(msg)
-    ranked = sorted(
-        peak_groups,
-        key=lambda group: _stable_rank(
-            seed,
-            pair_index,
-            side,
-            spectrum_id,
-            group.original_index,
-        ),
-    )
-    retained = max(1, round(len(ranked) * retained_fraction))
-    if len(ranked) > 1:
-        retained = min(retained, len(ranked) - 1)
-    selected = {group.original_index for group in ranked[:retained]}
-    return tuple(group for group in peak_groups if group.original_index in selected)
-
-
-def _view_words(  # noqa: PLR0913
-    record: Any,
-    *,
-    seed: int,
-    pair_index: int,
-    side: str,
-    retained_fraction: float,
-    significant_digits: int,
-) -> list[str]:
-    groups = select_view_peak_groups(
-        record.peak_groups,
-        spectrum_id=record.spectrum_id,
-        seed=seed,
-        pair_index=pair_index,
-        side=side,
-        retained_fraction=retained_fraction,
-    )
-    normalized = renormalize_peak_groups(
-        groups,
-        precursor_mz=record.precursor_mz,
-        significant_digits=significant_digits,
-    )
-    return [token for group in normalized for token in group.tokens]
-
-
-def load_view_pairs(run_dir: str | Path, protocol: dict[str, Any]) -> list[ViewPair]:
-    """Load the paired training views created during the single MGF pass."""
-    output = Path(run_dir).expanduser().resolve() / "data"
-    pairs = []
-    for pair_index in range(int(protocol["views"]["pairs"])):
-        paths = {
-            side: output / f"view_{pair_index}_{side}.npz" for side in ("left", "right")
-        }
-        pairs.append(
-            ViewPair(
-                left=load_csr(paths["left"]),
-                right=load_csr(paths["right"]),
-            ),
-        )
-    return pairs

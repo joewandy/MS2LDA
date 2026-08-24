@@ -13,12 +13,11 @@ import torch
 from benchmarks.neural_ms2lda.artifacts import load_protocol, load_trained_model
 from benchmarks.neural_ms2lda.chemical import _sos_bands
 from benchmarks.neural_ms2lda.data import (
-    select_view_peak_groups,
+    build_token_features,
     sparse_batch,
 )
 from benchmarks.neural_ms2lda.model import (
     DOCUMENT_MIXTURE_EXPONENT,
-    TOKEN_TYPE_BALANCE,
     TOPICS_PER_TOKEN,
     initialize_model,
 )
@@ -26,7 +25,6 @@ from benchmarks.neural_ms2lda.objectives import (
     balanced_sinkhorn_targets,
     cooccurrence_topic_loss,
     positive_npmi_graph,
-    recycle_dead_prototypes,
     router_block_loss,
     topic_block_loss,
     topic_separation_loss,
@@ -36,11 +34,11 @@ from benchmarks.neural_ms2lda.optimization import (
     _weighted_topic_separation,
 )
 from benchmarks.neural_ms2lda.spectra import (
-    PeakGroup,
     SpectrumRecord,
     audit_split_disjointness,
     build_training_vocabulary,
 )
+from benchmarks.neural_ms2lda.utils import read_json
 
 from ._support import spectrum_record, token_features
 
@@ -74,25 +72,17 @@ def test_split_audit_rejects_compound_leakage() -> None:
         audit_split_disjointness(records, {"a": "train", "b": "test"})
 
 
-def test_training_views_keep_fragment_loss_peak_groups_atomic() -> None:
-    groups = (
-        PeakGroup(0, 100.0, 1.0, ("frag@100.0", "loss@200.0")),
-        PeakGroup(1, 110.0, 0.5, ("frag@110.0", "loss@190.0")),
-    )
-    selected = select_view_peak_groups(
-        groups,
-        spectrum_id="spectrum",
-        seed=42,
-        pair_index=0,
-        side="left",
-        retained_fraction=0.5,
-    )
-    assert len(selected) == 1
-    assert len(selected[0].tokens) == 2
+def test_token_features_are_sgns_plus_fragment_loss_indicators() -> None:
+    embeddings = np.eye(4, dtype=np.float32)
+    vocabulary = ["frag@1.0", "loss@2.0", "frag@3.0", "loss@4.0"]
+    features = build_token_features(embeddings, vocabulary)
+    assert features.shape == (4, 6)
+    assert np.all(features[[0, 2], -2] > 0)
+    assert np.all(features[[1, 3], -1] > 0)
+    assert np.allclose(np.linalg.norm(features, axis=1), 1.0)
 
 
-def test_mean_type_evidence_matches_the_report_equation() -> None:
-    """Check log-mean-exp evidence with unequal channel vocabulary sizes."""
+def test_fixed_equal_channel_decoder_matches_the_report_equation() -> None:
     protocol = load_protocol()
     features = token_features(10, fragments=2)
     model, _ = initialize_model(features, num_topics=4, protocol=protocol)
@@ -101,18 +91,9 @@ def test_mean_type_evidence_matches_the_report_equation() -> None:
     logits = 2.0 * topics @ projected.T / model.beta_temperature
     fragment_logits = logits[:, :2]
     loss_logits = logits[:, 2:]
-    evidence = torch.stack(
-        (
-            torch.logsumexp(fragment_logits, dim=1) - np.log(2),
-            torch.logsumexp(loss_logits, dim=1) - np.log(8),
-        ),
-        dim=1,
-    )
-    fragment_mass = torch.softmax(evidence, dim=1)[:, :1]
-    fragment_mass = 0.75 * fragment_mass + 0.25 * 0.5
     expected = torch.empty_like(logits)
-    expected[:, :2] = fragment_mass * torch.softmax(fragment_logits, dim=1)
-    expected[:, 2:] = (1.0 - fragment_mass) * torch.softmax(loss_logits, dim=1)
+    expected[:, :2] = 0.5 * torch.softmax(fragment_logits, dim=1)
+    expected[:, 2:] = 0.5 * torch.softmax(loss_logits, dim=1)
     actual = model.topic_word_distribution(projected)
     assert torch.allclose(actual, expected, atol=1e-7)
     assert torch.allclose(actual.sum(dim=1), torch.ones(4), atol=1e-6)
@@ -141,7 +122,7 @@ def test_decoder_supplies_finite_prototype_gradients() -> None:
     assert torch.isfinite(model.topic_prototypes.grad).all()
 
 
-def test_sinkhorn_top2_gradients_and_prototype_recycling() -> None:
+def test_sinkhorn_top2_and_topic_gradients_are_finite() -> None:
     protocol = load_protocol()
     model, _ = initialize_model(token_features(20), num_topics=4, protocol=protocol)
     matrix = sp.csr_matrix(np.eye(4, 20, dtype=np.float32) + 1.0)
@@ -149,33 +130,23 @@ def test_sinkhorn_top2_gradients_and_prototype_recycling() -> None:
     router = router_block_loss(
         model,
         batch,
-        batch,
         cached_beta=model.topic_word_distribution().detach(),
         temperature=0.5,
         sinkhorn_weight=0.25,
-        consistency_weight=0.1,
         sinkhorn_epsilon=0.05,
         sinkhorn_iterations=20,
     )
-    assert torch.all((router.left.assignments > 0).sum(dim=1) == 2)
-    optimizer = torch.optim.AdamW(model.parameters(), lr=1e-3)
+    assert torch.all((router.output.assignments > 0).sum(dim=1) == 2)
+    router.total.backward()
+    assert model.context_projection.weight.grad is not None
+    model.zero_grad(set_to_none=True)
     topic = topic_block_loss(
         model,
         batch,
-        batch,
         temperature=0.5,
-        local_decoder_weight=0.25,
     )
     topic.total.backward()
     assert model.topic_prototypes.grad is not None
-    before = model.topic_prototypes.detach().clone()
-    recycle_dead_prototypes(
-        model,
-        optimizer,
-        topic_indices=torch.tensor([0]),
-        replacements=torch.randn(1, model.projection_dimensions),
-    )
-    assert not torch.equal(before[0], model.topic_prototypes.detach()[0])
     targets = balanced_sinkhorn_targets(
         torch.randn(40, 4, generator=torch.Generator().manual_seed(42)),
         epsilon=0.2,
@@ -276,9 +247,13 @@ def test_protocol_and_model_artifact_expose_only_the_current_architecture() -> N
     assert protocol["model"] == {
         "num_topics": 1000,
         "projection_dimensions": 128,
-        "router_hidden_dimensions": 256,
         "beta_temperature": 0.18,
     }
+    assert "token_features" not in protocol
+    assert "views" not in protocol
+    assert "local_decoder_weight" not in protocol["optimization"]
+    assert "theta_consistency_weight" not in protocol["optimization"]
+    assert "validation_interval" not in protocol["optimization"]
     assert "num_topics" not in protocol["tomotopy"]
     model, _ = initialize_model(token_features(20), num_topics=4, protocol=protocol)
     separation_config = copy.deepcopy(protocol["topic_separation"])
@@ -292,12 +267,22 @@ def test_protocol_and_model_artifact_expose_only_the_current_architecture() -> N
     assert torch.allclose(weighted, expected)
 
     artifact = Path(__file__).parents[1] / "results/seed42/trained_model"
+    assert sorted(path.name for path in artifact.iterdir()) == [
+        "model.json",
+        "vocabulary.json",
+        "weights.pt",
+    ]
+    assert set(read_json(artifact / "model.json")) == {
+        "beta_temperature",
+        "routing_temperature",
+    }
     trained_model, vocabulary, temperature = load_trained_model(artifact)
     assert trained_model.num_topics == 1000
+    assert trained_model.input_dimensions == 50
+    assert isinstance(trained_model.context_projection, torch.nn.Linear)
     assert DOCUMENT_MIXTURE_EXPONENT == 0.75
-    assert TOKEN_TYPE_BALANCE == 0.25
     assert TOPICS_PER_TOKEN == 2
-    assert temperature == 0.1
+    assert temperature == pytest.approx(0.1)
     assert len(vocabulary) == trained_model.vocabulary_size
 
 
@@ -308,7 +293,7 @@ def test_report_constants_match_the_executable_model() -> None:
     ).read_text(encoding="utf-8")
     protocol = load_protocol()
     assert rf"\tau_\beta={protocol['model']['beta_temperature']}" in report
-    assert rf"\lambda={TOKEN_TYPE_BALANCE}" in report
+    assert r"\frac{1}{2}" in report
     assert rf"\gamma={DOCUMENT_MIXTURE_EXPONENT}" in report
     assert TOPICS_PER_TOKEN == 2
     assert "Only the two largest entries" in report

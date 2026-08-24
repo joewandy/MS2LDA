@@ -48,16 +48,23 @@ def test_published_model_reproduces_reference_probabilities() -> None:
         )
 
     expected_indices = (
-        np.asarray([129, 464, 628, 883]),
-        np.asarray([113, 261, 435, 758, 983]),
+        np.asarray([383, 456, 691, 800]),
+        np.asarray([61, 553, 609, 728, 731, 785]),
     )
     expected_values = (
         np.asarray(
-            [0.22317973, 0.10929480, 0.016402945, 0.6511225],
+            [0.3621624, 0.00024500815, 0.6224439, 0.015148607],
             dtype=np.float32,
         ),
         np.asarray(
-            [0.69798553, 0.056570835, 0.18551093, 0.004249601, 0.0556831],
+            [
+                0.0020063557,
+                0.25020465,
+                0.00077795435,
+                0.19118232,
+                0.23770817,
+                0.3181206,
+            ],
             dtype=np.float32,
         ),
     )
@@ -72,9 +79,9 @@ def test_published_model_reproduces_reference_probabilities() -> None:
         beta[[0, 42, 999], [0, 42, 21232]],
         np.asarray(
             [
-                0.06091761961579323,
-                5.1844017434632406e-05,
-                2.4032394776440924e-06,
+                7.370563980657607e-05,
+                5.212986798142083e-05,
+                1.4015468877914827e-05,
             ],
             dtype=np.float32,
         ),
@@ -88,22 +95,22 @@ def test_paper_results_are_exact() -> None:
     results = read_json(RESULTS_ROOT / "results.json")
     methods = {row["method"]: row for row in results["methods"]}
     assert methods["neural"]["validation"] == {
-        "annotation_coverage": 0.663,
-        "high_confidence_evaluable_motifs": 312,
-        "mean_sos": 0.6323301481310782,
-        "median_sos": 0.6363636363636365,
-        "optimized_motifs": 663,
+        "annotation_coverage": 0.853,
+        "high_confidence_evaluable_motifs": 396,
+        "mean_sos": 0.6366813215122081,
+        "median_sos": 0.6323809523809524,
+        "optimized_motifs": 853,
         "sos_bands": {
-            "high_gt_0_8": 49,
-            "intermediate_0_6_to_0_8": 136,
-            "low_lt_0_6": 127,
+            "high_gt_0_8": 64,
+            "intermediate_0_6_to_0_8": 170,
+            "low_lt_0_6": 162,
         },
-        "useful_high_confidence_motifs": 185,
+        "useful_high_confidence_motifs": 234,
     }
     assert results["secondary"]["completion_nll_per_token"] == {
-        "neural": {"validation": 8.501446912771746, "test": 8.522600207027194},
+        "neural": {"validation": 9.122051611660526, "test": 9.135820892827928},
         "tomotopy": {"validation": 9.662228074924426, "test": 9.756948055261505},
     }
     assert methods["tomotopy"]["validation"]["annotation_coverage"] == 0.607
-    assert methods["neural"]["test"]["annotation_coverage"] == 0.663
+    assert methods["neural"]["test"]["annotation_coverage"] == 0.853
     assert methods["tomotopy"]["test"]["annotation_coverage"] == 0.607

@@ -102,17 +102,14 @@ def generated_text(evidence: dict[str, Any], protocol: dict[str, Any]) -> None:
     neural = by_method["neural"]
     tomotopy = by_method["tomotopy"]
     sgns = protocol["sgns"]
-    token_features = protocol["token_features"]
     model = protocol["model"]
-    views = protocol["views"]
     optimization = protocol["optimization"]
     anti_collapse = protocol["anti_collapse"]
     cooccurrence = protocol["cooccurrence_regularization"]
     separation = protocol["topic_separation"]
     comparator = protocol["tomotopy"]
     chemistry = protocol["chemistry"]
-    fourier_dimensions = 2 * len(token_features["fourier_frequencies"])
-    feature_dimensions = int(sgns["dimensions"]) + fourier_dimensions + 2
+    feature_dimensions = int(sgns["dimensions"]) + 2
     for split in ("validation", "test"):
         _write_two_method_table(
             GENERATED / f"primary_{split}_table.tex", methods, _table_rows(split)
@@ -125,8 +122,7 @@ def generated_text(evidence: dict[str, Any], protocol: dict[str, Any]) -> None:
         ),
         (
             "Token features",
-            f"{sgns['dimensions']} SGNS + {fourier_dimensions} Fourier + 2 type "
-            f"= {feature_dimensions} dimensions",
+            f"{sgns['dimensions']} SGNS + 2 type " f"= {feature_dimensions} dimensions",
         ),
         (
             "SGNS",
@@ -136,26 +132,23 @@ def generated_text(evidence: dict[str, Any], protocol: dict[str, Any]) -> None:
             f"batch {sgns['batch_size']}; lr {sgns['learning_rate']}",
         ),
         (
-            "Projection; router hidden",
-            f"{model['projection_dimensions']}; {model['router_hidden_dimensions']}",
+            "Token projection; context projection",
+            f"{model['projection_dimensions']}; identity-initialized bias-free linear "
+            f"{model['projection_dimensions']} by {model['projection_dimensions']}",
         ),
         (
             "Decoder",
-            f"temperature {model['beta_temperature']}; mean channel evidence; "
-            "equal-mass pull 0.25",
+            f"temperature {model['beta_temperature']}; separate channel softmax; "
+            "fixed 50/50 fragment/loss mass",
         ),
         ("Router", "top-2; additive document evidence; gate exponent 0.75"),
-        (
-            "Views",
-            f"{views['pairs']} pairs; "
-            f"{100 * views['retained_peak_group_fraction']:.0f}\\% "
-            "physical peak groups/view",
-        ),
+        ("Training spectra", "one full-spectrum path; no corrupted views"),
         (
             "AdamW",
             f"lr {optimization['learning_rate']}; "
             f"weight decay {optimization['weight_decay']}; "
-            f"gradient clip {optimization['gradient_clip_norm']}",
+            f"gradient clip {optimization['gradient_clip_norm']}; "
+            "deterministic PyTorch algorithms",
         ),
         (
             "Batches and epochs",
@@ -166,8 +159,6 @@ def generated_text(evidence: dict[str, Any], protocol: dict[str, Any]) -> None:
         ),
         (
             "Loss weights",
-            f"local {optimization['local_decoder_weight']}; "
-            f"view consistency {optimization['theta_consistency_weight']}; "
             f"NPMI {cooccurrence['weight']}; separation {separation['weight']}",
         ),
         (
@@ -192,12 +183,6 @@ def generated_text(evidence: dict[str, Any], protocol: dict[str, Any]) -> None:
         (
             "Prototype separation",
             f"{separation['neighbors']} neighbours; margin {separation['margin']}",
-        ),
-        (
-            "Recycling",
-            f"usage $<{anti_collapse['recycle_usage_fraction_of_uniform']}$ "
-            f"of uniform for {anti_collapse['recycle_patience_validations']} "
-            f"validations; max {anti_collapse['maximum_recycles_per_topic']}/topic",
         ),
         (
             "Tomotopy",
@@ -232,7 +217,7 @@ def generated_text(evidence: dict[str, Any], protocol: dict[str, Any]) -> None:
         ("Top-2 routing", r"\texttt{model.py: route}"),
         (r"Gated $\theta_d$", r"\texttt{model.py: aggregate\_theta}"),
         ("Likelihood and regularizers", r"\texttt{objectives.py}"),
-        ("Optimization and recycling", r"\texttt{training.py; optimization.py}"),
+        ("Alternating optimization", r"\texttt{training.py; optimization.py}"),
         ("Held-out inference", r"\texttt{evaluation.py}"),
         ("MAG and SOS", r"\texttt{mag.py; chemical.py}"),
     )
@@ -275,21 +260,20 @@ def generated_text(evidence: dict[str, Any], protocol: dict[str, Any]) -> None:
         "TomotopyValidationUseful": tomotopy["validation"][
             "useful_high_confidence_motifs"
         ],
-        "NeuralValidationSOS": f"{neural['validation']['mean_sos']:.3f}",
-        "TomotopyValidationSOS": f"{tomotopy['validation']['mean_sos']:.3f}",
+        "NeuralValidationSOS": f"{neural['validation']['mean_sos']:.4f}",
+        "TomotopyValidationSOS": f"{tomotopy['validation']['mean_sos']:.4f}",
         "NeuralTestOptimized": neural["test"]["optimized_motifs"],
         "TomotopyTestOptimized": tomotopy["test"]["optimized_motifs"],
         "NeuralTestEvaluable": neural["test"]["high_confidence_evaluable_motifs"],
         "TomotopyTestEvaluable": tomotopy["test"]["high_confidence_evaluable_motifs"],
         "NeuralTestUseful": neural["test"]["useful_high_confidence_motifs"],
         "TomotopyTestUseful": tomotopy["test"]["useful_high_confidence_motifs"],
-        "NeuralTestSOS": f"{neural['test']['mean_sos']:.3f}",
-        "TomotopyTestSOS": f"{tomotopy['test']['mean_sos']:.3f}",
+        "NeuralTestSOS": f"{neural['test']['mean_sos']:.4f}",
+        "TomotopyTestSOS": f"{tomotopy['test']['mean_sos']:.4f}",
         "NeuralCoverage": f"{neural_coverage:.1f}\\%",
         "TomotopyCoverage": f"{tomotopy_coverage:.1f}\\%",
         "NeuralFitMinutes": f"{neural['fitting_seconds'] / 60:.1f}",
         "TomotopyFitMinutes": f"{tomotopy['fitting_seconds'] / 60:.1f}",
-        "NeuralRecycledTopics": secondary["neural_recycled_topics_during_training"],
         "NeuralActiveTopics": secondary["neural_test_corpus_active_topics"],
         "NeuralMedianEffectiveTopics": f"{effective_topics:.2f}",
         "NeuralValidationNLL": f"{nll['neural']['validation']:.4f}",

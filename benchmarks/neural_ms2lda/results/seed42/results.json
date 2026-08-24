@@ -1,50 +1,33 @@
 {
-  "study": {
-    "association_probability_threshold": 0.5,
-    "cpu_threads": 6,
-    "final_epoch": 40,
-    "retained_spectra": 38888,
-    "seed": 42,
-    "source_spectra": 41568,
-    "split_spectra": {
-      "test": 7777,
-      "train": 27222,
-      "validation": 3889
-    },
-    "tomotopy_inference_iterations": 100,
-    "tomotopy_training_iterations": 750,
-    "topics": 1000,
-    "vocabulary_size": 21233
-  },
   "methods": [
     {
-      "fitting_seconds": 4719.976054917002,
+      "fitting_seconds": 1911.3929620420095,
       "method": "neural",
       "test": {
-        "annotation_coverage": 0.663,
-        "high_confidence_evaluable_motifs": 424,
-        "mean_sos": 0.6203718694686279,
-        "median_sos": 0.6134848484848485,
-        "optimized_motifs": 663,
+        "annotation_coverage": 0.853,
+        "high_confidence_evaluable_motifs": 547,
+        "mean_sos": 0.6365724479137103,
+        "median_sos": 0.6281276962899052,
+        "optimized_motifs": 853,
         "sos_bands": {
-          "high_gt_0_8": 58,
-          "intermediate_0_6_to_0_8": 176,
-          "low_lt_0_6": 190
+          "high_gt_0_8": 84,
+          "intermediate_0_6_to_0_8": 228,
+          "low_lt_0_6": 235
         },
-        "useful_high_confidence_motifs": 234
+        "useful_high_confidence_motifs": 312
       },
       "validation": {
-        "annotation_coverage": 0.663,
-        "high_confidence_evaluable_motifs": 312,
-        "mean_sos": 0.6323301481310782,
-        "median_sos": 0.6363636363636365,
-        "optimized_motifs": 663,
+        "annotation_coverage": 0.853,
+        "high_confidence_evaluable_motifs": 396,
+        "mean_sos": 0.6366813215122081,
+        "median_sos": 0.6323809523809524,
+        "optimized_motifs": 853,
         "sos_bands": {
-          "high_gt_0_8": 49,
-          "intermediate_0_6_to_0_8": 136,
-          "low_lt_0_6": 127
+          "high_gt_0_8": 64,
+          "intermediate_0_6_to_0_8": 170,
+          "low_lt_0_6": 162
         },
-        "useful_high_confidence_motifs": 185
+        "useful_high_confidence_motifs": 234
       }
     },
     {
@@ -81,21 +64,38 @@
   "secondary": {
     "completion_nll_per_token": {
       "neural": {
-        "test": 8.522600207027194,
-        "validation": 8.501446912771746
+        "test": 9.135820892827928,
+        "validation": 9.122051611660526
       },
       "tomotopy": {
         "test": 9.756948055261505,
         "validation": 9.662228074924426
       }
     },
-    "neural_recycled_topics_during_training": 28,
-    "neural_test_corpus_active_topics": 319,
-    "neural_test_median_effective_topics_per_spectrum": 7.276468330946235,
+    "neural_recycled_topics_during_training": 0,
+    "neural_test_corpus_active_topics": 304,
+    "neural_test_median_effective_topics_per_spectrum": 6.676036136479368,
     "warm_in_memory_batch_inference": {
       "batch_size": 128,
-      "neural_spectra_per_second": 6554.369157643746,
+      "neural_spectra_per_second": 10828.111072259224,
       "tomotopy_spectra_per_second": 30.049701734805108
     }
+  },
+  "study": {
+    "association_probability_threshold": 0.5,
+    "cpu_threads": 6,
+    "final_epoch": 40,
+    "retained_spectra": 38888,
+    "seed": 42,
+    "source_spectra": 41568,
+    "split_spectra": {
+      "test": 7777,
+      "train": 27222,
+      "validation": 3889
+    },
+    "tomotopy_inference_iterations": 100,
+    "tomotopy_training_iterations": 750,
+    "topics": 1000,
+    "vocabulary_size": 21233
   }
 }

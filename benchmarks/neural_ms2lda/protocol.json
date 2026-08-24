@@ -31,19 +31,10 @@
     "batch_size": 8192,
     "learning_rate": 0.01
   },
-  "token_features": {
-    "fourier_frequencies": [1, 2, 4, 8, 16, 32, 64],
-    "mass_scale": 1000.0
-  },
   "model": {
     "num_topics": 1000,
     "projection_dimensions": 128,
-    "router_hidden_dimensions": 256,
     "beta_temperature": 0.18
-  },
-  "views": {
-    "pairs": 4,
-    "retained_peak_group_fraction": 0.8
   },
   "optimization": {
     "batch_size": 128,
@@ -52,10 +43,7 @@
     "learning_rate": 0.001,
     "weight_decay": 0.0001,
     "gradient_clip_norm": 5.0,
-    "local_decoder_weight": 0.25,
-    "theta_consistency_weight": 0.1,
-    "maximum_epochs": 40,
-    "validation_interval": 2
+    "maximum_epochs": 40
   },
   "anti_collapse": {
     "routing_temperature_start": 0.5,
@@ -65,10 +53,7 @@
     "sinkhorn_weight_hold_epochs": 10,
     "sinkhorn_weight_end": 0.05,
     "sinkhorn_epsilon": 0.05,
-    "sinkhorn_iterations": 5,
-    "recycle_usage_fraction_of_uniform": 0.1,
-    "recycle_patience_validations": 3,
-    "maximum_recycles_per_topic": 2
+    "sinkhorn_iterations": 5
   },
   "cooccurrence_regularization": {
     "minimum_document_frequency": 10,

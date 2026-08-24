@@ -1,15 +1,21 @@
 # Neural MS2LDA study
 
-This directory contains one research model: a collapse-resistant neural
-MS2LDA with 1,000 topics and one-pass document inference. Fixed train-only token
-features and learned topic prototypes define both the contextual top-2 router
-and the fragment/loss-balanced decoder. Paired views, balanced assignments, a
-positive-NPMI graph, prototype separation, and deterministic dead-topic
-recycling protect the large topic inventory during training.
+This directory contains one seed-42, K=1000 research model with one-pass
+document inference. Train-only 48-dimensional SGNS features and fragment/loss
+indicators are projected into a shared topic geometry. A linear leave-one-out
+context map and whole-spectrum evidence define top-2 token routes; their
+count-weighted aggregation produces each document mixture. The decoder assigns
+fixed equal mass to fragment and neutral-loss channels.
 
-Tomotopy is trained independently from the same training split as the
-comparator. Both methods use six CPU threads. Validation evaluation and MAG
-scoring finish before the workflow opens the test matrices.
+Training uses full spectra and alternates router and topic updates. Sinkhorn
+targets, a positive-NPMI graph, prototype separation, and routing-temperature
+annealing protect the topic inventory. PyTorch deterministic algorithms are
+required under the six-thread allowance. The validation-only ablation ledger
+is `results/seed42/ablation_results.json`.
+
+Tomotopy is an independently trained comparator, not a teacher. Both methods
+use six CPU threads. This is a single-dataset, single-seed research comparison;
+it does not change the production MS2LDA backend.
 
 Create the two environments and acquire the public inputs:
 
@@ -20,7 +26,7 @@ conda run -n ms2lda-neural python scripts/download_msnlib_validation_assets.py \
   --data-root /path/to/MSnLib-assets
 ```
 
-Run the study:
+Run the complete reproducibility workflow:
 
 ```bash
 conda run -n ms2lda-neural python -m benchmarks.neural_ms2lda run \
@@ -28,22 +34,13 @@ conda run -n ms2lda-neural python -m benchmarks.neural_ms2lda run \
   --run /path/to/run
 ```
 
-`status --run /path/to/run` prints current progress. An interrupted fit restarts
-from its deterministic initialization. A run directory remains bound to the
-data root used when it was created; start a new run if the inputs move.
-
-The published model artifact contains only `weights.pt`, `model.json`, and
-`vocabulary.json`. `results.json` is the sole numerical source for the report.
-Regenerate its figures, tables, and prose macros with:
+`status --run /path/to/run` prints progress. The published model artifact
+contains only `weights.pt`, `model.json`, and `vocabulary.json`. `results.json`
+is the sole numerical source for the report. Regenerate its fragments with:
 
 ```bash
 python scripts/generate_neural_ms2lda_report.py
 ```
 
-This is a single-dataset, single-seed research result. It does not change the
-public MS2LDA application defaults or establish that the neural model should
-replace the production Tomotopy backend.
-
-For repository navigation, scientific guardrails, and the predeclared next
-step, read [HANDOVER.md](HANDOVER.md). The next research task is a
-validation-only ablation study; it is documented there but has not been run.
+See [HANDOVER.md](HANDOVER.md) for the exact architecture, evidence contract,
+and verification commands.
