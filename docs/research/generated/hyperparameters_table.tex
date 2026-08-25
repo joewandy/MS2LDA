@@ -1,7 +1,7 @@
 Seed; topics; CPU threads & 42; 1000; 6 \\
 Token features & 48 SGNS + 2 type = 50 dimensions \\
 SGNS & SparseAdam; 5 epochs; 8 pairs/document; 5 negatives; power 0.75; batch 8192; lr 0.01 \\
-Token projection; context router & 128; hidden 256; Linear--GELU--LayerNorm--Linear \\
+Token projection; context router & 50 to 128 bias-free; context 256 to 128 bias-free; GELU \\
 Decoder & temperature 0.18; separate channel softmax; fixed 50/50 fragment/loss mass \\
 Router & top-2; additive document evidence; gate exponent 0.75 \\
 Training spectra & one complete-spectrum path per training pass \\

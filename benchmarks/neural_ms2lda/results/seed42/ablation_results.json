@@ -1471,5 +1471,135 @@
     "training_status": "complete",
     "validation_evaluation_seconds": 3,
     "validation_mag_seconds": 122
+  },
+  {
+    "architecture_eligibility": "eligible_deep",
+    "baseline": "selected_deep_U1",
+    "code_path_reduction": "one bias-free nonlinear residual map removes the hidden-width choice, LayerNorm, the second router matrix, and router biases",
+    "experiment": "M1",
+    "failure_note": "validation NLL missed the historical 101% reporting reference but passed the predeclared 105% chemistry-first ceiling; every absolute and relative chemistry gate passed",
+    "gates": {
+      "absolute_floors": true,
+      "evaluable_motifs": true,
+      "mean_sos": true,
+      "numerically_stable": true,
+      "optimized_motifs": true,
+      "useful_motifs": true,
+      "validation_nll_101_reporting_reference": false,
+      "validation_nll_105_selection_ceiling": true
+    },
+    "metrics": {
+      "annotation_coverage": 0.884,
+      "evaluable_motifs": 408,
+      "mean_sos": 0.6580793714074608,
+      "median_sos": 0.6488636363636364,
+      "optimized_motifs": 884,
+      "useful_motifs": 265,
+      "validation_nll": 8.974139925584877
+    },
+    "parameter_count": 167168,
+    "parameter_count_reduction": 66432,
+    "removed_component": "two-layer normalized context MLP",
+    "retained": true,
+    "retained_removals": [
+      "C1",
+      "C2",
+      "C6",
+      "C7",
+      "D2",
+      "E1",
+      "U1",
+      "M1"
+    ],
+    "source_commit": "14ea2ae781e44baa1fdf09f26072da5123c2e2c8",
+    "test_evaluated": false,
+    "training_seconds": 1932.8134315839852,
+    "training_status": "complete",
+    "validation_only_selection": true
+  },
+  {
+    "architecture_eligibility": "eligible_deep",
+    "baseline": "M1",
+    "code_path_reduction": "independent deterministic replay of the selected single-layer nonlinear model",
+    "experiment": "locked_M1_retrain",
+    "failure_note": "all model tensors, saved validation arrays, validation metrics, and gate decisions reproduced exactly",
+    "gates": {
+      "exact_model_tensors": true,
+      "exact_validation_arrays": true,
+      "exact_validation_metrics": true,
+      "numerically_stable": true
+    },
+    "metrics": {
+      "annotation_coverage": 0.884,
+      "evaluable_motifs": 408,
+      "mean_sos": 0.6580793714074608,
+      "median_sos": 0.6488636363636364,
+      "optimized_motifs": 884,
+      "useful_motifs": 265,
+      "validation_nll": 8.974139925584877
+    },
+    "parameter_count": 167168,
+    "parameter_count_reduction": 66432,
+    "removed_component": "none (independent M1 reproducibility confirmation)",
+    "retained": true,
+    "retained_removals": [
+      "C1",
+      "C2",
+      "C6",
+      "C7",
+      "D2",
+      "E1",
+      "U1",
+      "M1"
+    ],
+    "source_commit": "14ea2ae781e44baa1fdf09f26072da5123c2e2c8",
+    "test_evaluated": true,
+    "training_seconds": 1764.874561500037,
+    "training_status": "complete"
+  },
+  {
+    "architecture_eligibility": "eligible_deep",
+    "baseline": "M1",
+    "code_path_reduction": "50 learned feature scales and 50-dimensional prototypes replace the learned 50-to-128 projection and 128-dimensional geometry",
+    "experiment": "M2",
+    "failure_note": "failed two relative chemistry gates: 839 optimized motifs versus 839.8 required and mean SOS 0.6398936376 below both the 0.6514985777 standard gate and 0.6449177840 tie gate; the campaign stopped and M3 was not run",
+    "gates": {
+      "absolute_floors": true,
+      "evaluable_motifs": true,
+      "mean_sos": false,
+      "numerically_stable": true,
+      "optimized_motifs": false,
+      "useful_motifs": true,
+      "validation_nll_101_reporting_reference": true,
+      "validation_nll_105_selection_ceiling": true
+    },
+    "metrics": {
+      "annotation_coverage": 0.839,
+      "evaluable_motifs": 430,
+      "mean_sos": 0.6398936375957471,
+      "median_sos": 0.6464424951267057,
+      "optimized_motifs": 839,
+      "useful_motifs": 262,
+      "validation_nll": 8.922485294454708
+    },
+    "parameter_count": 55050,
+    "parameter_count_reduction": 178550,
+    "parameter_count_reduction_from_baseline": 112118,
+    "removed_component": "128-dimensional learned topic geometry",
+    "retained": false,
+    "retained_removals": [
+      "C1",
+      "C2",
+      "C6",
+      "C7",
+      "D2",
+      "E1",
+      "U1",
+      "M1"
+    ],
+    "source_commit": "e91bc39739fb9fb51571aafd3a5c7b8ccb8e9d25",
+    "test_evaluated": false,
+    "training_seconds": 1677.3541725830291,
+    "training_status": "complete"
   }
 ]

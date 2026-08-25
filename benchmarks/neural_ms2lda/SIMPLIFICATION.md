@@ -85,7 +85,7 @@ simpler deep formulation, with NLL retained as an explicit secondary cost.
 
 ## Deep-architecture boundary
 
-U1 retains a bias-free token projection and a trainable nonlinear context
+U1 retained a bias-free token projection and a trainable nonlinear context
 router:
 
 `Linear(256, 256) -> GELU -> LayerNorm(256) -> Linear(256, 128)`.
@@ -100,9 +100,38 @@ spectrum context before the nonlinear router. This integration point is a
 property of the architecture, not a dormant compatibility path: the selected
 implementation has no DreaMS dependency or optional experimental branch.
 
+## Minimal nonlinear campaign
+
+The final bounded campaign tested whether the nonlinear boundary itself could
+be expressed more simply. Selection used seed 42 and validation only. Every
+candidate had to pass the existing absolute chemistry floors, retain 95% of the
+immediate baseline's motif counts and 99% of mean SOS, and keep NLL within 105%
+under the chemistry-first rule. One narrow chemistry miss could qualify for the
+predeclared tie band; no rescue run or hyperparameter sweep was allowed.
+
+M1 replaced U1's two-layer normalized router with one bias-free
+`Linear(256, 128) -> GELU` residual map. It reduced the model from 233,600 to
+167,168 parameters and produced 884 optimized, 408 evaluable, and 265 useful
+validation motifs, mean SOS 0.6580793714, and validation NLL 8.9741399256. All
+absolute and relative chemistry gates passed without the tie allowance. NLL
+missed the historical 101% reporting reference but remained inside the
+predeclared 105% ceiling. A fresh lock replay reproduced every state tensor,
+saved validation array, metric, and gate decision exactly.
+
+M2 then replaced the 128-dimensional learned geometry with 50 learned feature
+scales, a 100-to-50 nonlinear residual map, and 50-dimensional prototypes. It
+produced 839 optimized, 430 evaluable, and 262 useful motifs, mean SOS
+0.6398936376, and validation NLL 8.9224852945. Although all absolute floors
+passed, optimized motifs missed the relative threshold by one and mean SOS fell
+below both the standard and tie thresholds. Two relative misses require
+rejection, so the campaign stopped and the planned unit-exponent M3 was not run.
+
+M1 is therefore the final architecture. Its one reporting-only test evaluation
+was performed after selection and was not used to tune or reopen the campaign.
+
 ## Final retained mechanisms
 
-The selected model retains top-2 routing, leave-one-out context, additive
+The selected M1 model retains top-2 routing, leave-one-out context, additive
 whole-document evidence, the detached document gate, Sinkhorn targets, positive
 NPMI, prototype separation, SGNS coordinates, routing-temperature annealing,
 and alternating router/topic optimization. Each survived because its direct
@@ -115,21 +144,16 @@ or loader compatibility.
 
 ## Bounded future work
 
-Future changes should remain isolated within the eligible deep family:
-
-- test one narrower nonlinear router width;
-- test one gated nonlinear residual unit that combines token and context;
-- add a frozen DreaMS spectrum embedding through one learned adapter;
-- compare pooled context with one lightweight permutation-invariant set encoder;
-- consider DreaMS fine-tuning only after the frozen integration is understood.
-
-Do not combine these proposals into one run. Otherwise any improvement or
-failure cannot be attributed to a specific formulation.
+The architecture is now frozen. Further work should establish robustness and
+interpretability before adding capacity: repeat the fixed model across
+predeclared seeds, inspect neural-only motifs with chemical experts, and then
+test one frozen DreaMS adapter as a separate study. Fine-tuning or a different
+set encoder should not be combined with that first DreaMS experiment.
 
 ## Evidence boundary
 
 Tomotopy is fixed: its committed rows and diagnostics are preserved and it is
-not rerun. The final neural test workflow occurs only after U1 is frozen and is
+not rerun. The final neural test workflow occurs only after M1 is frozen and is
 used for reporting rather than further architecture selection. Exact scientific
 values live in the one ablation ledger and canonical `results.json`; no alternate
 result format is retained.

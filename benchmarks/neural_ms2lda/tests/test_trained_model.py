@@ -48,22 +48,22 @@ def test_published_model_reproduces_reference_probabilities() -> None:
         )
 
     expected_indices = (
-        np.asarray([55, 473, 620, 661]),
-        np.asarray([50, 83, 293, 564, 825, 828]),
+        np.asarray([15, 216, 383, 691]),
+        np.asarray([95, 507, 572, 577, 643, 785]),
     )
     expected_values = (
         np.asarray(
-            [0.10213348, 0.022363424, 0.69833755, 0.17716552],
+            [0.30278173, 0.06167897, 0.0003374848, 0.63520175],
             dtype=np.float32,
         ),
         np.asarray(
             [
-                0.1227046,
-                0.052162364,
-                0.20571087,
-                0.22919762,
-                0.046178792,
-                0.34404582,
+                0.27141142,
+                0.053447116,
+                0.178372994,
+                0.0019062023,
+                0.48980439,
+                0.0050578993,
             ],
             dtype=np.float32,
         ),
@@ -79,9 +79,9 @@ def test_published_model_reproduces_reference_probabilities() -> None:
         beta[[0, 42, 999], [0, 42, 21232]],
         np.asarray(
             [
-                2.6324029022362083e-05,
-                0.0007532279123552144,
-                7.333456778724212e-06,
+                3.8029058487154543e-05,
+                3.318029848742299e-05,
+                1.3942862096882891e-05,
             ],
             dtype=np.float32,
         ),
@@ -95,45 +95,50 @@ def test_paper_results_are_exact() -> None:
     results = read_json(RESULTS_ROOT / "results.json")
     methods = {row["method"]: row for row in results["methods"]}
     assert methods["neural"]["validation"] == {
-        "annotation_coverage": 0.843,
-        "high_confidence_evaluable_motifs": 429,
-        "mean_sos": 0.6506700669726432,
-        "median_sos": 0.6440677966101696,
-        "optimized_motifs": 843,
+        "annotation_coverage": 0.884,
+        "high_confidence_evaluable_motifs": 408,
+        "mean_sos": 0.6580793714074608,
+        "median_sos": 0.6488636363636364,
+        "optimized_motifs": 884,
         "sos_bands": {
-            "high_gt_0_8": 71,
-            "intermediate_0_6_to_0_8": 197,
-            "low_lt_0_6": 161,
+            "high_gt_0_8": 79,
+            "intermediate_0_6_to_0_8": 186,
+            "low_lt_0_6": 143,
         },
-        "useful_high_confidence_motifs": 268,
+        "useful_high_confidence_motifs": 265,
     }
     assert results["secondary"]["completion_nll_per_token"] == {
-        "neural": {"validation": 8.832002635285642, "test": 8.841165651073034},
+        "neural": {"validation": 8.974139925584877, "test": 8.979399918262724},
         "tomotopy": {"validation": 9.662228074924426, "test": 9.756948055261505},
     }
     assert methods["tomotopy"]["validation"]["annotation_coverage"] == 0.607
-    assert methods["neural"]["test"]["annotation_coverage"] == 0.843
+    assert methods["neural"]["test"]["annotation_coverage"] == 0.884
     assert methods["tomotopy"]["test"]["annotation_coverage"] == 0.607
 
 
-def test_ablation_ledger_selects_u1_and_excludes_shallow_models() -> None:
+def test_ablation_ledger_selects_m1_and_excludes_shallow_models() -> None:
     ledger = read_json(RESULTS_ROOT / "ablation_results.json")
     rows = {row["experiment"]: row for row in ledger}
-    candidate = rows["selected_deep_U1"]
+    candidate = rows["M1"]
     assert candidate["retained"] is True
-    assert candidate["test_evaluated"] is True
+    assert candidate["test_evaluated"] is False
     assert candidate["architecture_eligibility"] == "eligible_deep"
-    assert candidate["parameter_count"] == 233_600
+    assert candidate["parameter_count"] == 167_168
     assert candidate["metrics"] == {
-        "annotation_coverage": 0.843,
-        "evaluable_motifs": 429,
-        "mean_sos": 0.6506700669726432,
-        "median_sos": 0.6440677966101696,
-        "optimized_motifs": 843,
-        "useful_motifs": 268,
-        "validation_nll": 8.832002635285642,
+        "annotation_coverage": 0.884,
+        "evaluable_motifs": 408,
+        "mean_sos": 0.6580793714074608,
+        "median_sos": 0.6488636363636364,
+        "optimized_motifs": 884,
+        "useful_motifs": 265,
+        "validation_nll": 8.974139925584877,
     }
-    assert all(candidate["gates"].values())
+    assert candidate["gates"]["validation_nll_101_reporting_reference"] is False
+    assert candidate["gates"]["validation_nll_105_selection_ceiling"] is True
+    assert rows["locked_M1_retrain"]["gates"]["exact_model_tensors"] is True
+    assert rows["locked_M1_retrain"]["test_evaluated"] is True
+    assert rows["M2"]["retained"] is False
+    assert rows["M2"]["test_evaluated"] is False
     assert "selected_deep_control" not in rows
     for experiment in ("U7", "locked_U7_retrain", "S1", "S8", "locked_S8_retrain"):
         assert rows[experiment]["architecture_eligibility"].startswith("excluded")

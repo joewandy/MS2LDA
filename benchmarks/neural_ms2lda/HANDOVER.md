@@ -7,18 +7,21 @@ architecture under a six-CPU-thread allowance. It is a single-dataset,
 single-seed research result, not evidence that the production Tomotopy backend
 should be replaced.
 
-The selected U1 model is the simplest tested architecture that retains a
-nonlinear representation-learning path. Its deterministic lock produced 843
-optimized motifs, 429 high-confidence evaluable motifs, 268 useful motifs, mean
-SOS 0.6506700670, median SOS 0.6440677966, and validation NLL 8.8320026353.
+The selected M1 model is the simplest tested architecture that retains a
+nonlinear representation-learning path. Its deterministic lock produced 884
+optimized motifs, 408 high-confidence evaluable motifs, 265 useful motifs, mean
+SOS 0.6580793714, median SOS 0.6488636364, and validation NLL 8.9741399256.
 
 An earlier scratch reconstruction narrowly missed two thresholds derived from a
 historical U1 run: six useful motifs and 0.003272 mean SOS. The
 provenance-grounded deterministic lock passed every historical U1 reconstruction
 threshold and improves the accepted control's validation motif inventory while
 removing seven auxiliary mechanisms. The project rule prefers the materially
-simpler formulation when the scientific result is practically tied, so U1 is
-selected and its worse predictive NLL is reported as an explicit trade-off.
+simpler formulation when the scientific result is practically tied. M1 passed
+every absolute and relative chemistry gate without the tie allowance. Its NLL
+missed the historical 101% reporting reference but passed the predeclared 105%
+chemistry-first ceiling. M2 then failed optimized-motif and mean-SOS retention,
+so the campaign stopped without constructing M3.
 
 Tomotopy is fixed. Its committed model evidence, rows, diagnostics, and
 iteration counts are preserved without retraining or reevaluation.
@@ -32,9 +35,8 @@ iteration counts are preserved without retraining or reevaluation.
    starting tokens with the seed-42 uniform permutation and initialize learned
    128-dimensional prototypes from those projected tokens.
 3. Concatenate each projected token with its count-weighted leave-one-out
-   spectrum context. Apply `Linear(256, 256)`, GELU, `LayerNorm(256)`, and
-   `Linear(256, 128)`, add the nonlinear correction to the token vector, and
-   normalize.
+   spectrum context. Apply one bias-free `Linear(256, 128)` followed by GELU,
+   add the nonlinear correction to the token vector, and normalize.
 4. Add whole-spectrum prototype evidence, retain and renormalize the top two
    token assignments, and aggregate their count-weighted mass.
 5. Multiply routed topic mass by detached whole-spectrum evidence raised to
@@ -47,8 +49,8 @@ iteration counts are preserved without retraining or reevaluation.
    routing-temperature annealing, deterministic execution, finite checks, and
    gradient clipping.
 
-The model has 233,600 learned parameters: 6,400 in the token projection,
-99,200 in the nonlinear context router, and 128,000 in the topic prototypes.
+The model has 167,168 learned parameters: 6,400 in the token projection, 32,768
+in the nonlinear context router, and 128,000 in the topic prototypes.
 The implementation is unconditional: there are no architecture flags,
 experimental switches, schema variants, or loader compatibility branches.
 
@@ -84,7 +86,7 @@ dependency or compatibility interface is included now.
 `results.json` is the sole paper-facing numerical source. The model artifact
 contains exactly `weights.pt`, `model.json`, and `vocabulary.json`; tensor shapes
 encode architecture dimensions and `model.json` contains only the two inference
-temperatures. The loader supports only the selected U1 model.
+temperatures. The loader supports only the selected M1 model.
 
 ## Reproduction
 

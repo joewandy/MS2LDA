@@ -83,7 +83,7 @@ one sparse top-2 routing pass replaces iterative document-level inference.
 Fixed, train-only token features and learned topic prototypes define both the
 router and the topic--word decoder. Fragment and neutral-loss channels receive
 equal probability mass, while balanced assignments, positive-NPMI structure,
-and prototype separation address topic collapse. The architecture has 233,600
+and prototype separation address topic collapse. The architecture has 167,168
 learned parameters and is optimized with alternating router and topic updates
 over complete spectra. We compare Neural MS2LDA with Tomotopy LDA using the same
 \StudyTopics{} topics, seed \StudySeed, \StudyThreads{} CPU threads, scaffold
@@ -418,20 +418,19 @@ is
   \label{eq:context}
 \end{equation}
 A nonlinear context router transforms the concatenated token and context. Let
-$W_1\in\mathbb{R}^{256\times256}$ and
-$W_2\in\mathbb{R}^{128\times256}$ denote its learned affine layers. Then
+$W_c\in\mathbb{R}^{128\times256}$ denote its single learned bias-free matrix.
+Then
 \begin{align}
-  e_{dw} &= W_2\operatorname{LayerNorm}
-  \!\left(\operatorname{GELU}
-  \!\left(W_1[z_w;\bar z_{d\setminus w}]+b_1\right)\right)+b_2,\\
+  e_{dw} &= \operatorname{GELU}
+  \!\left(W_c[z_w;\bar z_{d\setminus w}]\right),\\
   h_{dw} &= \normalize\!\left(z_w+e_{dw}\right),
   \qquad u_d=\normalize(s_d).
   \label{eq:context-router}
 \end{align}
-The final router layer is initialized near zero, so training begins near the
-token geometry while retaining a fully nonlinear learned correction. The model
-has 233,600 learned parameters: 6,400 in the token projection, 99,200 in the
-context router, and 128,000 in the topic prototypes.
+The router matrix is initialized from $\mathcal N(0,0.01^2)$, so training begins
+near the token geometry while retaining a nonlinear learned correction. The
+model has 167,168 learned parameters: 6,400 in the token projection, 32,768 in
+the context router, and 128,000 in the topic prototypes.
 Local and document evidence are added before routing:
 \begin{equation}
   a_{dwk}=h_{dw}^{\top}\widehat q_k+u_d^{\top}\widehat q_k,
@@ -494,7 +493,7 @@ from the training-only safeguards.
     \node[modelnode,fill=blue!12,text width=2.15cm] (context) at (5.35,0) {
       Leave-one-out context\\
       $\bar z_{d\setminus w}\in\mathbb R^{128}$\\
-      MLP $256\!\to\!256\!\to\!128$};
+      Linear $256\!\to\!128$ + GELU};
     \node[modelnode,fill=blue!12,text width=2.15cm] (router) at (8.25,0) {
       Local + document scores\\
       soft route $\to$ top-2\\
@@ -1001,9 +1000,8 @@ On the test split, Neural MS2LDA yields
 \NeuralCoverage{} versus \TomotopyCoverage{} because the optimized topic
 spectra and their MAG annotations are shared across the held-out splits.
 
-Unlike validation, test mean SOS is practically identical at four decimals
-(\NeuralTestSOS{} versus \TomotopyTestSOS{}); the unrounded Tomotopy value is
-only $3.5\times10^{-6}$ higher. Neural MS2LDA has the higher median
+Neural MS2LDA also has higher test mean SOS
+(\NeuralTestSOS{} versus \TomotopyTestSOS{}) and the higher median
 (\NeuralTestMedianSOS{} versus \TomotopyTestMedianSOS{}) and the higher
 useful-within-evaluable share (\NeuralTestUsefulShare{} versus
 \TomotopyTestUsefulShare{}). Test completion NLL is also lower for neural
@@ -1035,6 +1033,29 @@ the completion likelihood. Together they make the large topic inventory usable
 while the likelihood keeps the model accountable for predicting spectral
 evidence.
 
+\subsection{Why the nonlinear router is this small}
+
+Architecture development ended with a bounded validation-only simplification
+campaign. The accepted U1 control used two affine router layers with GELU and
+LayerNorm and had 233,600 parameters. M1 replaced that block with the single
+bias-free nonlinear residual map in Equation~\ref{eq:context-router}, reducing
+the model to 167,168 parameters. Relative to U1, M1 produced 884 rather than
+843 optimized motifs, 408 rather than 429 evaluable motifs, 265 rather than 268
+useful motifs, and mean SOS 0.6581 rather than 0.6507. It passed every
+predeclared absolute and relative chemistry gate without using the narrow tie
+allowance. Validation NLL increased from 8.8320 to 8.9741; this missed the
+historical 101\% reporting reference but remained inside the predeclared 105\%
+chemistry-first ceiling.
+
+The next candidate reduced all learned geometry to 50 dimensions. It retained
+430 evaluable and 262 useful motifs, but optimized motifs missed their relative
+threshold by one and mean SOS fell to 0.6399, below both the standard and tie
+thresholds. Because two gates failed, development stopped and the planned
+document-exponent change was not run. A fresh M1 replay reproduced every state
+tensor, validation array, metric, and gate decision exactly. The test split was
+opened only after this selection and lock; its values were used for reporting,
+not for further architecture choice.
+
 \subsection{Breadth, purity, and practical value}
 
 The central empirical finding is breadth together with comparable test-average
@@ -1049,8 +1070,8 @@ with the SOS distribution, not in isolation.
 
 The validation result shows this tension directly. Tomotopy's evaluable motifs
 are chemically purer on average, whereas neural MS2LDA supplies substantially
-more useful motifs in absolute terms. On test, mean SOS is effectively tied and
-the neural median is higher, so the larger neural inventory is not accompanied
+more useful motifs in absolute terms. On test, both mean and median SOS are
+higher for the neural model, so the larger neural inventory is not accompanied
 by an obvious average-quality penalty there. The lower completion NLL adds a
 different kind of support: given half a spectrum, the neural model assigns more
 probability to its withheld fragment/loss evidence. Neither result implies that

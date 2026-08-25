@@ -178,7 +178,8 @@ def library_matches(
                     continue
                 seen_inchikeys.add(inchikey)
                 smiles_values.append(smiles)
-                spectra.append(pickle.loads(row[1]))
+                # The pinned local benchmark database is trusted study input.
+                spectra.append(pickle.loads(row[1]))  # noqa: S301
                 scores.append(float(similarities[topic, rank]))
                 if len(smiles_values) == int(unique_molecules):
                     break

@@ -329,10 +329,8 @@ def test_protocol_and_model_artifact_expose_only_the_current_architecture() -> N
     assert [type(layer) for layer in trained_model.context_router] == [
         torch.nn.Linear,
         torch.nn.GELU,
-        torch.nn.LayerNorm,
-        torch.nn.Linear,
     ]
-    assert sum(parameter.numel() for parameter in trained_model.parameters()) == 233_600
+    assert sum(parameter.numel() for parameter in trained_model.parameters()) == 167_168
     assert DOCUMENT_MIXTURE_EXPONENT == 0.75
     assert TOPICS_PER_TOKEN == 2
     assert temperature == pytest.approx(0.1)

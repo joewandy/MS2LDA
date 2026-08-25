@@ -6,7 +6,7 @@ two fragment/loss indicators. A bias-free projection maps those 50 features to
 128 dimensions, and a nonlinear context router combines each token with the
 leave-one-out context of its spectrum:
 
-`Linear(256, 256) -> GELU -> LayerNorm(256) -> Linear(256, 128)`.
+`Linear(256, 128, bias=False) -> GELU`.
 
 The routed tokens interact with 1,000 learned motif prototypes. Sparse top-2
 assignments, additive whole-spectrum evidence, and a detached document gate
@@ -16,26 +16,28 @@ channels equal probability mass.
 Training uses full spectra and alternates router and topic updates. Sinkhorn
 targets, positive-NPMI structure, prototype separation, routing-temperature
 annealing, finite checks, and gradient clipping protect the topic inventory.
-The model has 233,600 learned parameters.
+The model has 167,168 learned parameters.
 
 ## Why this model
 
-The selected U1 formulation removes Fourier mass coordinates, partial training
+The selected M1 formulation retains U1's removal of Fourier mass coordinates, partial training
 views, Jensen--Shannon view consistency, local reconstruction, dead-topic
-recycling, weighted k-means++ initialization, and adaptive channel mass. Its
-deterministic lock produced 843 optimized, 429 evaluable, and 268 useful
-validation motifs with mean SOS 0.6506700670 and validation NLL 8.8320026353.
+recycling, weighted k-means++ initialization, and adaptive channel mass. It also
+replaces U1's two-layer normalized context MLP with one nonlinear residual
+layer. Its deterministic lock produced 884 optimized, 408 evaluable, and 265
+useful validation motifs with mean SOS 0.6580793714 and validation NLL
+8.9741399256.
 
 An earlier scratch reconstruction narrowly missed two thresholds derived from a
-historical U1 run. The provenance-grounded deterministic lock passed every
-historical U1 reconstruction threshold and substantially improved the accepted
-control's motif inventory while removing seven auxiliary mechanisms. Under the
-project's practical-tie rule, the simpler deep model is selected and the worse
-predictive NLL remains an explicit trade-off. Exact values and the earlier
-mechanical misses remain in `results/seed42/ablation_results.json`.
+historical U1 run. U1 remains the locked control. M1 passed every absolute and
+relative chemistry gate without using the tie allowance; its NLL missed the old
+101% reporting reference but stayed inside the predeclared 105% chemistry-first
+ceiling. M2's 50-dimensional geometry then failed two relative chemistry gates,
+so the campaign stopped before M3. Exact values remain in
+`results/seed42/ablation_results.json`.
 
-The nonlinear router is a required architectural invariant. Shallow U7 and
-S-series endpoints are ablation evidence only. A future DreaMS embedding can
+The nonlinear router remains a required architectural invariant. Shallow U7,
+the S-series, and failed M2 are ablation evidence only. A future DreaMS embedding can
 augment or replace the pooled spectrum-context vector before the nonlinear
 router; DreaMS is not integrated in the reported model.
 

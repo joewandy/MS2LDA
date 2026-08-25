@@ -98,7 +98,7 @@ def _chemical_subprocess(
         split,
     ]
     with log.open("a", encoding="utf-8") as handle:
-        subprocess.run(
+        subprocess.run(  # noqa: S603
             command,
             cwd=REPO_ROOT,
             env=environment,

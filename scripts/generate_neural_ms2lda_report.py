@@ -133,8 +133,9 @@ def generated_text(evidence: dict[str, Any], protocol: dict[str, Any]) -> None:
         ),
         (
             "Token projection; context router",
-            f"{model['projection_dimensions']}; hidden "
-            f"{model['router_hidden_dimensions']}; Linear--GELU--LayerNorm--Linear",
+            f"{feature_dimensions} to {model['projection_dimensions']} bias-free; "
+            f"context {2 * model['projection_dimensions']} to "
+            f"{model['projection_dimensions']} bias-free; GELU",
         ),
         (
             "Decoder",

@@ -346,12 +346,17 @@ def assign_scaffold_splits(
     for group in group_order:
         size = len(grouped[group])
 
-        def score(split: str) -> tuple[float, float, str]:
+        def score(
+            split: str,
+            *,
+            current_group: str = group,
+            current_size: int = size,
+        ) -> tuple[float, float, str]:
             target = targets[split]
-            projected = counts[split] + size
+            projected = counts[split] + current_size
             overflow = max(projected - target, 0.0) / max(target, 1.0)
             deficit = (target - counts[split]) / max(target, 1.0)
-            return overflow, -deficit, _stable_digest(seed, f"{group}\0{split}")
+            return overflow, -deficit, _stable_digest(seed, f"{current_group}\0{split}")
 
         selected = min(names, key=score)
         assignments[group] = selected
