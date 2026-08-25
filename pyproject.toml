@@ -53,7 +53,11 @@ exclude = [
   "MS2LDA/Add_On/Fingerprints/FP_calculation/*.ipynb",
 
     # MotifDB entire folder (now fetched at runtime)
-  "MS2LDA/MotifDB/**"
+  "MS2LDA/MotifDB/**",
+
+  # Research tooling remains clone-runnable, not part of the public API.
+  "scripts/download_msnlib_validation_assets.py",
+  "scripts/generate_neural_ms2lda_report.py"
 ]
 
 [tool.poetry.dependencies]
@@ -137,6 +141,8 @@ exclude = [
   "MS2LDA/Add_On/Fingerprints/FP_calculation/*"
 ]
 unsafe-fixes = true
+
+[tool.ruff.lint]
 select = ["ALL"]
 ignore = ["D", "ANN"]
 
