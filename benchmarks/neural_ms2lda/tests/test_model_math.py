@@ -139,7 +139,7 @@ def test_sinkhorn_top2_and_topic_gradients_are_finite() -> None:
     assert torch.all((router.output.assignments > 0).sum(dim=1) == 2)
     router.total.backward()
     assert model.context_router[0].weight.grad is not None
-    assert model.context_router[-1].weight.grad is not None
+    assert torch.isfinite(model.context_router[0].weight.grad).all()
     model.zero_grad(set_to_none=True)
     topic = topic_block_loss(
         model,
@@ -293,7 +293,6 @@ def test_protocol_and_model_artifact_expose_only_the_current_architecture() -> N
     assert protocol["model"] == {
         "num_topics": 1000,
         "projection_dimensions": 128,
-        "router_hidden_dimensions": 256,
         "beta_temperature": 0.18,
     }
     assert "token_features" not in protocol

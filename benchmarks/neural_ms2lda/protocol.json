@@ -34,7 +34,6 @@
   "model": {
     "num_topics": 1000,
     "projection_dimensions": 128,
-    "router_hidden_dimensions": 256,
     "beta_temperature": 0.18
   },
   "optimization": {

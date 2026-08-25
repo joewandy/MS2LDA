@@ -50,7 +50,6 @@ class NeuralMS2LDA(nn.Module):
         *,
         num_topics: int,
         projection_dimensions: int,
-        router_hidden_dimensions: int,
         beta_temperature: float,
         topic_initial_indices: torch.Tensor,
         seed: int,
@@ -88,13 +87,14 @@ class NeuralMS2LDA(nn.Module):
             )
             nn.init.orthogonal_(self.token_projection.weight)
             self.context_router = nn.Sequential(
-                nn.Linear(2 * self.projection_dimensions, router_hidden_dimensions),
+                nn.Linear(
+                    2 * self.projection_dimensions,
+                    self.projection_dimensions,
+                    bias=False,
+                ),
                 nn.GELU(),
-                nn.LayerNorm(router_hidden_dimensions),
-                nn.Linear(router_hidden_dimensions, self.projection_dimensions),
             )
-            nn.init.normal_(self.context_router[-1].weight, mean=0.0, std=0.01)
-            nn.init.zeros_(self.context_router[-1].bias)
+            nn.init.normal_(self.context_router[0].weight, mean=0.0, std=0.01)
 
         with torch.no_grad():
             projected = self.projected_tokens()
@@ -314,7 +314,6 @@ def initialize_model(
         token_features,
         num_topics=int(num_topics),
         projection_dimensions=int(model_config["projection_dimensions"]),
-        router_hidden_dimensions=int(model_config["router_hidden_dimensions"]),
         beta_temperature=float(model_config["beta_temperature"]),
         topic_initial_indices=initial_indices,
         seed=seed + int(num_topics),

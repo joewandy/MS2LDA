@@ -69,7 +69,6 @@ def mini_protocol(mgf: Path) -> dict[str, Any]:
         {
             "num_topics": 4,
             "projection_dimensions": 8,
-            "router_hidden_dimensions": 16,
         }
     )
     protocol["optimization"].update(
