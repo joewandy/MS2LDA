@@ -7,6 +7,11 @@ import scipy.sparse as sp
 import torch
 
 from benchmarks.neural_ms2lda.data import sparse_batch
+from benchmarks.neural_ms2lda.followup import (
+    retemperature_theta,
+    theta_distribution,
+    top_rank_stability,
+)
 from benchmarks.neural_ms2lda.pooled import (
     assignment_information_loss,
     initialize_pooled_candidate,
@@ -52,3 +57,33 @@ def test_assignment_information_loss_is_negative_mutual_information() -> None:
     marginal_entropy = -torch.sum(marginal * torch.log(marginal))
     assert torch.allclose(value, conditional - marginal_entropy)
     assert value < 0
+
+
+def test_retemperature_preserves_rank_and_sharpens() -> None:
+    theta = np.asarray([[0.5, 0.3, 0.2], [0.1, 0.7, 0.2]], dtype=np.float32)
+    sharpened = retemperature_theta(
+        theta,
+        source_temperature=0.24,
+        target_temperature=0.12,
+    )
+    assert np.allclose(sharpened.sum(axis=1), 1.0)
+    assert np.all(sharpened.max(axis=1) > theta.max(axis=1))
+    assert top_rank_stability(theta, sharpened) == {
+        "top1_assignment_stability": 1.0,
+        "top3_set_stability": 1.0,
+    }
+    assert theta_distribution(sharpened)["median_effective_topics_per_spectrum"] < (
+        theta_distribution(theta)["median_effective_topics_per_spectrum"]
+    )
+
+
+def test_retemperature_identity_is_numerically_stable() -> None:
+    theta = np.asarray([[0.0, 0.0, 1.0], [1e-30, 0.4, 0.6]], dtype=np.float32)
+    calibrated = retemperature_theta(
+        theta,
+        source_temperature=0.24,
+        target_temperature=0.24,
+    )
+    assert np.all(np.isfinite(calibrated))
+    assert np.allclose(calibrated.sum(axis=1), 1.0)
+    assert np.array_equal(np.argmax(calibrated, axis=1), np.argmax(theta, axis=1))

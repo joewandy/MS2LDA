@@ -1,7 +1,10 @@
 """Validation-only MSnLib ETM and pooled-model comparison campaign.
 
 The runner reuses the locked repository preparation, completion, and chemical
-scoring machinery.  It never loads candidate test matrices or test records.
+scoring machinery. Its candidate training/evaluation commands do not load or
+score test matrices or result artifacts. The pre-existing shared MAG leakage
+index may encode held-out compound identifiers from both splits, but candidate
+selection remains based only on validation theta and validation chemistry.
 """
 
 from __future__ import annotations
@@ -9,7 +12,9 @@ from __future__ import annotations
 import argparse
 import contextlib
 import csv
+import hashlib
 import json
+import math
 import os
 import platform
 import random
@@ -35,6 +40,7 @@ from benchmarks.neural_ms2lda.data import (
     sparse_batch,
     train_token_features,
 )
+from benchmarks.neural_ms2lda.followup import retemperature_theta
 from benchmarks.neural_ms2lda.objectives import completion_metrics
 from benchmarks.neural_ms2lda.pooled import (
     assignment_information_loss,
@@ -52,17 +58,28 @@ from scripts.run_published_topic_models_msnlib import (
     ECR,
     FixedETM,
     TopMostECRTM,
+    ecrtm_completion,
+    infer_ecrtm,
     sgns_only,
 )
 
 EPS = 1e-12
 REPO_ROOT = Path(__file__).resolve().parents[1]
 POOLED_ROOT = REPO_ROOT / "research/etm_ecrtm_msnlib/pooled_projected"
-METHODS = ("etm", "pooled_likelihood", "pooled_mi005")
+METHODS = ("etm", "etm_balanced", "pooled_likelihood", "pooled_mi005")
 POOLED_PROTOCOLS = {
     "pooled_likelihood": POOLED_ROOT / "protocol_minimum.json",
     "pooled_mi005": POOLED_ROOT / "protocol_mi005.json",
 }
+
+
+def file_sha256(path: Path) -> str:
+    """Hash an execution input without loading the whole artifact into memory."""
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(8 * 1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 class MemoryTracker:
@@ -101,6 +118,37 @@ class MemoryTracker:
                 self.peak_mps_driver_bytes if self.device.type == "mps" else None
             ),
         }
+
+
+class FragmentLossBalancedETM(FixedETM):
+    """Canonical fixed-SGNS ETM with only channel-wise beta normalization."""
+
+    def __init__(
+        self,
+        embeddings: np.ndarray,
+        topics: int,
+        fragment_mask: np.ndarray,
+        hidden: int = 800,
+    ) -> None:
+        super().__init__(embeddings, topics, hidden=hidden)
+        mask = torch.as_tensor(fragment_mask, dtype=torch.bool)
+        if mask.ndim != 1 or len(mask) != len(embeddings):
+            raise ValueError("fragment mask must match the ETM vocabulary")
+        if not torch.any(mask) or torch.all(mask):
+            raise ValueError("fragment mask must contain fragments and losses")
+        self.register_buffer("fragment_mask", mask, persistent=False)
+
+    def beta(self) -> torch.Tensor:
+        """Normalize fragment and loss logits independently to mass 0.5."""
+        logits = self.alphas(self.rho).T
+        probabilities = torch.empty_like(logits)
+        probabilities[:, self.fragment_mask] = 0.5 * nnf.softmax(
+            logits[:, self.fragment_mask], dim=1
+        )
+        probabilities[:, ~self.fragment_mask] = 0.5 * nnf.softmax(
+            logits[:, ~self.fragment_mask], dim=1
+        )
+        return probabilities
 
 
 def configure(seed: int, threads: int) -> None:
@@ -368,9 +416,11 @@ def train_etm(
     device: torch.device,
     epochs: int,
     batch_size: int,
+    method: str = "etm",
 ) -> dict[str, Any]:
-    """Train the canonical fixed-SGNS ETM on the locked training matrix."""
-    method = "etm"
+    """Train canonical ETM or its paired channel-balanced decoder variant."""
+    if method not in {"etm", "etm_balanced"}:
+        raise ValueError("ETM method must be etm or etm_balanced")
     output = run / "models" / method
     result_path = output / "result.json"
     if result_path.is_file():
@@ -384,11 +434,23 @@ def train_etm(
     full = load_csr(run / "data/validation_full.npz")
     records = load_heldout_records(run / "data", "validation")
     vocabulary = load_vocabulary(run / "data")
-    model = FixedETM(
-        sgns_only(run / "token_features/features.npy"),
-        int(protocol["model"]["num_topics"]),
-        hidden=800,
-    ).to(device)
+    embeddings = sgns_only(run / "token_features/features.npy")
+    if method == "etm_balanced":
+        fragment_mask = np.asarray(
+            [word.startswith("frag@") for word in vocabulary], dtype=bool
+        )
+        model = FragmentLossBalancedETM(
+            embeddings,
+            int(protocol["model"]["num_topics"]),
+            fragment_mask,
+            hidden=800,
+        ).to(device)
+    else:
+        model = FixedETM(
+            embeddings,
+            int(protocol["model"]["num_topics"]),
+            hidden=800,
+        ).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.005, weight_decay=1.2e-6)
     rng = np.random.default_rng(seed + 7019)
     memory = MemoryTracker(device)
@@ -424,7 +486,7 @@ def train_etm(
         }
         history.append(row)
         write_csv(output / "training_history.csv", history)
-        print("ETM_EPOCH", json.dumps(row, sort_keys=True), flush=True)
+        print(f"{method.upper()}_EPOCH", json.dumps(row, sort_keys=True), flush=True)
     fitting_seconds = time.perf_counter() - started
     model.eval()
     with torch.inference_mode():
@@ -461,7 +523,11 @@ def train_etm(
         {key: value.detach().cpu() for key, value in model.state_dict().items()},
     )
     config = {
-        "architecture": "canonical fixed-pretrained-SGNS ETM",
+        "architecture": (
+            "fixed-pretrained-SGNS ETM with fragment/loss-balanced decoder"
+            if method == "etm_balanced"
+            else "canonical fixed-pretrained-SGNS ETM"
+        ),
         "embedding_dimensions": 48,
         "hidden_dimensions": 800,
         "topics": int(protocol["model"]["num_topics"]),
@@ -472,7 +538,17 @@ def train_etm(
         "weight_decay": 1.2e-6,
         "device": str(device),
         "seed": seed + 7001,
-        "decoder_normalization": "global topic-word softmax",
+        "decoder_normalization": (
+            "independent fragment/loss softmaxes at 0.5 each"
+            if method == "etm_balanced"
+            else "global topic-word softmax"
+        ),
+        "paired_reference_method": "etm" if method == "etm_balanced" else None,
+        "only_scientific_change": (
+            "beta normalization: global softmax -> fixed 0.5 fragment + 0.5 loss"
+            if method == "etm_balanced"
+            else None
+        ),
     }
     write_json(output / "config.json", config)
     write_csv(output / "top_words.csv", top_words)
@@ -750,6 +826,10 @@ class ProbeECR(ECR):
                     torch.sum(torch.abs(v * (kernel.T @ u) - b), dim=0)
                 )
                 self.final_residual = float(residual.detach().cpu())
+                if not math.isfinite(self.final_residual):
+                    raise FloatingPointError(
+                        "ECRTM Sinkhorn solver produced a non-finite residual"
+                    )
                 if self.final_residual <= 0.005:
                     break
         transport = u * (kernel * v.T)
@@ -822,6 +902,17 @@ def ecrtm_probe(
             )
             ecr_loss = model.ecr_loss()
             objective = reconstruction_loss + kl.mean() + ecr_loss
+            residual = model.ecr.final_residual
+            if residual is None or not math.isfinite(residual):
+                raise FloatingPointError(
+                    "ECRTM Sinkhorn solver produced no finite residual"
+                )
+            if int(max_iter) >= 1000 and residual > 0.005:
+                raise FloatingPointError(
+                    "canonical ECRTM Sinkhorn solver did not reach residual 0.005"
+                )
+            if not torch.isfinite(objective):
+                raise FloatingPointError("ECRTM probe produced a non-finite loss")
             forward_seconds = time.perf_counter() - started
             optimizer.zero_grad(set_to_none=True)
             backward_started = time.perf_counter()
@@ -863,6 +954,264 @@ def ecrtm_probe(
     return result
 
 
+def train_ecrtm_canonical(  # noqa: PLR0915
+    run: Path,
+    *,
+    device: torch.device,
+    epochs: int,
+    batch_size: int,
+    max_iter: int,
+) -> dict[str, Any]:
+    """Train maintained ECRTM with the convergent canonical Sinkhorn rule."""
+    if device.type != "cpu":
+        raise ValueError("the validated canonical ECRTM path currently requires CPU")
+    method = "ecrtm_canonical"
+    calibrated_method = "ecrtm_canonical_tau030"
+    output = run / "models" / method
+    result_path = output / "result.json"
+    if result_path.is_file():
+        return read_json(result_path)
+    if int(max_iter) < 1000:
+        raise ValueError("canonical ECRTM requires max_iter >= 1000")
+    protocol = read_json(run / "protocol.json")
+    seed = int(protocol["seed"])
+    configure(seed + 8001, int(protocol["cpu_threads"]))
+    train = load_csr(run / "data/train.npz")
+    observed = load_csr(run / "data/validation_observed.npz")
+    completion = load_csr(run / "data/validation_completion.npz")
+    full = load_csr(run / "data/validation_full.npz")
+    records = load_heldout_records(run / "data", "validation")
+    vocabulary = load_vocabulary(run / "data")
+    topics = int(protocol["model"]["num_topics"])
+    model = TopMostECRTM(sgns_only(run / "token_features/features.npy"), topics)
+    model.ecr = ProbeECR(max_iter=int(max_iter))
+    model = model.to(device)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.002)
+    rng = np.random.default_rng(seed + 8017)
+    memory = MemoryTracker(device)
+    history: list[dict[str, Any]] = []
+    output.mkdir(parents=True, exist_ok=True)
+    checkpoint_path = output / "checkpoint.pt"
+    training_contract = {
+        "topics": topics,
+        "batch_size": int(batch_size),
+        "maximum_sinkhorn_iterations": int(max_iter),
+        "seed": seed + 8001,
+        "optimizer": "Adam",
+        "learning_rate": 0.002,
+        "ecr_weight": 100.0,
+        "sinkhorn_alpha": 20.0,
+        "sinkhorn_residual_tolerance": 0.005,
+        "sinkhorn_check_interval": 50,
+        "train_matrix_sha256": file_sha256(run / "data/train.npz"),
+        "token_features_sha256": file_sha256(run / "token_features/features.npy"),
+        "protocol_sha256": file_sha256(run / "protocol.json"),
+    }
+    start_epoch = 0
+    if checkpoint_path.is_file():
+        checkpoint = torch.load(
+            checkpoint_path,
+            map_location="cpu",
+            weights_only=False,
+        )
+        if checkpoint["training_contract"] != training_contract:
+            raise ValueError("canonical ECRTM checkpoint contract does not match")
+        model.load_state_dict(checkpoint["model_state"])
+        optimizer.load_state_dict(checkpoint["optimizer_state"])
+        rng.bit_generator.state = checkpoint["numpy_rng_state"]
+        torch.set_rng_state(checkpoint["torch_rng_state"])
+        history = list(checkpoint["history"])
+        start_epoch = int(checkpoint["epoch"])
+    for epoch in range(start_epoch, int(epochs)):
+        model.train()
+        order = rng.permutation(train.shape[0])
+        topic_total = 0.0
+        ecr_total = 0.0
+        iteration_values = []
+        residual_values = []
+        batches = 0
+        epoch_started = time.perf_counter()
+        for start in range(0, len(order), int(batch_size)):
+            rows = order[start : start + int(batch_size)]
+            bows = torch.from_numpy(
+                train[rows].toarray().astype(np.float32, copy=False)
+            ).to(device)
+            theta, kl = model.theta(bows, sample=True)
+            beta_internal = model.beta()
+            reconstruction = nnf.softmax(
+                model.decoder_bn(theta @ beta_internal), dim=-1
+            )
+            reconstruction_loss = (
+                -(bows * torch.log(reconstruction.clamp_min(EPS))).sum(dim=1).mean()
+            )
+            topic_loss = reconstruction_loss + kl.mean()
+            ecr_loss = model.ecr_loss()
+            residual = model.ecr.final_residual
+            if residual is None or not math.isfinite(residual) or residual > 0.005:
+                raise FloatingPointError(
+                    "canonical ECRTM Sinkhorn solver did not reach residual 0.005"
+                )
+            objective = topic_loss + ecr_loss
+            if not torch.isfinite(objective):
+                raise FloatingPointError("canonical ECRTM produced a non-finite loss")
+            optimizer.zero_grad(set_to_none=True)
+            objective.backward()
+            optimizer.step()
+            topic_total += float(topic_loss.detach().cpu())
+            ecr_total += float(ecr_loss.detach().cpu())
+            iteration_values.append(int(model.ecr.iterations_run))
+            if model.ecr.final_residual is not None:
+                residual_values.append(float(model.ecr.final_residual))
+            batches += 1
+        memory.sample()
+        row = {
+            "epoch": epoch + 1,
+            "topic_model_loss": topic_total / batches,
+            "ecr_loss": ecr_total / batches,
+            "mean_sinkhorn_iterations": float(np.mean(iteration_values)),
+            "maximum_sinkhorn_iterations": int(max(iteration_values)),
+            "mean_final_checked_residual": float(np.mean(residual_values)),
+            "maximum_final_checked_residual": float(max(residual_values)),
+            "seconds": time.perf_counter() - epoch_started,
+        }
+        history.append(row)
+        write_csv(output / "training_history.csv", history)
+        atomic_torch_save(
+            checkpoint_path,
+            {
+                "epoch": epoch + 1,
+                "model_state": model.state_dict(),
+                "optimizer_state": optimizer.state_dict(),
+                "numpy_rng_state": rng.bit_generator.state,
+                "torch_rng_state": torch.get_rng_state(),
+                "history": history,
+                "training_contract": training_contract,
+            },
+        )
+        print("ECRTM_CANONICAL_EPOCH", json.dumps(row, sort_keys=True), flush=True)
+    fitting_seconds = float(sum(float(row["seconds"]) for row in history))
+    model.eval()
+    with torch.inference_mode():
+        beta_internal = model.beta().cpu().numpy().astype(np.float32)
+    beta = beta_internal / np.maximum(beta_internal.sum(axis=1, keepdims=True), EPS)
+    inference_started = time.perf_counter()
+    theta_observed = infer_ecrtm(model, observed, int(batch_size))
+    observed_seconds = time.perf_counter() - inference_started
+    inference_started = time.perf_counter()
+    theta_full = infer_ecrtm(model, full, int(batch_size))
+    full_seconds = time.perf_counter() - inference_started
+    word_metrics, top_words = topic_word_diagnostics(beta, vocabulary)
+    metrics = {
+        "document_completion": ecrtm_completion(
+            model, theta_observed, completion, records, int(batch_size)
+        ),
+        "topic_inventory": mixture_diagnostics(theta_full, beta),
+        **word_metrics,
+        "finite_stable": bool(
+            np.all(np.isfinite(beta))
+            and np.all(np.isfinite(theta_observed))
+            and np.all(np.isfinite(theta_full))
+        ),
+        "runtime": {
+            "training_wall_seconds": fitting_seconds,
+            "validation_observed_spectra_per_second": observed.shape[0]
+            / observed_seconds,
+            "validation_full_spectra_per_second": full.shape[0] / full_seconds,
+            "memory": memory.result(),
+        },
+        "sinkhorn": {
+            "solver": "canonical convergence check",
+            "maximum_iterations": int(max_iter),
+            "check_interval": 50,
+            "residual_tolerance": 0.005,
+            "final_epoch_mean_iterations": history[-1]["mean_sinkhorn_iterations"],
+            "final_epoch_maximum_residual": history[-1][
+                "maximum_final_checked_residual"
+            ],
+        },
+    }
+    config = {
+        "architecture": "maintained TopMost-style ECRTM",
+        "topics": topics,
+        "embedding_dimensions": 48,
+        "encoder_hidden_dimensions": 200,
+        "epochs": int(epochs),
+        "batch_size": int(batch_size),
+        "optimizer": "Adam",
+        "learning_rate": 0.002,
+        "device": str(device),
+        "seed": seed + 8001,
+        "ecr_weight": 100.0,
+        "sinkhorn_alpha": 20.0,
+        "sinkhorn_maximum_iterations": int(max_iter),
+        "sinkhorn_residual_tolerance": 0.005,
+        "sinkhorn_check_interval": 50,
+        "numerical_approximation": False,
+        "resumable_epoch_checkpoint": str(checkpoint_path),
+        "resumed_from_epoch": start_epoch,
+    }
+    atomic_torch_save(
+        output / "weights.pt",
+        {key: value.detach().cpu() for key, value in model.state_dict().items()},
+    )
+    write_json(output / "config.json", config)
+    write_csv(output / "top_words.csv", top_words)
+    write_json(
+        output / "fragment_mass_summary.json",
+        metrics["fragment_probability_mass"],
+    )
+    result = {
+        "method": method,
+        "parameters": sum(parameter.numel() for parameter in model.parameters()),
+        "config": config,
+        "metrics": metrics,
+    }
+    write_json(result_path, result)
+    save_validation(run, method, beta, theta_full, metrics)
+    atomic_save_numpy(output / "validation_observed_theta.npy", theta_observed)
+
+    calibrated_observed = retemperature_theta(
+        theta_observed, source_temperature=1.0, target_temperature=0.30
+    )
+    calibrated_full = retemperature_theta(
+        theta_full, source_temperature=1.0, target_temperature=0.30
+    )
+    calibrated_metrics = {
+        "document_completion": ecrtm_completion(
+            model, calibrated_observed, completion, records, int(batch_size)
+        ),
+        "topic_inventory": mixture_diagnostics(calibrated_full, beta),
+        **word_metrics,
+        "finite_stable": bool(
+            np.all(np.isfinite(calibrated_observed))
+            and np.all(np.isfinite(calibrated_full))
+        ),
+        "post_hoc_inference_temperature": 0.30,
+        "beta_unchanged": True,
+        "source_method": method,
+    }
+    calibrated_output = run / "models" / calibrated_method
+    calibrated_output.mkdir(parents=True, exist_ok=True)
+    calibrated_result = {
+        "method": calibrated_method,
+        "parameters": result["parameters"],
+        "config": {
+            "source_method": method,
+            "post_hoc_inference_temperature": 0.30,
+            "trained_separately": False,
+        },
+        "metrics": calibrated_metrics,
+    }
+    write_json(calibrated_output / "config.json", calibrated_result["config"])
+    write_json(calibrated_output / "result.json", calibrated_result)
+    write_csv(calibrated_output / "top_words.csv", top_words)
+    save_validation(run, calibrated_method, beta, calibrated_full, calibrated_metrics)
+    atomic_save_numpy(
+        calibrated_output / "validation_observed_theta.npy", calibrated_observed
+    )
+    return result
+
+
 def chemical(run: Path, data_root: Path, method: str) -> dict[str, Any]:
     """Run exact shared MAG/SOS scoring on validation only."""
     protocol = read_json(run / "protocol.json")
@@ -872,6 +1221,9 @@ def chemical(run: Path, data_root: Path, method: str) -> dict[str, Any]:
         data_root=data_root,
         protocol=protocol,
         split="validation",
+        annotation_method=(
+            "ecrtm_canonical" if method == "ecrtm_canonical_tau030" else None
+        ),
     )
     rows = result["high_confidence_chemistry"].get("topic_scores", [])
     write_csv(run / "models" / method / "chemical_scores.csv", rows)
@@ -896,25 +1248,36 @@ def main(argv: Sequence[str] | None = None) -> int:
     score = commands.add_parser("chemical")
     score.add_argument("--run", required=True, type=Path)
     score.add_argument("--data-root", required=True, type=Path)
-    score.add_argument("--method", required=True, choices=METHODS + ("ecrtm",))
+    score.add_argument(
+        "--method",
+        required=True,
+        choices=METHODS + ("ecrtm", "ecrtm_canonical", "ecrtm_canonical_tau030"),
+    )
     probe = commands.add_parser("ecrtm-probe")
     probe.add_argument("--run", required=True, type=Path)
     probe.add_argument("--device", choices=("auto", "cpu", "mps"), default="auto")
     probe.add_argument("--max-iter", type=int, required=True)
     probe.add_argument("--batch-size", type=int, default=8)
     probe.add_argument("--wall-cap-seconds", type=float, default=900.0)
+    ecrtm_train = commands.add_parser("train-ecrtm-canonical")
+    ecrtm_train.add_argument("--run", required=True, type=Path)
+    ecrtm_train.add_argument("--device", choices=("auto", "cpu", "mps"), default="cpu")
+    ecrtm_train.add_argument("--epochs", type=int, default=40)
+    ecrtm_train.add_argument("--batch-size", type=int, default=200)
+    ecrtm_train.add_argument("--max-iter", type=int, default=1000)
     args = parser.parse_args(argv)
     run = args.run.expanduser().resolve()
     if args.command == "prepare":
         result = prepare(run, args.data_root.expanduser().resolve())
     elif args.command == "train":
         device = resolve_device(args.device)
-        if args.method == "etm":
+        if args.method in {"etm", "etm_balanced"}:
             result = train_etm(
                 run,
                 device=device,
                 epochs=args.etm_epochs,
                 batch_size=args.etm_batch_size,
+                method=args.method,
             )
         else:
             result = train_pooled(run, method=args.method, device=device)
@@ -922,6 +1285,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         result = real_batch_smoke(run, device=resolve_device(args.device))
     elif args.command == "chemical":
         result = chemical(run, args.data_root.expanduser().resolve(), args.method)
+    elif args.command == "train-ecrtm-canonical":
+        result = train_ecrtm_canonical(
+            run,
+            device=resolve_device(args.device),
+            epochs=args.epochs,
+            batch_size=args.batch_size,
+            max_iter=args.max_iter,
+        )
     else:
         result = ecrtm_probe(
             run,

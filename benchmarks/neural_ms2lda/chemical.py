@@ -148,6 +148,29 @@ def _topic_scores(  # noqa: PLR0913
     }
 
 
+def score_precomputed_annotations(
+    *,
+    theta: np.ndarray,
+    records: list[dict[str, Any]],
+    annotations: list[dict[str, Any]],
+    membership_threshold: float,
+    fingerprint_threshold: float,
+) -> dict[str, Any]:
+    """Rescore fixed MAG annotations after a validation-only theta change.
+
+    This is the public, inexpensive path for inference-calibration studies.  It
+    deliberately reuses the locked association and compound-balanced SOS
+    implementation instead of rerunning beta-dependent MAG annotation.
+    """
+    return _topic_scores(
+        theta=theta,
+        records=records,
+        annotations=annotations,
+        threshold=membership_threshold,
+        fingerprint_threshold=fingerprint_threshold,
+    )
+
+
 def _chemical_inputs(
     protocol: dict[str, Any], data_root: str | Path
 ) -> dict[str, Path]:
@@ -311,11 +334,15 @@ def run_chemical_scoring(
     data_root: str | Path,
     protocol: dict[str, Any],
     split: str = "test",
+    annotation_method: str | None = None,
 ) -> dict[str, Any]:
     """Annotate one registered topic model and score held-out compounds."""
     allowed = {
         "ecrtm",
+        "ecrtm_canonical",
+        "ecrtm_canonical_tau030",
         "etm",
+        "etm_balanced",
         "neural",
         "pooled_likelihood",
         "pooled_mi005",
@@ -340,7 +367,7 @@ def run_chemical_scoring(
         raise ValueError("full mixtures and held-out records differ")
     annotations, annotation = _shared_annotations(
         directory,
-        method=method,
+        method=annotation_method or method,
         data_root=data_root,
         protocol=protocol,
     )
@@ -354,6 +381,7 @@ def run_chemical_scoring(
     output.mkdir(parents=True, exist_ok=True)
     result = {
         "method": method,
+        "annotation_method": annotation_method or method,
         "split": split,
         "topics": len(annotations),
         "annotation_coverage": annotation["annotation_coverage"],
@@ -375,7 +403,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         "--method",
         choices=(
             "ecrtm",
+            "ecrtm_canonical",
+            "ecrtm_canonical_tau030",
             "etm",
+            "etm_balanced",
             "neural",
             "pooled_likelihood",
             "pooled_mi005",
