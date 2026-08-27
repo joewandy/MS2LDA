@@ -140,9 +140,11 @@ def _topic_scores(  # noqa: PLR0913
         "eligible_topics": len(eligible),
         "total_topics": len(annotations),
         "associated_spectra": sum(row["associated_spectra"] for row in rows),
+        "associated_molecules": sum(row["associated_molecules"] for row in rows),
         "mean_sos": float(np.mean(values)) if values else None,
         "median_sos": float(np.median(values)) if values else None,
         "sos_bands": _sos_bands(values),
+        "topic_scores": rows,
     }
 
 
@@ -310,8 +312,15 @@ def run_chemical_scoring(
     protocol: dict[str, Any],
     split: str = "test",
 ) -> dict[str, Any]:
-    """Annotate neural or comparator topics and score held-out compounds."""
-    allowed = {"neural", "tomotopy"}
+    """Annotate one registered topic model and score held-out compounds."""
+    allowed = {
+        "ecrtm",
+        "etm",
+        "neural",
+        "pooled_likelihood",
+        "pooled_mi005",
+        "tomotopy",
+    }
     if method not in allowed:
         raise ValueError(f"chemical method must be one of {sorted(allowed)}")
     if split not in {"validation", "test"}:
@@ -364,7 +373,14 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--data-root", required=True, type=Path)
     parser.add_argument(
         "--method",
-        choices=("neural", "tomotopy"),
+        choices=(
+            "ecrtm",
+            "etm",
+            "neural",
+            "pooled_likelihood",
+            "pooled_mi005",
+            "tomotopy",
+        ),
         required=True,
     )
     parser.add_argument("--split", choices=("validation", "test"), default="test")
