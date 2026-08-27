@@ -1,0 +1,13 @@
+{
+  "simple_candidate": {
+    "projection_dimensions": 128,
+    "theta_temperature": 0.24,
+    "beta_temperature": 0.18,
+    "mi_weight": 0.05,
+    "batch_size": 512,
+    "learning_rate": 0.001,
+    "weight_decay": 0.0001,
+    "gradient_clip_norm": 5.0,
+    "maximum_epochs": 40
+  }
+}
