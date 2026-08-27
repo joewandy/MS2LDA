@@ -1,0 +1,24 @@
+{
+  "backward_and_step_seconds": 1.1019434159970842,
+  "batch_size": 200,
+  "device": "cpu",
+  "ecr_loss": 158.02552795410156,
+  "final_checked_residual": 1.2407824993133545,
+  "finite": true,
+  "forward_seconds": 0.24274112499551848,
+  "iterations_run": 50,
+  "max_iterations": 50,
+  "memory": {
+    "measurement": "sampled high-water marks; process ru_maxrss is OS reported",
+    "peak_mps_allocated_bytes": null,
+    "peak_mps_driver_bytes": null,
+    "peak_process_bytes": 1076920320
+  },
+  "solver": "bounded approximation",
+  "status": "complete",
+  "topic_model_loss": 8367.36328125,
+  "topics": 1000,
+  "total_seconds": 1.34488066699123,
+  "vocabulary_size": 21233,
+  "wall_cap_seconds": 900.0
+}

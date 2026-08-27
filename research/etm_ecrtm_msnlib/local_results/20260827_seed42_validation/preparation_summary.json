@@ -1,0 +1,65 @@
+{
+  "data": {
+    "leakage_audit": {
+      "connectivity_groups": 38465,
+      "leaked_compounds": 0,
+      "leaked_groups": 0,
+      "split_groups": 28572
+    },
+    "parsing": {
+      "acyclic_spectra": 228,
+      "dropped_too_few_peaks": 2680,
+      "missing_optional_compound_name": 252,
+      "num_peaks_mismatches": [
+        {
+          "declared": 292,
+          "feature_id": "20240502_pluskal_enamine_5009_I16_id_MSn_positive.mzML msn trees:3",
+          "parsed": 173,
+          "spectrum_id": "[mzspec:MSV000094528:20240502_pluskal_enamine_5009_I16_id_MSn_positive:281, mzspec:MSV000094528:20240502_pluskal_enamine_5009_I16_id_MSn_positive:282, mzspec:MSV000094528:20240502_pluskal_enamine_5009_I16_id_MSn_positive:662]",
+          "spectrum_index": 29453
+        }
+      ],
+      "parsed_blocks": 41568,
+      "retained_spectra": 38888,
+      "unique_connectivity_keys": 38465,
+      "unique_split_groups": 28572
+    },
+    "split": {
+      "algorithm": "descending-group-size deterministic deficit minimization",
+      "group_counts": {
+        "test": 5702,
+        "train": 20014,
+        "validation": 2856
+      },
+      "seed": 42,
+      "spectrum_counts": {
+        "test": 7777,
+        "train": 27222,
+        "validation": 3889
+      },
+      "targets": {
+        "test": 7777.6,
+        "train": 27221.6,
+        "validation": 3888.8
+      }
+    },
+    "vocabulary": {
+      "min_cf": 0,
+      "min_df": 3,
+      "order": "raw_training_spectra_first_seen",
+      "rm_top": 0,
+      "source_split": "train",
+      "training_documents": 27222,
+      "vocabulary_size": 21233
+    }
+  },
+  "evidence_boundary": "validation candidates only; test is not evaluated",
+  "token_features": {
+    "feature_dimensions": 50
+  },
+  "train_shape": [
+    27222,
+    21233
+  ],
+  "vocabulary_size": 21233
+}

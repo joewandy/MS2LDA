@@ -1,0 +1,4 @@
+method,training_wall_seconds,validation_full_spectra_per_second,peak_process_bytes,parameters,finite_stable
+etm,3372.4009491250035,19841.38969230237,1684733952,19278000,True
+pooled_likelihood,815.3003464170033,42988.88246308887,1686700032,134400,True
+pooled_mi005,803.0206524170353,43777.21519281201,1692303360,134400,True

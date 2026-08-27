@@ -1,0 +1,14 @@
+{
+  "architecture": "canonical fixed-pretrained-SGNS ETM",
+  "batch_size": 256,
+  "decoder_normalization": "global topic-word softmax",
+  "device": "cpu",
+  "embedding_dimensions": 48,
+  "epochs": 120,
+  "hidden_dimensions": 800,
+  "learning_rate": 0.005,
+  "optimizer": "Adam",
+  "seed": 7043,
+  "topics": 1000,
+  "weight_decay": 1.2e-06
+}
