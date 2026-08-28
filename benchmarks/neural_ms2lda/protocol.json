@@ -69,7 +69,13 @@
   },
   "evaluation": {
     "latency_subset_size": 128,
-    "latency_repeats": 5
+    "latency_repeats": 5,
+    "active_topic_usage_threshold": 0.0005,
+    "duplicate_cosine_thresholds": [0.95, 0.99, 0.999],
+    "catastrophic_duplicate_component_fraction": 0.5,
+    "top_word_count": 20,
+    "channel_extreme_lower": 0.1,
+    "channel_extreme_upper": 0.9
   },
   "tomotopy": {
     "alpha": 0.6,

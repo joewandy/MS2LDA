@@ -2,29 +2,24 @@
 
 ## Current state
 
-The repository supports one seed-42, K=1000, 40-epoch deep Neural MS2LDA
-architecture under a six-CPU-thread allowance. It is a single-dataset,
-single-seed research result, not evidence that the production Tomotopy backend
-should be replaced.
+The repository supports one locked seed-42, K=1000, 40-epoch Neural MS2LDA
+architecture under a six-CPU-thread allowance. Its deterministic validation
+result is 884 optimized motifs, 408 high-confidence evaluable motifs, 265 useful
+motifs, mean SOS 0.6580793714, median SOS 0.6488636364, and completion NLL
+8.9741399256.
 
-The selected M1 model is the simplest tested architecture that retains a
-nonlinear representation-learning path. Its deterministic lock produced 884
-optimized motifs, 408 high-confidence evaluable motifs, 265 useful motifs, mean
-SOS 0.6580793714, median SOS 0.6488636364, and validation NLL 8.9741399256.
+M1 first survived a bounded within-family simplification campaign. A later
+validation-only external campaign compared it with canonical fixed-SGNS ETM,
+a deterministic pooled projected model, fragment/loss-balanced ETM, and
+canonical ECRTM. No completed alternative preserved the full chemistry,
+completion, and inventory contract; ECRTM failed its maintained Sinkhorn
+convergence path at real K/V before evaluation.
 
-An earlier scratch reconstruction narrowly missed two thresholds derived from a
-historical U1 run: six useful motifs and 0.003272 mean SOS. The
-provenance-grounded deterministic lock passed every historical U1 reconstruction
-threshold and improves the accepted control's validation motif inventory while
-removing seven auxiliary mechanisms. The project rule prefers the materially
-simpler formulation when the scientific result is practically tied. M1 passed
-every absolute and relative chemistry gate without the tie allowance. Its NLL
-missed the historical 101% reporting reference but passed the predeclared 105%
-chemistry-first ceiling. M2 then failed optimized-motif and mean-SOS retention,
-so the campaign stopped without constructing M3.
-
-Tomotopy is fixed. Its committed model evidence, rows, diagnostics, and
-iteration counts are preserved without retraining or reevaluation.
+The correct conclusion is therefore that M1 is the **least-complex model
+demonstrated to satisfy the complete real-data scientific contract**. It is not
+the simplest conceivable architecture, and the study does not establish a
+production-backend replacement. Alternative candidate test data remain locked.
+See `FINAL_MODEL_SELECTION.md` for the complete decision.
 
 ## Implemented model
 
@@ -50,43 +45,79 @@ iteration counts are preserved without retraining or reevaluation.
    gradient clipping.
 
 The model has 167,168 learned parameters: 6,400 in the token projection, 32,768
-in the nonlinear context router, and 128,000 in the topic prototypes.
-The implementation is unconditional: there are no architecture flags,
-experimental switches, schema variants, or loader compatibility branches.
+in the nonlinear context router, and 128,000 in the topic prototypes. The
+production-facing M1 implementation remains unconditional: there are no
+architecture flags or loader compatibility branches.
+
+## Why the retained mechanisms are functional
+
+Internal M1 ablations showed substantial motif losses when the document gate,
+Sinkhorn, NPMI, or prototype separation was removed. The external comparison
+then reproduced the corresponding failure modes in simpler model families:
+
+- pooled projected MS2LDA formed a 614-topic near-exact duplicate component;
+- ETM and balanced ETM produced diffuse/weak spectrum-topic assignments;
+- balancing ETM's channels improved optimized coverage but not chemical breadth
+  or SOS;
+- ECRTM targeted collapse but its maintained ordinary-domain Sinkhorn path
+  became numerically and operationally unsuitable at K=1000, V=21,233.
+
+These results do not prove that every future alternative must fail. They show
+that the present M1 mechanisms address observed real-data defects rather than
+adding complexity without evidence.
 
 ## Removed mechanisms
 
-The final implementation contains no Fourier mass coordinates, paired partial
-views, Jensen--Shannon view consistency, local reconstruction, dead-topic
-recycling, weighted k-means++ initialization, or adaptive fragment/loss channel
-mass. Their exact ablation measurements remain in the single ledger; their code
-paths and protocol fields do not.
+The final M1 implementation contains no Fourier mass coordinates, paired
+partial views, Jensen--Shannon view consistency, local reconstruction,
+dead-topic recycling, weighted k-means++ initialization, or adaptive
+fragment/loss channel mass. Their exact ablation measurements remain in the
+single ledger; their code paths and protocol fields do not.
 
 Shallow U7 and S-series endpoints are excluded because they remove the
 nonlinear learned representation block. A future DreaMS embedding may augment
-or replace the pooled spectrum context before the nonlinear router. No DreaMS
-dependency or compatibility interface is included now.
+or replace pooled context, but it is not part of this model-selection claim.
+
+## Expanded diagnostic contract
+
+Likelihood and optimized motif count are not sufficient. Every new neural
+model result must report the contract implemented in `diagnostics.py`:
+
+- median/mean effective topics per spectrum and corpus effective topics;
+- active topics, maximum mean usage, unique top-1 topics, and never-top-1 topics;
+- mean/median nearest beta cosine and maximum pairwise cosine;
+- duplicate connected components at cosine 0.95, 0.99, and 0.999;
+- median beta effective words, maximum probability, and top-20 mass;
+- top-word uniqueness;
+- per-topic fragment probability mass and extreme-skew fraction.
+
+The default catastrophic-component flag is a connected component containing at
+least half the topics at the strictest 0.999 cosine threshold. Chemistry gates
+remain separate and primary.
 
 ## Authoritative evidence
 
 | Purpose | Location |
 | --- | --- |
-| Mathematical and scientific description | `docs/research/neural_ms2lda_report.tex` |
-| Reviewed compiled report | `docs/research/neural_ms2lda_report.pdf` |
-| Fixed study constants | `benchmarks/neural_ms2lda/protocol.json` |
+| Canonical combined report | `docs/research/neural_ms2lda_report.tex` |
+| Archived pre-selection methods report | `docs/research/archive/neural_ms2lda_report_pre_model_selection.tex` |
+| Final external selection decision | `benchmarks/neural_ms2lda/FINAL_MODEL_SELECTION.md` |
+| Fixed study constants and diagnostic settings | `benchmarks/neural_ms2lda/protocol.json` |
 | Model and one-pass inference | `benchmarks/neural_ms2lda/model.py` |
 | Training objectives | `benchmarks/neural_ms2lda/objectives.py` |
 | Alternating updates | `benchmarks/neural_ms2lda/training.py`, `optimization.py` |
 | Data and train-only token features | `benchmarks/neural_ms2lda/data.py`, `spectra.py` |
+| Inventory diagnostics | `benchmarks/neural_ms2lda/diagnostics.py` |
 | Canonical model | `benchmarks/neural_ms2lda/results/seed42/trained_model/` |
-| Paper-facing evidence | `benchmarks/neural_ms2lda/results/seed42/results.json` |
+| Locked M1/Tomotopy evidence | `benchmarks/neural_ms2lda/results/seed42/results.json` |
 | Ablation ledger | `benchmarks/neural_ms2lda/results/seed42/ablation_results.json` |
-| Simplification rationale | `benchmarks/neural_ms2lda/SIMPLIFICATION.md` |
+| External validation comparison | `research/etm_ecrtm_msnlib/local_results/20260827_followup/comparison.csv` |
+| External experiment log | `research/etm_ecrtm_msnlib/local_results/20260827_followup/EXPERIMENT_LOG.md` |
+| Next M1 stability campaign | `research/etm_ecrtm_msnlib/M1_MULTISEED_HANDOFF.md` |
 
-`results.json` is the sole paper-facing numerical source. The model artifact
-contains exactly `weights.pt`, `model.json`, and `vocabulary.json`; tensor shapes
-encode architecture dimensions and `model.json` contains only the two inference
-temperatures. The loader supports only the selected M1 model.
+`results.json` remains the sole numerical source for the locked M1/Tomotopy
+paper comparison. The separate committed `comparison.csv` is the numerical
+source for the later validation-only external model-selection section.
 
 ## Reproduction
 
@@ -103,27 +134,49 @@ conda run -n ms2lda-neural python -m benchmarks.neural_ms2lda run \
   --run /path/to/new-run
 ```
 
-Use `status --run /path/to/new-run` for progress. A run directory is bound to
-its resolved data root. An interrupted neural fit restarts from deterministic
-initialization; completed stages may be reused only with that bound input path.
+Backfill the expanded diagnostics for a completed validation run without
+opening test:
+
+```bash
+python scripts/backfill_neural_ms2lda_diagnostics.py --run /path/to/run
+```
+
+Regenerate report inputs:
+
+```bash
+python scripts/generate_neural_ms2lda_report.py
+python scripts/generate_neural_ms2lda_model_selection.py
+```
 
 ## Verification
 
 ```bash
 black --check benchmarks/neural_ms2lda \
   scripts/download_msnlib_validation_assets.py \
-  scripts/generate_neural_ms2lda_report.py
+  scripts/generate_neural_ms2lda_report.py \
+  scripts/generate_neural_ms2lda_model_selection.py \
+  scripts/backfill_neural_ms2lda_diagnostics.py
 
 ruff check --select E,F,I benchmarks/neural_ms2lda \
   scripts/download_msnlib_validation_assets.py \
-  scripts/generate_neural_ms2lda_report.py
+  scripts/generate_neural_ms2lda_report.py \
+  scripts/generate_neural_ms2lda_model_selection.py \
+  scripts/backfill_neural_ms2lda_diagnostics.py
 
 pytest -q benchmarks/neural_ms2lda/tests
 python scripts/generate_neural_ms2lda_report.py
+python scripts/generate_neural_ms2lda_model_selection.py
 ```
 
-Also run the production regression suite with `NUMBA_DISABLE_JIT=1` and the four
-documented frozen-upstream exclusions, build and inspect the wheel to confirm
-that research code is excluded, import the installed wheel outside the
-checkout, compile the LaTeX report deterministically, and visually inspect every
-rendered PDF page.
+Also run the production regression suite with the documented frozen-upstream
+exclusions, inspect the built wheel to confirm research code is excluded, import
+the installed wheel outside the checkout, compile the LaTeX report
+deterministically, and visually inspect every rendered PDF page.
+
+## Next compute
+
+Architecture search is paused. The next campaign varies only M1 optimization
+seed while keeping the seed-42 data split, vocabulary, SGNS features,
+co-occurrence graph, MAG index, and validation contract fixed. New seeds 11, 23,
+and 37 are predeclared. The exact workflow and stopping rules are in
+`research/etm_ecrtm_msnlib/M1_MULTISEED_HANDOFF.md`. Test remains locked.

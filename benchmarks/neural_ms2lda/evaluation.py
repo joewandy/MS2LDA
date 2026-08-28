@@ -1,4 +1,4 @@
-"""Held-out likelihood, mixture diagnostics, and one-pass evaluation."""
+"""Held-out likelihood, collapse diagnostics, and one-pass evaluation."""
 
 from __future__ import annotations
 
@@ -11,38 +11,11 @@ import numpy as np
 import torch
 
 from .artifacts import load_trained_model
-from .data import load_csr, load_heldout_records
+from .data import load_csr, load_heldout_records, load_vocabulary
+from .diagnostics import model_selection_diagnostics
 from .model import infer_theta
 from .objectives import completion_metrics
 from .utils import atomic_save_numpy, read_json, write_json
-
-PROBABILITY_FLOOR = 1e-12
-
-
-def _normalized_mixtures(theta: np.ndarray) -> np.ndarray:
-    """Return row-normalized mixtures with a uniform empty-row fallback."""
-    values = np.asarray(theta, dtype=np.float64)
-    totals = values.sum(axis=1, keepdims=True)
-    values = np.divide(
-        values,
-        totals,
-        out=np.zeros_like(values),
-        where=totals > PROBABILITY_FLOOR,
-    )
-    values[totals[:, 0] <= PROBABILITY_FLOOR] = 1.0 / values.shape[1]
-    return values
-
-
-def _mixture_safety(
-    observed_theta: np.ndarray,
-    full_theta: np.ndarray,
-) -> tuple[int, float]:
-    """Measure corpus activity from observed halves and entropy from full spectra."""
-    observed = _normalized_mixtures(observed_theta)
-    full = _normalized_mixtures(full_theta)
-    active = int((observed.mean(axis=0) >= 1.0 / observed.shape[1]).sum())
-    entropy = -np.sum(full * np.log(np.clip(full, PROBABILITY_FLOOR, None)), axis=1)
-    return active, float(np.median(np.exp(entropy)))
 
 
 @torch.inference_mode()
@@ -99,6 +72,7 @@ def evaluate_neural(
     completion = load_csr(data / f"{split}_completion.npz")
     full = load_csr(data / f"{split}_full.npz")
     records = load_heldout_records(data, split)
+    vocabulary = load_vocabulary(data)
     model, _, temperature = load_trained_model(run / "trained_model")
     batch_size = int(protocol["optimization"]["batch_size"])
     beta = model.topic_word_distribution().detach().cpu().numpy().astype(np.float32)
@@ -112,17 +86,38 @@ def evaluate_neural(
     if not np.isfinite(completion_summary["nll_per_token"]):
         raise FloatingPointError("neural completion NLL is non-finite")
 
+    diagnostics = model_selection_diagnostics(
+        full_theta,
+        beta,
+        vocabulary,
+        protocol["evaluation"],
+    )
+    inventory = diagnostics["topic_inventory"]
+
     output.mkdir(parents=True, exist_ok=True)
     atomic_save_numpy(output / f"{split}_full_theta.npy", full_theta)
+    write_json(output / "diagnostics.json", diagnostics)
     if split == "validation":
         atomic_save_numpy(output / "beta.npy", beta)
-        metrics = {"validation_document_completion": completion_summary}
+        metrics = {
+            "validation_document_completion": completion_summary,
+            **diagnostics,
+        }
     else:
-        active, effective_median = _mixture_safety(theta, full_theta)
         metrics = {
             "test_document_completion": completion_summary,
-            "active_topics": {"corpus_active_topics": active},
-            "full_spectrum_mixture": {"effective_topic_count_median": effective_median},
+            **diagnostics,
+            # Compatibility aliases retained for the existing report generator.
+            "active_topics": {
+                "corpus_active_topics": inventory[
+                    "active_topics_mean_usage_ge_1_over_k"
+                ]
+            },
+            "full_spectrum_mixture": {
+                "effective_topic_count_median": inventory[
+                    "median_effective_topics_per_spectrum"
+                ]
+            },
             "warm_in_memory_batch_inference": _warm_inference(
                 model,
                 observed,
