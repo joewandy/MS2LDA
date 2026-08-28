@@ -1,0 +1,30 @@
+{
+  "maximum_evaluable_motifs": 240,
+  "maximum_optimized_motifs": 911,
+  "maximum_useful_motifs": 148,
+  "method": "etm_balanced",
+  "output": "/Users/joewandy/Work/git/MS2LDA/research/etm_ecrtm_msnlib/local_results/20260827_followup/etm_balanced_temperature_sweep.csv",
+  "reconstruction_check": {
+    "max_abs_reconstructed_beta_difference": 0.0,
+    "max_abs_reconstructed_full_theta_difference": 0.0,
+    "method": "etm_balanced",
+    "saved_full_theta_shape": [
+      3889,
+      1000
+    ],
+    "validation_only": true
+  },
+  "rows": 10,
+  "temperatures": [
+    1.0,
+    0.8,
+    0.6,
+    0.5,
+    0.4,
+    0.3,
+    0.25,
+    0.2,
+    0.15,
+    0.1
+  ]
+}

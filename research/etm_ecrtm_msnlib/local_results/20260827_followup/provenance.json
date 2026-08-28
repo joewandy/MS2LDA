@@ -1,0 +1,185 @@
+{
+  "balanced_etm_execution": {
+    "later_runner_difference": "canonical ECRTM support and execution hardening only; balanced ETM implementation unchanged",
+    "launch_head_sha": "6f0f2dff45b5bcd29347c76969d76a14ccbb2581",
+    "model_runner_blob_sha": "b79e1d2d0008eab8091964ff220e6b9c2c799e79"
+  },
+  "branch": "experiment/msnlib-neural-followup-20260827",
+  "canonical_ecrtm_execution": {
+    "failure": {
+      "completed_epoch_seconds": 21971.14456304186,
+      "epochs_completed": 21,
+      "epochs_requested": 40,
+      "failed_epoch": 22,
+      "failure": "canonical Sinkhorn residual did not reach 0.005 within 1000 iterations; the deterministic checkpoint resume failed again",
+      "last_completed_epoch": {
+        "ecr_loss": 33.12584449601,
+        "epoch": 21,
+        "maximum_final_checked_residual": 0.004999764263629913,
+        "maximum_sinkhorn_iterations": 951,
+        "mean_final_checked_residual": 0.004979663797022,
+        "mean_sinkhorn_iterations": 721.07299270073,
+        "seconds": 3321.497983917012,
+        "topic_model_loss": 5468.578484973768
+      },
+      "numerical_approximation_used": false,
+      "partial_model_scored": false,
+      "resume_attempts": 1,
+      "status": "failed_sinkhorn_nonconvergence"
+    },
+    "later_runner_difference": "report packaging only; model code unchanged",
+    "launch_head_sha": "d3ff2e85f0e4ef08e653c9ac917afa055ed1edc4",
+    "model_runner_blob_sha": "ea5ed49e42ba9e902ed154aad83b4357c6c792fe"
+  },
+  "data_asset_manifest": {
+    "archives": {
+      "Data.zip": {
+        "bytes": 1641318401,
+        "md5": "4ae210759ced93a2e673f0e5daf17d3e",
+        "zip_test": "ok"
+      },
+      "model_positive_mode.zip": {
+        "bytes": 1991689484,
+        "md5": "83d7ac4ff546653a03c3132be69d3d0f",
+        "zip_test": "ok"
+      }
+    },
+    "construction_command": "python scripts/download_msnlib_validation_assets.py --data-root <DATA_ROOT>",
+    "created_utc": "2026-08-25T16:35:08.048064+00:00",
+    "extracted_inputs": {
+      "Data/Benchmark_MSn_Lib/CaseStudy_Corinna_Library_filtered_1000motifs_output_100625/motifset.json": {
+        "bytes": 1537391,
+        "sha256": "76cc12fc12b9160a5871d4bf1f5c373d6ca5b520bbafcd078ae0d1b5e542587d"
+      },
+      "Data/Benchmark_MSn_Lib/Corinna_Library_filtered_positive.mgf": {
+        "bytes": 88159030,
+        "sha256": "c1a2389754e630590111bde8f50403c9d90081d3f3427bc63defef0b9714682f"
+      },
+      "model_positive_mode/positive_train_data/150225_CleanedLibraries_Spec2Vec_pos_embeddings.npy": {
+        "bytes": 1023072128,
+        "sha256": "30ac8b287b02e53cd3e72bcfc2083e608aa0dcfcda8f73f5e237dfd40754b4d3"
+      },
+      "model_positive_mode/positive_train_data/150225_CombLibraries_spectra.db": {
+        "bytes": 4372279296,
+        "sha256": "f4d8c6af067479f1082cad8c4fa8958d975506eed89d6026fa10ee89121912f1"
+      },
+      "model_positive_mode/positive_train_data/150225_Spec2Vec_pos_CleanedLibraries.model": {
+        "bytes": 9943191,
+        "sha256": "322a81fcd4f1f77a12007735d71f0a4f509f87c76703e2fef8f954eb909a2b82"
+      }
+    },
+    "zenodo_api": "https://zenodo.org/api/records/20179680",
+    "zenodo_record": 20179680
+  },
+  "data_asset_manifest_sha256": "70908449b6d89ec1e2db18b80417339dc43e56eb598a39143bd2d233daabe633",
+  "data_root": "/Users/joewandy/Work/data/MS2LDA-msnlib-validation/zenodo/20179680",
+  "evidence_boundary": "validation only; candidate test arrays, theta, completion, MAG, SOS, and result artifacts were not opened, loaded, scored, or summarized",
+  "exact_commands": [
+    "git status",
+    "git fetch origin --prune",
+    "git switch -c experiment/msnlib-neural-followup-20260827 ecb09251de94093e345584ed53f87ed799e88dc4",
+    "conda run -n ms2lda-neural python -m scripts.run_msnlib_neural_followup diagnose-existing --run /Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42 --m1-run /Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/neural-minimality-seed42/m1-lock --output /Users/joewandy/Work/git/MS2LDA/research/etm_ecrtm_msnlib/local_results/20260827_followup --device cpu",
+    "conda run -n ms2lda-neural python -m scripts.run_msnlib_neural_followup select-temperature --run /Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42 --method pooled_likelihood --temperature 0.11 --output /Users/joewandy/Work/git/MS2LDA/research/etm_ecrtm_msnlib/local_results/20260827_followup --device cpu",
+    "conda run -n ms2lda-neural python -m scripts.run_msnlib_model_comparison train --run /Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42 --method etm_balanced --device cpu --etm-epochs 120 --etm-batch-size 256",
+    "conda run -n ms2lda-msnlib-mag python -m scripts.run_msnlib_model_comparison chemical --run /Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42 --data-root /Users/joewandy/Work/data/MS2LDA-msnlib-validation/zenodo/20179680 --method etm_balanced",
+    "conda run --no-capture-output -n ms2lda-neural python -m scripts.run_msnlib_neural_followup sweep-etm-temperature --run /Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42 --method etm_balanced --output /Users/joewandy/Work/git/MS2LDA/research/etm_ecrtm_msnlib/local_results/20260827_followup --device cpu",
+    "conda run --no-capture-output -n ms2lda-neural python -m scripts.run_msnlib_model_comparison train-ecrtm-canonical --run /Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42 --device cpu --epochs 40 --batch-size 200 --max-iter 1000",
+    "caffeinate -dimsu /bin/zsh /Users/joewandy/Work/git/MS2LDA/ecrtm_overnight_queue.sh",
+    "conda run -n ms2lda-neural python -m pytest -q benchmarks/neural_ms2lda/tests",
+    "conda run --no-capture-output -n ms2lda-neural python -m pytest -q benchmarks/neural_ms2lda/tests/test_followup_etm.py benchmarks/neural_ms2lda/tests/test_workflow.py",
+    "conda run -n ms2lda-neural black --check benchmarks/neural_ms2lda scripts/run_msnlib_model_comparison.py scripts/run_msnlib_neural_followup.py scripts/package_msnlib_neural_followup.py",
+    "conda run -n ms2lda-neural ruff check --config benchmarks/neural_ms2lda/ruff.toml benchmarks/neural_ms2lda scripts/run_msnlib_model_comparison.py scripts/run_msnlib_neural_followup.py scripts/package_msnlib_neural_followup.py",
+    "conda run -n ms2lda-neural python -m scripts.package_msnlib_neural_followup --run /Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42 --data-root /Users/joewandy/Work/data/MS2LDA-msnlib-validation/zenodo/20179680 --output /Users/joewandy/Work/git/MS2LDA/research/etm_ecrtm_msnlib/local_results/20260827_followup --source-sha d9d5f092d63cbfa6ecdaa396af06012b7b537de1"
+  ],
+  "execution_hardening": {
+    "canonical_ecrtm_checkpoint_contract_binds": [
+      "train matrix SHA-256",
+      "token features SHA-256",
+      "protocol SHA-256",
+      "optimizer and learning rate",
+      "ECR and Sinkhorn settings"
+    ],
+    "canonical_ecrtm_nonfinite_residuals_fail_closed": true,
+    "synthetic_checkpoint_resume_max_abs_parameter_difference": 0.0
+  },
+  "execution_run_directory": "/Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42",
+  "generated_utc": "2026-08-28T07:07:17.135549+00:00",
+  "hardware": {
+    "machine": "arm64",
+    "platform": "macOS-26.5.2-arm64-arm-64bit"
+  },
+  "important_large_uncommitted_artifacts": [
+    {
+      "bytes": 81192388,
+      "path": "/Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42/models/etm_balanced/weights.pt",
+      "sha256": "20b8e183d39615ec0452314f7bd225ba7f2920641a1619e049bb757eff87c8df"
+    },
+    {
+      "bytes": 84932128,
+      "path": "/Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42/validation_evaluation/etm_balanced/beta.npy",
+      "sha256": "4d6d1d533cff3bfe05e14fa3fa9c7b5999358616a1afcccd7a175fe7a52b61b2"
+    },
+    {
+      "bytes": 15556128,
+      "path": "/Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42/validation_evaluation/etm_balanced/validation_full_theta.npy",
+      "sha256": "f0a764cb8e8f17e9f0c32ceb9e33a89df8613a3f637a3512422915a452cbdcde"
+    },
+    {
+      "bytes": 15556128,
+      "path": "/Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42/followup_validation/pooled_likelihood_tau_0p110/validation_full_theta.npy",
+      "sha256": "52c7faccb22ab7a24ac43320092c0642116c221c200d146674f7ccf68d88d5b9"
+    },
+    {
+      "bytes": 15556128,
+      "path": "/Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42/followup_validation/pooled_likelihood_tau_0p110/validation_observed_theta.npy",
+      "sha256": "798d40208259adad0b452ea4cf8ad5f5aaaaf94309758514927ab030462a9582"
+    },
+    {
+      "bytes": 69667304,
+      "path": "/Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42/models/ecrtm_canonical/checkpoint.pt",
+      "sha256": "c1220c0785c4dd36fc264b20f7b66cdca3c784b04fd8f6e9c3c1120060596976"
+    }
+  ],
+  "model_runner_blob_sha": "ea5ed49e42ba9e902ed154aad83b4357c6c792fe",
+  "operational_failures": [
+    {
+      "effect": "stopped before sweep output",
+      "error": "KeyError: nll_per_in_vocab_token",
+      "resolution": "use locked completion key nll_per_token; add test",
+      "stage": "first follow-up diagnostic invocation"
+    },
+    {
+      "effect": "stopped after pooled sweep before redundancy output",
+      "error": "read-only memory-mapped beta normalized in place",
+      "resolution": "make an explicit working copy; add deterministic rerun",
+      "stage": "second follow-up diagnostic invocation"
+    },
+    {
+      "effect": "21/40 epochs completed; no partial model was inferred, chemically scored, or considered for selection",
+      "error": "Sinkhorn residual did not reach 0.005 within 1000 iterations during epoch 22; one deterministic checkpoint resume failed again",
+      "resolution": "stop the published comparator as operationally infeasible; do not use the known-unconverged 50-step numerical approximation",
+      "stage": "canonical ECRTM full training"
+    }
+  ],
+  "origin_main_sha": "20de0e45aec25203e6bc38770a795b25cc18bff7",
+  "packaging_head_sha": "d9d5f092d63cbfa6ecdaa396af06012b7b537de1",
+  "previous_result_sha": "ecb09251de94093e345584ed53f87ed799e88dc4",
+  "random_seeds": {
+    "canonical_ecrtm": 8043,
+    "etm_and_balanced_etm": 7043,
+    "locked_split_sgns_pooled": 42
+  },
+  "research_handoff_sha": "9baec8aa62f684480eba35d4fc7f626c46f7b804",
+  "software": {
+    "environment_file": "environment.txt",
+    "python": "3.11.15 | packaged by conda-forge | (main, Aug 11 2026, 10:24:21) [Clang 19.1.7 ]"
+  },
+  "source_and_diagnostic_sha": "d9d5f092d63cbfa6ecdaa396af06012b7b537de1",
+  "validation_boundary_notes": {
+    "candidate_test_matrices_accessed": false,
+    "candidate_test_results_accessed": false,
+    "mag_index_semantics": "the existing leakage-filtered index excludes compound identifiers from both held-out splits; follow-up candidate selection and scoring use validation theta and validation records only",
+    "shared_mag_index_reused": true
+  },
+  "validation_records_sha256": "0e85218489af6a07413474bb2db6ce74da537f6fd3c8ee77d5286f5775ba068c"
+}

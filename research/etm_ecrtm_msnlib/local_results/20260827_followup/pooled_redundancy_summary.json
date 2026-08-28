@@ -1,0 +1,61 @@
+{
+  "duplicate_components": [
+    {
+      "duplicate_component_count": 8,
+      "largest_component_size": 614,
+      "pair_count": 188209,
+      "threshold": 0.95,
+      "topics_in_duplicate_components": 632
+    },
+    {
+      "duplicate_component_count": 4,
+      "largest_component_size": 614,
+      "pair_count": 188199,
+      "threshold": 0.99,
+      "topics_in_duplicate_components": 622
+    },
+    {
+      "duplicate_component_count": 1,
+      "largest_component_size": 614,
+      "pair_count": 188191,
+      "threshold": 0.999,
+      "topics_in_duplicate_components": 614
+    }
+  ],
+  "duplicate_pair_rows_saved": 1000,
+  "duplicate_pair_rows_sort": "top beta cosine among pairs >=0.95",
+  "fraction_nearest_beta_neighbour_in_document_top3": 0.2149652867060941,
+  "largest_near_exact_component": {
+    "median_beta_effective_words": 15097.331976736374,
+    "median_beta_max_probability": 0.00042623537592589855,
+    "median_beta_top20_mass": 0.006284894931013696,
+    "optimized_topics": 614,
+    "prototype_cosine_maximum": 0.9999999534051517,
+    "prototype_cosine_median": 0.9999956991274792,
+    "prototype_cosine_minimum": 0.9999082821782576,
+    "threshold": 0.999,
+    "top1_spectra": 0,
+    "topics": 614,
+    "topics_ever_top1": 0
+  },
+  "maximum_possible_evaluable_topics_under_rank_preserving_sharpening": 374,
+  "mean_nearest_beta_cosine": 0.6922892928123474,
+  "mean_nearest_neighbour_to_top_probability_ratio": 0.210568595048007,
+  "median_nearest_neighbour_to_top_probability_ratio": 0.12313129266798892,
+  "nearest_beta_cosine_percentiles": {
+    "50": 0.9999991059303284,
+    "75": 1.0,
+    "90": 1.0,
+    "95": 1.0,
+    "99": 1.0
+  },
+  "optimized_topics_never_top1": 626,
+  "spearman_nearest_beta_cosine_vs_document_max_theta": {
+    "pvalue": 0.0002215234505221443,
+    "statistic": 0.05918785737698807
+  },
+  "topics": 1000,
+  "topics_never_top1": 626,
+  "unique_top1_topics": 374,
+  "validation_spectra": 3889
+}

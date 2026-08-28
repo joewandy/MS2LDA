@@ -1,0 +1,69 @@
+{
+  "config": {
+    "architecture": "fixed-pretrained-SGNS ETM with fragment/loss-balanced decoder",
+    "batch_size": 256,
+    "decoder_normalization": "independent fragment/loss softmaxes at 0.5 each",
+    "device": "cpu",
+    "embedding_dimensions": 48,
+    "epochs": 120,
+    "hidden_dimensions": 800,
+    "learning_rate": 0.005,
+    "only_scientific_change": "beta normalization: global softmax -> fixed 0.5 fragment + 0.5 loss",
+    "optimizer": "Adam",
+    "paired_reference_method": "etm",
+    "seed": 7043,
+    "topics": 1000,
+    "weight_decay": 1.2e-06
+  },
+  "method": "etm_balanced",
+  "metrics": {
+    "document_completion": {
+      "eligible_documents": 3888,
+      "in_vocabulary_tokens": 1277983,
+      "nll_per_token": 8.766068508771959,
+      "oov_fraction": 0.031355544236867795,
+      "out_of_vocabulary_tokens": 41369,
+      "total_documents": 3889
+    },
+    "finite_stable": true,
+    "fragment_probability_mass": {
+      "extreme_definition": "fragment mass <0.1 or >0.9",
+      "fraction_extreme_skew": 0.0,
+      "maximum": 0.5000057816505432,
+      "median": 0.4999987781047821,
+      "minimum": 0.4999813437461853,
+      "percentiles": {
+        "1": 0.4999862599372864,
+        "25": 0.4999980032444,
+        "5": 0.49999084919691084,
+        "50": 0.4999987781047821,
+        "75": 0.49999934434890747,
+        "95": 0.5000001788139343,
+        "99": 0.5000007754564285
+      }
+    },
+    "runtime": {
+      "memory": {
+        "measurement": "sampled high-water marks; process ru_maxrss is OS reported",
+        "peak_mps_allocated_bytes": null,
+        "peak_mps_driver_bytes": null,
+        "peak_process_bytes": 1562869760
+      },
+      "training_wall_seconds": 5531.022853249917,
+      "validation_full_spectra_per_second": 15126.51539280875,
+      "validation_observed_spectra_per_second": 15560.784939762092
+    },
+    "top_word_count": 20,
+    "top_word_uniqueness": 0.3356,
+    "topic_inventory": {
+      "active_topics_mean_usage_ge_1_over_k": 167,
+      "active_topics_mean_usage_gt_0_0005": 275,
+      "corpus_effective_topic_count": 355.7054325020411,
+      "maximum_mean_topic_usage": 0.03393826980853328,
+      "maximum_pairwise_beta_cosine": 0.995825736742412,
+      "mean_nearest_topic_beta_cosine": 0.39961187104708834,
+      "median_effective_topics_per_spectrum": 46.71972801725626
+    }
+  },
+  "parameters": 19278000
+}

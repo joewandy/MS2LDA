@@ -1,0 +1,45 @@
+{
+  "evidence_boundary": "validation only; candidate test artifacts untouched",
+  "m1_theta_distribution": {
+    "fraction_max_theta_ge_0_2": 0.8431473386474673,
+    "fraction_max_theta_ge_0_3": 0.6646952944201594,
+    "fraction_max_theta_ge_0_5": 0.3628182051941373,
+    "max_theta_p10": 0.16290144557240321,
+    "max_theta_p25": 0.25452097123216877,
+    "max_theta_p50": 0.40749138308063243,
+    "max_theta_p75": 0.5831729324559078,
+    "max_theta_p90": 0.7395975861174819,
+    "max_theta_p95": 0.8233244286381468,
+    "mean_effective_topics_per_spectrum": 12.11738891753681,
+    "median_effective_topics_per_spectrum": 7.2008717275848095,
+    "median_max_theta": 0.40749138308063243,
+    "unique_top1_topics": 786
+  },
+  "pooled_top1_upper_bound": 374,
+  "reconstruction_checks": [
+    {
+      "max_abs_reconstructed_beta_difference": 0.0,
+      "max_abs_reconstructed_full_theta_difference": 0.0,
+      "method": "pooled_likelihood",
+      "saved_full_theta_shape": [
+        3889,
+        1000
+      ],
+      "validation_only": true
+    },
+    {
+      "max_abs_reconstructed_beta_difference": 7.450580596923828e-09,
+      "max_abs_reconstructed_full_theta_difference": 0.0,
+      "method": "etm",
+      "saved_full_theta_shape": [
+        3889,
+        1000
+      ],
+      "validation_only": true
+    }
+  ],
+  "validation_record_compatibility": {
+    "followup_validation_records_sha256": "0e85218489af6a07413474bb2db6ce74da537f6fd3c8ee77d5286f5775ba068c",
+    "m1_validation_records_sha256": "0e85218489af6a07413474bb2db6ce74da537f6fd3c8ee77d5286f5775ba068c"
+  }
+}
