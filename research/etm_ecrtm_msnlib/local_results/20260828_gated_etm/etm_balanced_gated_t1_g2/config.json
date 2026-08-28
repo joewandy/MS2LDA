@@ -1,0 +1,22 @@
+{
+  "architecture": "fixed-pretrained-SGNS ETM with fragment/loss-balanced decoder and detached shared-geometry document gate",
+  "batch_size": 256,
+  "decoder_normalization": "independent fragment/loss softmaxes at 0.5 each",
+  "device": "cpu",
+  "embedding_dimensions": 48,
+  "epochs": 120,
+  "gate_detached_before_theta_multiplication": true,
+  "gate_gamma": 2.0,
+  "gate_logit_scale": 2.0,
+  "gate_temperature": 1.0,
+  "gate_used_during_training": true,
+  "hidden_dimensions": 800,
+  "learning_rate": 0.005,
+  "only_scientific_change": "detached shared-geometry document gate participates in every training reconstruction",
+  "optimizer": "Adam",
+  "paired_reference_method": "etm_balanced",
+  "seed": 7043,
+  "topics": 1000,
+  "trained_separately": true,
+  "weight_decay": 1.2e-06
+}

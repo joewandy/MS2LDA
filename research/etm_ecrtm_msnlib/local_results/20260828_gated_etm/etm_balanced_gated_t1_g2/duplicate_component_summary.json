@@ -1,0 +1,27 @@
+{
+  "catastrophic_duplicate_component": false,
+  "duplicate_components": [
+    {
+      "duplicate_component_count": 10,
+      "largest_component_size": 5,
+      "pair_count": 26,
+      "threshold": 0.95,
+      "topics_in_duplicate_components": 27
+    },
+    {
+      "duplicate_component_count": 2,
+      "largest_component_size": 2,
+      "pair_count": 2,
+      "threshold": 0.99,
+      "topics_in_duplicate_components": 4
+    },
+    {
+      "duplicate_component_count": 0,
+      "largest_component_size": 1,
+      "pair_count": 0,
+      "threshold": 0.999,
+      "topics_in_duplicate_components": 0
+    }
+  ],
+  "largest_strict_duplicate_component": 1
+}

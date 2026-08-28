@@ -1,0 +1,168 @@
+{
+  "all_candidate_methods_trained": true,
+  "balanced_etm_unchanged_audit": {
+    "actual_sha256": {
+      "beta.npy": "4d6d1d533cff3bfe05e14fa3fa9c7b5999358616a1afcccd7a175fe7a52b61b2",
+      "validation_full_theta.npy": "f0a764cb8e8f17e9f0c32ceb9e33a89df8613a3f637a3512422915a452cbdcde",
+      "weights.pt": "20b8e183d39615ec0452314f7bd225ba7f2920641a1619e049bb757eff87c8df"
+    },
+    "all_hashes_match": true,
+    "expected_sha256": {
+      "beta.npy": "4d6d1d533cff3bfe05e14fa3fa9c7b5999358616a1afcccd7a175fe7a52b61b2",
+      "validation_full_theta.npy": "f0a764cb8e8f17e9f0c32ceb9e33a89df8613a3f637a3512422915a452cbdcde",
+      "weights.pt": "20b8e183d39615ec0452314f7bd225ba7f2920641a1619e049bb757eff87c8df"
+    }
+  },
+  "base_commit": "a2cd7e201ac49a5f5f95aff40889a186fe4757ae",
+  "branch": "experiment/msnlib-gated-etm-20260828",
+  "candidate_test_completion_computed": false,
+  "candidate_test_data_loaded": false,
+  "candidate_test_mag_sos_computed": false,
+  "candidate_test_metrics_inspected": false,
+  "data_root": "/Users/joewandy/Work/data/MS2LDA-msnlib-validation/zenodo/20179680",
+  "evidence_boundary": "validation only; candidate test artifacts not accessed",
+  "exact_commands": [
+    "git status",
+    "git fetch origin --prune",
+    "git switch -c experiment/msnlib-gated-etm-20260828 a2cd7e201ac49a5f5f95aff40889a186fe4757ae",
+    "conda run --no-capture-output -n ms2lda-neural python -m scripts.run_msnlib_model_comparison train --run /Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42 --method etm_balanced_gated --device cpu --etm-epochs 120 --etm-batch-size 256 --gate-temperature 1.0 --gate-gamma 1.0",
+    "conda run --no-capture-output -n ms2lda-msnlib-mag python -m scripts.run_msnlib_model_comparison chemical --run /Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42 --data-root /Users/joewandy/Work/data/MS2LDA-msnlib-validation/zenodo/20179680 --method etm_balanced_gated_t1_g1",
+    "conda run --no-capture-output -n ms2lda-neural python -m scripts.run_msnlib_model_comparison train --run /Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42 --method etm_balanced_gated --device cpu --etm-epochs 120 --etm-batch-size 256 --gate-temperature 1.0 --gate-gamma 2.0",
+    "conda run --no-capture-output -n ms2lda-msnlib-mag python -m scripts.run_msnlib_model_comparison chemical --run /Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42 --data-root /Users/joewandy/Work/data/MS2LDA-msnlib-validation/zenodo/20179680 --method etm_balanced_gated_t1_g2",
+    "conda run --no-capture-output -n ms2lda-neural python -m scripts.package_msnlib_gated_etm --repo /Users/joewandy/Work/git/MS2LDA --run /Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42 --m1-run /Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/neural-minimality-seed42/m1-lock --data-root /Users/joewandy/Work/data/MS2LDA-msnlib-validation/zenodo/20179680 --output /Users/joewandy/Work/git/MS2LDA/research/etm_ecrtm_msnlib/local_results/20260828_gated_etm --source-commit 6dbbefa149179460acf9c39eaf10bf428244af1c --methods etm_balanced_gated_t1_g1 etm_balanced_gated_t1_g2",
+    "conda run --no-capture-output -n ms2lda-neural python -m pytest -q benchmarks/neural_ms2lda/tests",
+    "conda run --no-capture-output -n ms2lda-neural black --check benchmarks/neural_ms2lda/chemical.py benchmarks/neural_ms2lda/tests/test_followup_etm.py benchmarks/neural_ms2lda/tests/test_model_math.py benchmarks/neural_ms2lda/tests/test_workflow.py scripts/run_msnlib_model_comparison.py scripts/package_msnlib_gated_etm.py",
+    "conda run --no-capture-output -n ms2lda-neural ruff check --config benchmarks/neural_ms2lda/ruff.toml benchmarks/neural_ms2lda/chemical.py benchmarks/neural_ms2lda/tests/test_followup_etm.py benchmarks/neural_ms2lda/tests/test_model_math.py benchmarks/neural_ms2lda/tests/test_workflow.py scripts/run_msnlib_model_comparison.py scripts/package_msnlib_gated_etm.py"
+  ],
+  "experiment_source_commit": "6dbbefa149179460acf9c39eaf10bf428244af1c",
+  "final_result_commit": "SELF: resolve the commit containing this provenance.json; exact SHA is reported in the final handoff",
+  "important_local_artifacts": [
+    {
+      "bytes": 10657989,
+      "path": "/Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42/data/train.npz",
+      "sha256": "b4808f341864ba1df246a5093992f52397c2f96e0b48b23245b9b17e30aa5b52"
+    },
+    {
+      "bytes": 1285639,
+      "path": "/Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42/data/validation_records.jsonl",
+      "sha256": "0e85218489af6a07413474bb2db6ce74da537f6fd3c8ee77d5286f5775ba068c"
+    },
+    {
+      "bytes": 775961,
+      "path": "/Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42/data/validation_observed.npz",
+      "sha256": "76afa43a3540d91edd4dd7e851afe10c65e3d67bcf06007c83eac1d9b6e15bff"
+    },
+    {
+      "bytes": 778241,
+      "path": "/Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42/data/validation_completion.npz",
+      "sha256": "f75245b599bc3c087aad97ff7247112d422ec0ab87418c5f96b0a889b2f661f0"
+    },
+    {
+      "bytes": 1528665,
+      "path": "/Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42/data/validation_full.npz",
+      "sha256": "51888951815f448d0527a6a876be345cfe76ab346d9e97bada9a186e8857fab2"
+    },
+    {
+      "bytes": 399495,
+      "path": "/Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42/data/vocabulary.json",
+      "sha256": "9ed46f54a4e4917560f764d4ac662bae7036c1b98733d6b25a62a869799bd90e"
+    },
+    {
+      "bytes": 4246728,
+      "path": "/Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42/token_features/features.npy",
+      "sha256": "74fcfff0ee9bc776a372225023ab7070dc0cae11582191a3a4891a19560c84e5"
+    },
+    {
+      "bytes": 447424845,
+      "path": "/Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42/mag/index/spec2vec_filtered.faiss",
+      "sha256": "845408fe7338135cb23cbe9023f5805c11dafcb8d028ca631fb1968292aef300"
+    },
+    {
+      "bytes": 81192388,
+      "path": "/Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42/models/etm/weights.pt",
+      "sha256": "59a7a11afbccbe1fc155baf55ebe0fa27d74dba264909ab983dc63545adb9276"
+    },
+    {
+      "bytes": 84932128,
+      "path": "/Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42/validation_evaluation/etm/beta.npy",
+      "sha256": "281c5e3a959911cd0a08739f78ac94db05fddbcdd78b56d6b235687cbf426414"
+    },
+    {
+      "bytes": 15556128,
+      "path": "/Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42/validation_evaluation/etm/validation_full_theta.npy",
+      "sha256": "ae08c6406e454f65a5c76506fdcdc3d3aeb5fb443b9063ea110102900ae14753"
+    },
+    {
+      "bytes": 81192388,
+      "path": "/Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42/models/etm_balanced/weights.pt",
+      "sha256": "20b8e183d39615ec0452314f7bd225ba7f2920641a1619e049bb757eff87c8df"
+    },
+    {
+      "bytes": 84932128,
+      "path": "/Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42/validation_evaluation/etm_balanced/beta.npy",
+      "sha256": "4d6d1d533cff3bfe05e14fa3fa9c7b5999358616a1afcccd7a175fe7a52b61b2"
+    },
+    {
+      "bytes": 15556128,
+      "path": "/Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42/validation_evaluation/etm_balanced/validation_full_theta.npy",
+      "sha256": "f0a764cb8e8f17e9f0c32ceb9e33a89df8613a3f637a3512422915a452cbdcde"
+    },
+    {
+      "bytes": 4917536,
+      "path": "/Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/neural-minimality-seed42/m1-lock/trained_model/weights.pt",
+      "sha256": "93bef588929637c2e5516f93b2a84a95b1d36ce10b71c18a23aa791718802c28"
+    },
+    {
+      "bytes": 84932128,
+      "path": "/Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/neural-minimality-seed42/m1-lock/validation_evaluation/neural/beta.npy",
+      "sha256": "255ac874cc8c9f91d01ddf502523f87156f8fdfe68e0c1c4e4feec57b047487c"
+    },
+    {
+      "bytes": 15556128,
+      "path": "/Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/neural-minimality-seed42/m1-lock/validation_evaluation/neural/validation_full_theta.npy",
+      "sha256": "017f8ce248e0d8756f93dd1d69f64c924d0f94d996fddeb08faeb5d8b08be7ed"
+    },
+    {
+      "bytes": 81192388,
+      "path": "/Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42/models/etm_balanced_gated_t1_g1/weights.pt",
+      "sha256": "8626d026102d72a0b8ee61cd48adf1adb29b88dc44dc80871214cfba7ef30014"
+    },
+    {
+      "bytes": 84932128,
+      "path": "/Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42/validation_evaluation/etm_balanced_gated_t1_g1/beta.npy",
+      "sha256": "67e2e0f05343dc869e89b2eedfc1f5ab116e6266fc3281b2bd8721311a00b104"
+    },
+    {
+      "bytes": 15556128,
+      "path": "/Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42/validation_evaluation/etm_balanced_gated_t1_g1/validation_full_theta.npy",
+      "sha256": "32b2bf42e1c24eb8b9ac3199bb68e06f076da93890260f96613b63c022cb46a7"
+    },
+    {
+      "bytes": 81192388,
+      "path": "/Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42/models/etm_balanced_gated_t1_g2/weights.pt",
+      "sha256": "ffba02db4a4110d3cd4381d456f8454041e32f1e602004d23c63246c696d1417"
+    },
+    {
+      "bytes": 84932128,
+      "path": "/Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42/validation_evaluation/etm_balanced_gated_t1_g2/beta.npy",
+      "sha256": "127372d8db634ba75f54da4ec32f1bf3a2de4722c6c09ae83746ae0e1f78bbf9"
+    },
+    {
+      "bytes": 15556128,
+      "path": "/Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42/validation_evaluation/etm_balanced_gated_t1_g2/validation_full_theta.npy",
+      "sha256": "8f57fe165e1bb008d4fd32e69f1c4a77a21a6bf5ab26add5408e70ce94f07121"
+    }
+  ],
+  "m1_reference_run_root": "/Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/neural-minimality-seed42/m1-lock",
+  "methods": [
+    "etm_balanced_gated_t1_g1",
+    "etm_balanced_gated_t1_g2"
+  ],
+  "packaged_from_commit": "6dbbefa149179460acf9c39eaf10bf428244af1c",
+  "post_hoc_candidate_methods": [],
+  "run_root": "/Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42",
+  "seeds": {
+    "data_split": 42,
+    "etm_optimization": 7043
+  }
+}
