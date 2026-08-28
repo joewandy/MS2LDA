@@ -40,7 +40,8 @@ from benchmarks.neural_ms2lda.data import (
     sparse_batch,
     train_token_features,
 )
-from benchmarks.neural_ms2lda.followup import retemperature_theta
+from benchmarks.neural_ms2lda.diagnostics import model_selection_diagnostics
+from benchmarks.neural_ms2lda.followup import retemperature_theta, theta_distribution
 from benchmarks.neural_ms2lda.objectives import completion_metrics
 from benchmarks.neural_ms2lda.pooled import (
     assignment_information_loss,
@@ -66,7 +67,17 @@ from scripts.run_published_topic_models_msnlib import (
 EPS = 1e-12
 REPO_ROOT = Path(__file__).resolve().parents[1]
 POOLED_ROOT = REPO_ROOT / "research/etm_ecrtm_msnlib/pooled_projected"
-METHODS = ("etm", "etm_balanced", "pooled_likelihood", "pooled_mi005")
+ETM_METHODS = ("etm", "etm_balanced", "etm_balanced_gated")
+METHODS = ETM_METHODS + ("pooled_likelihood", "pooled_mi005")
+GATED_ETM_PREFIX = "etm_balanced_gated_"
+MODEL_SELECTION_EVALUATION_PROTOCOL = {
+    "active_topic_usage_threshold": 0.0005,
+    "duplicate_cosine_thresholds": (0.95, 0.99, 0.999),
+    "catastrophic_duplicate_component_fraction": 0.5,
+    "top_word_count": 20,
+    "channel_extreme_lower": 0.1,
+    "channel_extreme_upper": 0.9,
+}
 POOLED_PROTOCOLS = {
     "pooled_likelihood": POOLED_ROOT / "protocol_minimum.json",
     "pooled_mi005": POOLED_ROOT / "protocol_mi005.json",
@@ -80,6 +91,37 @@ def file_sha256(path: Path) -> str:
         for chunk in iter(lambda: handle.read(8 * 1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def validation_access_manifest(run: Path) -> dict[str, Any]:
+    """Describe and hash every candidate data artifact opened by ETM training."""
+    relative_paths = (
+        "protocol.json",
+        "data/train.npz",
+        "data/validation_observed.npz",
+        "data/validation_completion.npz",
+        "data/validation_full.npz",
+        "data/validation_records.jsonl",
+        "data/vocabulary.json",
+        "token_features/features.npy",
+    )
+    artifacts = []
+    for relative in relative_paths:
+        path = run / relative
+        artifacts.append(
+            {
+                "path": str(path),
+                "bytes": path.stat().st_size,
+                "sha256": file_sha256(path),
+            }
+        )
+    return {
+        "evidence_boundary": "training plus validation only",
+        "candidate_test_artifacts_loaded": False,
+        "candidate_test_metrics_inspected": False,
+        "data_loader": "load_etm_campaign_data",
+        "loaded_artifacts": artifacts,
+    }
 
 
 class MemoryTracker:
@@ -151,6 +193,81 @@ class FragmentLossBalancedETM(FixedETM):
         return probabilities
 
 
+class GatedFragmentLossBalancedETM(FragmentLossBalancedETM):
+    """Balanced ETM with detached shared-geometry document evidence.
+
+    The ordinary ETM variational encoder still produces ``theta``. A pooled
+    count-weighted SGNS document vector is compared with ETM's existing topic
+    vectors, and the resulting gate reweights ``theta`` during reconstruction.
+    Detaching the gate prevents it from becoming a second learned encoder while
+    preserving reconstruction gradients through ETM theta and beta.
+    """
+
+    def __init__(
+        self,
+        embeddings: np.ndarray,
+        topics: int,
+        fragment_mask: np.ndarray,
+        *,
+        gate_temperature: float = 1.0,
+        gate_gamma: float = 1.0,
+        hidden: int = 800,
+    ) -> None:
+        super().__init__(embeddings, topics, fragment_mask, hidden=hidden)
+        if not math.isfinite(gate_temperature) or gate_temperature <= 0:
+            raise ValueError("gate temperature must be finite and positive")
+        if not math.isfinite(gate_gamma) or gate_gamma < 0:
+            raise ValueError("gate gamma must be finite and non-negative")
+        self.gate_temperature = float(gate_temperature)
+        self.gate_gamma = float(gate_gamma)
+
+    def document_gate(self, normalized_bows: torch.Tensor) -> torch.Tensor:
+        """Return shared-geometry gate probabilities before detachment."""
+        document_geometry = nnf.normalize(normalized_bows @ self.rho, dim=1)
+        topic_geometry = nnf.normalize(self.alphas.weight, dim=1)
+        logits = 2.0 * (document_geometry @ topic_geometry.T) / self.gate_temperature
+        return nnf.softmax(logits, dim=1)
+
+    def apply_document_gate(
+        self,
+        theta: torch.Tensor,
+        normalized_bows: torch.Tensor,
+    ) -> torch.Tensor:
+        """Reweight ETM theta by detached evidence and renormalize rows."""
+        if self.gate_gamma == 0.0:
+            return theta
+        gate = self.document_gate(normalized_bows).detach()
+        gated = theta * gate.pow(self.gate_gamma)
+        return gated / gated.sum(dim=1, keepdim=True).clamp_min(EPS)
+
+    def theta(
+        self,
+        normalized_bows: torch.Tensor,
+        sample: bool,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        """Use the detached gate in both stochastic training and inference."""
+        theta, kl = super().theta(normalized_bows, sample=sample)
+        return self.apply_document_gate(theta, normalized_bows), kl
+
+
+def _float_label(value: float) -> str:
+    """Return a filesystem-safe compact label for one frozen scalar."""
+    return f"{float(value):.6g}".replace("-", "m").replace(".", "p")
+
+
+def gated_method_name(gate_temperature: float, gate_gamma: float) -> str:
+    """Name separately trained gate-strength variants without ambiguity."""
+    return (
+        f"{GATED_ETM_PREFIX}t{_float_label(gate_temperature)}"
+        f"_g{_float_label(gate_gamma)}"
+    )
+
+
+def is_gated_etm_artifact(method: str) -> bool:
+    """Return whether a result label belongs to this gated-ETM campaign."""
+    return method.startswith(GATED_ETM_PREFIX)
+
+
 def configure(seed: int, threads: int) -> None:
     """Apply the locked seed/thread contract."""
     random.seed(seed)
@@ -205,6 +322,18 @@ def dense_normalized(
         device
     )
     return values / values.sum(1, keepdim=True).clamp_min(1.0)
+
+
+def load_etm_campaign_data(run: Path) -> dict[str, Any]:
+    """Load the training and validation-only matrices used by ETM candidates."""
+    data = run / "data"
+    return {
+        "train": load_csr(data / "train.npz"),
+        "observed": load_csr(data / "validation_observed.npz"),
+        "completion": load_csr(data / "validation_completion.npz"),
+        "full": load_csr(data / "validation_full.npz"),
+        "records": load_heldout_records(data, "validation"),
+    }
 
 
 def sparse_reconstruction(
@@ -394,13 +523,19 @@ def _base_evaluation(
     records: list[dict[str, Any]],
     vocabulary: list[str],
 ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
-    word_metrics, top_words = topic_word_diagnostics(beta, vocabulary)
+    _, top_words = topic_word_diagnostics(beta, vocabulary)
+    diagnostics = model_selection_diagnostics(
+        theta_full,
+        beta,
+        vocabulary,
+        MODEL_SELECTION_EVALUATION_PROTOCOL,
+    )
     metrics = {
         "document_completion": completion_metrics(
             theta_observed, beta, completion, records
         ),
-        "topic_inventory": mixture_diagnostics(theta_full, beta),
-        **word_metrics,
+        **diagnostics,
+        "theta_distribution": theta_distribution(theta_full),
         "finite_stable": bool(
             np.all(np.isfinite(beta))
             and np.all(np.isfinite(theta_observed))
@@ -417,34 +552,57 @@ def train_etm(
     epochs: int,
     batch_size: int,
     method: str = "etm",
+    gate_temperature: float = 1.0,
+    gate_gamma: float = 1.0,
 ) -> dict[str, Any]:
-    """Train canonical ETM or its paired channel-balanced decoder variant."""
-    if method not in {"etm", "etm_balanced"}:
-        raise ValueError("ETM method must be etm or etm_balanced")
-    output = run / "models" / method
+    """Train one validation-only ETM architecture under the locked contract."""
+    if method not in ETM_METHODS:
+        raise ValueError(f"ETM method must be one of {ETM_METHODS}")
+    if method != "etm_balanced_gated" and (
+        gate_temperature != 1.0 or gate_gamma != 1.0
+    ):
+        raise ValueError("gate controls are only valid for etm_balanced_gated")
+    artifact_method = (
+        gated_method_name(gate_temperature, gate_gamma)
+        if method == "etm_balanced_gated"
+        else method
+    )
+    output = run / "models" / artifact_method
     result_path = output / "result.json"
     if result_path.is_file():
         return read_json(result_path)
     protocol = read_json(run / "protocol.json")
     seed = int(protocol["seed"])
     configure(seed + 7001, int(protocol["cpu_threads"]))
-    train = load_csr(run / "data/train.npz")
-    observed = load_csr(run / "data/validation_observed.npz")
-    completion = load_csr(run / "data/validation_completion.npz")
-    full = load_csr(run / "data/validation_full.npz")
-    records = load_heldout_records(run / "data", "validation")
+    campaign_data = load_etm_campaign_data(run)
+    train = campaign_data["train"]
+    observed = campaign_data["observed"]
+    completion = campaign_data["completion"]
+    full = campaign_data["full"]
+    records = campaign_data["records"]
     vocabulary = load_vocabulary(run / "data")
     embeddings = sgns_only(run / "token_features/features.npy")
-    if method == "etm_balanced":
+    write_json(output / "validation_access_audit.json", validation_access_manifest(run))
+    if method in {"etm_balanced", "etm_balanced_gated"}:
         fragment_mask = np.asarray(
             [word.startswith("frag@") for word in vocabulary], dtype=bool
         )
-        model = FragmentLossBalancedETM(
-            embeddings,
-            int(protocol["model"]["num_topics"]),
-            fragment_mask,
-            hidden=800,
-        ).to(device)
+        if method == "etm_balanced_gated":
+            model = GatedFragmentLossBalancedETM(
+                embeddings,
+                int(protocol["model"]["num_topics"]),
+                fragment_mask,
+                gate_temperature=gate_temperature,
+                gate_gamma=gate_gamma,
+                hidden=800,
+            ).to(device)
+        else:
+            model = FragmentLossBalancedETM(
+                embeddings,
+                int(protocol["model"]["num_topics"]),
+                fragment_mask,
+                hidden=800,
+            ).to(device)
     else:
         model = FixedETM(
             embeddings,
@@ -486,7 +644,11 @@ def train_etm(
         }
         history.append(row)
         write_csv(output / "training_history.csv", history)
-        print(f"{method.upper()}_EPOCH", json.dumps(row, sort_keys=True), flush=True)
+        print(
+            f"{artifact_method.upper()}_EPOCH",
+            json.dumps(row, sort_keys=True),
+            flush=True,
+        )
     fitting_seconds = time.perf_counter() - started
     model.eval()
     with torch.inference_mode():
@@ -524,9 +686,14 @@ def train_etm(
     )
     config = {
         "architecture": (
-            "fixed-pretrained-SGNS ETM with fragment/loss-balanced decoder"
-            if method == "etm_balanced"
-            else "canonical fixed-pretrained-SGNS ETM"
+            "fixed-pretrained-SGNS ETM with fragment/loss-balanced decoder "
+            "and detached shared-geometry document gate"
+            if method == "etm_balanced_gated"
+            else (
+                "fixed-pretrained-SGNS ETM with fragment/loss-balanced decoder"
+                if method == "etm_balanced"
+                else "canonical fixed-pretrained-SGNS ETM"
+            )
         ),
         "embedding_dimensions": 48,
         "hidden_dimensions": 800,
@@ -540,15 +707,34 @@ def train_etm(
         "seed": seed + 7001,
         "decoder_normalization": (
             "independent fragment/loss softmaxes at 0.5 each"
-            if method == "etm_balanced"
+            if method in {"etm_balanced", "etm_balanced_gated"}
             else "global topic-word softmax"
         ),
-        "paired_reference_method": "etm" if method == "etm_balanced" else None,
-        "only_scientific_change": (
-            "beta normalization: global softmax -> fixed 0.5 fragment + 0.5 loss"
-            if method == "etm_balanced"
-            else None
+        "paired_reference_method": (
+            "etm_balanced"
+            if method == "etm_balanced_gated"
+            else ("etm" if method == "etm_balanced" else None)
         ),
+        "only_scientific_change": (
+            "detached shared-geometry document gate participates in every "
+            "training reconstruction"
+            if method == "etm_balanced_gated"
+            else (
+                "beta normalization: global softmax -> fixed 0.5 fragment + 0.5 loss"
+                if method == "etm_balanced"
+                else None
+            )
+        ),
+        "gate_temperature": (
+            float(gate_temperature) if method == "etm_balanced_gated" else None
+        ),
+        "gate_gamma": float(gate_gamma) if method == "etm_balanced_gated" else None,
+        "gate_logit_scale": 2.0 if method == "etm_balanced_gated" else None,
+        "gate_detached_before_theta_multiplication": (
+            True if method == "etm_balanced_gated" else None
+        ),
+        "gate_used_during_training": (True if method == "etm_balanced_gated" else None),
+        "trained_separately": True,
     }
     write_json(output / "config.json", config)
     write_csv(output / "top_words.csv", top_words)
@@ -556,14 +742,29 @@ def train_etm(
         output / "fragment_mass_summary.json",
         metrics["fragment_probability_mass"],
     )
+    write_json(output / "metrics.json", metrics)
+    write_csv(output / "theta_distribution.csv", [metrics["theta_distribution"]])
+    write_json(
+        output / "duplicate_component_summary.json",
+        {
+            "duplicate_components": metrics["topic_inventory"]["duplicate_components"],
+            "largest_strict_duplicate_component": metrics["topic_inventory"][
+                "largest_strict_duplicate_component"
+            ],
+            "catastrophic_duplicate_component": metrics["topic_inventory"][
+                "catastrophic_duplicate_component"
+            ],
+        },
+    )
     result = {
-        "method": method,
+        "method": artifact_method,
+        "architecture_method": method,
         "parameters": sum(parameter.numel() for parameter in model.parameters()),
         "config": config,
         "metrics": metrics,
     }
     write_json(result_path, result)
-    save_validation(run, method, beta, theta_full, metrics)
+    save_validation(run, artifact_method, beta, theta_full, metrics)
     return result
 
 
@@ -1226,7 +1427,48 @@ def chemical(run: Path, data_root: Path, method: str) -> dict[str, Any]:
         ),
     )
     rows = result["high_confidence_chemistry"].get("topic_scores", [])
-    write_csv(run / "models" / method / "chemical_scores.csv", rows)
+    model_output = run / "models" / method
+    write_csv(model_output / "chemical_scores.csv", rows)
+    write_json(model_output / "chemical_validation.json", result)
+    metrics_path = model_output / "metrics.json"
+    if metrics_path.is_file():
+        metrics = read_json(metrics_path)
+        chemistry = dict(result["high_confidence_chemistry"])
+        chemistry.pop("topic_scores", None)
+        chemistry["optimized_motifs"] = int(
+            round(float(result["annotation_coverage"]) * int(result["topics"]))
+        )
+        chemistry["useful_motifs"] = int(
+            sum(
+                bool(row["eligible"])
+                and row["sos"] is not None
+                and float(row["sos"]) >= 0.6
+                for row in rows
+            )
+        )
+        metrics["validation_chemistry"] = {
+            **chemistry,
+            "annotation_coverage": float(result["annotation_coverage"]),
+            "heldout_compounds_excluded_from_mag": bool(
+                result["heldout_compounds_excluded_from_mag"]
+            ),
+            "split": "validation",
+        }
+        write_json(metrics_path, metrics)
+    audit_path = model_output / "validation_access_audit.json"
+    if audit_path.is_file():
+        audit = read_json(audit_path)
+        audit.update(
+            {
+                "chemical_split": "validation",
+                "candidate_test_chemistry_loaded": False,
+                "candidate_test_mag_or_sos_computed": False,
+                "reused_leakage_filtered_mag_index": str(
+                    run / "mag/index/spec2vec_filtered.faiss"
+                ),
+            }
+        )
+        write_json(audit_path, audit)
     return result
 
 
@@ -1242,17 +1484,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     train.add_argument("--device", choices=("auto", "cpu", "mps"), default="auto")
     train.add_argument("--etm-epochs", type=int, default=120)
     train.add_argument("--etm-batch-size", type=int, default=256)
+    train.add_argument("--gate-temperature", type=float, default=1.0)
+    train.add_argument("--gate-gamma", type=float, default=1.0)
     smoke = commands.add_parser("smoke")
     smoke.add_argument("--run", required=True, type=Path)
     smoke.add_argument("--device", choices=("auto", "cpu", "mps"), default="auto")
     score = commands.add_parser("chemical")
     score.add_argument("--run", required=True, type=Path)
     score.add_argument("--data-root", required=True, type=Path)
-    score.add_argument(
-        "--method",
-        required=True,
-        choices=METHODS + ("ecrtm", "ecrtm_canonical", "ecrtm_canonical_tau030"),
-    )
+    score.add_argument("--method", required=True)
     probe = commands.add_parser("ecrtm-probe")
     probe.add_argument("--run", required=True, type=Path)
     probe.add_argument("--device", choices=("auto", "cpu", "mps"), default="auto")
@@ -1271,13 +1511,15 @@ def main(argv: Sequence[str] | None = None) -> int:
         result = prepare(run, args.data_root.expanduser().resolve())
     elif args.command == "train":
         device = resolve_device(args.device)
-        if args.method in {"etm", "etm_balanced"}:
+        if args.method in ETM_METHODS:
             result = train_etm(
                 run,
                 device=device,
                 epochs=args.etm_epochs,
                 batch_size=args.etm_batch_size,
                 method=args.method,
+                gate_temperature=args.gate_temperature,
+                gate_gamma=args.gate_gamma,
             )
         else:
             result = train_pooled(run, method=args.method, device=device)

@@ -2,15 +2,24 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import numpy as np
 import pytest
 import torch
 
-from scripts.run_msnlib_model_comparison import FragmentLossBalancedETM, ProbeECR
+from scripts import run_msnlib_model_comparison as comparison
+from scripts.run_msnlib_model_comparison import (
+    FragmentLossBalancedETM,
+    GatedFragmentLossBalancedETM,
+    ProbeECR,
+    gated_method_name,
+)
 from scripts.run_msnlib_neural_followup import (
     _completion_nll,
     _largest_component_members,
 )
+from scripts.run_published_topic_models_msnlib import FixedETM
 
 
 def test_balanced_etm_changes_only_decoder_normalization() -> None:
@@ -44,6 +53,103 @@ def test_balanced_etm_rejects_one_channel_vocabulary() -> None:
         assert "fragments and losses" in str(exc)
     else:
         raise AssertionError("one-channel vocabulary should be rejected")
+
+
+def _gated_etm(*, gamma: float = 1.0) -> GatedFragmentLossBalancedETM:
+    embeddings = np.asarray(
+        [[1.0, 0.0], [0.8, 0.2], [0.0, 1.0], [0.2, 0.8]],
+        dtype=np.float32,
+    )
+    return GatedFragmentLossBalancedETM(
+        embeddings,
+        topics=3,
+        fragment_mask=np.asarray([True, True, False, False]),
+        gate_temperature=1.0,
+        gate_gamma=gamma,
+        hidden=4,
+    )
+
+
+def test_gated_theta_is_finite_nonnegative_and_normalized() -> None:
+    model = _gated_etm()
+    bows = torch.tensor([[0.5, 0.5, 0.0, 0.0], [0.0, 0.0, 0.4, 0.6]])
+    theta, _ = model.theta(bows, sample=False)
+    assert torch.all(torch.isfinite(theta))
+    assert torch.all(theta >= 0)
+    assert torch.allclose(theta.sum(dim=1), torch.ones(2))
+
+
+def test_gate_gamma_zero_recovers_ordinary_etm_theta() -> None:
+    model = _gated_etm(gamma=0.0)
+    bows = torch.tensor([[0.5, 0.5, 0.0, 0.0], [0.0, 0.0, 0.4, 0.6]])
+    expected, expected_kl = FixedETM.theta(model, bows, sample=False)
+    actual, actual_kl = model.theta(bows, sample=False)
+    assert torch.equal(actual, expected)
+    assert torch.equal(actual_kl, expected_kl)
+
+
+def test_document_gate_is_detached_before_theta_reweighting() -> None:
+    model = _gated_etm()
+    bows = torch.tensor([[0.5, 0.5, 0.0, 0.0]])
+    theta = torch.tensor([[0.2, 0.3, 0.5]], requires_grad=True)
+    assert model.document_gate(bows).requires_grad
+    gated = model.apply_document_gate(theta, bows)
+    (gated * torch.tensor([[1.0, 2.0, 4.0]])).sum().backward()
+    assert theta.grad is not None
+    assert torch.any(theta.grad != 0)
+    assert model.alphas.weight.grad is None
+
+
+def test_gated_etm_keeps_exact_channel_balance_and_parameter_count() -> None:
+    model = _gated_etm()
+    reference = FragmentLossBalancedETM(
+        model.rho.detach().numpy(),
+        topics=3,
+        fragment_mask=np.asarray([True, True, False, False]),
+        hidden=4,
+    )
+    beta = model.beta()
+    assert torch.allclose(beta[:, :2].sum(dim=1), torch.full((3,), 0.5))
+    assert torch.allclose(beta[:, 2:].sum(dim=1), torch.full((3,), 0.5))
+    assert sum(parameter.numel() for parameter in model.parameters()) == sum(
+        parameter.numel() for parameter in reference.parameters()
+    )
+
+
+def test_gated_etm_inference_is_deterministic_for_identical_inputs() -> None:
+    model = _gated_etm().eval()
+    bows = torch.tensor([[0.4, 0.1, 0.2, 0.3]])
+    first, _ = model.theta(bows.repeat(2, 1), sample=False)
+    second, _ = model.theta(bows.repeat(2, 1), sample=False)
+    assert torch.equal(first, second)
+    assert torch.equal(first[0], first[1])
+
+
+def test_gated_artifact_name_records_temperature_and_gamma() -> None:
+    assert gated_method_name(1.0, 0.5) == "etm_balanced_gated_t1_g0p5"
+
+
+def test_etm_campaign_matrix_routing_is_validation_only(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    opened: list[str] = []
+
+    def fake_load(path: object) -> object:
+        opened.append(Path(str(path)).name)
+        return object()
+
+    def fake_records(path: object, split: str) -> list[dict[str, str]]:
+        opened.append(f"records:{split}")
+        return [{"split": split}]
+
+    monkeypatch.setattr(comparison, "load_csr", fake_load)
+    monkeypatch.setattr(comparison, "load_heldout_records", fake_records)
+    loaded = comparison.load_etm_campaign_data(tmp_path)
+    assert set(loaded) == {"train", "observed", "completion", "full", "records"}
+    assert opened
+    assert all("test" not in path for path in opened)
+    assert any(path.endswith(":validation") for path in opened)
 
 
 def test_followup_reads_locked_completion_metric_field() -> None:

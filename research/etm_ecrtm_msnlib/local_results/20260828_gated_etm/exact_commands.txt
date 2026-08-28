@@ -1,0 +1,5 @@
+git status
+git fetch origin --prune
+git switch -c experiment/msnlib-gated-etm-20260828 a2cd7e201ac49a5f5f95aff40889a186fe4757ae
+conda run --no-capture-output -n ms2lda-neural python -m scripts.run_msnlib_model_comparison train --run /Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42 --method etm_balanced_gated --device cpu --etm-epochs 120 --etm-batch-size 256 --gate-temperature 1.0 --gate-gamma 1.0
+conda run --no-capture-output -n ms2lda-msnlib-mag python -m scripts.run_msnlib_model_comparison chemical --run /Users/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42 --data-root /Users/joewandy/Work/data/MS2LDA-msnlib-validation/zenodo/20179680 --method etm_balanced_gated_t1_g1

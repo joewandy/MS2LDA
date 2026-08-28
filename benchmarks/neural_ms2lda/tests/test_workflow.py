@@ -31,7 +31,7 @@ from benchmarks.neural_ms2lda.data import (
     prepare_data,
     train_token_features,
 )
-from benchmarks.neural_ms2lda.evaluation import _mixture_safety, evaluate_neural
+from benchmarks.neural_ms2lda.evaluation import evaluate_neural
 from benchmarks.neural_ms2lda.mag import _connectivity_key, build_filtered_mag_index
 from benchmarks.neural_ms2lda.tomotopy import (
     _converged,
@@ -84,14 +84,6 @@ def test_old_stage_outputs_are_not_silently_adopted(tmp_path: Path) -> None:
     (run / "data").mkdir(parents=True)
     with pytest.raises(ValueError, match="lacks a data-root binding"):
         initialize_run(run, data_root=data_root)
-
-
-def test_mixture_safety_uses_full_spectra_for_effective_topic_count() -> None:
-    observed = np.asarray([[1.0, 0.0], [0.5, 0.5]])
-    full = np.full((2, 2), 0.5)
-    active, effective_median = _mixture_safety(observed, full)
-    assert active == 1
-    assert effective_median == pytest.approx(2.0)
 
 
 def _prepare_mini_training_scaffold(

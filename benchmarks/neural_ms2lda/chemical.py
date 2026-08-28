@@ -348,7 +348,8 @@ def run_chemical_scoring(
         "pooled_mi005",
         "tomotopy",
     }
-    if method not in allowed:
+    gated_etm = method.startswith("etm_balanced_gated_")
+    if method not in allowed and not gated_etm:
         raise ValueError(f"chemical method must be one of {sorted(allowed)}")
     if split not in {"validation", "test"}:
         raise ValueError("chemical split must be validation or test")
@@ -399,21 +400,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run", required=True, type=Path)
     parser.add_argument("--data-root", required=True, type=Path)
-    parser.add_argument(
-        "--method",
-        choices=(
-            "ecrtm",
-            "ecrtm_canonical",
-            "ecrtm_canonical_tau030",
-            "etm",
-            "etm_balanced",
-            "neural",
-            "pooled_likelihood",
-            "pooled_mi005",
-            "tomotopy",
-        ),
-        required=True,
-    )
+    parser.add_argument("--method", required=True)
     parser.add_argument("--split", choices=("validation", "test"), default="test")
     args = parser.parse_args(argv)
     result = run_chemical_scoring(
