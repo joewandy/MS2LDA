@@ -8,7 +8,11 @@ dependencies:
   - scipy=1.13.1
   - rdkit=2024.9.6
   - pip:
-      - torch==2.6.0
+      # CUDA 12.8 wheels support RTX 50-series GPUs (sm_120). Keep the
+      # non-CUDA macOS installation available for reproducing earlier work.
+      - --extra-index-url https://download.pytorch.org/whl/cu128
+      - "torch==2.10.0+cu128; sys_platform == 'linux' or sys_platform == 'win32'"
+      - "torch==2.10.0; sys_platform == 'darwin'"
       - tomotopy==0.13.0
       - pytest==8.3.5
       - black==24.10.0
