@@ -73,11 +73,11 @@ This maps almost perfectly to our observed learned-ETM failure. In the synthetic
 
 There are two caveats. First, raw ECRTM `theta` was badly over-dispersed on the sparse spectra. Second, ECR uses a full topic-word transport geometry, which may be computationally expensive at real MSnLib scale (`K=1000`, `V~21k`). These are real-data feasibility questions, not reasons to redesign ECRTM before testing it.
 
-### 6.2 Neural Sinkhorn Topic Model: elegant but a larger model-family change
+### 6.2 Neural Sinkhorn Topic Model: tested and rejected in published form
 
-NSTM also uses optimal transport and embedding geometry, but OT is more central to its document/topic inference objective than ECR is in ECRTM [Zhao et al., 2021]. Its explicit attention to short documents makes it scientifically relevant, and it should remain a serious fallback comparator if ETM/ECRTM fail. However, moving directly to NSTM would change more of the core likelihood/inference story than starting from ETM and then testing ECRTM.
+NSTM also uses optimal transport and embedding geometry, but OT is more central to its document/topic inference objective than ECR is in ECRTM [Zhao et al., 2021]. Its explicit attention to short documents made it a scientifically relevant fallback after the ETM campaigns failed.
 
-For a paper whose main biological contribution is Mass2Motif discovery rather than a new generic topic model, ETM -> ECRTM is therefore the simpler lineage to test first.
+That fallback has now been tested using a PyTorch port pinned to the authors' reference implementation and numerically cross-checked against TopMost. The paper-normalized form was diffuse and weak at planted beta recovery. The exact released-code count handling improved planted theta and top-word overlap, but intensity pseudo-count reconstruction outweighed its Sinkhorn term by about 885 times at K=36. At K=128, median effective topics rose to 63.8, all topics entered one beta duplicate component at cosine 0.99, and completion remained worse than ETM. The model therefore did not advance to real K=1000 validation; full evidence is in `local_results/20260830_nstm/README.md`.
 
 ### 6.3 Direct Dirichlet/sparse-prior VAEs
 
@@ -130,7 +130,7 @@ It is **not** the easiest primary model for a computational-biology paper, becau
 | TopMost-style ECRTM | ECRTM | Topic collapse / duplicate-topic inventory | 36/36 topics active and best planted beta recovery, but diffuse theta | **Run as published anti-collapse candidate** |
 | ECRTM alpha=0.1 | Dirichlet/sparse-prior literature | Sparse document mixtures | Little effect because reconstruction scale dominates KL | Negative diagnostic |
 | ECRTM inference temperature tau=0.30 | Calibration/sharpening; analogous to short-text quantization intuition | Diffuse per-spectrum theta | Strong improvement in theta sparsity/recovery without changing beta | Predeclared validation-only calibration candidate |
-| Neural Sinkhorn Topic Model | NSTM | Short-document representation + coherent/diverse topics | Not yet run in our benchmark | Fallback published family if ETM/ECRTM fail |
+| Neural Sinkhorn Topic Model | NSTM | Short-document representation + coherent/diverse topics | Strong theta/top-word signal, but diffuse theta, nearly uniform/duplicate beta and worse completion; failed K=128 gate | Negative published-family result; do not advance unchanged to real K=1000 |
 | Contextualized topic model + DreaMS | CTM + DreaMS | Missing document-level structural context | Not yet run | Bounded future work after simple models |
 | FASTopic | DSR/ETP with pretrained Transformer embeddings | Stability/efficiency/topic discovery | Not yet run | Later comparator, larger departure |
 
@@ -162,7 +162,7 @@ Test one chemistry/co-occurrence mechanism at a time. Positive-NPMI/co-occurrenc
 
 ### If short-spectrum inference remains the limiting issue
 
-NSTM or a recent short-text model is a more established next family than creating another custom router. If the missing information is instead whole-spectrum structural context, a frozen DreaMS embedding through a conventional contextualized topic-model encoder is the cleaner next experiment.
+Do not repeat unchanged NSTM: its reference implementation has now failed the synthetic promotion gate. A different recent short-text model would still be more established than creating another custom router, but it requires a new bounded hypothesis. If the missing information is instead whole-spectrum structural context, a frozen DreaMS embedding through a conventional contextualized topic-model encoder is the cleaner next experiment.
 
 ## 12. Reviewer-facing position
 

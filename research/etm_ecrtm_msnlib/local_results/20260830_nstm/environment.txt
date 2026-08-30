@@ -1,0 +1,8 @@
+platform=Linux-6.18.33.2-microsoft-standard-WSL2-x86_64-with-glibc2.43
+python=3.11.16
+torch=2.10.0+cu128
+cuda_runtime=12.8
+gpu=NVIDIA GeForce RTX 5070
+numpy=1.26.4
+scipy=1.17.1
+conda_environment=ms2lda-neural

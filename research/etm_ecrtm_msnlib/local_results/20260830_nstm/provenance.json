@@ -1,0 +1,54 @@
+{
+  "candidate_test_artifacts_accessed": false,
+  "official_reference": {
+    "license": "MIT",
+    "path": "/home/joewandy/Work/external/nstm-review/official",
+    "repository": "https://github.com/ethanhezhao/NeuralSinkhornTopicModel",
+    "sha": "610d1604d5467289028714ed0ce684dfb5ef8a7b"
+  },
+  "paper": {
+    "arxiv": "2008.13537",
+    "source_archive_sha256": "b9a356f7889d15b0bdc9eed17e72a683997b18070fd4eb6c83ef249fe96267f0"
+  },
+  "topmost_cross_check": {
+    "license": "Apache-2.0",
+    "path": "/home/joewandy/Work/external/nstm-review/topmost",
+    "repository": "https://github.com/bobxwu/TopMost",
+    "sha": "ef24433859b2e283959ddef7f95020a40abb104f"
+  },
+  "synthetic_artifact_root": "/home/joewandy/Work/data/MS2LDA-msnlib-validation/runs/nstm-campaign-20260830",
+  "synthetic_dataset": {
+    "manifest": "/home/joewandy/Work/data/MS2LDA-msnlib-validation/runs/nstm-campaign-20260830/synthetic_artifacts/seed_11/artifact_manifest.json",
+    "sgns_sha256": "a09a20a70eb1de6e5a4d2bfeeb4f411db7807aa2aff66e4cfc002e2bb668e0c5"
+  },
+  "runs": [
+    {
+      "bytes": 1859965,
+      "fitted_topics": 36,
+      "method": "nstm_paper_l1",
+      "result_path": "/home/joewandy/Work/data/MS2LDA-msnlib-validation/runs/nstm-campaign-20260830/synthetic_runs/seed_11_K_36_nstm_paper_l1/result.json",
+      "result_sha256": "9f225e1bc98ee3e97f59055688d290704344c506e90c1de2f122329e98df9eaf",
+      "weights_path": "/home/joewandy/Work/data/MS2LDA-msnlib-validation/runs/nstm-campaign-20260830/synthetic_runs/seed_11_K_36_nstm_paper_l1/weights.pt",
+      "weights_sha256": "9c70e8423cbb4d09604a464ac40205c6718359bc82baf89133bddbbc44d0140b"
+    },
+    {
+      "bytes": 1859965,
+      "fitted_topics": 36,
+      "method": "nstm_released_code",
+      "result_path": "/home/joewandy/Work/data/MS2LDA-msnlib-validation/runs/nstm-campaign-20260830/synthetic_runs/seed_11_K_36_nstm_released_code/result.json",
+      "result_sha256": "e6312eff087b9a78b5e4c5773b7344c145cc8c6669f6ec475002d430a9f67447",
+      "weights_path": "/home/joewandy/Work/data/MS2LDA-msnlib-validation/runs/nstm-campaign-20260830/synthetic_runs/seed_11_K_36_nstm_released_code/weights.pt",
+      "weights_sha256": "39f2ce9eec7434aacb4cdff321cf015f8b3e755c1fc1cafb59e526c60f3f703e"
+    },
+    {
+      "bytes": 1953149,
+      "fitted_topics": 128,
+      "method": "nstm_released_code",
+      "result_path": "/home/joewandy/Work/data/MS2LDA-msnlib-validation/runs/nstm-campaign-20260830/synthetic_runs/seed_11_K_128_nstm_released_code/result.json",
+      "result_sha256": "df366b93e7e5ad27cb20fef166cecc66a833f52d812680653e876351c2203a28",
+      "weights_path": "/home/joewandy/Work/data/MS2LDA-msnlib-validation/runs/nstm-campaign-20260830/synthetic_runs/seed_11_K_128_nstm_released_code/weights.pt",
+      "weights_sha256": "65f66945f77c42ba1350aa34bccfae352a03a9694047ec5f9b266d3d23ffe387"
+    }
+  ],
+  "sinkhorn_cross_check_maximum_absolute_difference": 7.450580596923828e-08
+}
