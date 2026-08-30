@@ -407,3 +407,39 @@ machine-readable manifest and an integrity checker that reconcile:
 The full local verification completed 78 checks with no discrepancy. This
 checkpoint is the baseline for future work; future experiments must write to a
 new result directory and must not mutate these evidence files.
+
+## Experiment 8: unchanged real training-seed stability
+
+- **Question:** is the Routing ETM discovery breadth, sparse posterior and broad
+  inventory stable to ordinary training initialization, or was the frozen result
+  a single-seed accident?
+- **Predeclared isolation:** reuse the exact frozen seed-42 train/validation
+  split, vocabulary, SGNS, K=1000 configuration, 120 epochs, MAG/SOS evaluator
+  and membership threshold. Change only model initialization and minibatch-order
+  RNG, using training seeds 23 and 37. Do not load, compute or inspect candidate
+  test artifacts.
+- **Results:**
+
+| training seed | optimized | evaluable | useful | mean SOS | completion NLL | median effective | median support | unique top-1 |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 7043 (original) | 803 | 445 | 289 | 0.647153 | 9.542924 | 3.699 | 6 | 828 |
+| 23 | 791 | 453 | 274 | 0.637558 | 9.546012 | 3.702 | 6 | 816 |
+| 37 | 787 | 439 | 275 | 0.647350 | 9.539388 | 3.714 | 6 | 813 |
+| mean | 793.67 | 445.67 | 279.33 | 0.644020 | 9.542775 | 3.705 | 6 | 819.0 |
+
+- **Stability finding:** every seed exceeds M1's 408 evaluable / 265 useful and
+  Tomotopy's 206/138 while retaining exact sparse support, more than 800 unique
+  validation winners and no catastrophic duplicate component. The discovery
+  advantage is therefore robust to these initializations on the frozen split.
+- **Reproduced trade-off:** every seed remains below M1 on optimized coverage and
+  mean SOS and above M1 on completion NLL. The original all-gates Boolean is not
+  reinterpreted or silently relaxed.
+- **Boundary:** n=3 is descriptive same-split initialization stability, not
+  data-split, instrument or external-dataset generalization. Candidate test
+  remains locked in every saved access audit.
+- **Decision:** stop repeating identical real seeds. If further model work is
+  desired, positive-NPMI is now the one bounded next experiment justified by the
+  reproduced coverage/SOS residual. Predeclare it, screen it synthetically and
+  promote at most one configuration to validation; do not reconstruct M1.
+- **Evidence:** compact per-seed artifacts, the aggregate summary, hashes and
+  verifier are in `../20260830_routing_etm_stability/`.

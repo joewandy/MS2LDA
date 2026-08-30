@@ -8,7 +8,8 @@
   negative evidence;
 - the expanded sparsity and collapse-diagnostic contract; and
 - the decision to freeze Routing ETM as the paper-facing validation baseline and
-  establish real training-seed stability next.
+  the three-seed evidence that its discovery breadth and residual trade-offs are
+  stable to initialization on the frozen split.
 
 The pre-model-selection detailed methods report is preserved verbatim at:
 
@@ -31,7 +32,10 @@ The current checkpoint sources are:
 - `research/etm_ecrtm_msnlib/local_results/20260830_routing_etm/checkpoint_manifest.json`
 - `research/etm_ecrtm_msnlib/local_results/20260830_routing_etm/comparison.csv`
 - `research/etm_ecrtm_msnlib/local_results/20260830_routing_etm/metrics.json`
+- `research/etm_ecrtm_msnlib/local_results/20260830_routing_etm_stability/stability_summary.json`
+- `research/etm_ecrtm_msnlib/local_results/20260830_routing_etm_stability/checkpoint_manifest.json`
 - `benchmarks/neural_ms2lda/results/seed42/results.json`
 
-Verify them with `scripts/verify_routing_etm_checkpoint.py`. No Routing ETM
-candidate test result was used in the report.
+Verify them with `scripts/verify_routing_etm_checkpoint.py` and
+`scripts/verify_routing_etm_stability.py`. No Routing ETM candidate test result
+was used in the report.

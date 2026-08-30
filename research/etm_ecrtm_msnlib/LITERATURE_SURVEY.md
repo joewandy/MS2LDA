@@ -257,9 +257,15 @@ It nevertheless exceeds M1 and Tomotopy on evaluable/useful discovery breadth
 and is now frozen as the paper-facing validation baseline.
 
 The private M1 architecture is not the publication target. Its ablations may
-nominate small independently defensible mechanisms, but the immediate evidence
-priority is real training-seed stability of the unchanged Routing ETM.
-Positive-NPMI topic-coherence regularization remains one optional later mechanism,
-grounded in the established coherence literature [Lau et al., 2014], only if the
-beta/MAG and SOS deficit reproduces. It must be added alone with synthetic
-promotion and cannot justify rebuilding the private architecture piece by piece.
+nominate small independently defensible mechanisms. Real same-split
+training-seed stability has now been measured for the unchanged Routing ETM:
+all three runs preserve higher evaluable/useful breadth than M1 and Tomotopy,
+sparse per-spectrum mixtures and a broad global inventory. All three also
+reproduce the optimized-coverage, mean-SOS and completion-NLL trade-off relative
+to M1.
+
+Positive-NPMI topic-coherence regularization is therefore the one optional next
+mechanism justified by the reproduced residual, grounded in the established
+coherence literature [Lau et al., 2014]. It must be predeclared, added alone,
+screened synthetically and promote at most one configuration to validation. This
+does not justify rebuilding the private architecture piece by piece.

@@ -1,0 +1,173 @@
+{
+  "aggregate": {
+    "completion_nll": {
+      "maximum": 9.546012354985589,
+      "mean": 9.542774926110688,
+      "minimum": 9.539388063230367,
+      "sample_standard_deviation": 0.0033146731673055515
+    },
+    "corpus_effective_topics": {
+      "maximum": 538.4028391476129,
+      "mean": 532.6331570649951,
+      "minimum": 524.1597533977895,
+      "sample_standard_deviation": 7.496596275939499
+    },
+    "evaluable_motifs": {
+      "maximum": 453.0,
+      "mean": 445.6666666666667,
+      "minimum": 439.0,
+      "sample_standard_deviation": 7.023769168568492
+    },
+    "learned_context_scale": {
+      "maximum": 0.2003410905599594,
+      "mean": 0.18725332617759705,
+      "minimum": 0.17718999087810516,
+      "sample_standard_deviation": 0.011868181519414529
+    },
+    "mean_sos": {
+      "maximum": 0.6473499549023675,
+      "mean": 0.644020263415431,
+      "minimum": 0.6375580383595507,
+      "sample_standard_deviation": 0.005597319207959456
+    },
+    "median_effective_topics": {
+      "maximum": 3.7135154307212956,
+      "mean": 3.7049908524283435,
+      "minimum": 3.6993879168431225,
+      "sample_standard_deviation": 0.007503243243972754
+    },
+    "median_exact_support": {
+      "maximum": 6.0,
+      "mean": 6.0,
+      "minimum": 6.0,
+      "sample_standard_deviation": 0.0
+    },
+    "median_sos": {
+      "maximum": 0.6578947368421053,
+      "mean": 0.6483856310967694,
+      "minimum": 0.6395348837209303,
+      "sample_standard_deviation": 0.009197615368387346
+    },
+    "optimized_motifs": {
+      "maximum": 803.0,
+      "mean": 793.6666666666666,
+      "minimum": 787.0,
+      "sample_standard_deviation": 8.32666399786453
+    },
+    "training_wall_seconds": {
+      "maximum": 876.7970338140021,
+      "mean": 823.5515994043368,
+      "minimum": 795.3899105929868,
+      "sample_standard_deviation": 46.13757305831272
+    },
+    "unique_top1_topics": {
+      "maximum": 828.0,
+      "mean": 819.0,
+      "minimum": 813.0,
+      "sample_standard_deviation": 7.937253933193772
+    },
+    "useful_motifs": {
+      "maximum": 289.0,
+      "mean": 279.3333333333333,
+      "minimum": 274.0,
+      "sample_standard_deviation": 8.386497083606082
+    }
+  },
+  "by_seed": [
+    {
+      "catastrophic_duplicate_component": false,
+      "completion_nll": 9.54292436011611,
+      "corpus_effective_topics": 538.4028391476129,
+      "data_split_seed": 42,
+      "evaluable_motifs": 445,
+      "finite_stable": true,
+      "learned_context_scale": 0.17718999087810516,
+      "mean_sos": 0.6471527969843748,
+      "median_effective_topics": 3.6993879168431225,
+      "median_exact_support": 6.0,
+      "median_sos": 0.6578947368421053,
+      "optimized_motifs": 803,
+      "training_seed": 7043,
+      "training_wall_seconds": 876.7970338140021,
+      "unique_top1_topics": 828,
+      "useful_motifs": 289
+    },
+    {
+      "catastrophic_duplicate_component": false,
+      "completion_nll": 9.546012354985589,
+      "corpus_effective_topics": 535.3368786495828,
+      "data_split_seed": 42,
+      "evaluable_motifs": 453,
+      "finite_stable": true,
+      "learned_context_scale": 0.18422889709472656,
+      "mean_sos": 0.6375580383595507,
+      "median_effective_topics": 3.7020692097206123,
+      "median_exact_support": 6.0,
+      "median_sos": 0.6395348837209303,
+      "optimized_motifs": 791,
+      "training_seed": 23,
+      "training_wall_seconds": 795.3899105929868,
+      "unique_top1_topics": 816,
+      "useful_motifs": 274
+    },
+    {
+      "catastrophic_duplicate_component": false,
+      "completion_nll": 9.539388063230367,
+      "corpus_effective_topics": 524.1597533977895,
+      "data_split_seed": 42,
+      "evaluable_motifs": 439,
+      "finite_stable": true,
+      "learned_context_scale": 0.2003410905599594,
+      "mean_sos": 0.6473499549023675,
+      "median_effective_topics": 3.7135154307212956,
+      "median_exact_support": 6.0,
+      "median_sos": 0.6477272727272727,
+      "optimized_motifs": 787,
+      "training_seed": 37,
+      "training_wall_seconds": 798.4678538060216,
+      "unique_top1_topics": 813,
+      "useful_motifs": 275
+    }
+  ],
+  "comparators": {
+    "m1": {
+      "completion_nll": 8.974139925584877,
+      "evaluable_motifs": 408,
+      "mean_sos": 0.6580793714074608,
+      "median_sos": 0.6488636363636364,
+      "optimized_motifs": 884,
+      "useful_motifs": 265
+    },
+    "tomotopy": {
+      "completion_nll": 9.662228074924426,
+      "evaluable_motifs": 206,
+      "mean_sos": 0.676148899919428,
+      "median_sos": 0.6854497354497355,
+      "optimized_motifs": 607,
+      "useful_motifs": 138
+    }
+  },
+  "direction_checks": {
+    "all_below_m1_mean_sos": true,
+    "all_below_m1_optimized_motifs": true,
+    "all_exceed_m1_evaluable_motifs": true,
+    "all_exceed_m1_useful_motifs": true,
+    "all_exceed_tomotopy_evaluable_motifs": true,
+    "all_exceed_tomotopy_useful_motifs": true,
+    "all_finite_stable": true,
+    "all_worse_than_m1_completion_nll": true,
+    "candidate_test_remained_locked": true,
+    "no_catastrophic_duplicate_component_on_any_seed": true
+  },
+  "evidence_boundary": "same frozen training/validation split; test locked",
+  "interpretation": "Discovery breadth is stable across training seeds; optimized coverage, mean SOS, and likelihood remain reproducible trade-offs.",
+  "method": "etm_balanced_routing_top2_entmax15_raw_counts",
+  "only_changed_factor": "model initialization and minibatch-order seed",
+  "runs": 3,
+  "schema_version": 1,
+  "training_seeds": [
+    7043,
+    23,
+    37
+  ]
+}

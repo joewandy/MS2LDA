@@ -2,12 +2,12 @@
 
 This document preserves the scientific background and completed published-model
 campaign. Routing-informed sparse ETM is now frozen as the paper-facing
-validation baseline. It has 445 evaluable / 289 useful motifs, median 3.70
-effective topics and 828 unique top-1 topics: better discovery breadth than M1
-and Tomotopy, with explicit optimized-coverage, SOS and NLL trade-offs. The
-formal all-gates Boolean remains false and candidate test remains locked. The
-active continuation rules are in `NEXT_AGENT.md`; M1 is private donor evidence
-only.
+validation baseline. Across three unchanged real training seeds it has 439--453
+evaluable / 274--289 useful motifs, median 3.70--3.71 effective topics and
+813--828 unique top-1 topics: better discovery breadth than M1 and Tomotopy,
+with reproducible optimized-coverage, SOS and NLL trade-offs. The formal
+all-gates Boolean remains false and candidate test remains locked. The active
+continuation rules are in `NEXT_AGENT.md`; M1 is private donor evidence only.
 
 ## Read the literature survey before changing the model
 
@@ -104,10 +104,13 @@ Current baseline code and evidence on this branch:
 - `scripts/run_routing_etm_campaign.py` — synthetic mechanism runner.
 - `scripts/run_routing_etm_real.py` — validation-only real runner.
 - `scripts/verify_routing_etm_checkpoint.py` — integrity and consistency check.
+- `scripts/verify_routing_etm_stability.py` — three-seed evidence verifier.
 - `local_results/20260830_routing_etm/README.md` — authoritative technical
   report and replay instructions.
 - `local_results/20260830_routing_etm/checkpoint_manifest.json` — frozen source,
   environment, evidence and comparator hashes/values.
+- `local_results/20260830_routing_etm_stability/README.md` — same-split
+  training-seed stability report and compact evidence package.
 
 Earlier ETM, pooled, balanced, gated, sparse, ECRTM and NSTM results remain in
 their dated `local_results/` directories. They are negative controls and
@@ -117,9 +120,11 @@ provenance, not active model recommendations.
 
 Do not search indefinitely. The Routing ETM checkpoint has repaired the measured
 diffuse-mixture and topic-starvation failures and is already competitive on the
-scientific discovery metrics. Preserve it before doing more model work. The next
-evidence priority is real training-seed stability. Only if the remaining
-coverage/SOS gap reproduces may one targeted, literature-supported coherence
-intervention be considered.
+scientific discovery metrics. Same-split training-seed stability is now
+established descriptively at n=3: every run preserves the discovery advantage,
+sparse mixtures and broad inventory, and every run reproduces the residual
+coverage/SOS/NLL trade-off. If more model work is desired, the next admissible
+step is one bounded, literature-supported coherence intervention rather than
+more unchanged seeds or a wider architecture search.
 
 The goal is not to make the highest-scoring neural architecture. The goal is the simplest scientifically defensible model that preserves Mass2Motif discovery quality on real MSnLib data.

@@ -7,20 +7,21 @@ remain locked.
 
 Routing-informed sparse ETM is the first recognizable ETM-family candidate in
 this study to combine sparse short-spectrum mixtures, a broad non-collapsed topic
-inventory and competitive chemical discovery breadth. On the locked seed-42
-MSnLib validation split it produces 445 evaluable and 289 useful motifs, exceeding
-M1 by 37 and 24 and Tomotopy by 239 and 151, respectively.
+inventory and competitive chemical discovery breadth. Across three independent
+model-training seeds on the locked seed-42 MSnLib validation split it produces
+439-453 evaluable and 274-289 useful motifs. Every seed exceeds M1's 408/265 and
+Tomotopy's 206/138 discovery counts.
 
 The model does not dominate every metric. M1 retains more MAG-optimizable topics,
 higher mean SOS and better completion NLL. Tomotopy has higher mean and median SOS
 over a much smaller evaluable set. Routing ETM's median SOS is nevertheless higher
 than M1's, and its completion NLL is better than Tomotopy's.
 
-The predeclared all-gates result remains false because Routing ETM misses the
-optimized, mean-SOS and NLL thresholds. Scientifically, this is a strong near-pass
-and a viable baseline rather than an architecture failure. The old diffuse-theta
-and global-collapse problems have been solved; remaining work concerns robustness
-and a modest quality/likelihood trade-off.
+The predeclared all-gates result remains false on every seed because Routing ETM
+misses the optimized, mean-SOS and NLL thresholds. Scientifically, this is a
+stable breadth-first baseline rather than an architecture failure. The old
+diffuse-theta and global-collapse problems have been solved; the remaining
+quality/likelihood trade-off is also reproducible.
 
 Source implementation and result commit:
 `3d9af674949a70a38cbd250b95023f28b9514fe5`.
@@ -58,6 +59,26 @@ Routing ETM expands the intermediate-quality inventory substantially. Its
 evaluable-to-optimized conversion is 55.4% versus M1's 46.2%, and its
 useful-to-optimized conversion is 36.0% versus M1's 30.0%. The result is not an
 artifact of reporting only a small, high-scoring subset.
+
+## Discovery breadth reproduces across training seeds
+
+Only model initialization and minibatch order changed. Seed 7043 is the original
+frozen run; seeds 23 and 37 are independent repetitions using identical prepared
+inputs and evaluation.
+
+| training seed | optimized | evaluable | useful | mean SOS | median SOS | completion NLL | median effective | unique top-1 |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 7043 | 803 | 445 | 289 | 0.647153 | 0.657895 | 9.542924 | 3.699 | 828 |
+| 23 | 791 | 453 | 274 | 0.637558 | 0.639535 | 9.546012 | 3.702 | 816 |
+| 37 | 787 | 439 | 275 | 0.647350 | 0.647727 | 9.539388 | 3.714 | 813 |
+| **mean** | **793.7** | **445.7** | **279.3** | **0.644020** | **0.648386** | **9.542775** | **3.705** | **819.0** |
+
+The formulation therefore preserves its discovery advantage on every tested
+initialization. It also preserves the trade-off: all three runs remain below M1
+on optimized coverage and mean SOS and above M1 on NLL. Median exact support is 6
+on every seed, and no run has a catastrophic duplicate component. With only
+three repetitions, ranges and per-seed values are the primary robustness
+evidence; sample standard deviations are descriptive rather than inferential.
 
 ## The model remains explainable ETM
 
@@ -154,9 +175,11 @@ true for the Boolean pass.
 | finite/stable | required | yes | — | pass |
 | no catastrophic duplicate component | required | yes | — | pass |
 
-The all-gates value must remain false for audit integrity. It should be reported
-as a conservative selection outcome, not collapsed into the misleading statement
-that Routing ETM is generally worse than M1.
+The all-gates value must remain false for audit integrity. Seeds 23 and 37 repeat
+the same pass/fail direction: both discovery-count gates pass while optimized,
+mean-SOS and NLL gates fail. It should be reported as a conservative selection
+outcome, not collapsed into the misleading statement that Routing ETM is
+generally worse than M1.
 
 ## Scope, definitions and methodology
 
@@ -171,13 +194,13 @@ that Routing ETM is generally worse than M1.
   under `theta @ beta`; lower is better.
 - **Evidence population:** the frozen seed-42 MSnLib training/validation split,
   train-only vocabulary and SGNS, leakage-filtered MAG index and 3,889 validation
-  spectra. Candidate test was not accessed.
+  spectra. Training seeds were 7043, 23 and 37. Candidate test was not accessed.
 
 Training used deterministic CUDA, 120 fixed epochs, Adam 0.005, weight decay
-1.2e-6, batch 256 and six CPU threads. Training took 876.8 seconds on the RTX
-5070. Peak PyTorch allocated/reserved CUDA memory was 0.821/1.053 GB; process
-high-water memory was 2.879 GB. Deterministic full-validation inference processed
-23,426 spectra/second.
+1.2e-6, batch 256 and six CPU threads. The three runs took 795.4-876.8 seconds on
+the RTX 5070. Peak PyTorch allocated memory remained about 0.821 GB and process
+high-water memory about 2.9 GB. Deterministic full-validation inference processed
+23,426-26,067 spectra/second.
 
 ## Historical alternatives remain useful negative evidence
 
@@ -199,15 +222,17 @@ future topic model must fail.
 
 ## Robustness, limitations and checkpoint integrity
 
-The central limitation is real-seed uncertainty: Routing ETM has one completed
-real training seed on one data split. Synthetic mechanism behavior is confirmed
-over seeds 11, 23 and 37, but real multiseed stability is not yet established.
-No test-set performance claim is made.
+Initialization stability is now established descriptively over three real
+training runs on one fixed split. This does not establish split stability,
+independent-dataset generalization or test performance. The same validation
+spectra were reused by design, and n=3 is too small for a strong population-level
+variance claim. No test-set performance claim is made.
 
-The committed checkpoint contains source, configs, synthetic summaries, real
-metrics, per-topic chemical scores, training history, diagnostics, environment,
-validation-access audit and provenance. Large weights, arrays, MAG indexes and
-raw data stay outside Git with paths, sizes and SHA-256 hashes recorded.
+The original checkpoint contains source, configs, synthetic summaries and the
+seed-7043 result. The stability package adds both new configs, metrics, full
+per-topic chemical scores, topic words, histories, diagnostics, access audits
+and provenance. Large weights, arrays, MAG indexes and raw data stay outside Git
+with paths, sizes and SHA-256 hashes recorded.
 
 Run the machine check without training:
 
@@ -216,19 +241,20 @@ conda run -n ms2lda-neural python \
   scripts/verify_routing_etm_checkpoint.py
 ```
 
-On the original host, add `--verify-inputs --verify-local-artifacts
---require-external` to hash every retained input and large artifact. The full
-check completes 78 consistency/integrity checks. Exact replay commands are in
-`research/etm_ecrtm_msnlib/local_results/20260830_routing_etm/README.md`.
+Verify the multiseed package with `scripts/verify_routing_etm_stability.py`; on
+the original host add `--verify-inputs --verify-local-artifacts
+--require-external`. The committed/full stability checks perform 93/117 checks.
+Exact replay commands are in
+`research/etm_ecrtm_msnlib/local_results/20260830_routing_etm_stability/README.md`.
 
 ## Recommended next steps
 
 1. Preserve this checkpoint as the baseline for every future comparison.
-2. Repeat the unchanged Routing ETM on two additional real training seeds using
-   validation only; do not tune against their outcomes.
-3. If the optimized-coverage and mean-SOS gap is stable, consider one bounded
-   train-derived positive-NPMI experiment. Stop if it reduces the present
-   evaluable/useful breadth, sparse support or global inventory.
+2. If improving optimized coverage and mean SOS is worth more model work, run one
+   predeclared train-derived positive-NPMI experiment. Screen it synthetically
+   and promote at most one configuration to validation.
+3. Require that any intervention preserve the demonstrated 439-453 evaluable and
+   274-289 useful ranges, sparse support and broad topic inventory.
 4. Keep the private M1 architecture and its other mechanisms out of the
    paper-facing model.
 5. Unlock test only after an independent review freezes the method, checkpoint
@@ -236,12 +262,13 @@ check completes 78 consistency/integrity checks. Exact replay commands are in
 
 ## Further questions
 
-- Are 445 evaluable and 289 useful motifs stable across real training seeds?
 - Which topics account for the 197 unoptimized Routing ETM components, and are
   they unused noise, chemically coherent novel motifs or decoder artefacts?
-- Does the lower mean SOS persist after controlling for the candidate's 37-topic
-  increase in evaluable breadth?
+- Does the lower mean SOS persist after controlling for the candidate's roughly
+  38-topic mean increase in evaluable breadth?
 - Can one coherence intervention recover optimized coverage without sacrificing
-  NLL or recreating M1's complexity?
+  the observed breadth range, NLL or interpretability?
+- Does the formulation remain stable under a different data split or external
+  library?
 - After stability review, does the frozen candidate reproduce its advantage on
   the untouched test split?

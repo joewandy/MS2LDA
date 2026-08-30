@@ -9,7 +9,7 @@ import numpy as np
 import pytest
 import scipy.sparse as sp
 import torch
-from scripts.run_routing_etm_real import REAL_METHOD
+from scripts.run_routing_etm_real import REAL_METHOD, resolve_training_seed
 
 from benchmarks.neural_ms2lda.chemical import run_chemical_scoring
 from benchmarks.neural_ms2lda.routing_etm import (
@@ -47,6 +47,13 @@ def _inputs() -> tuple[np.ndarray, np.ndarray, sp.csr_matrix]:
         ),
     )
     return embeddings, fragment_mask, matrix
+
+
+def test_real_training_seed_override_preserves_legacy_default() -> None:
+    assert resolve_training_seed(42, None) == 7043
+    assert resolve_training_seed(42, 23) == 23
+    with pytest.raises(ValueError, match="must be non-negative"):
+        resolve_training_seed(42, -1)
 
 
 def test_etm_control_is_exact_balanced_etm() -> None:

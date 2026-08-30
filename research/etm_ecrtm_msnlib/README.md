@@ -7,10 +7,11 @@ Branch: `codex/unified-ms2lda-environment`
 
 ## Bottom line
 
-Routing-informed sparse ETM is already a successful discovery model. On the
-locked seed-42 validation split it produces more evaluable and useful motifs than
-both the private M1 reference and the production Tomotopy comparator, while its
-document mixtures are sparse and its global topic inventory remains broad.
+Routing-informed sparse ETM is already a successful discovery model. Across
+three model-training seeds on the locked seed-42 validation split, every run
+produces more evaluable and useful motifs than both the private M1 reference and
+the production Tomotopy comparator, while document mixtures remain sparse and
+the global topic inventory remains broad.
 
 | metric | M1 | **Routing ETM** | Tomotopy |
 |---|---:|---:|---:|
@@ -27,11 +28,17 @@ the two earlier ETM failures: diffuse document mixtures and collapsed/starved
 topic inventories. M1 retains better optimized coverage, mean SOS and completion
 NLL; Tomotopy has higher SOS over a much smaller evaluable set.
 
-The predeclared all-gates Boolean is still false because Routing ETM has 803
-rather than 840 optimized motifs, mean SOS 0.647153 rather than 0.651498, and NLL
-9.542924 rather than at most 9.422847. This is a conservative model-selection
-record, not a judgment that the model is unusable. The correct status is **strong
-near-pass; freeze and build from here**.
+The three Routing ETM runs span 787-803 optimized, 439-453 evaluable and 274-289
+useful motifs, mean SOS 0.637558-0.647350 and NLL 9.539388-9.546012. The
+predeclared all-gates Boolean remains false on every seed, but the discovery
+advantage also holds on every seed. The correct status is **stable breadth-first
+baseline; freeze and build from here**.
+
+| training seed | optimized | evaluable | useful | mean SOS | NLL | median effective | unique top-1 |
+|---:|---:|---:|---:|---:|---:|---:|---:|
+| 7043 | 803 | 445 | 289 | 0.647153 | 9.542924 | 3.699 | 828 |
+| 23 | 791 | 453 | 274 | 0.637558 | 9.546012 | 3.702 | 816 |
+| 37 | 787 | 439 | 275 | 0.647350 | 9.539388 | 3.714 | 813 |
 
 ## What the model is
 
@@ -95,8 +102,9 @@ intermediate motifs rather than by inflating a small high-scoring subset.
 
 ## Evidence scope and limitations
 
-- Real evidence is one deterministic MSnLib split, K=1000 and one Routing ETM
-  training seed. It demonstrates this run, not multiseed stability.
+- Real evidence is one deterministic MSnLib split, K=1000 and three Routing ETM
+  training seeds. It demonstrates initialization stability on this split, not
+  split stability or independent-dataset generalization.
 - Model selection used training plus validation only. Candidate test theta,
   completion, MAG, SOS and result files were not loaded, calculated or inspected.
 - M1 is a locked private comparator and donor-ablation source, not the proposed
@@ -110,15 +118,15 @@ intermediate motifs rather than by inflating a small high-scoring subset.
 
 ## What to improve next
 
-The immediate task is evidence quality, not another architectural rescue:
+Initialization stability is now complete. The next decision is whether the
+reproducible quality trade-off warrants one targeted model experiment:
 
 1. Verify and preserve this checkpoint.
-2. Repeat the frozen Routing ETM on two additional real training seeds using the
-   same validation-only protocol.
-3. If the optimized-coverage and mean-SOS gap reproduces, consider one bounded,
+2. If improving coverage/SOS is worth more work, consider one bounded,
    predeclared train-derived positive-NPMI coherence experiment. Preserve the
-   present breadth, sparsity and inventory; do not run an open coefficient sweep.
-4. Authorize test only after an independent review freezes the method and the
+   demonstrated 439-453 evaluable and 274-289 useful ranges, sparsity and
+   inventory; do not run an open coefficient sweep.
+3. Authorize test only after an independent review freezes the method and the
    interpretation of success.
 
 Do not add M1's document gate, Sinkhorn balancing, prototype separation,
@@ -146,9 +154,10 @@ conda run -n ms2lda-neural python \
   --verify-inputs --verify-local-artifacts --require-external
 ```
 
-The full real replay commands, synthetic decision configs, runtime evidence and
-artifact hashes are in
-`local_results/20260830_routing_etm/README.md` and `provenance.json`.
+The original replay commands and synthetic decision configs are in
+`local_results/20260830_routing_etm/README.md`. The multiseed commands, compact
+results, runtime evidence and hashes are in
+`local_results/20260830_routing_etm_stability/README.md`.
 
 ## Evidence map
 
@@ -158,12 +167,17 @@ artifact hashes are in
   hypotheses, stopping rules, results and decisions.
 - `local_results/20260830_routing_etm/checkpoint_manifest.json` — frozen hashes,
   comparator values, expected metrics and replay locations.
+- `local_results/20260830_routing_etm_stability/` — three-seed real stability
+  report, compact per-seed evidence and machine-verifiable manifest.
 - `benchmarks/neural_ms2lda/FINAL_MODEL_SELECTION.md` — report-level comparison
   and current publication decision.
 - `benchmarks/neural_ms2lda/routing_etm.py` — model implementation.
 - `scripts/run_routing_etm_campaign.py` — truth-known synthetic runner.
 - `scripts/run_routing_etm_real.py` — validation-only real runner.
 - `scripts/verify_routing_etm_checkpoint.py` — integrity and consistency checker.
+- `scripts/package_routing_etm_stability.py` and
+  `scripts/verify_routing_etm_stability.py` — deterministic multiseed packaging
+  and verification.
 - `LITERATURE_SURVEY.md` and `REFERENCES.bib` — published-method grounding.
 - `HANDOFF.md` — historical published-model campaign and failure diagnosis.
 - `NEXT_AGENT.md` — rules for any work after this frozen checkpoint.

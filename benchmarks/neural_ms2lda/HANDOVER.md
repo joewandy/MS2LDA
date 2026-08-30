@@ -9,8 +9,9 @@ result is 803 optimized, 445 evaluable and 289 useful motifs, mean SOS 0.647153,
 completion NLL 9.542924, median 3.70 effective topics and 828 unique top-1
 topics. It exceeds M1 and Tomotopy on evaluable/useful discovery breadth and is
 now frozen as the paper-facing validation baseline. It does not pass the complete
-historical gate Boolean, so test stays locked. The next priority is checkpoint
-integrity and real Routing ETM training-seed stability, not M1 multiseed. See
+historical gate Boolean, so test stays locked. Three unchanged Routing ETM
+training seeds now reproduce both the discovery advantage and the residual
+trade-off; M1 multiseed is not the next task. See
 `research/etm_ecrtm_msnlib/NEXT_AGENT.md`.
 
 ## Current state
@@ -194,8 +195,11 @@ deterministically, and visually inspect every rendered PDF page.
 
 ## Next compute
 
-Do not change the architecture before verifying the frozen checkpoint. The next
-useful compute is two unchanged Routing ETM real training seeds on validation to
-measure stability. Positive-NPMI is only an optional later intervention if the
-coverage/SOS deficit reproduces. Do not start M1 multiseed; candidate test remains
-locked. The current workflow is in `research/etm_ecrtm_msnlib/NEXT_AGENT.md`.
+The unchanged Routing ETM has now been verified on three real training seeds over
+the same frozen validation split. Every run preserves higher evaluable/useful
+breadth than M1 and Tomotopy, sparse mixtures and a broad inventory; every run
+also reproduces the coverage/SOS/NLL deficit relative to M1. Stop repeating
+identical seeds. If more model work is wanted, positive-NPMI is the one optional
+bounded intervention now justified by that residual. Do not start M1 multiseed;
+candidate test remains locked. The current workflow is in
+`research/etm_ecrtm_msnlib/NEXT_AGENT.md`.

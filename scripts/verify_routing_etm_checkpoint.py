@@ -7,6 +7,7 @@ import csv
 import hashlib
 import json
 import math
+import subprocess
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -26,6 +27,10 @@ def _sha256(path: Path) -> str:
         for chunk in iter(lambda: handle.read(8 * 1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def _sha256_bytes(value: bytes) -> str:
+    return hashlib.sha256(value).hexdigest()
 
 
 def _read_json(path: Path) -> dict[str, Any]:
@@ -72,10 +77,38 @@ def _verify_hashed_files(
     repo_root: Path,
     rows: Iterable[Mapping[str, object]],
     errors: list[str],
+    *,
+    source_commit: str | None = None,
 ) -> int:
     checks = 0
     for row in rows:
         relative = str(row["path"])
+        if source_commit is not None:
+            completed = subprocess.run(  # noqa: S603
+                ["git", "show", f"{source_commit}:{relative}"],  # noqa: S607
+                cwd=repo_root,
+                check=False,
+                capture_output=True,
+            )
+            if completed.returncode != 0:
+                errors.append(
+                    f"missing checkpoint source at {source_commit}: {relative}",
+                )
+                continue
+            checks += 1
+            _compare(
+                errors,
+                label=f"{relative} bytes at {source_commit}",
+                actual=len(completed.stdout),
+                expected=int(row["bytes"]),
+            )
+            _compare(
+                errors,
+                label=f"{relative} sha256 at {source_commit}",
+                actual=_sha256_bytes(completed.stdout),
+                expected=str(row["sha256"]),
+            )
+            continue
         path = _repo_path(repo_root, relative)
         if not path.is_file():
             errors.append(f"missing checkpoint file: {relative}")
@@ -283,7 +316,12 @@ def verify_checkpoint(
     )
     manifest = _read_json(manifest_file)
     errors: list[str] = []
-    checks = _verify_hashed_files(root, manifest["implementation_files"], errors)
+    checks = _verify_hashed_files(
+        root,
+        manifest["implementation_files"],
+        errors,
+        source_commit=str(manifest["source_implementation_commit"]),
+    )
     checks += _verify_hashed_files(root, manifest["evidence_files"], errors)
 
     metrics = _read_json(_repo_path(root, str(manifest["metrics_source"])))

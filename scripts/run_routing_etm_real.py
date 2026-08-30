@@ -57,6 +57,17 @@ if TYPE_CHECKING:
 REAL_METHOD = "etm_balanced_routing_top2_entmax15_raw_counts"
 
 
+def resolve_training_seed(data_seed: int, requested_seed: int | None) -> int:
+    """Keep the legacy seed by default while allowing isolated stability runs."""
+    training_seed = (
+        int(data_seed) + 7001 if requested_seed is None else int(requested_seed)
+    )
+    if training_seed < 0:
+        message = "training seed must be non-negative"
+        raise ValueError(message)
+    return training_seed
+
+
 def train_real_validation(  # noqa: C901, PLR0912, PLR0913, PLR0915
     real_run: Path,
     prepared_run: Path,
@@ -65,6 +76,7 @@ def train_real_validation(  # noqa: C901, PLR0912, PLR0913, PLR0915
     epochs: int,
     batch_size: int,
     threads: int,
+    training_seed: int | None = None,
 ) -> dict[str, Any]:
     """Train the single promoted model on frozen training/validation inputs."""
     real_run = real_run.expanduser().resolve()
@@ -76,7 +88,8 @@ def train_real_validation(  # noqa: C901, PLR0912, PLR0913, PLR0915
 
     input_manifest = prepare_real_validation_view(real_run, prepared_run)
     protocol = read_json(real_run / "protocol.json")
-    seed = int(protocol["seed"])
+    data_seed = int(protocol["seed"])
+    seed = resolve_training_seed(data_seed, training_seed)
     topics = int(protocol["model"]["num_topics"])
     data = real_run / "data"
     train = load_csr(data / "train.npz")
@@ -99,7 +112,7 @@ def train_real_validation(  # noqa: C901, PLR0912, PLR0913, PLR0915
         message = "frozen validation records and matrices differ"
         raise ValueError(message)
 
-    configure(seed + 7001, threads)
+    configure(seed, threads)
     fragment_mask = np.asarray(
         [word.startswith("frag@") for word in vocabulary],
         dtype=bool,
@@ -118,7 +131,7 @@ def train_real_validation(  # noqa: C901, PLR0912, PLR0913, PLR0915
         lr=0.005,
         weight_decay=1.2e-6,
     )
-    rng = np.random.default_rng(seed + 7019)
+    rng = np.random.default_rng(seed + 18)
     output.mkdir(parents=True, exist_ok=True)
     checkpoint_path = output / "checkpoint.pt"
     input_hashes = {
@@ -133,7 +146,7 @@ def train_real_validation(  # noqa: C901, PLR0912, PLR0913, PLR0915
         "reconstruction_scaling": "raw_counts",
         "epochs": int(epochs),
         "batch_size": int(batch_size),
-        "seed": seed + 7001,
+        "seed": seed,
         "optimizer": "Adam",
         "learning_rate": 0.005,
         "weight_decay": 1.2e-6,
@@ -190,7 +203,8 @@ def train_real_validation(  # noqa: C901, PLR0912, PLR0913, PLR0915
         "optimizer": "Adam",
         "learning_rate": 0.005,
         "weight_decay": 1.2e-6,
-        "seed": seed + 7001,
+        "data_split_seed": data_seed,
+        "seed": seed,
         "device": str(device),
         "threads": int(threads),
         "checkpoint_interval_epochs": 5,
@@ -445,6 +459,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     train.add_argument("--batch-size", type=int, default=256)
     train.add_argument("--device", choices=("auto", "cpu", "cuda"), default="auto")
     train.add_argument("--threads", type=int, default=6)
+    train.add_argument(
+        "--training-seed",
+        type=int,
+        help="override only model initialization and training order",
+    )
     score = commands.add_parser("chemical")
     score.add_argument("--real-run", required=True, type=Path)
     score.add_argument("--data-root", required=True, type=Path)
@@ -457,6 +476,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             epochs=args.epochs,
             batch_size=args.batch_size,
             threads=args.threads,
+            training_seed=args.training_seed,
         )
     elif args.command == "chemical":
         result = score_real_validation(args.real_run, args.data_root)

@@ -3,11 +3,11 @@
 > **Current publication direction (2026-08-30):** M1 remains a private benchmark
 > and donor evidence, not the proposed paper model. A published balanced ETM base
 > with top-2 contextual posterior evidence and entmax 1.5 is now the frozen
-> paper-facing validation baseline. It reaches 445 evaluable / 289 useful motifs,
-> exceeding M1 and Tomotopy on discovery breadth, with sparse, broad topic use.
-> Three conservative M1-relative gates remain false, so test stays locked. The
-> next priority is checkpoint integrity and real training-seed stability. See
-> `research/etm_ecrtm_msnlib/local_results/20260830_routing_etm/README.md`.
+> paper-facing validation baseline. Across three unchanged real training seeds it
+> reaches 439--453 evaluable / 274--289 useful motifs, exceeding M1 and Tomotopy
+> on discovery breadth with sparse, broad topic use. The optimized-coverage,
+> mean-SOS and NLL trade-offs also reproduce, so test stays locked. See
+> `research/etm_ecrtm_msnlib/local_results/20260830_routing_etm_stability/README.md`.
 
 This directory contains the locked seed-42, K=1000 Neural MS2LDA M1 model with
 one-pass document inference. Each token has 48 train-only SGNS coordinates and
@@ -51,7 +51,8 @@ These are different claims and both are preserved in
 for test yet.
 
 Tomotopy is an independently trained comparator, not a teacher. This remains a
-single-dataset, single-data-split research result and does not change the
+single-dataset, single-data-split research result; the three runs measure
+initialization stability, not external generalization, and do not change the
 production MS2LDA backend.
 
 ## Required diagnostics

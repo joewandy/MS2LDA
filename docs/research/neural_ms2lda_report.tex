@@ -5,6 +5,7 @@
 \usepackage{microtype}
 \usepackage{booktabs}
 \usepackage{longtable}
+\usepackage{float}
 \usepackage{array}
 \usepackage{amsmath,amssymb}
 \usepackage{xcolor}
@@ -41,21 +42,21 @@ mixtures, while a sparse ETM using entmax alone starved most topics.
 
 We therefore retained the published ETM generator and added two bounded inference
 adaptations: top-2 contextual evidence from observed spectral words and published
-alpha-entmax 1.5. The resulting model has only one additional learned scalar. On
-the locked seed-42, $K=1000$ MS$^{n}$Lib validation split it produces 445
-evaluable and 289 useful motifs, compared with 408/265 for the private M1
-reference and 206/138 for Tomotopy. Its median spectrum uses 3.70 effective
-topics, 828 topics win at least one validation spectrum, and no catastrophic
-duplicate component appears.
+alpha-entmax 1.5. The resulting model has only one additional learned scalar.
+Across three unchanged training seeds on the locked seed-42, $K=1000$
+MS$^{n}$Lib validation split, it produces 439--453 evaluable and 274--289 useful
+motifs, compared with 408/265 for the private M1 reference and 206/138 for
+Tomotopy. Median effective topics remain 3.70--3.71, 813--828 topics win at least
+one validation spectrum, and no catastrophic duplicate component appears.
 
-The model does not dominate every metric. It produces 803 optimized motifs,
-mean SOS 0.647153 and completion NLL 9.542924, versus 884, 0.658079 and 8.974140
-for M1. Three conservative M1-relative gates are therefore false and candidate
-test remains locked. The correct scientific conclusion is a strong near-pass and
-a viable paper-facing baseline: the principal discovery breadth, sparsity and
-inventory failures are repaired, while residual chemical-quality and likelihood
-trade-offs remain explicit. The next priority is reproducibility and real
-training-seed stability, not reconstruction of the private M1 architecture.
+The model does not dominate every metric. Across the same runs it produces
+787--803 optimized motifs, mean SOS 0.637558--0.647350 and completion NLL
+9.539388--9.546012, versus 884, 0.658079 and 8.974140 for M1. Three conservative
+M1-relative gates are therefore consistently false and candidate test remains
+locked. The correct scientific conclusion is a strong near-pass and viable
+paper-facing baseline: the discovery breadth, sparsity and inventory repairs are
+initialization-stable on this split, while residual chemical-quality and
+likelihood trade-offs also reproduce.
 \end{abstract}
 
 \section{Scientific objective}
@@ -211,8 +212,8 @@ configuration to real validation.
 \begin{table}[ht]
 \centering
 \small
-\caption{Locked seed-42 validation comparison. Bold marks the best value in each
-row, not a global model winner.}
+\caption{Representative original run on the locked seed-42 validation split.
+Bold marks the best value in each row, not a global model winner.}
 \label{tab:primary-comparison}
 \begin{tabular}{@{}lrrr@{}}
 \toprule
@@ -233,6 +234,40 @@ motifs over M1 and 239/151 over Tomotopy. It also has lower completion NLL than
 Tomotopy. It is not uniformly better: M1 retains higher optimized coverage,
 mean SOS and likelihood, while Tomotopy has higher SOS over a much smaller
 evaluable inventory.
+
+\subsection{Same-split training-seed stability}
+
+Two additional runs changed only model initialization and minibatch-order RNG.
+The data split, vocabulary, SGNS, model configuration, 120 epochs and chemical
+evaluation remained frozen. The original deterministic seed is 7043; the added
+seeds are 23 and 37.
+
+\begin{table}[ht]
+\centering
+\scriptsize
+\caption{Real validation stability. The mean is descriptive for three
+initializations on one data split.}
+\label{tab:real-stability}
+\begin{tabular}{@{}lrrrrrrr@{}}
+\toprule
+Seed & Optimized & Evaluable & Useful & Mean SOS & NLL & Median eff. & Unique \\
+\midrule
+7043 & 803 & 445 & 289 & 0.647153 & 9.542924 & 3.699 & 828 \\
+23   & 791 & 453 & 274 & 0.637558 & 9.546012 & 3.702 & 816 \\
+37   & 787 & 439 & 275 & 0.647350 & 9.539388 & 3.714 & 813 \\
+\midrule
+Mean & 793.67 & 445.67 & 279.33 & 0.644020 & 9.542775 & 3.705 & 819.0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Every run exceeds M1's 408 evaluable / 265 useful motifs and Tomotopy's
+206/138. Every run also remains below M1 on optimized coverage and mean SOS and
+above M1 on completion NLL. Median exact support is 6 in every run, all runs
+have more than 800 unique validation winners, and none has a catastrophic
+duplicate component. The result therefore establishes initialization stability
+of both the discovery advantage and the residual trade-off on this frozen split.
+It does not establish data-split or external-dataset generalization.
 
 The SOS bands explain the apparent mean/median tension.
 
@@ -262,7 +297,7 @@ Its median SOS is also higher than M1's.
 
 \subsection{Sparse spectra without global collapse}
 
-\begin{table}[ht]
+\begin{table}[H]
 \centering
 \small
 \caption{Diagnostics distinguishing per-spectrum sparsity from global topic
@@ -348,10 +383,12 @@ comparison would be insufficient.
 
 \section{Runtime and system load}
 
-The frozen real model trained for 120 epochs in 876.8 seconds (14.6 minutes) on
-an NVIDIA GeForce RTX 5070. Including final inference and evidence hashing, the
-run completed in about 16 minutes. Steady-state training used approximately
-83\% GPU utilization, 53~$^{\circ}$C and 116 W of a 250 W limit.
+The original frozen model trained for 120 epochs in 876.8 seconds (14.6 minutes)
+on an NVIDIA GeForce RTX 5070. The two added seeds trained in 795.4 and 798.5
+seconds (about 13.3 minutes each). Including final inference and evidence
+hashing, each run completed in roughly 15--16 minutes. Observed GPU load ranged
+from moderate to high; one repeat snapshot recorded 40\% utilization,
+54~$^{\circ}$C, 110 W of a 250 W limit and 2.6/12.2 GB device memory in use.
 
 Peak PyTorch allocated/reserved CUDA memory was 0.821/1.053 GB. Process high-water
 memory was 2.879 GB, with at least 12.43 GB system memory remaining. Deterministic
@@ -361,11 +398,11 @@ memory limits.
 
 \section{Limitations and robustness}
 
-The main unresolved uncertainty is real training-seed stability. The synthetic
-mechanism screen used three seeds, but the real Routing ETM result is one
-deterministic training seed on one positive-mode data split. It establishes this
-run, not the variance of repeated fitting or generalization to other instruments,
-ionization modes, biological samples or topic counts.
+The three real runs establish descriptive initialization stability on one
+positive-mode data split: the sample is small and intentionally changes neither
+data membership nor hyperparameters. It does not establish generalization to
+other splits, instruments, ionization modes, biological samples, datasets or
+topic counts.
 
 MAG/SOS is a library-dependent chemical proxy. Higher evaluable breadth can
 lower an unweighted mean by admitting additional borderline topics, which is why
@@ -375,20 +412,21 @@ and independent-dataset replication remain necessary.
 M1 is retained as a locked private comparator and donor-ablation source, not as
 the proposed publication architecture. Tomotopy remains the independent
 production comparator. No claim is made that Routing ETM should replace the
-production backend before stability and untouched-test review.
+production backend before independent and untouched-test review.
 
 \section{Recommended next evidence}
 
-The checkpoint should be preserved before further model changes. The next steps
-are:
+The baseline and stability checkpoints should be preserved before further model
+changes. The next steps are:
 \begin{enumerate}
-  \item verify every committed source/evidence hash and retained local artifact;
-  \item repeat the unchanged Routing ETM on two additional real training seeds,
-  using validation only and no tuning against the outcomes;
-  \item if the optimized-coverage and mean-SOS gap reproduces, consider one
-  predeclared train-derived positive-NPMI coherence experiment;
+  \item verify both committed source/evidence packages and retained local
+  artifacts;
+  \item stop repeating identical same-split seeds; future robustness work should
+  vary the split or dataset;
+  \item if further model work is desired, consider one predeclared train-derived
+  positive-NPMI coherence experiment, now justified by the reproduced residual;
   \item stop that intervention if it reduces the present evaluable/useful
-  breadth, sparse support or global inventory; and
+  breadth, sparse support or global inventory;
   \item unlock candidate test only after an independent review freezes the
   method, checkpoint and success interpretation.
 \end{enumerate}
@@ -409,9 +447,10 @@ The result is not uniform dominance. M1 retains better optimized coverage, mean
 SOS and completion NLL; Tomotopy has higher SOS over fewer evaluable motifs. The
 predeclared all-gates Boolean remains false and candidate test remains locked.
 Nevertheless, the scientific outcome is positive: Routing ETM is the strongest
-paper-facing discovery baseline produced by this campaign. Future work should
-establish stability and preserve explainability rather than treat the model as a
-failure requiring architectural rescue.
+paper-facing discovery baseline produced by this campaign, and its central
+advantage is stable across the three tested initializations. Future work should
+preserve explainability and test new sources of generalization rather than treat
+the model as a failure requiring architectural rescue.
 
 \appendix
 \section{Reproduction and provenance}
@@ -426,24 +465,30 @@ validation-access audit and provenance.
 Verify the committed checkpoint without training:
 \begin{verbatim}
 conda run -n ms2lda-neural python \
-  scripts/verify_routing_etm_checkpoint.py
+  -m scripts.verify_routing_etm_checkpoint
+conda run -n ms2lda-neural python \
+  -m scripts.verify_routing_etm_stability
 \end{verbatim}
 
 On the original host, verify every immutable validation input and retained large
 model artifact:
 \begin{verbatim}
 conda run -n ms2lda-neural python \
-  scripts/verify_routing_etm_checkpoint.py \
+  -m scripts.verify_routing_etm_checkpoint \
+  --verify-inputs --verify-local-artifacts --require-external
+conda run -n ms2lda-neural python \
+  -m scripts.verify_routing_etm_stability \
   --verify-inputs --verify-local-artifacts --require-external
 \end{verbatim}
 
-The full local check completes 78 integrity and cross-file consistency checks.
-Exact real replay commands are in
+The full local checks complete 78 baseline and 117 stability integrity and
+cross-file consistency checks. Exact real replay commands are in
 \path{research/etm_ecrtm_msnlib/local_results/20260830_routing_etm/README.md}.
-The machine-readable source of hashes, metrics, comparator values and replay
-locations is the neighboring \path{checkpoint_manifest.json}. Large weights,
-NumPy arrays, FAISS indexes, databases and raw MSnLib assets are retained outside
-Git and identified by path, byte size and SHA-256.
+The stability table and per-seed compact evidence are in
+\path{research/etm_ecrtm_msnlib/local_results/20260830_routing_etm_stability/}.
+Each package has a machine-readable \path{checkpoint_manifest.json}. Large
+weights, NumPy arrays, FAISS indexes, databases and raw MSnLib assets are
+retained outside Git and identified by path, byte size and SHA-256.
 
 \section{Frozen diagnostic settings}
 

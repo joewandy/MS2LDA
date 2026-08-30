@@ -230,27 +230,34 @@ load was sustained but comfortably below memory, thermal and power limits.
     ETM's embedding decoder has many more raw parameters.
 12. **What exact failure remains?** A 37-motif optimized-coverage shortfall,
     0.004345 mean-SOS shortfall, and 0.120077 NLL excess.
-13. **Is further ETM work justified?** The model is already viable. The next
-    priority is reproducibility and real-seed stability; any model change must be
-    optional, bounded and justified by a reproduced deficit.
+13. **Is further ETM work justified?** The model is already viable. Same-split
+    stability is now established across three training seeds; any model change
+    must be optional, bounded and justified by the reproduced residual.
 14. **Is M1 multiseed next?** No. The private model remains donor evidence only.
 
 ## What should improve next
 
-Do not change the architecture before preserving this checkpoint. The priorities
-are now evidence quality and robustness:
+This checkpoint has now been followed by two unchanged validation-only training
+seeds. The compact evidence and machine-checkable summary are in
+`../20260830_routing_etm_stability/README.md`. Across all three runs, Routing ETM
+has 439--453 evaluable and 274--289 useful motifs, median 3.70--3.71 effective
+topics and 813--828 unique top-1 topics. The discovery advantage, sparsity and
+broad inventory are stable on this split; the coverage/SOS/NLL trade-off also
+reproduces.
 
-1. **Confirm real-training stability.** Repeat the frozen model on two additional
-   training seeds using validation only. This tests whether 445/289 discovery
-   breadth and the broad sparse inventory are stable rather than a seed-42 event.
-2. **Keep the candidate test locked.** Test becomes appropriate only after the
+The priorities are now:
+
+1. **Keep the candidate test locked.** Test becomes appropriate only after the
    method, metrics and acceptance interpretation are independently reviewed and
    frozen.
-3. **Treat coherence regularization as optional.** If the optimized-coverage and
-   mean-SOS gaps reproduce across seeds, one predeclared train-derived
-   positive-NPMI experiment is the most targeted model change. It must preserve
+2. **Treat coherence regularization as optional.** Because the
+   optimized-coverage and mean-SOS gaps reproduced, one predeclared train-derived
+   positive-NPMI experiment is the most targeted next model change. It must preserve
    the present breadth and sparsity and cannot be used to start an unrestricted
    coefficient search.
+3. **Do not repeat identical seeds indefinitely.** The current n=3 result is
+   adequate for initialization stability; future robustness evidence should vary
+   the split or dataset.
 4. **Do not reconstruct M1.** The donor document gate, Sinkhorn balancing,
    prototype separation, alternating optimizer and temperature schedule remain
    out of scope.
@@ -265,7 +272,7 @@ The committed checkpoint is machine-checkable without training or opening test:
 
 ```bash
 conda run -n ms2lda-neural python \
-  scripts/verify_routing_etm_checkpoint.py
+  -m scripts.verify_routing_etm_checkpoint
 ```
 
 On the original host, also verify every immutable validation input and retained
@@ -273,19 +280,19 @@ large artifact against its recorded SHA-256:
 
 ```bash
 conda run -n ms2lda-neural python \
-  scripts/verify_routing_etm_checkpoint.py \
+  -m scripts.verify_routing_etm_checkpoint \
   --verify-inputs --verify-local-artifacts --require-external
 ```
 
 Replay the frozen real training run into a new validation-only directory:
 
 ```bash
-conda run -n ms2lda-neural python scripts/run_routing_etm_real.py train \
+conda run -n ms2lda-neural python -m scripts.run_routing_etm_real train \
   --real-run /home/joewandy/Work/data/MS2LDA-msnlib-validation/runs/routing-etm-checkpoint-replay-seed42 \
   --prepared-run /home/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42 \
   --epochs 120 --batch-size 256 --device cuda --threads 6
 
-conda run -n ms2lda-neural python scripts/run_routing_etm_real.py chemical \
+conda run -n ms2lda-neural python -m scripts.run_routing_etm_real chemical \
   --real-run /home/joewandy/Work/data/MS2LDA-msnlib-validation/runs/routing-etm-checkpoint-replay-seed42 \
   --data-root /home/joewandy/Work/data/MS2LDA-msnlib-validation/zenodo/20179680
 ```
