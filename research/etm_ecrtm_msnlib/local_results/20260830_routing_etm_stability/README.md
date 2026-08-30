@@ -139,6 +139,8 @@ predeclared positive-NPMI add-on was subsequently screened and failed its first
 synthetic promotion gate, so it was not run on real validation. Do not repeat
 identical seeds, tune the NPMI coefficient or add another donor mechanism.
 Further robustness evidence should vary the split or external library.
+The subsequent zero-parameter top-2 token simplification also failed its first
+synthetic non-inferiority gate, so the one-scalar contextual route is retained.
 
 Candidate test remains locked until an independent review accepts the method,
 checkpoint and interpretation. Do not add M1's document gate, Sinkhorn target,

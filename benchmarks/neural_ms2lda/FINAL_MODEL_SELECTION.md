@@ -219,6 +219,11 @@ high-water memory about 2.9 GB. Deterministic full-validation inference processe
 - A fixed weight-1 positive-NPMI loss improved its own train-graph statistic but
   reduced seed-11 K=36 true-beta recovery from 0.498454 to 0.491576. It failed
   its predeclared first gate, so no multi-seed, high-K or real run was performed.
+- A zero-parameter top-2 token route improved substantially over entmax-only ETM
+  but could not replace contextual routing: beta/theta recovery fell from
+  0.498454/0.764875 to 0.410354/0.661425 and recovered motifs fell from 10 to 6.
+  It failed its predeclared first gate, so no later synthetic or real run was
+  performed. The single learned context scalar is therefore retained.
 
 These experiments justify the selected mechanism without claiming that every
 future topic model must fail.
@@ -251,15 +256,19 @@ Exact replay commands are in
 `research/etm_ecrtm_msnlib/local_results/20260830_routing_etm_stability/README.md`.
 Verify the stopped NPMI experiment with
 `scripts/verify_routing_etm_npmi.py --require-external` on the original host.
+Verify the stopped zero-parameter simplification with
+`scripts/verify_routing_etm_top2_token.py --require-external`.
 
 ## Recommended next steps
 
 1. Preserve this checkpoint as the baseline for every future comparison.
 2. Do not tune the failed positive-NPMI coefficient or add another M1 component.
-3. Direct further robustness work to a different split or external library.
-4. Keep the private M1 architecture and its other mechanisms out of the
+3. Do not remove the one-scalar leave-one-out context; its zero-parameter
+   replacement failed direct non-inferiority.
+4. Direct further robustness work to a different split or external library.
+5. Keep the private M1 architecture and its other mechanisms out of the
    paper-facing model.
-5. Unlock test only after an independent review freezes the method, checkpoint
+6. Unlock test only after an independent review freezes the method, checkpoint
    and success interpretation.
 
 ## Further questions

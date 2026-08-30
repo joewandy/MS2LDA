@@ -6,7 +6,7 @@ import argparse
 import json
 import time
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
 import torch
@@ -31,6 +31,10 @@ from benchmarks.neural_ms2lda.sparse_etm import (
     dense_normalized,
     sparse_reconstruction_loss,
     theta_support_diagnostics,
+)
+from benchmarks.neural_ms2lda.top2_token_etm import (
+    TOP2_ROUTING_VARIANT,
+    Top2TokenETM,
 )
 from benchmarks.neural_ms2lda.utils import (
     atomic_save_numpy,
@@ -58,6 +62,11 @@ if TYPE_CHECKING:
 PROMOTION_SEEDS = (11, 23, 37)
 PRIMARY_TOPICS = 36
 HIGH_K_TOPICS = 128
+CampaignRoutingVariant = RoutingVariant | Literal["top2_token"]
+CAMPAIGN_ROUTING_VARIANTS: tuple[CampaignRoutingVariant, ...] = (
+    *ROUTING_VARIANTS,
+    TOP2_ROUTING_VARIANT,
+)
 POSITIVE_NPMI_WEIGHT = 1.0
 POSITIVE_NPMI_GRAPH_CONFIG = {
     "minimum_document_frequency": 10,
@@ -69,7 +78,7 @@ POSITIVE_NPMI_GRAPH_CONFIG = {
 
 
 def method_label(
-    variant: RoutingVariant,
+    variant: CampaignRoutingVariant,
     theta_transform: ThetaTransform,
     reconstruction_scaling: ReconstructionScaling,
     *,
@@ -140,7 +149,7 @@ def run_synthetic(  # noqa: PLR0913, PLR0915
     *,
     seed: int,
     fitted_topics: int,
-    routing_variant: RoutingVariant,
+    routing_variant: CampaignRoutingVariant,
     theta_transform: ThetaTransform,
     reconstruction_scaling: ReconstructionScaling,
     epochs: int,
@@ -238,15 +247,25 @@ def run_synthetic(  # noqa: PLR0913, PLR0915
         [word.startswith("frag@") for word in dataset.vocabulary],
         dtype=bool,
     )
-    model = RoutingInformedETM(
-        embeddings,
-        fitted_topics,
-        fragment_mask,
-        routing_variant=routing_variant,
-        theta_transform=theta_transform,
-        routing_temperature=1.0,
-        hidden=800,
-    ).to(device)
+    if routing_variant == TOP2_ROUTING_VARIANT:
+        model = Top2TokenETM(
+            embeddings,
+            fitted_topics,
+            fragment_mask,
+            theta_transform=theta_transform,
+            routing_temperature=1.0,
+            hidden=800,
+        ).to(device)
+    else:
+        model = RoutingInformedETM(
+            embeddings,
+            fitted_topics,
+            fragment_mask,
+            routing_variant=routing_variant,
+            theta_transform=theta_transform,
+            routing_temperature=1.0,
+            hidden=800,
+        ).to(device)
     optimizer = torch.optim.Adam(
         model.parameters(),
         lr=0.005,
@@ -492,7 +511,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument(
         "--routing-variant",
         required=True,
-        choices=ROUTING_VARIANTS,
+        choices=CAMPAIGN_ROUTING_VARIANTS,
     )
     parser.add_argument(
         "--theta-transform",

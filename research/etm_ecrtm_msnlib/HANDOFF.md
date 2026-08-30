@@ -118,6 +118,8 @@ Current baseline code and evidence on this branch:
   training-seed stability report and compact evidence package.
 - `local_results/20260830_routing_etm_npmi/README.md` — stopped synthetic
   positive-NPMI add-on and its negative result.
+- `local_results/20260830_routing_etm_top2_token/README.md` — stopped
+  zero-parameter token-only simplification and its negative result.
 
 Earlier ETM, pooled, balanced, gated, sparse, ECRTM and NSTM results remain in
 their dated `local_results/` directories. They are negative controls and
@@ -133,6 +135,9 @@ sparse mixtures and broad inventory, and every run reproduces the residual
 coverage/SOS/NLL trade-off. The one bounded positive-NPMI add-on then failed its
 first synthetic gate: it improved its own graph objective but slightly reduced
 true-beta recovery. No real run was authorized. Further coefficient or
-architecture search on this split is not justified.
+architecture search on this split is not justified. The final parameter-free
+top-2 token route was also tested and failed direct non-inferiority:
+leave-one-out spectral context and its single learned scalar are therefore
+retained.
 
 The goal is not to make the highest-scoring neural architecture. The goal is the simplest scientifically defensible model that preserves Mass2Motif discovery quality on real MSnLib data.

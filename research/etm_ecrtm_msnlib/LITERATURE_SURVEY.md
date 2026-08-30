@@ -274,3 +274,11 @@ seed-11 K=36 but slightly reduced true-beta recovery (0.498454 to 0.491576),
 missing the predeclared promotion gate. No multi-seed, high-K or real run was
 authorized. This negative result argues against coefficient tuning or rebuilding
 the private architecture piece by piece.
+
+The remaining structural simplification was then tested separately. Direct
+top-2 token evidence plus entmax removed leave-one-out context and all added
+parameters. It improved over entmax-only ETM but lost 0.0881 beta recovery,
+0.1034 theta recovery and four recovered planted motifs relative to contextual
+Routing ETM. The first predeclared gate therefore stopped the campaign. This
+isolates the single context scalar as a necessary domain adaptation rather than
+unexplained excess architecture.

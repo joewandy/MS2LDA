@@ -92,6 +92,19 @@ NPMI. Future evidence should concern a different split/external dataset or the
 independent checkpoint/test decision, not further same-dataset architecture
 search.
 
+## Completed zero-parameter simplification
+
+The only plausible smaller route was also tested under a protocol committed
+before implementation. Direct top-2 token votes plus entmax removed the
+leave-one-out context and matched balanced ETM's parameter count exactly. It
+improved strongly over entmax-only ETM but failed non-inferiority to contextual
+Routing ETM: seed-11 K=36 beta/theta recovery fell from 0.498454/0.764875 to
+0.410354/0.661425, recovered motifs from 10 to 6 and active/unique topics from
+14/14 to 11/10. No later synthetic or real run was authorized.
+
+Retain the single learned context scalar. It is now the smallest demonstrated
+addition that preserves the model's recovery and inventory repair.
+
 ## Shared immutable inputs
 
 - `/home/joewandy/Work/data/MS2LDA-msnlib-validation/zenodo/20179680`
@@ -121,6 +134,8 @@ weights, NumPy arrays, databases or indexes.
   `local_results/20260830_routing_etm_stability/checkpoint_manifest.json`
 - Stopped positive-NPMI experiment:
   `local_results/20260830_routing_etm_npmi/README.md`
+- Stopped zero-parameter simplification:
+  `local_results/20260830_routing_etm_top2_token/README.md`
 - Model implementation: `benchmarks/neural_ms2lda/routing_etm.py`
 - Real runner: `scripts/run_routing_etm_real.py`
 - Synthetic runner: `scripts/run_routing_etm_campaign.py`

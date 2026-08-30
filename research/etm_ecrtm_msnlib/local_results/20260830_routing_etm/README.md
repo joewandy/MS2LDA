@@ -253,10 +253,12 @@ The priorities are now:
 2. **Do not tune coherence regularization.** The predeclared weight-1
    positive-NPMI experiment subsequently improved its graph loss but reduced
    true-beta recovery and stopped before real validation.
-3. **Do not repeat identical seeds indefinitely.** The current n=3 result is
+3. **Retain the one-scalar context.** A zero-parameter top-2 token route improved
+   over entmax alone but failed direct non-inferiority to contextual routing.
+4. **Do not repeat identical seeds indefinitely.** The current n=3 result is
    adequate for initialization stability; future robustness evidence should vary
    the split or dataset.
-4. **Do not reconstruct M1.** The donor document gate, Sinkhorn balancing,
+5. **Do not reconstruct M1.** The donor document gate, Sinkhorn balancing,
    prototype separation, alternating optimizer and temperature schedule remain
    out of scope.
 

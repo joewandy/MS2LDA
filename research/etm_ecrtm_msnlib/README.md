@@ -119,13 +119,16 @@ intermediate motifs rather than by inflating a small high-scoring subset.
 ## What to improve next
 
 Initialization stability is complete, and the one bounded positive-NPMI add-on
-failed synthetic promotion. The next work should improve evidence rather than
-add more mechanisms:
+failed synthetic promotion. The final zero-parameter token-only simplification
+also failed synthetic non-inferiority, confirming that the existing one-scalar
+context is minimal among demonstrated formulations. The next work should improve
+evidence rather than alter the model:
 
 1. Verify and preserve this checkpoint.
 2. Do not tune the NPMI coefficient or add another donor component. Test split
    or external-library robustness if more evidence is needed.
-3. Authorize test only after an independent review freezes the method and the
+3. Do not remove the learned context scalar or replace it with token-only votes.
+4. Authorize test only after an independent review freezes the method and the
    interpretation of success.
 
 Do not add M1's document gate, Sinkhorn balancing, prototype separation,

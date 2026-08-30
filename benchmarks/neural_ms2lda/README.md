@@ -9,7 +9,9 @@
 > mean-SOS and NLL trade-offs also reproduce, so test stays locked. See
 > `research/etm_ecrtm_msnlib/local_results/20260830_routing_etm_stability/README.md`.
 > The one fixed positive-NPMI add-on failed synthetic promotion, leaving this
-> unchanged Routing ETM as the simplest supported formulation.
+> unchanged Routing ETM as the simplest supported formulation. A final
+> zero-parameter top-2 token ablation also failed synthetic non-inferiority,
+> confirming that its sole learned context scalar earns its place.
 
 This directory contains the locked seed-42, K=1000 Neural MS2LDA M1 model with
 one-pass document inference. Each token has 48 train-only SGNS coordinates and

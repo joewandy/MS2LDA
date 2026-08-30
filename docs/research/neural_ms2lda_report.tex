@@ -58,7 +58,11 @@ paper-facing baseline: the discovery breadth, sparsity and inventory repairs are
 initialization-stable on this split, while residual chemical-quality and
 likelihood trade-offs also reproduce. A final weight-1 positive-NPMI add-on
 improved its own train-graph objective but reduced planted beta recovery, so it
-stopped at the first synthetic gate and was never run on real validation.
+stopped at the first synthetic gate and was never run on real validation. The
+last plausible zero-parameter simplification, direct top-2 token voting without
+spectral context, also failed its first gate: beta/theta recovery fell by
+0.0881/0.1034. This isolates the one learned context scalar as necessary in the
+simplest demonstrated formulation.
 \end{abstract}
 
 \section{Scientific objective}
@@ -417,6 +421,43 @@ MS$^{n}$Lib were therefore not run. This result does not prove that every NPMI
 coefficient must fail; it shows that coefficient search is not justified by the
 simplest fixed intervention.
 
+\subsection{Removing the one-scalar context failed non-inferiority}
+
+The final simplification test retained top-2 token-to-topic voting and entmax but
+removed the leave-one-out spectral context and its learned scalar. The candidate
+therefore had exactly the balanced-ETM state and parameter count. The protocol
+and non-inferiority thresholds were committed before implementation or training.
+
+\begin{table}[ht]
+\centering
+\small
+\caption{Seed-11 K=36 zero-parameter triage. The token-only route improves over
+entmax alone but does not retain the selected contextual model.}
+\label{tab:token-stop}
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+Metric & Entmax ETM & Top-2 token & Top-2 context \\
+\midrule
+Held-out NLL & 6.616673 & 6.344000 & \textbf{6.278416} \\
+True-beta cosine & 0.250317 & 0.410354 & \textbf{0.498454} \\
+True-theta cosine & 0.403055 & 0.661425 & \textbf{0.764875} \\
+Recovered planted motifs & 2 & 6 & \textbf{10} \\
+Active topics & 5 & 11 & \textbf{14} \\
+Unique top-1 topics & 4 & 10 & \textbf{14} \\
+Median effective topics & 1.816 & 2.005 & 1.971 \\
+Learned parameters & 2,167,400 & 2,167,400 & 2,167,401 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Against the contextual reference, beta and theta fell by 0.088100 and 0.103449,
+well beyond the allowed 0.02. NLL was 1.0446\% worse, recovered motifs fell from
+10 to 6, and active/unique topics fell by 3/4. The candidate stayed finite,
+sparse and free of catastrophic duplication, but failed the model's central
+recovery and inventory purpose. Seeds 23/37, K=128 and real MS$^{n}$Lib were
+therefore not run. Top-2 restriction explains part of the repair over entmax
+alone; leave-one-out spectrum context supplies an additional essential signal.
+
 \section{Runtime and system load}
 
 The original frozen model trained for 120 epochs in 876.8 seconds (14.6 minutes)
@@ -444,6 +485,11 @@ The positive-NPMI stopping result is one synthetic seed because its predeclared
 first-stage gate failed. It supports rejection of this fixed add-on, not a broad
 claim that all possible coherence objectives are ineffective.
 
+The zero-parameter routing result is likewise one synthetic seed because four
+primary non-inferiority conditions failed at the first stage. It supports
+retaining the contextual scalar; it is not a claim that no future encoder could
+use a different parameter-free context representation.
+
 MAG/SOS is a library-dependent chemical proxy. Higher evaluable breadth can
 lower an unweighted mean by admitting additional borderline topics, which is why
 counts, mean, median and SOS bands are reported together. Expert interpretation
@@ -465,6 +511,8 @@ changes. The next steps are:
   vary the split or dataset;
   \item do not tune the failed NPMI coefficient or add another private-donor
   component;
+  \item retain the one-scalar leave-one-out context rather than replacing it
+  with the failed token-only route;
   \item prefer a different split or external library over further architecture
   search on the same validation evidence; and
   \item unlock candidate test only after an independent review freezes the
@@ -491,7 +539,10 @@ paper-facing discovery baseline produced by this campaign, and its central
 advantage is stable across the three tested initializations. Future work should
 preserve explainability and test new sources of generalization. The failed NPMI
 triage reinforces that the simplest supported formulation is the existing
-Routing ETM, not Routing ETM plus additional donor mechanisms.
+Routing ETM, not Routing ETM plus additional donor mechanisms. The failed
+zero-parameter ablation closes the opposite direction as well: removing
+leave-one-out context loses too much recovery and inventory for the saving of a
+single scalar.
 
 \appendix
 \section{Reproduction and provenance}
@@ -511,6 +562,8 @@ conda run -n ms2lda-neural python \
   -m scripts.verify_routing_etm_stability
 conda run -n ms2lda-neural python \
   -m scripts.verify_routing_etm_npmi --require-external
+conda run -n ms2lda-neural python \
+  -m scripts.verify_routing_etm_top2_token --require-external
 \end{verbatim}
 
 On the original host, verify every immutable validation input and retained large
@@ -524,12 +577,13 @@ conda run -n ms2lda-neural python \
   --verify-inputs --verify-local-artifacts --require-external
 \end{verbatim}
 
-The full local checks complete 78 baseline, 117 stability and 26 stopped-NPMI
-integrity and cross-file consistency checks. Exact replay commands and compact
-package locations are indexed in \path{docs/research/README.md}. Each main
-checkpoint has a machine-readable \path{checkpoint_manifest.json}. Large weights,
-NumPy arrays, FAISS indexes, databases and raw MSnLib assets are retained outside
-Git and identified by path, byte size and SHA-256.
+The full local checks complete 78 baseline, 117 stability, 26 stopped-NPMI and
+52 zero-parameter-ablation integrity and cross-file consistency checks. Exact
+replay commands and compact package locations are indexed in
+\path{docs/research/README.md}. Each main checkpoint has a machine-readable
+\path{checkpoint_manifest.json}. Large weights, NumPy arrays, FAISS indexes,
+databases and raw MSnLib assets are retained outside Git and identified by path,
+byte size and SHA-256.
 
 \section{Frozen diagnostic settings}
 

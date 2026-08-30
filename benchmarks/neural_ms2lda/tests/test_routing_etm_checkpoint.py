@@ -8,6 +8,7 @@ from scripts.verify_routing_etm_stability import (
     DEFAULT_MANIFEST as DEFAULT_STABILITY_MANIFEST,
 )
 from scripts.verify_routing_etm_stability import verify_stability_package
+from scripts.verify_routing_etm_top2_token import verify_top2_token_experiment
 
 
 def test_committed_routing_etm_checkpoint_is_consistent() -> None:
@@ -32,3 +33,10 @@ def test_committed_routing_etm_npmi_stopping_decision_is_consistent() -> None:
     result = verify_npmi_experiment(repo_root=repo_root)
     assert result["status"] == "passed", result["errors"]
     assert result["stopping_decision"] == "failed synthetic triage; no real promotion"
+
+
+def test_committed_top2_token_stopping_decision_is_consistent() -> None:
+    repo_root = Path(__file__).resolve().parents[3]
+    result = verify_top2_token_experiment(repo_root=repo_root)
+    assert result["status"] == "passed", result["errors"]
+    assert result["stopping_decision"] == "failed synthetic triage; context retained"

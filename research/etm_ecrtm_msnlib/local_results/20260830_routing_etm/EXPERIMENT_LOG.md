@@ -454,3 +454,15 @@ unchanged. This failed the first synthetic gate, so seeds 23/37, K=128 and real
 MSnLib were not run. Do not tune its coefficient or add another donor component.
 The complete predeclaration, result and artifact hashes are in
 `../20260830_routing_etm_npmi/`.
+
+## Experiment 10: zero-parameter top-2 token route
+
+The final simplification removed leave-one-out spectral context and its learned
+scalar while retaining direct top-2 token votes and entmax. The protocol was
+committed before implementation. At seed-11 K=36 the parameter-free candidate
+improved substantially over entmax-only ETM, but relative to contextual Routing
+ETM beta/theta recovery fell from 0.498454/0.764875 to 0.410354/0.661425,
+recovered motifs fell from 10 to 6 and active/unique topics fell from 14/14 to
+11/10. It failed the first non-inferiority gate, so seeds 23/37, K=128 and real
+MSnLib were not run. The complete package is in
+`../20260830_routing_etm_top2_token/`.
