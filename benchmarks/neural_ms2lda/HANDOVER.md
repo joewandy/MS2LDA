@@ -177,8 +177,9 @@ deterministically, and visually inspect every rendered PDF page.
 
 ## Next compute
 
-Architecture search is paused. The next campaign varies only M1 optimization
-seed while keeping the seed-42 data split, vocabulary, SGNS features,
-co-occurrence graph, MAG index, and validation contract fixed. New seeds 11, 23,
-and 37 are predeclared. The exact workflow and stopping rules are in
-`research/etm_ecrtm_msnlib/M1_MULTISEED_HANDOFF.md`. Test remains locked.
+The next campaign is principled sparse-ETM research: sparsemax/entmax, a sparse
+prior, and/or pseudo-count objective scaling. Screen these mechanisms first on
+the existing truth-known synthetic protocol and advance to real MSnLib
+validation only if warranted. M1 multiseed stability is the fallback only if
+the sparse-ETM campaign fails. The current workflow is in
+`research/etm_ecrtm_msnlib/NEXT_AGENT.md`. Test remains locked.

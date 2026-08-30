@@ -24,8 +24,11 @@ annotations, or the locked `theta >= 0.5` membership threshold. Sharpening
 increases evaluable breadth to 409 at `tau=0.3`, but useful motifs peak at 248
 and mean SOS never reaches 0.651498. The completion-NLL gate passes only through
 `tau=0.8`, where breadth is still 316 evaluable / 192 useful. No temperature
-passes all gates, so inference calibration does not rescue the architecture.
-The ETM path stops and M1 multiseed stability is the next campaign.
+passes all gates, so inference calibration does not rescue the gated dense-ETM
+architecture. The next campaign is principled sparse-ETM research
+(sparsemax/entmax, sparse prior, and/or pseudo-count objective scaling), first
+screened synthetically and then on real validation if warranted. M1 multiseed
+stability is fallback-only if that campaign fails.
 
 ## Validation headline
 

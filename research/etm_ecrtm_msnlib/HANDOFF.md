@@ -1,6 +1,10 @@
 # Neural MS2LDA published-model handoff
 
-This is the canonical handoff for the next higher-compute research/implementation agent. It complements `NEXT_AGENT.md`; where they overlap, the scientific stopping rules below and the locked repository evaluation protocol take precedence.
+This document preserves the scientific background and completed
+published-model campaign. The active higher-compute handoff is `NEXT_AGENT.md`:
+principled sparse-ETM research using sparsemax/entmax, a sparse prior, and/or
+pseudo-count objective scaling, screened synthetically before any warranted
+real-validation run. M1 multiseed stability is fallback-only.
 
 ## Read the literature survey before changing the model
 
@@ -58,9 +62,9 @@ A direct transplant of ECR onto fixed-SGNS ETM was both less defensible and empi
 
 The standalone ECRTM Sinkhorn solver also showed runtime sensitivity. A representative exact-1000-iteration versus bounded-50-step comparison was scientifically very close in the synthetic run, but the bounded version is a numerical research approximation and must be labelled as such. At real K=1000 and V≈21,233, ECR's full topic-word transport matrix is a major computational concern that should be measured explicitly.
 
-## Literature-guided candidate ladder
+## Completed literature-guided candidate ladder
 
-The next experiment should remain deliberately narrow:
+The completed published-model campaign followed this deliberately narrow ladder:
 
 1. **Fixed-SGNS ETM** — the cleanest established neural extension of LDA/ETM for the current representation. scETM strengthens the computational-biology precedent for embedded topic models on sparse biological counts.
 2. **TopMost ECRTM with the same SGNS initialisation** — the published anti-collapse candidate if ETM loses topic inventory or produces excessive duplicates.

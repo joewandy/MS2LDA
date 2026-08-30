@@ -81,4 +81,4 @@ A large MAG-optimized count alone is not evidence of a usable topic inventory.
 
 ## Next compute
 
-Architecture search is paused. The next campaign is M1 optimization-seed stability on the fixed seed-42 data split, vocabulary, token features, and evaluation contract. Test remains locked. The predeclared workflow is in `research/etm_ecrtm_msnlib/M1_MULTISEED_HANDOFF.md`.
+The next campaign is principled sparse-ETM research using sparsemax/entmax, a sparse prior, and/or pseudo-count objective scaling. Screen it synthetically first and advance to real MSnLib validation only if warranted. M1 optimization-seed stability is the fallback only if sparse-ETM fails. Test remains locked. The current workflow is in `research/etm_ecrtm_msnlib/NEXT_AGENT.md`.

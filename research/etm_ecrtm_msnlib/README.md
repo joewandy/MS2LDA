@@ -1,5 +1,13 @@
 # ETM / ECRTM direction for Neural MS2LDA
 
+## Current next direction
+
+The next campaign is principled sparse-ETM research: sparsemax/entmax, a sparse
+prior, and/or pseudo-count objective scaling. It must be screened first on the
+truth-known synthetic protocol and may advance to real MSnLib validation only
+if warranted. M1 multiseed stability is the fallback only if this campaign
+fails. See `NEXT_AGENT.md`.
+
 Status: **research handoff; real MSnLib candidate experiment has NOT been run**.
 
 Branch: `research/etm-ecrtm-msnlib-20260826`
