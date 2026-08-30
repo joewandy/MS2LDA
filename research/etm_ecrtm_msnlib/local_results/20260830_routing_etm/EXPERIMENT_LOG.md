@@ -443,3 +443,14 @@ new result directory and must not mutate these evidence files.
   promote at most one configuration to validation; do not reconstruct M1.
 - **Evidence:** compact per-seed artifacts, the aggregate summary, hashes and
   verifier are in `../20260830_routing_etm_stability/`.
+
+## Experiment 9: simplest positive-NPMI add-on
+
+The predeclared weight-1 train-derived positive-NPMI term was tested alone on
+seed-11 K=36. It reduced its train-graph loss from 5.526062 to 5.499502 but
+reduced true-beta recovery from 0.498454 to 0.491576. NLL changed from 6.278416
+to 6.287552; theta recovery, sparse support and inventory were effectively
+unchanged. This failed the first synthetic gate, so seeds 23/37, K=128 and real
+MSnLib were not run. Do not tune its coefficient or add another donor component.
+The complete predeclaration, result and artifact hashes are in
+`../20260830_routing_etm_npmi/`.

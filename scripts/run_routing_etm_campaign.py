@@ -12,7 +12,12 @@ import numpy as np
 import torch
 
 from benchmarks.neural_ms2lda.diagnostics import model_selection_diagnostics
-from benchmarks.neural_ms2lda.objectives import completion_metrics
+from benchmarks.neural_ms2lda.objectives import (
+    beta_cooccurrence_topic_loss,
+    completion_metrics,
+    prepare_cooccurrence_graph,
+    torch_sparse_graph,
+)
 from benchmarks.neural_ms2lda.routing_etm import (
     ROUTING_VARIANTS,
     RoutingInformedETM,
@@ -53,18 +58,30 @@ if TYPE_CHECKING:
 PROMOTION_SEEDS = (11, 23, 37)
 PRIMARY_TOPICS = 36
 HIGH_K_TOPICS = 128
+POSITIVE_NPMI_WEIGHT = 1.0
+POSITIVE_NPMI_GRAPH_CONFIG = {
+    "minimum_document_frequency": 10,
+    "minimum_pair_frequency": 3,
+    "maximum_neighbors": 16,
+    "minimum_npmi": 0.0,
+    "weight": POSITIVE_NPMI_WEIGHT,
+}
 
 
 def method_label(
     variant: RoutingVariant,
     theta_transform: ThetaTransform,
     reconstruction_scaling: ReconstructionScaling,
+    *,
+    positive_npmi: bool = False,
 ) -> str:
     """Return an artifact label, reusing the exact existing ETM control."""
     if variant == "etm":
-        return f"balanced_etm_{theta_transform}_{reconstruction_scaling}"
-    transform = "" if theta_transform == "softmax" else f"_{theta_transform}"
-    return f"balanced_etm_routing_{variant}{transform}_{reconstruction_scaling}"
+        label = f"balanced_etm_{theta_transform}_{reconstruction_scaling}"
+    else:
+        transform = "" if theta_transform == "softmax" else f"_{theta_transform}"
+        label = f"balanced_etm_routing_{variant}{transform}_{reconstruction_scaling}"
+    return f"{label}_positive_npmi" if positive_npmi else label
 
 
 @torch.inference_mode()
@@ -132,9 +149,15 @@ def run_synthetic(  # noqa: PLR0913, PLR0915
     threads: int,
     training_documents: int,
     validation_documents: int,
+    positive_npmi: bool = False,
 ) -> dict[str, Any]:
     """Train and evaluate one isolated routing-informed ETM formulation."""
-    label = method_label(routing_variant, theta_transform, reconstruction_scaling)
+    label = method_label(
+        routing_variant,
+        theta_transform,
+        reconstruction_scaling,
+        positive_npmi=positive_npmi,
+    )
     output = output_root / "synthetic_runs" / f"seed_{seed}_K_{fitted_topics}_{label}"
     result_path = output / "result.json"
     if result_path.is_file():
@@ -150,6 +173,14 @@ def run_synthetic(  # noqa: PLR0913, PLR0915
         "routing_temperature": 1.0,
         "theta_transform": theta_transform,
         "reconstruction_scaling": reconstruction_scaling,
+        "positive_npmi": (
+            {
+                **POSITIVE_NPMI_GRAPH_CONFIG,
+                "objective_application": "every ordinary ETM minibatch",
+            }
+            if positive_npmi
+            else None
+        ),
         "posterior_change": (
             "centered log token evidence added to the Gaussian posterior mean"
             if routing_variant != "etm"
@@ -166,7 +197,7 @@ def run_synthetic(  # noqa: PLR0913, PLR0915
             "nonlinear context router",
             "document gate",
             "Sinkhorn balancing",
-            "positive-NPMI regularization",
+            *([] if positive_npmi else ["positive-NPMI regularization"]),
             "prototype separation",
             "alternating optimization",
         ],
@@ -191,6 +222,15 @@ def run_synthetic(  # noqa: PLR0913, PLR0915
         training_documents=training_documents,
         validation_documents=validation_documents,
     )
+    graph = None
+    graph_tensor = None
+    if positive_npmi:
+        graph = prepare_cooccurrence_graph(
+            output,
+            train=dataset.train,
+            protocol={"cooccurrence_regularization": POSITIVE_NPMI_GRAPH_CONFIG},
+        )
+        graph_tensor = torch_sparse_graph(graph).to(device)
     # Match the existing sparse-ETM runner exactly so every routing variant
     # starts from the paired control's parameters and sees the same batch order.
     configure(seed + 7001, threads)
@@ -222,6 +262,7 @@ def run_synthetic(  # noqa: PLR0913, PLR0915
         order = rng.permutation(dataset.train.shape[0])
         reconstruction_values = []
         kl_values = []
+        npmi_values = []
         gradient_values = []
         epoch_started = time.perf_counter()
         for start in range(0, len(order), int(batch_size)):
@@ -230,15 +271,21 @@ def run_synthetic(  # noqa: PLR0913, PLR0915
                 dense_normalized(dataset.train, rows, device),
                 sample=True,
             )
+            beta_batch = model.beta()
             reconstruction, _ = sparse_reconstruction_loss(
                 theta,
-                model.beta(),
+                beta_batch,
                 dataset.train,
                 rows,
                 device,
                 scaling=reconstruction_scaling,
             )
-            objective = reconstruction + kl.mean()
+            npmi = (
+                beta_cooccurrence_topic_loss(graph_tensor, beta=beta_batch)
+                if graph_tensor is not None
+                else reconstruction.new_zeros(())
+            )
+            objective = reconstruction + kl.mean() + POSITIVE_NPMI_WEIGHT * npmi
             if not torch.isfinite(objective):
                 message = "routing ETM produced a non-finite objective"
                 raise FloatingPointError(message)
@@ -259,11 +306,15 @@ def run_synthetic(  # noqa: PLR0913, PLR0915
             optimizer.step()
             reconstruction_values.append(float(reconstruction.detach().cpu()))
             kl_values.append(float(kl.mean().detach().cpu()))
+            npmi_values.append(float(npmi.detach().cpu()))
             gradient_values.append(float(gradient_norm.detach().cpu()))
         row = {
             "epoch": epoch + 1,
             "reconstruction": float(np.mean(reconstruction_values)),
             "kl": float(np.mean(kl_values)),
+            "positive_npmi_loss": (
+                float(np.mean(npmi_values)) if positive_npmi else None
+            ),
             "reconstruction_to_kl_ratio": float(
                 np.mean(reconstruction_values) / max(np.mean(kl_values), EPS),
             ),
@@ -285,7 +336,18 @@ def run_synthetic(  # noqa: PLR0913, PLR0915
     training_seconds = time.perf_counter() - training_started
     model.eval()
     with torch.inference_mode():
-        beta = model.beta().cpu().numpy().astype(np.float32)
+        beta_tensor = model.beta()
+        final_npmi_loss = (
+            float(
+                beta_cooccurrence_topic_loss(
+                    graph_tensor,
+                    beta=beta_tensor,
+                ).cpu(),
+            )
+            if graph_tensor is not None
+            else None
+        )
+        beta = beta_tensor.cpu().numpy().astype(np.float32)
     theta_observed, observed_throughput = infer_theta(
         model,
         dataset.validation_observed,
@@ -345,6 +407,18 @@ def run_synthetic(  # noqa: PLR0913, PLR0915
             if model.context_scale is not None
             else None
         ),
+        "positive_npmi": {
+            "enabled": bool(positive_npmi),
+            "weight": POSITIVE_NPMI_WEIGHT if positive_npmi else None,
+            "final_loss": final_npmi_loss,
+            "graph_nonzero_entries": int(graph.nnz) if graph is not None else None,
+            "graph_mean_weight": (
+                float(np.mean(graph.data)) if graph is not None else None
+            ),
+            "graph_max_weight": (
+                float(np.max(graph.data)) if graph is not None else None
+            ),
+        },
         "runtime": {
             "training_wall_seconds": training_seconds,
             "validation_observed_spectra_per_second": observed_throughput,
@@ -384,6 +458,19 @@ def run_synthetic(  # noqa: PLR0913, PLR0915
             "sha256": file_sha256(output / "weights.pt"),
         },
         "candidate_test_artifacts_accessed": False,
+        "positive_npmi_graph": (
+            {
+                "path": str(output / "cooccurrence_graph/positive_npmi_graph.npz"),
+                "bytes": (output / "cooccurrence_graph/positive_npmi_graph.npz")
+                .stat()
+                .st_size,
+                "sha256": file_sha256(
+                    output / "cooccurrence_graph/positive_npmi_graph.npz",
+                ),
+            }
+            if positive_npmi
+            else None
+        ),
     }
     write_json(output / "provenance.json", provenance)
     result = {
@@ -427,6 +514,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--threads", type=int, default=6)
     parser.add_argument("--training-documents", type=int, default=800)
     parser.add_argument("--validation-documents", type=int, default=160)
+    parser.add_argument(
+        "--positive-npmi",
+        action="store_true",
+        help="add the frozen weight-1 train-derived positive-NPMI loss",
+    )
     args = parser.parse_args(argv)
     result = run_synthetic(
         args.output_root.expanduser().resolve(),
@@ -441,6 +533,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         threads=args.threads,
         training_documents=args.training_documents,
         validation_documents=args.validation_documents,
+        positive_npmi=args.positive_npmi,
     )
     print(json.dumps(result, indent=2, sort_keys=True), flush=True)  # noqa: T201
     return 0

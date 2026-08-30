@@ -216,6 +216,9 @@ high-water memory about 2.9 GB. Deterministic full-validation inference processe
   K=1000 and V=21,233; no partial model was scored.
 - The reference short-document NSTM implementation failed the paired high-K
   synthetic screen and was not promoted to MSnLib.
+- A fixed weight-1 positive-NPMI loss improved its own train-graph statistic but
+  reduced seed-11 K=36 true-beta recovery from 0.498454 to 0.491576. It failed
+  its predeclared first gate, so no multi-seed, high-K or real run was performed.
 
 These experiments justify the selected mechanism without claiming that every
 future topic model must fail.
@@ -246,15 +249,14 @@ the original host add `--verify-inputs --verify-local-artifacts
 --require-external`. The committed/full stability checks perform 93/117 checks.
 Exact replay commands are in
 `research/etm_ecrtm_msnlib/local_results/20260830_routing_etm_stability/README.md`.
+Verify the stopped NPMI experiment with
+`scripts/verify_routing_etm_npmi.py --require-external` on the original host.
 
 ## Recommended next steps
 
 1. Preserve this checkpoint as the baseline for every future comparison.
-2. If improving optimized coverage and mean SOS is worth more model work, run one
-   predeclared train-derived positive-NPMI experiment. Screen it synthetically
-   and promote at most one configuration to validation.
-3. Require that any intervention preserve the demonstrated 439-453 evaluable and
-   274-289 useful ranges, sparse support and broad topic inventory.
+2. Do not tune the failed positive-NPMI coefficient or add another M1 component.
+3. Direct further robustness work to a different split or external library.
 4. Keep the private M1 architecture and its other mechanisms out of the
    paper-facing model.
 5. Unlock test only after an independent review freezes the method, checkpoint
@@ -266,8 +268,6 @@ Exact replay commands are in
   they unused noise, chemically coherent novel motifs or decoder artefacts?
 - Does the lower mean SOS persist after controlling for the candidate's roughly
   38-topic mean increase in evaluable breadth?
-- Can one coherence intervention recover optimized coverage without sacrificing
-  the observed breadth range, NLL or interpretability?
 - Does the formulation remain stable under a different data split or external
   library?
 - After stability review, does the frozen candidate reproduce its advantage on

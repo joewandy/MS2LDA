@@ -250,11 +250,9 @@ The priorities are now:
 1. **Keep the candidate test locked.** Test becomes appropriate only after the
    method, metrics and acceptance interpretation are independently reviewed and
    frozen.
-2. **Treat coherence regularization as optional.** Because the
-   optimized-coverage and mean-SOS gaps reproduced, one predeclared train-derived
-   positive-NPMI experiment is the most targeted next model change. It must preserve
-   the present breadth and sparsity and cannot be used to start an unrestricted
-   coefficient search.
+2. **Do not tune coherence regularization.** The predeclared weight-1
+   positive-NPMI experiment subsequently improved its graph loss but reduced
+   true-beta recovery and stopped before real validation.
 3. **Do not repeat identical seeds indefinitely.** The current n=3 result is
    adequate for initialization stability; future robustness evidence should vary
    the split or dataset.

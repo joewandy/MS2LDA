@@ -134,13 +134,11 @@ provenance.
 
 ## Next bounded decision
 
-The stability question is answered for initialization on this split. Do not run
-more identical seeds by default. If improving mean SOS and optimized coverage is
-worth another experiment, the next defensible step is one predeclared,
-train-derived positive-NPMI coherence intervention, screened synthetically and
-then promoted at most once to validation. It must preserve the demonstrated
-439-453 evaluable and 274-289 useful breadth ranges, sparse support and broad
-inventory.
+The stability question is answered for initialization on this split. The one
+predeclared positive-NPMI add-on was subsequently screened and failed its first
+synthetic promotion gate, so it was not run on real validation. Do not repeat
+identical seeds, tune the NPMI coefficient or add another donor mechanism.
+Further robustness evidence should vary the split or external library.
 
 Candidate test remains locked until an independent review accepts the method,
 checkpoint and interpretation. Do not add M1's document gate, Sinkhorn target,

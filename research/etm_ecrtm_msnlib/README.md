@@ -118,14 +118,13 @@ intermediate motifs rather than by inflating a small high-scoring subset.
 
 ## What to improve next
 
-Initialization stability is now complete. The next decision is whether the
-reproducible quality trade-off warrants one targeted model experiment:
+Initialization stability is complete, and the one bounded positive-NPMI add-on
+failed synthetic promotion. The next work should improve evidence rather than
+add more mechanisms:
 
 1. Verify and preserve this checkpoint.
-2. If improving coverage/SOS is worth more work, consider one bounded,
-   predeclared train-derived positive-NPMI coherence experiment. Preserve the
-   demonstrated 439-453 evaluable and 274-289 useful ranges, sparsity and
-   inventory; do not run an open coefficient sweep.
+2. Do not tune the NPMI coefficient or add another donor component. Test split
+   or external-library robustness if more evidence is needed.
 3. Authorize test only after an independent review freezes the method and the
    interpretation of success.
 

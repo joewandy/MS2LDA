@@ -76,21 +76,21 @@ and worse completion NLL relative to M1. Median exact support is 6 in every run,
 and no run has a catastrophic duplicate component. This is descriptive
 same-split initialization stability at n=3, not split or external generalization.
 
-## Optional targeted model improvement
+## Completed positive-NPMI stopping experiment
 
-The residual optimized-coverage and mean-SOS deficit has now reproduced, so one
-train-derived positive-NPMI coherence intervention may be considered as the next
-bounded experiment. Predeclare one formulation and coefficient rule before
-training. Screen synthetically first, then promote at most one configuration to
-validation.
+The one remaining bounded add-on has now been tested. A weight-1 train-derived
+positive-NPMI topic loss was added to the unchanged Routing ETM, using the
+already-audited graph settings and no coefficient search. On seed-11 K=36 it
+reduced its own graph loss from 5.526062 to 5.499502 but changed true-beta
+recovery from 0.498454 to 0.491576. NLL worsened slightly; theta recovery,
+sparsity and inventory were effectively unchanged.
 
-It must preserve or improve the current evaluable/useful breadth, exact support,
-unique top-1 breadth and non-collapse diagnostics. Stop if it merely trades away
-the discovery advantage to satisfy the old Boolean gate.
-
-Do not add the M1 document gate, Sinkhorn balancing, prototype separation,
-alternating optimizer, temperature schedule or another custom prior. Do not run
-an unrestricted coefficient or architecture search.
+This failed the predeclared synthetic promotion gate, so seeds 23/37, K=128 and
+real MSnLib were not run. Do not tune a larger coefficient or add another M1
+component. The simplest supported paper-facing model remains Routing ETM without
+NPMI. Future evidence should concern a different split/external dataset or the
+independent checkpoint/test decision, not further same-dataset architecture
+search.
 
 ## Shared immutable inputs
 
@@ -119,6 +119,8 @@ weights, NumPy arrays, databases or indexes.
   `local_results/20260830_routing_etm/checkpoint_manifest.json`
 - Stability manifest:
   `local_results/20260830_routing_etm_stability/checkpoint_manifest.json`
+- Stopped positive-NPMI experiment:
+  `local_results/20260830_routing_etm_npmi/README.md`
 - Model implementation: `benchmarks/neural_ms2lda/routing_etm.py`
 - Real runner: `scripts/run_routing_etm_real.py`
 - Synthetic runner: `scripts/run_routing_etm_campaign.py`

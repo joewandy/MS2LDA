@@ -199,7 +199,8 @@ The unchanged Routing ETM has now been verified on three real training seeds ove
 the same frozen validation split. Every run preserves higher evaluable/useful
 breadth than M1 and Tomotopy, sparse mixtures and a broad inventory; every run
 also reproduces the coverage/SOS/NLL deficit relative to M1. Stop repeating
-identical seeds. If more model work is wanted, positive-NPMI is the one optional
-bounded intervention now justified by that residual. Do not start M1 multiseed;
-candidate test remains locked. The current workflow is in
+identical seeds. The one bounded positive-NPMI intervention then failed its
+first synthetic promotion gate and was not run on real validation. Do not tune
+its coefficient, add another M1 component or start M1 multiseed; candidate test
+remains locked. The current workflow is in
 `research/etm_ecrtm_msnlib/NEXT_AGENT.md`.

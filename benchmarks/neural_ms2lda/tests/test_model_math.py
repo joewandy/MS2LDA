@@ -23,6 +23,7 @@ from benchmarks.neural_ms2lda.model import (
 )
 from benchmarks.neural_ms2lda.objectives import (
     balanced_sinkhorn_targets,
+    beta_cooccurrence_topic_loss,
     cooccurrence_topic_loss,
     positive_npmi_graph,
     router_block_loss,
@@ -279,6 +280,8 @@ def test_train_only_regularizers_supply_finite_topic_gradients() -> None:
     )
     beta = model.topic_word_distribution()
     cooccurrence = cooccurrence_topic_loss(model, torch_sparse_graph(graph), beta=beta)
+    generic = beta_cooccurrence_topic_loss(torch_sparse_graph(graph), beta=beta)
+    assert torch.allclose(cooccurrence, generic)
     separation = topic_separation_loss(model, neighbors=2, margin=0.3)
     (cooccurrence + separation).backward()
     assert torch.isfinite(cooccurrence)

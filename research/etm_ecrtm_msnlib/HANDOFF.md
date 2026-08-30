@@ -72,7 +72,12 @@ The completed published-model campaign followed this deliberately narrow ladder:
 1. **Fixed-SGNS ETM** — the cleanest established neural extension of LDA/ETM for the current representation. scETM strengthens the computational-biology precedent for embedded topic models on sparse biological counts.
 2. **TopMost ECRTM with the same SGNS initialisation** — the published anti-collapse candidate if ETM loses topic inventory or produces excessive duplicates.
 3. **Raw ECRTM and the already-frozen tau=0.30 theta calibration** — only to address the distinct short-spectrum mixture-calibration problem; do not tune tau on test.
-4. Add one further MS-specific mechanism only if the real validation result identifies a specific failure. For example, if beta predicts completion reasonably but MAG/SOS coherence falls, positive-NPMI is a targeted literature-supported mechanism to test. If representation quality is the bottleneck, a frozen DreaMS/contextual embedding is a separate later experiment, not something to combine immediately with ECRTM.
+4. The conditional MS-specific add-back was exercised once: a fixed weight-1
+   positive-NPMI term improved its own train-graph statistic but reduced planted
+   beta recovery, so it stopped at the first synthetic gate. Do not tune that
+   coefficient or combine it with another donor mechanism. A frozen
+   DreaMS/contextual embedding would require a separate, newly justified
+   experiment rather than being combined opportunistically with ECRTM.
 
 M1 remains a locked historical comparator and source of donor ablation evidence;
 it is not the paper-facing base or next campaign.
@@ -111,6 +116,8 @@ Current baseline code and evidence on this branch:
   environment, evidence and comparator hashes/values.
 - `local_results/20260830_routing_etm_stability/README.md` — same-split
   training-seed stability report and compact evidence package.
+- `local_results/20260830_routing_etm_npmi/README.md` — stopped synthetic
+  positive-NPMI add-on and its negative result.
 
 Earlier ETM, pooled, balanced, gated, sparse, ECRTM and NSTM results remain in
 their dated `local_results/` directories. They are negative controls and
@@ -123,8 +130,9 @@ diffuse-mixture and topic-starvation failures and is already competitive on the
 scientific discovery metrics. Same-split training-seed stability is now
 established descriptively at n=3: every run preserves the discovery advantage,
 sparse mixtures and broad inventory, and every run reproduces the residual
-coverage/SOS/NLL trade-off. If more model work is desired, the next admissible
-step is one bounded, literature-supported coherence intervention rather than
-more unchanged seeds or a wider architecture search.
+coverage/SOS/NLL trade-off. The one bounded positive-NPMI add-on then failed its
+first synthetic gate: it improved its own graph objective but slightly reduced
+true-beta recovery. No real run was authorized. Further coefficient or
+architecture search on this split is not justified.
 
 The goal is not to make the highest-scoring neural architecture. The goal is the simplest scientifically defensible model that preserves Mass2Motif discovery quality on real MSnLib data.

@@ -56,7 +56,9 @@ M1-relative gates are therefore consistently false and candidate test remains
 locked. The correct scientific conclusion is a strong near-pass and viable
 paper-facing baseline: the discovery breadth, sparsity and inventory repairs are
 initialization-stable on this split, while residual chemical-quality and
-likelihood trade-offs also reproduce.
+likelihood trade-offs also reproduce. A final weight-1 positive-NPMI add-on
+improved its own train-graph objective but reduced planted beta recovery, so it
+stopped at the first synthetic gate and was never run on real validation.
 \end{abstract}
 
 \section{Scientific objective}
@@ -381,6 +383,40 @@ These results justify the selected posterior adaptation without claiming that
 every future topic model must fail. They also show why another likelihood-only
 comparison would be insufficient.
 
+\subsection{The simplest coherence add-on failed synthetic promotion}
+
+The only post-stability model addition was a train-derived positive-NPMI topic
+loss with the already-audited weight 1.0 and graph settings. No parameter,
+decoder, posterior, optimizer schedule or other donor component changed. The
+term reduced its own graph loss but did not improve planted motif-word recovery.
+
+\begin{table}[ht]
+\centering
+\small
+\caption{Seed-11 K=36 synthetic triage. Graph loss is lower-is-better; all other
+cosines are higher-is-better.}
+\label{tab:npmi-stop}
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+Metric & Routing ETM & + positive-NPMI & Change \\
+\midrule
+Held-out NLL & 6.278416 & 6.287552 & +0.009136 \\
+True-beta cosine & 0.498454 & 0.491576 & -0.006878 \\
+True-theta cosine & 0.764875 & 0.765219 & +0.000344 \\
+Train-graph loss & 5.526062 & 5.499502 & -0.026559 \\
+Active topics & 14 & 14 & 0 \\
+Unique top-1 topics & 14 & 14 & 0 \\
+Median effective topics & 1.971 & 1.955 & -0.017 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The predeclared gate required at least +0.01 true-beta cosine. The observed
+change was -0.006878, while NLL worsened by 0.15\%. Seeds 23/37, K=128 and real
+MS$^{n}$Lib were therefore not run. This result does not prove that every NPMI
+coefficient must fail; it shows that coefficient search is not justified by the
+simplest fixed intervention.
+
 \section{Runtime and system load}
 
 The original frozen model trained for 120 epochs in 876.8 seconds (14.6 minutes)
@@ -404,6 +440,10 @@ data membership nor hyperparameters. It does not establish generalization to
 other splits, instruments, ionization modes, biological samples, datasets or
 topic counts.
 
+The positive-NPMI stopping result is one synthetic seed because its predeclared
+first-stage gate failed. It supports rejection of this fixed add-on, not a broad
+claim that all possible coherence objectives are ineffective.
+
 MAG/SOS is a library-dependent chemical proxy. Higher evaluable breadth can
 lower an unweighted mean by admitting additional borderline topics, which is why
 counts, mean, median and SOS bands are reported together. Expert interpretation
@@ -423,10 +463,10 @@ changes. The next steps are:
   artifacts;
   \item stop repeating identical same-split seeds; future robustness work should
   vary the split or dataset;
-  \item if further model work is desired, consider one predeclared train-derived
-  positive-NPMI coherence experiment, now justified by the reproduced residual;
-  \item stop that intervention if it reduces the present evaluable/useful
-  breadth, sparse support or global inventory;
+  \item do not tune the failed NPMI coefficient or add another private-donor
+  component;
+  \item prefer a different split or external library over further architecture
+  search on the same validation evidence; and
   \item unlock candidate test only after an independent review freezes the
   method, checkpoint and success interpretation.
 \end{enumerate}
@@ -449,8 +489,9 @@ predeclared all-gates Boolean remains false and candidate test remains locked.
 Nevertheless, the scientific outcome is positive: Routing ETM is the strongest
 paper-facing discovery baseline produced by this campaign, and its central
 advantage is stable across the three tested initializations. Future work should
-preserve explainability and test new sources of generalization rather than treat
-the model as a failure requiring architectural rescue.
+preserve explainability and test new sources of generalization. The failed NPMI
+triage reinforces that the simplest supported formulation is the existing
+Routing ETM, not Routing ETM plus additional donor mechanisms.
 
 \appendix
 \section{Reproduction and provenance}
@@ -468,6 +509,8 @@ conda run -n ms2lda-neural python \
   -m scripts.verify_routing_etm_checkpoint
 conda run -n ms2lda-neural python \
   -m scripts.verify_routing_etm_stability
+conda run -n ms2lda-neural python \
+  -m scripts.verify_routing_etm_npmi --require-external
 \end{verbatim}
 
 On the original host, verify every immutable validation input and retained large
@@ -481,14 +524,12 @@ conda run -n ms2lda-neural python \
   --verify-inputs --verify-local-artifacts --require-external
 \end{verbatim}
 
-The full local checks complete 78 baseline and 117 stability integrity and
-cross-file consistency checks. Exact real replay commands are in
-\path{research/etm_ecrtm_msnlib/local_results/20260830_routing_etm/README.md}.
-The stability table and per-seed compact evidence are in
-\path{research/etm_ecrtm_msnlib/local_results/20260830_routing_etm_stability/}.
-Each package has a machine-readable \path{checkpoint_manifest.json}. Large
-weights, NumPy arrays, FAISS indexes, databases and raw MSnLib assets are
-retained outside Git and identified by path, byte size and SHA-256.
+The full local checks complete 78 baseline, 117 stability and 26 stopped-NPMI
+integrity and cross-file consistency checks. Exact replay commands and compact
+package locations are indexed in \path{docs/research/README.md}. Each main
+checkpoint has a machine-readable \path{checkpoint_manifest.json}. Large weights,
+NumPy arrays, FAISS indexes, databases and raw MSnLib assets are retained outside
+Git and identified by path, byte size and SHA-256.
 
 \section{Frozen diagnostic settings}
 

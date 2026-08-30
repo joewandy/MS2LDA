@@ -158,7 +158,10 @@ Report raw and frozen-temperature results. If a real method change is needed bey
 
 ### If both published models fit likelihood but lose MAG/SOS chemistry
 
-Test one chemistry/co-occurrence mechanism at a time. Positive-NPMI/co-occurrence structure is the most defensible first add-back because M1's real ablations suggest it has a direct motif-quality role.
+This conditional has now been tested once. The fixed weight-1 positive-NPMI
+add-back improved its own train-graph objective but reduced planted beta
+recovery, so it failed the first predeclared synthetic gate. Do not tune the
+coefficient or add another M1 donor component on the same evidence.
 
 ### If short-spectrum inference remains the limiting issue
 
@@ -264,8 +267,10 @@ sparse per-spectrum mixtures and a broad global inventory. All three also
 reproduce the optimized-coverage, mean-SOS and completion-NLL trade-off relative
 to M1.
 
-Positive-NPMI topic-coherence regularization is therefore the one optional next
-mechanism justified by the reproduced residual, grounded in the established
-coherence literature [Lau et al., 2014]. It must be predeclared, added alone,
-screened synthetically and promote at most one configuration to validation. This
-does not justify rebuilding the private architecture piece by piece.
+Positive-NPMI topic-coherence regularization was therefore tested as the one
+optional next mechanism grounded in the established coherence literature [Lau
+et al., 2014]. The isolated weight-1 term improved its own train-graph loss on
+seed-11 K=36 but slightly reduced true-beta recovery (0.498454 to 0.491576),
+missing the predeclared promotion gate. No multi-seed, high-K or real run was
+authorized. This negative result argues against coefficient tuning or rebuilding
+the private architecture piece by piece.
