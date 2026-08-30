@@ -61,14 +61,18 @@ python scripts/backfill_neural_ms2lda_diagnostics.py --run /path/to/run
 
 ## Reproduction
 
-Create the two environments and acquire the public inputs:
+Create the unified production, neural, CUDA, and MAG environment and acquire
+the public inputs:
 
 ```bash
-conda env create -f environment-neural-ms2lda.yml
-conda env create -f environment-msnlib-mag.yml
+conda env create -f environment.yml
 conda run -n ms2lda-neural python scripts/download_msnlib_validation_assets.py \
   --data-root /path/to/MSnLib-assets
 ```
+
+`environment.yml` is the sole Conda manifest. The active pipeline runs the
+MS2LDA application, training, validation, FAISS/Spec2Vec retrieval, and MAG
+annotation with its `ms2lda-neural` interpreter.
 
 Run the complete locked M1/Tomotopy workflow:
 

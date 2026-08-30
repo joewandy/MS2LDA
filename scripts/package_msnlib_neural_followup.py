@@ -379,7 +379,7 @@ def _exact_commands(
             "--etm-batch-size 256"
         ),
         (
-            "conda run -n ms2lda-msnlib-mag python -m "
+            "conda run -n ms2lda-neural python -m "
             f"scripts.run_msnlib_model_comparison chemical --run {run} "
             f"--data-root {data_root} --method etm_balanced"
         ),
@@ -398,13 +398,13 @@ def _exact_commands(
     ]
     if (run / "validation_chemical/ecrtm_canonical/complete.json").is_file():
         commands.append(
-            "conda run -n ms2lda-msnlib-mag python -m "
+            "conda run -n ms2lda-neural python -m "
             f"scripts.run_msnlib_model_comparison chemical --run {run} "
             f"--data-root {data_root} --method ecrtm_canonical"
         )
     if (run / "validation_chemical/ecrtm_canonical_tau030/complete.json").is_file():
         commands.append(
-            "conda run -n ms2lda-msnlib-mag python -m "
+            "conda run -n ms2lda-neural python -m "
             f"scripts.run_msnlib_model_comparison chemical --run {run} "
             f"--data-root {data_root} --method ecrtm_canonical_tau030"
         )

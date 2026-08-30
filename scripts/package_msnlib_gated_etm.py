@@ -407,9 +407,6 @@ def _environment() -> str:
         "",
         "# conda list --export: ms2lda-neural",
         _conda_export("ms2lda-neural"),
-        "",
-        "# conda list --export: ms2lda-msnlib-mag",
-        _conda_export("ms2lda-msnlib-mag"),
     ]
     return "\n".join(lines) + "\n"
 

@@ -87,7 +87,8 @@ dash-bootstrap-components = "^1.6.0"
 
 # modelling / embeddings
 tomotopy   = ">=0.12.7"
-spec2vec   = "^0.8.0"
+# 0.8.1 imports MatchMS APIs removed by the validated 0.29 release.
+spec2vec   = "^0.9.1"
 PyQt6      = "^6.7.1"
 faiss-cpu  = "1.10.0"
 

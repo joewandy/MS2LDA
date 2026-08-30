@@ -153,6 +153,34 @@ def test_pipeline_finishes_validation_before_test(
     )
 
 
+def test_chemical_subprocess_uses_active_unified_interpreter(
+    monkeypatch: Any, tmp_path: Path
+) -> None:
+    captured: dict[str, Any] = {}
+
+    def run(command: list[str], **kwargs: Any) -> None:
+        captured["command"] = command
+        captured["kwargs"] = kwargs
+
+    interpreter = "/opt/ms2lda-neural/bin/python"
+    monkeypatch.setattr(pipeline.sys, "executable", interpreter)
+    monkeypatch.setattr(pipeline.subprocess, "run", run)
+    pipeline._chemical_subprocess(
+        tmp_path / "run",
+        method="neural",
+        data_root=tmp_path / "inputs",
+        cpu_threads=6,
+        split="validation",
+    )
+    assert captured["command"][:3] == [
+        interpreter,
+        "-m",
+        "benchmarks.neural_ms2lda.chemical",
+    ]
+    assert "ms2lda-msnlib-mag" not in captured["command"]
+    assert captured["kwargs"]["check"] is True
+
+
 def test_mag_index_excludes_validation_and_test_compounds(
     monkeypatch: Any, tmp_path: Path
 ) -> None:

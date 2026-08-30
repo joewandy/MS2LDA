@@ -122,8 +122,7 @@ source for the later validation-only external model-selection section.
 ## Reproduction
 
 ```bash
-conda env create -f environment-neural-ms2lda.yml
-conda env create -f environment-msnlib-mag.yml
+conda env create -f environment.yml
 
 conda run -n ms2lda-neural python \
   scripts/download_msnlib_validation_assets.py \
@@ -133,6 +132,9 @@ conda run -n ms2lda-neural python -m benchmarks.neural_ms2lda run \
   --data-root /path/to/MSnLib-assets \
   --run /path/to/new-run
 ```
+
+This unified environment includes the production MS2LDA application, neural
+and CUDA dependencies, and the FAISS/Spec2Vec MAG annotation stack.
 
 Backfill the expanded diagnostics for a completed validation run without
 opening test:

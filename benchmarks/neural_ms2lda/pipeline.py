@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import contextlib
 import os
-import shutil
 import subprocess
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -60,10 +60,7 @@ def _chemical_subprocess(
     cpu_threads: int,
     split: str,
 ) -> None:
-    """Run MAG in its pinned environment while preserving the thread contract."""
-    conda = shutil.which("conda")
-    if conda is None:
-        raise FileNotFoundError("conda is required for the pinned MAG environment")
+    """Run MAG with the active unified interpreter and thread contract."""
     log = directory / "logs" / f"chemical_{split}_{method}.log"
     log.parent.mkdir(parents=True, exist_ok=True)
     environment = os.environ.copy()
@@ -80,12 +77,7 @@ def _chemical_subprocess(
     ):
         environment[name] = str(cpu_threads)
     command = [
-        conda,
-        "run",
-        "--no-capture-output",
-        "-n",
-        "ms2lda-msnlib-mag",
-        "python",
+        sys.executable,
         "-m",
         "benchmarks.neural_ms2lda.chemical",
         "--run",

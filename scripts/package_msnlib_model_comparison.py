@@ -261,7 +261,7 @@ def environment_text() -> str:
         )
     )
     if conda:
-        for environment in ("ms2lda-neural", "ms2lda-msnlib-mag"):
+        for environment in ("ms2lda-neural",):
             sections.extend(
                 (
                     f"\n# conda list --export: {environment}",
@@ -308,7 +308,7 @@ def exact_commands(
     ]
     commands.extend(
         (
-            f"{prefix} ms2lda-msnlib-mag {module} chemical --run {run} "
+            f"{prefix} ms2lda-neural {module} chemical --run {run} "
             f"--data-root {data_root} --method {method}"
         )
         for method in METHODS
