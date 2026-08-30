@@ -16,372 +16,441 @@
   linkcolor=accent,
   urlcolor=accent,
   citecolor=accent,
-  pdftitle={Neural MS2LDA: One-Pass Mass2Motif Discovery and Real-Data Model Selection}
+  pdftitle={Routing-Informed Sparse ETM for Neural MS2LDA}
 }
-\input{generated/results_macros.tex}
 \setlist{nosep,leftmargin=*}
 \newcommand{\softmax}{\operatorname{softmax}}
+\newcommand{\entmax}{\operatorname{entmax}_{1.5}}
 \newcommand{\normalize}{\operatorname{normalize}}
-\newcommand{\stopgrad}{\operatorname{stopgrad}}
+\newcommand{\centerop}{\operatorname{center}}
 
-\title{Neural MS2LDA:\\
-One-Pass Mass2Motif Discovery and Real-Data Model Selection}
+\title{Routing-Informed Sparse ETM for Neural MS2LDA:\\
+Validation Checkpoint and Model Selection}
 \author{}
-\date{28 August 2026}
+\date{30 August 2026}
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
-Mass2Motif discovery requires more than good held-out likelihood: a model must
-retain a broad, non-redundant topic inventory and assign short, sparse tandem
-mass spectra strongly enough for chemical evaluation. Neural MS2LDA (M1) uses
-fixed train-only spectral-word embeddings, a contextual token-level top-2
-router, shared topic prototypes, a document gate, fragment/loss-balanced
-decoding, and complementary anti-collapse objectives. The fitted model has
-167,168 learned parameters and performs held-out document inference in one
-forward pass.
+Mass2Motif discovery requires more than good held-out likelihood. A useful model
+must retain a broad, non-redundant topic inventory and assign short tandem mass
+spectra strongly enough for chemical evaluation. Canonical and balanced Embedded
+Topic Models (ETMs) retained reasonable likelihood but produced diffuse document
+mixtures, while a sparse ETM using entmax alone starved most topics.
 
-Under the locked seed-\StudySeed{}, $K=\StudyTopics{}$ MS$^{n}$Lib benchmark,
-M1 produces \NeuralValidationOptimized{} optimized and
-\NeuralValidationUseful{} useful validation motifs, with completion NLL
-\NeuralValidationNLL{}. Against Tomotopy LDA it offers a larger useful motif
-inventory and faster resident inference, with a breadth--purity trade-off in
-SOS. We then performed a validation-only model-selection campaign against
-canonical fixed-SGNS ETM, a deterministic pooled embedded model, a
-fragment/loss-balanced ETM, and canonical ECRTM. All simpler completed models
-had good completion likelihood, but none preserved M1-level chemistry and topic
-inventory. The pooled model contained a 614-topic near-exact duplicate
-component; balanced ETM repaired channel skew but not chemical breadth; and the
-maintained ECRTM Sinkhorn path failed its convergence contract at real scale.
+We therefore retained the published ETM generator and added two bounded inference
+adaptations: top-2 contextual evidence from observed spectral words and published
+alpha-entmax 1.5. The resulting model has only one additional learned scalar. On
+the locked seed-42, $K=1000$ MS$^{n}$Lib validation split it produces 445
+evaluable and 289 useful motifs, compared with 408/265 for the private M1
+reference and 206/138 for Tomotopy. Its median spectrum uses 3.70 effective
+topics, 828 topics win at least one validation spectrum, and no catastrophic
+duplicate component appears.
 
-The evidence supports a qualified conclusion: M1 is not the mathematically
-simplest architecture, but it is the least-complex model currently demonstrated
-to satisfy the complete real-data scientific contract. Architecture selection
-is therefore closed pending multi-seed M1 stability analysis. Alternative model
-test data remained locked throughout model selection.
+The model does not dominate every metric. It produces 803 optimized motifs,
+mean SOS 0.647153 and completion NLL 9.542924, versus 884, 0.658079 and 8.974140
+for M1. Three conservative M1-relative gates are therefore false and candidate
+test remains locked. The correct scientific conclusion is a strong near-pass and
+a viable paper-facing baseline: the principal discovery breadth, sparsity and
+inventory failures are repaired, while residual chemical-quality and likelihood
+trade-offs remain explicit. The next priority is reproducibility and real
+training-seed stability, not reconstruction of the private M1 architecture.
 \end{abstract}
 
 \section{Scientific objective}
 
 MS2LDA represents tandem mass spectra as documents, fragment and neutral-loss
 tokens as words, and recurrent co-fragmentation patterns as Mass2Motifs
-\cite{vanderhooft2016}. At $K=1000$, a useful topic model must satisfy four
-requirements simultaneously:
+\cite{vanderhooft2016}. At $K=1000$, a useful model must simultaneously:
 \begin{enumerate}
   \item predict held-out spectral evidence;
-  \item retain many distinct topic--word distributions;
-  \item assign spectra confidently enough for motif-level association;
-  \item yield chemically useful MAG/SOS annotations under leakage control.
+  \item retain many distinct topic-word distributions;
+  \item assign each short spectrum to only a small number of motifs;
+  \item produce enough confident spectrum-topic associations for MAG/SOS; and
+  \item retain chemically useful motifs under leakage control.
 \end{enumerate}
 
-These requirements create failure modes that ordinary likelihood can hide.
-Topics may be starved, duplicated, or nearly uniform; short spectra may spread
-probability over too many topics; and fragment/loss vocabulary geometry may
-bias topic mass. A model that predicts documents well can therefore fail as a
-Mass2Motif discovery system.
+Likelihood alone can hide major failures. Topics may be starved, duplicated or
+nearly uniform, and a spectrum may spread probability over dozens of topics even
+when completion NLL is good. Earlier ETM experiments reproduced both failure
+classes. This study asks whether a recognizable ETM base can be adapted to the
+short MS/MS document regime without rebuilding the private M1 system.
 
-The original M1 study established a neural alternative to Tomotopy and used
-within-family ablations to simplify its contextual router. A subsequent concern
-was whether M1's combination of routing, gating, Sinkhorn, NPMI, separation, and
-alternating optimization was harder to justify than a recognizable published
-neural topic model. The validation-only campaign reported here directly tests
-that concern.
+\section{Evidence and metric contract}
 
-\section{Neural MS2LDA model}
-
-\subsection{Spectral-word geometry and decoder}
-
-Each training-vocabulary word $w$ has a fixed 50-dimensional feature vector
-$x_w$: 48 train-only SGNS coordinates plus fragment/loss indicators. A learned
-bias-free projection produces
-\begin{equation}
-  z_w=\normalize(Wx_w),\qquad W\in\mathbb R^{128\times50}.
-\end{equation}
-For normalized topic prototype $\widehat q_k$, cosine logits define separate
-fragment and loss softmaxes. Every topic assigns one half of its probability
-mass to each channel:
-\begin{equation}
-  \beta_{kw}=\begin{cases}
-  \tfrac12\,\softmax_{v\in V_F}(2\widehat q_k^\top z_v/\tau_\beta), & w\in V_F,\\
-  \tfrac12\,\softmax_{v\in V_L}(2\widehat q_k^\top z_v/\tau_\beta), & w\in V_L.
-  \end{cases}
-\end{equation}
-The trained topic--word matrix remains an explicit probabilistic Mass2Motif
-representation.
-
-\subsection{Contextual sparse routing}
-
-For document $d$, let $c_{dw}$ be the pseudo-count of word $w$ and
-$s_d=\sum_wc_{dw}z_w$. The leave-one-out token context is
-\begin{equation}
-  \bar z_{d\setminus w}=\frac{s_d-c_{dw}z_w}
-  {\max(\sum_vc_{dv}-c_{dw},1)}.
-\end{equation}
-A single bias-free nonlinear residual map combines token and context:
-\begin{align}
-  e_{dw}&=\operatorname{GELU}(W_c[z_w;\bar z_{d\setminus w}]),\\
-  h_{dw}&=\normalize(z_w+e_{dw}),\qquad u_d=\normalize(s_d).
-\end{align}
-Local and whole-spectrum scores are added, followed by top-2 routing:
-\begin{equation}
-  a_{dwk}=h_{dw}^{\top}\widehat q_k+u_d^{\top}\widehat q_k,
-  \qquad r_{dw}=\operatorname{top2}\!\left(\softmax(a_{dw}/T)\right).
-\end{equation}
-Count-weighted routed mass $M_{dk}=\sum_wc_{dw}r_{dwk}$ is reweighted by a
-detached document gate:
-\begin{equation}
-  g_{dk}=\softmax_k(u_d^\top\widehat q_k/T),\qquad
-  \theta_{dk}=\frac{M_{dk}\,\stopgrad(g_{dk})^{0.75}}
-  {\sum_jM_{dj}\,\stopgrad(g_{dj})^{0.75}}.
-\end{equation}
-The resulting completion model is the ordinary topic mixture
-\begin{equation}
-  p(w\mid d)=\sum_k\theta_{dk}\beta_{kw}.
-\end{equation}
-Held-out inference uses this one forward path and no per-spectrum optimization.
-
-\subsection{Training-only safeguards}
-
-M1 alternates router and topic updates under full-spectrum mixture likelihood.
-Detached Sinkhorn targets resist topic starvation, positive-NPMI regularization
-encourages training-supported co-occurrence, and nearest-prototype separation
-resists duplicate topics. Routing temperature and Sinkhorn weight are annealed.
-These mechanisms are absent from held-out inference but shape the learned topic
-inventory.
-
-The accepted M1 model has 167,168 learned parameters: 6,400 in the token
-projection, 32,768 in the context router, and 128,000 in the prototypes. The
-complete original derivation and internal simplification campaign are preserved
-in
-\path{docs/research/archive/neural_ms2lda_report_pre_model_selection.tex}.
-
-\section{Data and evaluation contract}
-
-The experiment uses the published positive-mode MS$^{n}$Lib benchmark assets
-from Zenodo record 20179680 \cite{brungs2025,msnlibdata}. The locked seed-42
-scaffold/compound-disjoint split contains train, validation, and test partitions;
-vocabulary and SGNS features are constructed from training spectra only.
+The experiment uses the positive-mode MS$^{n}$Lib assets from Zenodo record
+20179680 \cite{brungs2025,msnlibdata}. The locked scaffold/compound-disjoint split
+contains 27,222 training and 3,889 validation spectra. Vocabulary and
+48-dimensional SGNS features are constructed from training spectra only.
 Physical peak groups are divided as units for document completion, preventing a
 fragment and its corresponding neutral loss from leaking across observed and
 withheld halves.
 
-MAG retrieves leakage-filtered reference spectra and constructs motif
-annotations. SOS is then evaluated only for held-out molecules associated with
-a topic at $\theta\geq0.5$. The primary chemistry quantities are:
+MAG retrieves leakage-filtered reference spectra and optimizes motif annotations.
+The frozen validation membership threshold is $\theta_{dk}\geq0.5$. The primary
+metrics are:
 \begin{itemize}
-  \item optimized motifs: topics for which MAG yields an optimized motif;
-  \item evaluable motifs: optimized topics with at least one high-confidence
-  associated held-out molecule;
-  \item useful motifs: evaluable topics with SOS $\geq0.6$.
+  \item \textbf{optimized motifs}: topics for which MAG produces at least one
+  optimized annotation feature;
+  \item \textbf{evaluable motifs}: optimized topics associated with at least one
+  unique validation molecule;
+  \item \textbf{SOS}: annotation-fingerprint containment in a molecule
+  fingerprint, averaged over unique molecules and then over topics;
+  \item \textbf{useful motifs}: evaluable topics with SOS $\geq0.6$; and
+  \item \textbf{completion NLL}: negative log-likelihood per in-vocabulary
+  withheld token under $\theta\beta$, where lower is better.
 \end{itemize}
-Completion NLL is count-weighted over in-vocabulary withheld words. Chemistry
-breadth takes precedence over NLL in model selection.
 
-\subsection{Expanded collapse diagnostic contract}
+Candidate selection used training plus validation only. Candidate test theta,
+completion, MAG, SOS and result files were not loaded, calculated or inspected.
+The committed access audit records this boundary explicitly.
 
-The external comparison showed that optimized motif count alone can be
-misleading. Every neural topic-model run must now also report:
-\begin{itemize}
-  \item median/mean effective topics per spectrum and corpus effective topics;
-  \item active-topic counts and maximum mean topic usage;
-  \item unique top-1 topics and topics never top-1;
-  \item nearest and maximum pairwise beta cosine;
-  \item connected duplicate components at cosine 0.95, 0.99, and 0.999;
-  \item beta effective-word count, maximum word probability, top-20 mass, and
-  top-word uniqueness;
-  \item per-topic fragment probability mass and extreme channel skew.
-\end{itemize}
-These metrics are implemented in
-\path{benchmarks/neural_ms2lda/diagnostics.py} and are written for validation and
-test evaluation. Candidate selection remains validation-only.
+\section{Routing-informed sparse ETM}
 
-\section{Locked M1 versus Tomotopy result}
+\subsection{Published ETM generator}
 
-On validation, M1 produces \NeuralValidationOptimized{} optimized,
-\NeuralValidationEvaluable{} evaluable, and \NeuralValidationUseful{} useful
-motifs. Tomotopy produces \TomotopyValidationOptimized{},
-\TomotopyValidationEvaluable{}, and \TomotopyValidationUseful{}, respectively.
-M1 has lower validation completion NLL
-(\NeuralValidationNLL{} versus \TomotopyValidationNLL{}), while Tomotopy has
-higher validation mean SOS
-(\TomotopyValidationSOS{} versus \NeuralValidationSOS{}). Thus the validation
-result is a breadth--purity trade-off rather than uniform dominance.
+Let $\rho_w\in\mathbb{R}^{48}$ be the fixed train-only SGNS coordinate of word
+$w$ and $\alpha_k\in\mathbb{R}^{48}$ the learned ETM coordinate of topic $k$.
+The decoder is the ordinary embedding-space topic model \cite{dieng2020}, with
+separate fragment and neutral-loss normalizations so that each channel receives
+half of every topic's probability mass:
+\begin{equation}
+  \beta_{kw}=\begin{cases}
+  \tfrac12\softmax_{v\in V_F}(\alpha_k^\top\rho_v), & w\in V_F,\\
+  \tfrac12\softmax_{v\in V_L}(\alpha_k^\top\rho_v), & w\in V_L.
+  \end{cases}
+\end{equation}
 
-After model selection and lock, the original study opened test once for
-reporting. M1 yields \NeuralTestUseful{} useful test motifs versus
-\TomotopyTestUseful{} for Tomotopy, with completion NLL \NeuralTestNLL{} versus
-\TomotopyTestNLL{}. The recorded core fitting times are \NeuralFitMinutes{} and
-\TomotopyFitMinutes{} minutes. These test numbers apply only to the already
-locked M1/Tomotopy comparison; no later candidate was evaluated on test.
+The two-layer ETM encoder returns Gaussian parameters $\mu(x)$ and $\sigma(x)$
+for normalized spectrum bag-of-words $x$. The variational family, standard-normal
+analytic KL, raw pseudo-count multinomial reconstruction and optimizer remain
+unchanged.
 
-\section{Validation-only external model selection}
+\subsection{Top-2 contextual posterior evidence}
 
-The comparison started from recognizable published formulations and added only
-failure-motivated adaptations. The frozen candidate gates were optimized
-$\geq840$, evaluable $\geq388$, useful $\geq252$, mean SOS $\geq0.651498$,
-completion NLL $\leq9.422847$, finite execution, and no catastrophic inventory
-collapse.
+For each non-zero word, the model combines its normalized SGNS vector with the
+weighted leave-one-out mean of the other observed words. One learned scalar $c$
+controls the context contribution:
+\begin{equation}
+  h_{dw}=\normalize\!\left(
+  \normalize(\rho_w)+c\,\frac{\sum_vx_{dv}\rho_v-x_{dw}\normalize(\rho_w)}
+  {\max(1-x_{dw},\epsilon)}\right).
+\end{equation}
+
+The contextual word is compared with the same normalized topic coordinates that
+define $\beta$:
+\begin{equation}
+  s_{dwk}=\frac{h_{dw}^{\top}\normalize(\alpha_k)}{\tau_r},
+  \qquad \tau_r=1.0.
+\end{equation}
+Only its two largest topic logits are retained (the top-2 route) and normalized
+with a softmax. Their word-weighted sum yields one document evidence
+distribution $r_d$.
+
+The ordinary ETM posterior mean receives a bounded row-centred log offset:
+\begin{align}
+  \widetilde\mu(x_d)
+    &=\mu(x_d)+\centerop\!\left[\log\left(r_d+\tfrac1K\right)\right],\\
+  z_d&=\widetilde\mu(x_d)+\sigma(x_d)\odot\varepsilon,
+       \qquad \varepsilon\sim\mathcal N(0,I),\\
+  \theta_d&=\entmax(z_d),\\
+  p(w\mid d)&=\sum_k\theta_{dk}\beta_{kw}.
+\end{align}
+
+The $1/K$ pseudocount bounds topics absent from the sparse route. Row centring
+makes uniform evidence an exact no-op. Alpha-entmax 1.5 supplies exact zeros
+\cite{peters2019}. Routing temperature and strength are fixed at 1.0. The learned
+context scalar finished at 0.1772, and total parameters increase from 19,278,000
+for balanced ETM to 19,278,001.
+
+There is no nonlinear M1 router, document gate, Sinkhorn target, NPMI loss,
+prototype-separation loss, alternating optimizer or temperature schedule. The
+paper-facing claim is therefore ETM plus one explainable short-spectrum posterior
+adaptation and a published sparse simplex mapping.
+
+\section{Synthetic mechanism isolation}
+
+Truth-known synthetic spectra used 18 planted motifs, 1--3 generating motifs per
+spectrum, paired fragment/loss words, train-only SGNS, raw intensity pseudo-counts,
+800 training and 160 validation spectra, and frozen seeds 11, 23 and 37.
 
 \begin{table}[ht]
 \centering
-\scriptsize
-\setlength{\tabcolsep}{3.5pt}
-\caption{Real MS$^{n}$Lib validation-only model-selection result. Alternatives
-were never evaluated on candidate test data.}
-\label{tab:model-selection}
-\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.25\textwidth}rrrrr>{\raggedright\arraybackslash}p{0.19\textwidth}@{}}
+\small
+\caption{K=36 synthetic means. Beta and theta columns are cosine recovery against
+planted truth.}
+\label{tab:synthetic}
+\begin{tabular}{@{}lrrrrrr@{}}
 \toprule
-Model & Optimized & Evaluable & Useful & Mean SOS & NLL & Outcome \\
+Formulation & NLL & Beta & Theta & Median eff. & Active & Unique top-1 \\
 \midrule
-\input{generated/model_selection_validation_table.tex}
+Balanced ETM + softmax & 6.4710 & 0.3052 & 0.4868 & 3.59 & 8.0 & 6.7 \\
+Balanced ETM + entmax & 6.5977 & 0.2566 & 0.3973 & 1.88 & 5.0 & 4.7 \\
+Top-2 context + softmax & \textbf{6.2438} & 0.4423 & 0.7066 & 3.22 & 13.3 & 11.7 \\
+\textbf{Top-2 context + entmax} & 6.2892 & \textbf{0.4648} & \textbf{0.7513} & \textbf{2.00} & \textbf{14.0} & \textbf{13.0} \\
+\bottomrule
 \end{tabular}
 \end{table}
 
-\subsection{Canonical fixed-SGNS ETM}
+Entmax alone makes mixtures sparse but worsens topic starvation. Routing alone
+improves recovery and breadth but remains too diffuse in a separate deliberately
+diffuse stress condition. Their combination is complementary: routing supplies a
+broad recoverable posterior signal, and entmax converts it into sparse mixtures.
 
-The faithful ETM uses a two-layer variational document encoder and a global
-embedding-space topic--word softmax \cite{dieng2020}. Fixed spectral SGNS avoided
-the severe collapse observed with jointly learned embeddings in simulation.
-On real validation, ETM achieved lower NLL than M1 but only 609 optimized and 79
-useful motifs. Its median spectrum used 43.79 effective topics. Temperature
-sharpening increased associations but could not repair the topic-word deficit.
+At seed-11 K=128, the selected combination recovered all 18 planted motifs as
+distinct top-1 topics. It achieved beta/theta recovery 0.6638/0.9556, top-motif
+accuracy 0.9313, median 1.45 effective topics, median exact support 2 and NLL
+6.1276. This high-overcompleteness result supported promotion of one fixed
+configuration to real validation.
 
-\subsection{Pooled projected model}
+\section{Real \texorpdfstring{MS$^{n}$Lib}{MSnLib} validation}
 
-The deterministic pooled model projects token features, count-pools one spectrum
-vector, and uses a shared prototype bank for both $\theta$ and $\beta$. Its raw
-NLL and MAG optimization coverage appeared excellent, but its document mixtures
-were too diffuse. Post-hoc temperature $\tau=0.11$ matched M1-like mixture
-sparsity and raised evaluable/useful counts from 14/11 to 293/194.
-
-The deeper diagnosis showed that calibration was not the whole problem. A
-single connected component contained 614 topics at beta cosine $\geq0.999$.
-Those topics were nearly uniform over the vocabulary, never won a validation
-spectrum, and could not be separated by rank-preserving temperature changes.
-Weak assignment MI left essentially the same collapse.
-
-\subsection{Fragment/loss-balanced ETM}
-
-Real canonical ETM learned substantial channel skew, so a paired ETM was trained
-with independent 50/50 fragment/loss softmaxes. This adaptation eliminated the
-skew and raised optimized motifs from 609 to 911, demonstrating that global
-normalization was a real source of topic-spectrum distortion. Nevertheless,
-evaluable/useful motifs remained 166/104 and mean SOS decreased. Channel
-balance repaired annotation coverage but not the complete Mass2Motif objective.
-
-\subsection{ECRTM}
-
-ECRTM is a published embedding-clustering regularized topic model designed for
-component collapse \cite{wu2023}. It was scientifically justified after the
-614-topic pooled component was observed. At real $K=1000$ and vocabulary
-21,233, the maintained ordinary-domain Sinkhorn solver became progressively
-more demanding. After 21 completed epochs, mean/max iterations reached 721/951;
-epoch 22 failed the residual tolerance within 1,000 iterations and an exact
-checkpoint resume reproduced the failure. No partial or unconverged model was
-scored. This is an operational conclusion about the maintained numerical path,
-not a universal impossibility result for stabilized ECRTM implementations.
+\subsection{Discovery breadth relative to M1 and Tomotopy}
 
 \begin{table}[ht]
 \centering
-\scriptsize
-\caption{Diagnostics explaining why good likelihood did not imply a usable
-Mass2Motif inventory. The largest component uses beta cosine $\geq0.999$.}
-\label{tab:model-diagnostics}
-\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.29\textwidth}rrrrr@{}}
+\small
+\caption{Locked seed-42 validation comparison. Bold marks the best value in each
+row, not a global model winner.}
+\label{tab:primary-comparison}
+\begin{tabular}{@{}lrrr@{}}
 \toprule
-Model & Median effective topics & Unique top-1 & Largest component & Mean nearest cosine & Max cosine \\
+Metric & M1 & \textbf{Routing ETM} & Tomotopy \\
 \midrule
-\input{generated/model_selection_diagnostics_table.tex}
+Optimized motifs & \textbf{884} & 803 & 607 \\
+Evaluable motifs & 408 & \textbf{445} & 206 \\
+Useful motifs & 265 & \textbf{289} & 138 \\
+Mean SOS & 0.658079 & 0.647153 & \textbf{0.676149} \\
+Median SOS & 0.648864 & 0.657895 & \textbf{0.685450} \\
+Completion NLL $\downarrow$ & \textbf{8.974140} & 9.542924 & 9.662228 \\
+\bottomrule
 \end{tabular}
 \end{table}
 
-\section{Interpretation}
+Routing ETM is better on discovery breadth: it adds 37 evaluable and 24 useful
+motifs over M1 and 239/151 over Tomotopy. It also has lower completion NLL than
+Tomotopy. It is not uniformly better: M1 retains higher optimized coverage,
+mean SOS and likelihood, while Tomotopy has higher SOS over a much smaller
+evaluable inventory.
 
-\subsection{Why M1's complexity is functional}
+The SOS bands explain the apparent mean/median tension.
 
-The external failures align with the roles of M1's mechanisms. The pooled model
-demonstrates severe prototype/topic duplication; ETM demonstrates diffuse and
-weak spectrum-topic assignment; balanced ETM shows that annotatable topic
-spectra do not by themselves guarantee chemical specificity. M1's contextual
-sparse routing and document gate address assignment, Sinkhorn addresses usage,
-prototype separation addresses duplicate components, positive NPMI supports
-coherent words, and the channel split controls fragment/loss mass.
+\begin{table}[ht]
+\centering
+\small
+\caption{Validation SOS composition. Useful motifs are the high and intermediate
+bands combined.}
+\label{tab:sos-bands}
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+SOS band & M1 & Routing ETM & Difference \\
+\midrule
+High, $>0.8$ & 79 & 67 & -12 \\
+Intermediate, $0.6$--$0.8$ & 186 & 222 & +36 \\
+Low, $<0.6$ & 143 & 156 & +13 \\
+Evaluable total & 408 & 445 & +37 \\
+Useful total & 265 & 289 & +24 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
-Within-family M1 ablations had already shown substantial motif losses when the
-document gate, Sinkhorn, NPMI, or prototype separation was removed. The external
-campaign now shows that moving to a simpler model family does not make those
-failure modes disappear. M1 should therefore be described as the least-complex
-model demonstrated to meet the full contract, not as the simplest conceivable
-architecture or as a uniformly superior generic topic model.
+Routing ETM increases the intermediate-quality inventory rather than reporting
+only a small high-scoring subset. Evaluable-to-optimized conversion is 55.4\%
+versus M1's 46.2\%, and useful-to-optimized conversion is 36.0\% versus 30.0\%.
+Its median SOS is also higher than M1's.
 
-\subsection{What is not claimed}
+\subsection{Sparse spectra without global collapse}
 
-The model-selection campaign uses one positive-mode MS$^{n}$Lib benchmark and
-one locked data split. It does not prove that M1 is optimal on other instruments,
-ionization modes, biological samples, or topic counts. It also does not rule out
-a future stabilized ECRTM, a different published diversity regularizer, or a
-new representation. It establishes that the completed alternatives tested here
-do not justify replacing M1.
+\begin{table}[ht]
+\centering
+\small
+\caption{Diagnostics distinguishing per-spectrum sparsity from global topic
+collapse.}
+\label{tab:inventory}
+\begin{tabular}{@{}lr@{}}
+\toprule
+Routing ETM diagnostic & Value \\
+\midrule
+Median / mean effective topics per spectrum & 3.70 / 4.09 \\
+Median / p95 / maximum exact support & 6 / 13 / 23 \\
+Unique top-1 topics & 828 \\
+Topics active above mean usage 0.0005 & 535 \\
+Corpus-effective topics & 538.40 \\
+Maximum mean topic usage & 0.0143 \\
+Mean nearest-topic beta cosine & 0.1529 \\
+Largest component at beta cosine $\geq0.999$ & 2 topics \\
+Catastrophic duplicate component & no \\
+\bottomrule
+\end{tabular}
+\end{table}
 
-MAG/SOS remains a library-dependent chemical proxy. A high optimized count can
-include broad or unused topics, which is why the expanded diagnostic contract is
-now mandatory. Expert interpretation and independent-dataset replication remain
-necessary.
+Balanced softmax ETM used 46.72 median effective topics and produced only
+166 evaluable / 104 useful motifs. Entmax alone used 1.80 effective topics but
+collapsed to 20 unique top-1 topics and 7 evaluable / 6 useful motifs. Routing
+plus entmax fixes both failures simultaneously: sparse document mixtures no
+longer arise by starving the global inventory.
 
-\section{Next evidence: M1 stability}
+\subsection{Formal gates and scientific interpretation}
 
-Architecture search is paused. The next compute campaign varies only M1
-optimization seed while keeping the seed-42 split, vocabulary, SGNS features,
-co-occurrence graph, and validation contract byte-identical. New training seeds
-11, 23, and 37 are predeclared; test remains locked. The campaign will report
-per-seed chemistry, completion, the expanded collapse diagnostics, and
-one-to-one cross-seed beta alignment. The exact handoff is in
-\path{research/etm_ecrtm_msnlib/M1_MULTISEED_HANDOFF.md}.
+The gates were frozen before scoring. Motif counts retain 95\% of M1, mean SOS
+retains 99\%, and NLL may be at most 105\% of M1. Every gate had to be true for
+the formal pass.
 
-This design separates optimization stability from data-split variability. A
-later independent-library study should examine broader generalization, but it
-should not be conflated with the immediate question of whether the seed-42 M1
-result is representative of repeated fitting on the same benchmark.
+\begin{table}[ht]
+\centering
+\small
+\caption{Frozen gate audit. The Boolean remains false even though the candidate
+is scientifically useful.}
+\label{tab:gates}
+\begin{tabular}{@{}lrrrl@{}}
+\toprule
+Gate & Threshold & Candidate & Distance & Result \\
+\midrule
+Optimized motifs & $\geq840$ & 803 & -37 & fail \\
+Evaluable motifs & $\geq388$ & 445 & +57 & pass \\
+Useful motifs & $\geq252$ & 289 & +37 & pass \\
+Mean SOS & $\geq0.651498$ & 0.647153 & -0.004345 & fail \\
+Completion NLL & $\leq9.422847$ & 9.542924 & +0.120077 & fail \\
+Finite/stable & required & yes & -- & pass \\
+No catastrophic component & required & yes & -- & pass \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The mean-SOS miss is 0.67\% below its threshold and NLL is 1.27\% over its
+threshold. Optimized coverage is 4.40\% below its gate. The all-gates value must
+remain false for audit integrity, but it is misleading to translate that Boolean
+into a claim that Routing ETM is generally worse than M1. The saved evidence
+supports the status \emph{strong near-pass and current paper-facing baseline}.
+
+\section{Historical alternatives and negative evidence}
+
+The campaign tested one mechanism at a time and retained negative results:
+\begin{itemize}
+  \item canonical fixed-SGNS ETM had good completion but only 130 evaluable and
+  79 useful motifs, with 43.79 median effective topics;
+  \item fragment/loss balancing raised optimized coverage from 609 to 911 but
+  did not repair evaluable/useful breadth or SOS;
+  \item post-hoc temperature sharpening changed mixture scale but could not
+  jointly preserve breadth, SOS and NLL;
+  \item pooled projected models contained a 614-topic near-exact beta component;
+  \item entmax without routing produced exact sparsity by starving the inventory;
+  \item the maintained ECRTM Sinkhorn solver failed its convergence contract at
+  real $K=1000$ and vocabulary 21,233, so no partial model was scored; and
+  \item a reference short-document NSTM failed the paired high-K synthetic screen
+  and was not promoted to MSnLib.
+\end{itemize}
+
+These results justify the selected posterior adaptation without claiming that
+every future topic model must fail. They also show why another likelihood-only
+comparison would be insufficient.
+
+\section{Runtime and system load}
+
+The frozen real model trained for 120 epochs in 876.8 seconds (14.6 minutes) on
+an NVIDIA GeForce RTX 5070. Including final inference and evidence hashing, the
+run completed in about 16 minutes. Steady-state training used approximately
+83\% GPU utilization, 53~$^{\circ}$C and 116 W of a 250 W limit.
+
+Peak PyTorch allocated/reserved CUDA memory was 0.821/1.053 GB. Process high-water
+memory was 2.879 GB, with at least 12.43 GB system memory remaining. Deterministic
+full-validation inference processed approximately 23,426 spectra per second. The
+load was sustained but comfortably below GPU memory, thermal, power and system
+memory limits.
+
+\section{Limitations and robustness}
+
+The main unresolved uncertainty is real training-seed stability. The synthetic
+mechanism screen used three seeds, but the real Routing ETM result is one
+deterministic training seed on one positive-mode data split. It establishes this
+run, not the variance of repeated fitting or generalization to other instruments,
+ionization modes, biological samples or topic counts.
+
+MAG/SOS is a library-dependent chemical proxy. Higher evaluable breadth can
+lower an unweighted mean by admitting additional borderline topics, which is why
+counts, mean, median and SOS bands are reported together. Expert interpretation
+and independent-dataset replication remain necessary.
+
+M1 is retained as a locked private comparator and donor-ablation source, not as
+the proposed publication architecture. Tomotopy remains the independent
+production comparator. No claim is made that Routing ETM should replace the
+production backend before stability and untouched-test review.
+
+\section{Recommended next evidence}
+
+The checkpoint should be preserved before further model changes. The next steps
+are:
+\begin{enumerate}
+  \item verify every committed source/evidence hash and retained local artifact;
+  \item repeat the unchanged Routing ETM on two additional real training seeds,
+  using validation only and no tuning against the outcomes;
+  \item if the optimized-coverage and mean-SOS gap reproduces, consider one
+  predeclared train-derived positive-NPMI coherence experiment;
+  \item stop that intervention if it reduces the present evaluable/useful
+  breadth, sparse support or global inventory; and
+  \item unlock candidate test only after an independent review freezes the
+  method, checkpoint and success interpretation.
+\end{enumerate}
+
+Do not add M1's document gate, Sinkhorn balancing, prototype separation,
+alternating optimizer or temperature schedule. Additional complexity now risks
+making an already strong and explainable result harder to publish.
 
 \section{Conclusion}
 
-Neural MS2LDA performs one-pass document inference while retaining explicit
-probabilistic Mass2Motifs. On the locked MS$^{n}$Lib benchmark it yields a broad,
-chemically useful inventory and strong completion performance relative to
-Tomotopy. A subsequent validation-only comparison showed that canonical ETM,
-a deterministic pooled embedded model, balanced ETM, and canonical ECRTM each
-failed a different part of the scientific contract.
+Routing-informed sparse ETM repairs the central failure of neural topic models
+on short MS/MS documents: it achieves sparse per-spectrum mixtures without
+collapsing or starving the global topic inventory. It exceeds both M1 and
+Tomotopy on evaluable and useful validation motif counts, while retaining a
+recognizable ETM generator and adding only one learned scalar.
 
-The combined evidence changes the justification for M1. Its architecture is not
-presented as novelty for novelty's sake; its mechanisms correspond to observed
-real-data failure modes that simpler models did not jointly solve. M1 remains
-the only gate-passing neural model and no new candidate advances to test. The
-next claim to establish is reproducibility across optimization seeds, not another
-unbounded architecture search.
+The result is not uniform dominance. M1 retains better optimized coverage, mean
+SOS and completion NLL; Tomotopy has higher SOS over fewer evaluable motifs. The
+predeclared all-gates Boolean remains false and candidate test remains locked.
+Nevertheless, the scientific outcome is positive: Routing ETM is the strongest
+paper-facing discovery baseline produced by this campaign. Future work should
+establish stability and preserve explainability rather than treat the model as a
+failure requiring architectural rescue.
 
 \appendix
 \section{Reproduction and provenance}
 
-Generate the original numerical macros and the model-selection tables with:
+The frozen implementation and result package were first committed at
+\texttt{3d9af67}; the full source commit is recorded in the checkpoint manifest.
+Committed evidence includes synthetic summaries, the K=128 stress, real config
+and metrics, per-topic chemical scores, training history, theta support,
+duplicate-component diagnostics, fragment/loss balance, top words, environment,
+validation-access audit and provenance.
+
+Verify the committed checkpoint without training:
 \begin{verbatim}
-python scripts/generate_neural_ms2lda_report.py
-python scripts/generate_neural_ms2lda_model_selection.py
+conda run -n ms2lda-neural python \
+  scripts/verify_routing_etm_checkpoint.py
 \end{verbatim}
-Then compile \path{docs/research/neural_ms2lda_report.tex}. The model-selection
-source is the committed validation-only comparison at
-\path{research/etm_ecrtm_msnlib/local_results/20260827_followup/comparison.csv}.
-The full hypothesis-by-hypothesis record is in the neighboring
-\path{EXPERIMENT_LOG.md}. The previous detailed methods report is archived
-verbatim rather than deleted.
+
+On the original host, verify every immutable validation input and retained large
+model artifact:
+\begin{verbatim}
+conda run -n ms2lda-neural python \
+  scripts/verify_routing_etm_checkpoint.py \
+  --verify-inputs --verify-local-artifacts --require-external
+\end{verbatim}
+
+The full local check completes 78 integrity and cross-file consistency checks.
+Exact real replay commands are in
+\path{research/etm_ecrtm_msnlib/local_results/20260830_routing_etm/README.md}.
+The machine-readable source of hashes, metrics, comparator values and replay
+locations is the neighboring \path{checkpoint_manifest.json}. Large weights,
+NumPy arrays, FAISS indexes, databases and raw MSnLib assets are retained outside
+Git and identified by path, byte size and SHA-256.
 
 \section{Frozen diagnostic settings}
 
 The reporting contract uses mean topic usage 0.0005, duplicate-component cosine
 thresholds 0.95/0.99/0.999, top 20 words, catastrophic strict-component fraction
-0.5, and fragment-mass extremes below 0.1 or above 0.9. These are reporting and
-failure-detection settings; chemistry selection still uses the separately
-frozen MAG/SOS gates.
+0.5, fragment-mass extremes below 0.1 or above 0.9, and spectrum membership
+threshold 0.5. These are frozen reporting and failure-detection settings.
 
 \begin{thebibliography}{99}
 \bibitem{vanderhooft2016}
@@ -404,6 +473,11 @@ fragmentation mass spectral libraries.'' \emph{Nature Methods} 22, 2028--2031
 A. B. Dieng, F. J. R. Ruiz, and D. M. Blei. ``Topic Modeling in Embedding
 Spaces.'' \emph{Transactions of the Association for Computational Linguistics}
 8, 439--453 (2020). \url{https://doi.org/10.1162/tacl_a_00325}
+
+\bibitem{peters2019}
+B. Peters, V. Niculae, and A. F. T. Martins. ``Sparse Sequence-to-Sequence
+Models.'' \emph{Proceedings of ACL 2019}, 1504--1519 (2019).
+\url{https://doi.org/10.18653/v1/P19-1146}
 
 \bibitem{wu2023}
 X. Wu, X. Dong, T. Nguyen, and A. T. Luu. ``Effective Neural Topic Modeling

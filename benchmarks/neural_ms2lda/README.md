@@ -2,10 +2,11 @@
 
 > **Current publication direction (2026-08-30):** M1 remains a private benchmark
 > and donor evidence, not the proposed paper model. A published balanced ETM base
-> with top-2 contextual posterior evidence and entmax 1.5 now reaches 445
-> evaluable / 289 useful validation motifs with sparse, broad topic use. It misses
-> three frozen gates, so test remains locked; the next bounded experiment is an
-> NPMI-coherence addition to that ETM, not M1 multiseed. See
+> with top-2 contextual posterior evidence and entmax 1.5 is now the frozen
+> paper-facing validation baseline. It reaches 445 evaluable / 289 useful motifs,
+> exceeding M1 and Tomotopy on discovery breadth, with sparse, broad topic use.
+> Three conservative M1-relative gates remain false, so test stays locked. The
+> next priority is checkpoint integrity and real training-seed stability. See
 > `research/etm_ecrtm_msnlib/local_results/20260830_routing_etm/README.md`.
 
 This directory contains the locked seed-42, K=1000 Neural MS2LDA M1 model with
@@ -42,11 +43,12 @@ component in the pooled model. Channel balancing repaired ETM annotation
 coverage but not evaluable/useful breadth or SOS. The maintained ECRTM Sinkhorn
 path failed its convergence contract at real K/V after 21 completed epochs.
 
-M1 is therefore the **least-complex model demonstrated to satisfy the complete
-real-data scientific contract**. It is not claimed to be the simplest
-conceivable model or a universally superior topic model. See
-[FINAL_MODEL_SELECTION.md](FINAL_MODEL_SELECTION.md) for the locked decision.
-No alternative candidate is authorized for test.
+M1 remains the only model that satisfies every historical M1-relative Boolean
+gate. Routing ETM is now the stronger paper-facing discovery candidate because it
+is explainable and exceeds M1/Tomotopy on evaluable and useful motif breadth.
+These are different claims and both are preserved in
+[FINAL_MODEL_SELECTION.md](FINAL_MODEL_SELECTION.md). No candidate is authorized
+for test yet.
 
 Tomotopy is an independently trained comparator, not a teacher. This remains a
 single-dataset, single-data-split research result and does not change the
@@ -102,6 +104,6 @@ python scripts/generate_neural_ms2lda_model_selection.py
 ```
 
 See [HANDOVER.md](HANDOVER.md) for the exact architecture, evidence contract,
-and verification commands. The next compute campaign is the validation-only M1
-optimization-seed study specified in
-`research/etm_ecrtm_msnlib/M1_MULTISEED_HANDOFF.md`.
+and verification commands. Verify the current Routing ETM baseline with
+`scripts/verify_routing_etm_checkpoint.py`; continuation rules are in
+`research/etm_ecrtm_msnlib/NEXT_AGENT.md`.

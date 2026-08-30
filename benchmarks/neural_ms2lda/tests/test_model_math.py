@@ -337,16 +337,17 @@ def test_protocol_and_model_artifact_expose_only_the_current_architecture() -> N
     assert len(vocabulary) == trained_model.vocabulary_size
 
 
-def test_report_constants_match_the_executable_model() -> None:
-    """Prevent the paper's displayed model from drifting from the implementation."""
+def test_report_constants_match_the_executable_routing_etm() -> None:
+    """Prevent the current report from drifting from the Routing ETM implementation."""
     report = (
         Path(__file__).parents[3] / "docs/research/neural_ms2lda_report.tex"
     ).read_text(encoding="utf-8")
-    assert r"\tau_\beta" in report
     assert r"\tfrac12" in report
-    assert rf"^{{{DOCUMENT_MIXTURE_EXPONENT}}}" in report
-    assert TOPICS_PER_TOKEN == 2
-    assert "followed by top-2 routing" in report
+    assert r"\tau_r=1.0" in report
+    assert r"\tfrac1K" in report
+    assert r"\centerop" in report
+    assert r"\entmax" in report
+    assert "Only its two largest topic logits are retained" in report
 
 
 def test_sos_bands_include_boundaries_exactly_once() -> None:

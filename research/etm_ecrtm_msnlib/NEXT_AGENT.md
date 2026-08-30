@@ -1,82 +1,81 @@
-# Routing-informed ETM next-agent handoff
+# Routing-informed ETM checkpoint handoff
 
-## Publication boundary
+## Current decision
 
-Keep a published model as the paper-facing base. Do not propose the private M1
-architecture as the publication model and do not start an M1 multiseed campaign.
-M1 may be consulted only as donor/ablation evidence for a small mechanism that
-can be explained independently inside a published base.
+The routing-informed sparse ETM is frozen as the current paper-facing validation
+baseline. Do not describe it simply as a failed model: it exceeds M1 and
+Tomotopy on evaluable/useful discovery breadth, has sparse per-spectrum mixtures
+and preserves a broad global topic inventory.
 
-Candidate test remains locked. All work is synthetic or real validation until a
-later independent review explicitly authorizes test.
+The predeclared all-gates Boolean remains false because optimized coverage, mean
+SOS and NLL miss their M1-relative thresholds. Candidate test remains locked.
+M1 is private donor evidence only and is not the publication model.
 
-## Current result
+## Verify before doing anything
 
-The new candidate is a balanced fixed-SGNS Embedded Topic Model with:
+Run the committed integrity and consistency check:
 
-- unchanged ETM embedding decoder, likelihood, Gaussian variational family and
-  analytic standard-normal KL;
-- one learned leave-one-out context scalar;
-- top-2 token evidence scored in ETM's own topic geometry and added as a bounded
-  centered log offset to the posterior mean;
-- published alpha-entmax 1.5 theta; and
-- unchanged raw intensity pseudo-count reconstruction.
+```bash
+conda run -n ms2lda-neural python \
+  scripts/verify_routing_etm_checkpoint.py
+```
 
-It has no nonlinear M1 router, document gate, Sinkhorn, NPMI, prototype
-separation, alternating optimizer or schedule.
+On the original host, verify all retained local artifacts and immutable inputs:
 
-Synthetic K=36 seeds 11/23/37 and K=128 adjudication showed that routing prevents
-the topic starvation caused by entmax alone while entmax supplies the exact
-sparsity absent from routing+softmax. The K=128 candidate recovered all 18
-planted motifs as unique top-1 topics.
+```bash
+conda run -n ms2lda-neural python \
+  scripts/verify_routing_etm_checkpoint.py \
+  --verify-inputs --verify-local-artifacts --require-external
+```
 
-Frozen real validation at K=1000 produced:
+Do not edit the files listed in
+`local_results/20260830_routing_etm/checkpoint_manifest.json`. New experiments
+must use a new result directory and compare back to this checkpoint.
 
-| metric | result | gate |
-|---|---:|---:|
-| optimized motifs | 803 | >=840 (fail) |
-| evaluable motifs | 445 | >=388 (pass) |
-| useful motifs | 289 | >=252 (pass) |
-| mean SOS | 0.647153 | >=0.651498 (fail) |
-| completion NLL | 9.542924 | <=9.422847 (fail) |
-| median effective topics | 3.70 | diagnostic |
-| median exact support | 6 | diagnostic |
-| unique top-1 topics | 828 | diagnostic |
-| corpus-effective topics | 538.40 | diagnostic |
+## Frozen result
 
-The model is finite and has no catastrophic duplicate component. This is a
-failed all-gates result, but it is the first ETM-family candidate here to repair
-both per-spectrum diffuseness and global topic collapse while exceeding the
-evaluable/useful targets.
+| metric | M1 | **Routing ETM** | Tomotopy |
+|---|---:|---:|---:|
+| optimized motifs | 884 | 803 | 607 |
+| evaluable motifs | 408 | **445** | 206 |
+| useful motifs | 265 | **289** | 138 |
+| mean SOS | 0.658079 | 0.647153 | 0.676149 |
+| median SOS | 0.648864 | 0.657895 | 0.685450 |
+| completion NLL | 8.974140 | 9.542924 | 9.662228 |
 
-Authoritative evidence is in
-`local_results/20260830_routing_etm/README.md`, `EXPERIMENT_LOG.md`, and the CSV/
-JSON artifacts beside them.
+Routing ETM also has median 3.70 effective topics, median exact support 6, 828
+unique top-1 topics and 538.40 corpus-effective topics, with no catastrophic
+duplicate component.
 
-## Next bounded experiment
+## Evidence priority before model changes
 
-Test one intervention only: train-derived positive-NPMI topic-coherence
-regularization added to the frozen routing-informed ETM.
+No further architecture experiment is automatically authorized by this handoff.
+The highest-value next evidence is real-training stability:
 
-Rationale: the remaining real deficits are optimized beta coverage and mean SOS,
-with a small NLL excess. Positive-NPMI is directly connected to topic-word
-coherence and is grounded in published topic-model evaluation/regularization.
-It must be described independently rather than justified as “because M1 has it.”
+1. Keep the same train/validation split, vocabulary, SGNS, K=1000, MAG index,
+   model configuration, epochs and evaluation.
+2. Repeat only the training seed twice, without tuning against either outcome.
+3. Report the distribution of optimized, evaluable, useful, mean/median SOS,
+   NLL, sparse-support and inventory metrics.
+4. Keep candidate test inaccessible.
 
-Required sequence:
+This is a robustness study of the frozen paper-facing model, not M1 multiseed.
 
-1. Predeclare the NPMI construction, coefficient-selection rule and stopping
-   gates before training. Do not run an open-ended coefficient sweep.
-2. Screen on the existing paired fragment/loss synthetic seeds 11/23/37 with
-   K=36. Preserve routing+entmax recovery, sparse support and topic inventory.
-3. Run the existing seed-11 K=128 stress only if all three K=36 seeds pass.
-4. Promote at most one fixed coefficient/formulation to the same validation-only
-   K=1000 MSnLib evaluation.
-5. Require all original frozen gates, including NLL. Do not loosen them.
+## Optional targeted model improvement
 
-Do not add the document gate, Sinkhorn balancing, prototype separation,
-alternating optimization, a routing-strength sweep or a temperature sweep in the
-same campaign. If NPMI fails, stop and reassess rather than reconstructing M1.
+Only if additional real seeds reproduce the optimized-coverage and mean-SOS
+deficit should one train-derived positive-NPMI coherence intervention be
+considered. Predeclare one formulation and a bounded coefficient rule before
+training. Screen synthetically first, then promote at most one configuration to
+validation.
+
+It must preserve or improve the current evaluable/useful breadth, exact support,
+unique top-1 breadth and non-collapse diagnostics. Stop if it merely trades away
+the discovery advantage to satisfy the old Boolean gate.
+
+Do not add the M1 document gate, Sinkhorn balancing, prototype separation,
+alternating optimizer, temperature schedule or another custom prior. Do not run
+an unrestricted coefficient or architecture search.
 
 ## Shared immutable inputs
 
@@ -88,3 +87,17 @@ same campaign. If NPMI fails, stop and reassess rather than reconstructing M1.
 Use the existing `ms2lda-neural` Conda environment and `environment.yml`. Do not
 redownload or rebuild MSnLib, SGNS, Spec2Vec, MAG or FAISS assets. Do not commit
 weights, NumPy arrays, databases or indexes.
+
+## Authoritative sources
+
+- Current technical report:
+  `benchmarks/neural_ms2lda/FINAL_MODEL_SELECTION.md`
+- Detailed campaign report and replay commands:
+  `local_results/20260830_routing_etm/README.md`
+- Chronological decisions:
+  `local_results/20260830_routing_etm/EXPERIMENT_LOG.md`
+- Frozen manifest:
+  `local_results/20260830_routing_etm/checkpoint_manifest.json`
+- Model implementation: `benchmarks/neural_ms2lda/routing_etm.py`
+- Real runner: `scripts/run_routing_etm_real.py`
+- Synthetic runner: `scripts/run_routing_etm_campaign.py`

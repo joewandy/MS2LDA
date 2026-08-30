@@ -2,9 +2,34 @@
 
 ## Decision
 
-Keep ETM as the published base and continue this line with one bounded follow-up.
-Do not make the private M1 architecture the paper model and do not start an M1
-multiseed campaign.
+Freeze this model as the current paper-facing validation baseline. It is already
+the strongest discovery result among the explainable published-base candidates:
+it produces more evaluable and useful validation motifs than both the locked M1
+reference and Tomotopy, while retaining sparse per-spectrum mixtures and a broad
+global topic inventory.
+
+The right description is **a strong near-pass and the new baseline**, not simply
+"failed." The predeclared all-gates Boolean remains false because optimized
+coverage, mean SOS and completion NLL miss their conservative M1-relative
+thresholds. That formal result keeps candidate test locked; it does not erase the
+candidate's discovery gains.
+
+All figures below are from the same seed-42 validation split:
+
+| metric | M1 | **Routing ETM** | Tomotopy |
+|---|---:|---:|---:|
+| optimized motifs | **884** | 803 | 607 |
+| evaluable motifs | 408 | **445** | 206 |
+| useful motifs | 265 | **289** | 138 |
+| mean SOS | 0.658079 | 0.647153 | **0.676149** |
+| median SOS | 0.648864 | 0.657895 | **0.685450** |
+| completion NLL (lower is better) | **8.974140** | 9.542924 | 9.662228 |
+
+Routing ETM is therefore better on discovery breadth, not on every scalar. It
+beats M1 by 37 evaluable and 24 useful motifs and beats Tomotopy by 239 and 151,
+respectively. Tomotopy has the highest SOS among its much smaller evaluable set;
+M1 has the best completion NLL and optimized coverage. Routing ETM makes the
+strongest breadth/sparsity trade-off while remaining explainable.
 
 The tested model is a balanced fixed-SGNS Embedded Topic Model with two small,
 auditable inference changes:
@@ -24,10 +49,10 @@ It is not a full frozen-gate pass. Optimized coverage is 803 rather than 840,
 mean SOS is 0.647153 rather than 0.651498, and completion NLL is 9.542924 rather
 than at most 9.422847. Candidate test therefore remains locked.
 
-The result is nevertheless qualitatively different from earlier near misses:
-the remaining deficits are narrow chemical-quality/generalization gaps, not
-diffuse document mixtures or a collapsed global topic inventory. That is enough
-evidence to continue the understandable published-base route.
+The result is qualitatively different from earlier near misses: the remaining
+deficits are chemical-quality/generalization trade-offs, not diffuse document
+mixtures or a collapsed global topic inventory. Further architecture changes
+are optional improvements to a viable model, not rescue work.
 
 ## What the model actually does
 
@@ -121,12 +146,13 @@ batch 256, 120 fixed epochs, deterministic CUDA and six CPU threads.
 | balanced ETM | 911 | 166 | 104 | 0.629819 | 8.766069 | 46.72 | 260 | fail chemistry/diffuseness |
 | balanced gated ETM gamma 2 | 889 | 220 | 138 | 0.645148 | 8.686967 | 65.57 | 471 | fail chemistry/diffuseness |
 | prior sparse ETM | 993 | 7 | 6 | 0.663853 | 9.577829 | 1.80 | 20 | fail inventory/NLL |
-| **routing-informed sparse ETM** | **803** | **445** | **289** | **0.647153** | **9.542924** | **3.70** | **828** | fail 3 of 7 gates |
+| **routing-informed sparse ETM** | **803** | **445** | **289** | **0.647153** | **9.542924** | **3.70** | **828** | strong near-pass; freeze baseline |
 
 The locked private donor reference produced 884 / 408 / 265 optimized,
 evaluable and useful motifs. It is retained in `comparison.csv` solely as a
 historical validation comparator. The routing-informed ETM exceeds its evaluable
-and useful counts but does not satisfy the complete frozen contract.
+and useful counts but does not satisfy the complete frozen contract. These two
+statements are both true and should always be reported together.
 
 Frozen gate detail:
 
@@ -204,21 +230,71 @@ load was sustained but comfortably below memory, thermal and power limits.
     ETM's embedding decoder has many more raw parameters.
 12. **What exact failure remains?** A 37-motif optimized-coverage shortfall,
     0.004345 mean-SOS shortfall, and 0.120077 NLL excess.
-13. **Is further ETM work justified?** Yes, but bounded to one interpretable
-    intervention at a time.
+13. **Is further ETM work justified?** The model is already viable. The next
+    priority is reproducibility and real-seed stability; any model change must be
+    optional, bounded and justified by a reproduced deficit.
 14. **Is M1 multiseed next?** No. The private model remains donor evidence only.
 
-## Next experiment
+## What should improve next
 
-Add only train-derived positive-NPMI topic-coherence regularization to the frozen
-routing-informed ETM. This is the donor component most directly connected to the
-remaining optimized-coverage and mean-SOS deficits and is independently grounded
-in published topic-coherence work. Keep routing, entmax, decoder, likelihood,
-optimizer, data and evaluation unchanged. Promote only if synthetic recovery and
-inventory remain intact; on real validation it must also recover the NLL gate.
+Do not change the architecture before preserving this checkpoint. The priorities
+are now evidence quality and robustness:
 
-Do not add the donor document gate, Sinkhorn balancing, prototype separation,
-alternating optimizer or temperature schedule.
+1. **Confirm real-training stability.** Repeat the frozen model on two additional
+   training seeds using validation only. This tests whether 445/289 discovery
+   breadth and the broad sparse inventory are stable rather than a seed-42 event.
+2. **Keep the candidate test locked.** Test becomes appropriate only after the
+   method, metrics and acceptance interpretation are independently reviewed and
+   frozen.
+3. **Treat coherence regularization as optional.** If the optimized-coverage and
+   mean-SOS gaps reproduce across seeds, one predeclared train-derived
+   positive-NPMI experiment is the most targeted model change. It must preserve
+   the present breadth and sparsity and cannot be used to start an unrestricted
+   coefficient search.
+4. **Do not reconstruct M1.** The donor document gate, Sinkhorn balancing,
+   prototype separation, alternating optimizer and temperature schedule remain
+   out of scope.
+
+The completion gap is already smaller than Tomotopy's but worse than M1's. It
+should be reported as a trade-off rather than optimized away at the cost of the
+discovery gains.
+
+## Exact verification and replay
+
+The committed checkpoint is machine-checkable without training or opening test:
+
+```bash
+conda run -n ms2lda-neural python \
+  scripts/verify_routing_etm_checkpoint.py
+```
+
+On the original host, also verify every immutable validation input and retained
+large artifact against its recorded SHA-256:
+
+```bash
+conda run -n ms2lda-neural python \
+  scripts/verify_routing_etm_checkpoint.py \
+  --verify-inputs --verify-local-artifacts --require-external
+```
+
+Replay the frozen real training run into a new validation-only directory:
+
+```bash
+conda run -n ms2lda-neural python scripts/run_routing_etm_real.py train \
+  --real-run /home/joewandy/Work/data/MS2LDA-msnlib-validation/runs/routing-etm-checkpoint-replay-seed42 \
+  --prepared-run /home/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42 \
+  --epochs 120 --batch-size 256 --device cuda --threads 6
+
+conda run -n ms2lda-neural python scripts/run_routing_etm_real.py chemical \
+  --real-run /home/joewandy/Work/data/MS2LDA-msnlib-validation/runs/routing-etm-checkpoint-replay-seed42 \
+  --data-root /home/joewandy/Work/data/MS2LDA-msnlib-validation/zenodo/20179680
+```
+
+The exact synthetic decision configs are in `configs/`. For the promoted
+formulation, replay seeds 11, 23 and 37 at K=36 and seed 11 at K=128 with
+`scripts/run_routing_etm_campaign.py`, `top2_context`, `entmax15` and
+`raw_counts`. `checkpoint_manifest.json` freezes the implementation, evidence,
+comparator values and replay locations.
 
 ## Reproducibility and evidence boundary
 
@@ -265,5 +341,9 @@ artifact is committed.
   `top_words.csv`: promoted-candidate validation outputs.
 - `validation_access_audit.json`: train/validation-only and chemistry audit.
 - `provenance.json`: immutable input hashes and local large-artifact hashes.
+- `checkpoint_manifest.json`: machine-readable frozen implementation, metrics,
+  evidence hashes, comparator values and replay locations.
 - `configs/`: every decision-bearing synthetic config; `config.json` is the
   frozen real configuration.
+- `scripts/verify_routing_etm_checkpoint.py`: one-command integrity and
+  cross-file consistency check.

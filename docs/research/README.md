@@ -2,10 +2,13 @@
 
 `neural_ms2lda_report.tex` is the canonical report. It now combines:
 
-- the locked M1 architecture and Tomotopy comparison;
-- the validation-only ETM, pooled, balanced-ETM, and ECRTM model-selection campaign;
-- the expanded collapse-diagnostic contract;
-- the decision to pause architecture search and run M1 optimization-seed stability next.
+- the locked M1 and Tomotopy comparison;
+- the synthetic and real routing-informed sparse ETM campaign;
+- the validation-only ETM, pooled, balanced-ETM, sparse-ETM, ECRTM, and NSTM
+  negative evidence;
+- the expanded sparsity and collapse-diagnostic contract; and
+- the decision to freeze Routing ETM as the paper-facing validation baseline and
+  establish real training-seed stability next.
 
 The pre-model-selection detailed methods report is preserved verbatim at:
 
@@ -23,8 +26,12 @@ tracked PDF was intentionally removed because it represented the pre-selection
 source and would otherwise be misleading. Commit a replacement PDF only after a
 local deterministic build and visual review.
 
-The external model-selection source is:
+The current checkpoint sources are:
 
-`research/etm_ecrtm_msnlib/local_results/20260827_followup/comparison.csv`
+- `research/etm_ecrtm_msnlib/local_results/20260830_routing_etm/checkpoint_manifest.json`
+- `research/etm_ecrtm_msnlib/local_results/20260830_routing_etm/comparison.csv`
+- `research/etm_ecrtm_msnlib/local_results/20260830_routing_etm/metrics.json`
+- `benchmarks/neural_ms2lda/results/seed42/results.json`
 
-No alternative candidate test result was used in the model-selection section.
+Verify them with `scripts/verify_routing_etm_checkpoint.py`. No Routing ETM
+candidate test result was used in the report.

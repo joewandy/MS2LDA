@@ -1,6 +1,6 @@
 # Routing-informed ETM experiment log
 
-Status: active bounded synthetic mechanism screen. Validation only if promoted;
+Status: campaign complete and frozen as the paper-facing validation baseline;
 candidate test remains locked.
 
 ## Scientific boundary
@@ -366,13 +366,15 @@ authorized for test.
   gate, mean SOS is 0.004345 below it, and completion NLL is 0.120077 above it.
   These are narrow quality/generalization deficits, not the old diffuse-theta or
   collapsed-inventory failure.
-- **Decision:** record a failed all-gates decision, keep candidate test locked,
-  but continue the published-base line. The next justified bounded experiment is
-  to add only train-derived positive-NPMI topic coherence regularization to this
-  frozen ETM formulation. That intervention directly targets the two chemical
-  quality misses; it must preserve the recovered sparse inventory and meet the
-  NLL gate without changing routing, entmax, decoder, data or evaluation. Do not
-  add the donor gate, Sinkhorn, prototype separation or alternating optimizer.
+- **Decision:** record the formal all-gates Boolean as false and keep candidate
+  test locked. Scientifically, freeze the model as a strong near-pass and the new
+  paper-facing baseline: it exceeds M1 and Tomotopy on evaluable/useful discovery
+  breadth and fixes the previously measured sparsity/inventory failures. Do not
+  make another architecture change until the checkpoint is verified and real
+  training-seed stability is assessed. Positive-NPMI remains one optional,
+  predeclared coherence intervention only if the residual coverage/SOS gap
+  reproduces; do not add the donor gate, Sinkhorn, prototype separation or
+  alternating optimizer.
 
 ## Quality-control closure
 
@@ -388,3 +390,20 @@ authorized for test.
   present in the review package.
 - `git diff --check`, finite gradients, non-negative/simplex theta, exact entmax
   support, deterministic inference and validation/test isolation passed.
+
+## Frozen checkpoint
+
+The source implementation and complete reviewable result package were committed
+at `3d9af674949a70a38cbd250b95023f28b9514fe5`. The checkpoint adds a
+machine-readable manifest and an integrity checker that reconcile:
+
+- every committed implementation and evidence hash;
+- Routing ETM metrics against `metrics.json` and `comparison.csv`;
+- M1 and Tomotopy values against the locked `results.json` source;
+- SOS band arithmetic and optimized-coverage arithmetic;
+- the validation-only access audit; and
+- optionally, every retained local model artifact and immutable validation input.
+
+The full local verification completed 78 checks with no discrepancy. This
+checkpoint is the baseline for future work; future experiments must write to a
+new result directory and must not mutate these evidence files.

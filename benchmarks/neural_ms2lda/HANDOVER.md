@@ -7,10 +7,11 @@ the proposed publication model. The active direction is a published balanced
 ETM base with top-2 contextual posterior evidence and entmax 1.5. Its validation
 result is 803 optimized, 445 evaluable and 289 useful motifs, mean SOS 0.647153,
 completion NLL 9.542924, median 3.70 effective topics and 828 unique top-1
-topics. It passes the core evaluable/useful breadth gates but not the complete
-frozen contract. The next bounded experiment adds only train-derived
-positive-NPMI coherence regularization. M1 multiseed is not next, and test stays
-locked. See `research/etm_ecrtm_msnlib/NEXT_AGENT.md`.
+topics. It exceeds M1 and Tomotopy on evaluable/useful discovery breadth and is
+now frozen as the paper-facing validation baseline. It does not pass the complete
+historical gate Boolean, so test stays locked. The next priority is checkpoint
+integrity and real Routing ETM training-seed stability, not M1 multiseed. See
+`research/etm_ecrtm_msnlib/NEXT_AGENT.md`.
 
 ## Current state
 
@@ -127,6 +128,8 @@ remain separate and primary.
 | External experiment log | `research/etm_ecrtm_msnlib/local_results/20260827_followup/EXPERIMENT_LOG.md` |
 | Historical M1 stability plan (not current) | `research/etm_ecrtm_msnlib/M1_MULTISEED_HANDOFF.md` |
 | Current routing-informed ETM evidence | `research/etm_ecrtm_msnlib/local_results/20260830_routing_etm/README.md` |
+| Frozen Routing ETM manifest | `research/etm_ecrtm_msnlib/local_results/20260830_routing_etm/checkpoint_manifest.json` |
+| Routing ETM integrity checker | `scripts/verify_routing_etm_checkpoint.py` |
 | Current next campaign | `research/etm_ecrtm_msnlib/NEXT_AGENT.md` |
 
 `results.json` remains the sole numerical source for the locked M1/Tomotopy
@@ -191,7 +194,8 @@ deterministically, and visually inspect every rendered PDF page.
 
 ## Next compute
 
-The next campaign adds only train-derived positive-NPMI coherence regularization
-to the frozen routing-informed ETM. Screen it synthetically before any real
-validation. Do not start M1 multiseed. The current workflow is in
-`research/etm_ecrtm_msnlib/NEXT_AGENT.md`; candidate test remains locked.
+Do not change the architecture before verifying the frozen checkpoint. The next
+useful compute is two unchanged Routing ETM real training seeds on validation to
+measure stability. Positive-NPMI is only an optional later intervention if the
+coverage/SOS deficit reproduces. Do not start M1 multiseed; candidate test remains
+locked. The current workflow is in `research/etm_ecrtm_msnlib/NEXT_AGENT.md`.

@@ -1,12 +1,13 @@
 # Neural MS2LDA published-model handoff
 
-This document preserves the scientific background and completed
-published-model campaign. The active handoff is `NEXT_AGENT.md`: a single
-positive-NPMI coherence addition to the validated routing-informed ETM,
-screened synthetically before any warranted real-validation run. The current
-ETM result has 445 evaluable / 289 useful motifs, median 3.70 effective topics
-and 828 unique top-1 topics, but misses optimized, mean-SOS and NLL gates. M1 is
-private donor evidence only; M1 multiseed is not the next campaign.
+This document preserves the scientific background and completed published-model
+campaign. Routing-informed sparse ETM is now frozen as the paper-facing
+validation baseline. It has 445 evaluable / 289 useful motifs, median 3.70
+effective topics and 828 unique top-1 topics: better discovery breadth than M1
+and Tomotopy, with explicit optimized-coverage, SOS and NLL trade-offs. The
+formal all-gates Boolean remains false and candidate test remains locked. The
+active continuation rules are in `NEXT_AGENT.md`; M1 is private donor evidence
+only.
 
 ## Read the literature survey before changing the model
 
@@ -78,7 +79,7 @@ it is not the paper-facing base or next campaign.
 
 ## Real-data experiment: validation only
 
-Use the repository's existing deterministic MSnLib split, train-only vocabulary, train-only SGNS feature construction, document-completion protocol and leakage-filtered MAG/SOS evaluation. Candidate selection is **validation only**. Do not inspect candidate test results until a candidate passes the predeclared validation rule.
+Use the repository's existing deterministic MSnLib split, train-only vocabulary, train-only SGNS feature construction, document-completion protocol and leakage-filtered MAG/SOS evaluation. Candidate selection is **validation only**. Do not inspect candidate test results until an independent review freezes the method, checkpoint and success interpretation.
 
 The provisional chemistry-first gates relative to M1 are:
 
@@ -97,17 +98,28 @@ For every candidate, also report collapse and sparsity diagnostics: corpus topic
 
 ## Code and result map
 
-Current production-facing/reference code on this branch:
+Current baseline code and evidence on this branch:
 
-- `scripts/run_published_topic_models_msnlib.py` — validation-only real-data research runner using repository data preparation.
-- `research/etm_ecrtm_msnlib/repro/published_models_reference.py` — compact reference implementations of ETM/ECR/ECRTM equations used in this study.
-- `research/etm_ecrtm_msnlib/repro/SIMULATION_PROTOCOL.md` — simulator and metric specification.
-- `research/etm_ecrtm_msnlib/results/` — machine-readable synthetic summaries and negative controls.
+- `benchmarks/neural_ms2lda/routing_etm.py` — selected ETM posterior adaptation.
+- `scripts/run_routing_etm_campaign.py` — synthetic mechanism runner.
+- `scripts/run_routing_etm_real.py` — validation-only real runner.
+- `scripts/verify_routing_etm_checkpoint.py` — integrity and consistency check.
+- `local_results/20260830_routing_etm/README.md` — authoritative technical
+  report and replay instructions.
+- `local_results/20260830_routing_etm/checkpoint_manifest.json` — frozen source,
+  environment, evidence and comparator hashes/values.
 
-Historical work predating the final published-model direction is retained as provenance under `research/etm_ecrtm_msnlib/archive/`. It includes the initial M1 simplification campaign, the faithful ETM collapse campaign, the ECRTM follow-up, candidate code, ablation scripts, tests, report source and result tables. The current literature-guided ladder above supersedes those earlier provisional recommendations, but their code/results must remain available for audit.
+Earlier ETM, pooled, balanced, gated, sparse, ECRTM and NSTM results remain in
+their dated `local_results/` directories. They are negative controls and
+provenance, not active model recommendations.
 
 ## Scientific stopping rule
 
-Do not search indefinitely. If fixed-SGNS ETM passes the chemical gates, it is preferred for paper simplicity unless ECRTM provides a clear, reproducible chemical advantage that justifies its cost. If ETM fails because of topic starvation/duplication, evaluate ECRTM. If ECRTM retains topics but has diffuse spectrum mixtures, evaluate only the frozen theta calibration. If all recognisable published candidates fail a chemistry gate, diagnose the failure and add **one** targeted mechanism supported by the literature and the failed metric.
+Do not search indefinitely. The Routing ETM checkpoint has repaired the measured
+diffuse-mixture and topic-starvation failures and is already competitive on the
+scientific discovery metrics. Preserve it before doing more model work. The next
+evidence priority is real training-seed stability. Only if the remaining
+coverage/SOS gap reproduces may one targeted, literature-supported coherence
+intervention be considered.
 
 The goal is not to make the highest-scoring neural architecture. The goal is the simplest scientifically defensible model that preserves Mass2Motif discovery quality on real MSnLib data.

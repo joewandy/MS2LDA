@@ -253,12 +253,13 @@ motifs. The model therefore repairs the central short-document inference and
 inventory failures while remaining an ETM generator [Dieng et al., 2020] with a
 published sparse simplex transform [Peters et al., 2019]. It misses optimized
 coverage, mean SOS and completion NLL gates, so it is not authorized for test.
+It nevertheless exceeds M1 and Tomotopy on evaluable/useful discovery breadth
+and is now frozen as the paper-facing validation baseline.
 
-The private M1 architecture is not the publication target or next campaign. Its
-ablations are used only to nominate small independently defensible mechanisms.
-The next such mechanism is positive-NPMI topic-coherence regularization, grounded
-in the established coherence literature [Lau et al., 2014]. It directly targets
-the remaining beta/MAG and SOS quality deficits and must be added alone, with
-synthetic promotion and the original NLL gate. If it fails, the correct action is
-to stop and reassess rather than rebuilding the private architecture piece by
-piece.
+The private M1 architecture is not the publication target. Its ablations may
+nominate small independently defensible mechanisms, but the immediate evidence
+priority is real training-seed stability of the unchanged Routing ETM.
+Positive-NPMI topic-coherence regularization remains one optional later mechanism,
+grounded in the established coherence literature [Lau et al., 2014], only if the
+beta/MAG and SOS deficit reproduces. It must be added alone with synthetic
+promotion and cannot justify rebuilding the private architecture piece by piece.
