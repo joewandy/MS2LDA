@@ -293,11 +293,16 @@ def resolve_device(name: str) -> torch.device:
     """Resolve an operational device without changing model equations."""
     selected = name
     if selected == "auto":
-        selected = "mps" if torch.backends.mps.is_available() else "cpu"
+        if torch.cuda.is_available():
+            selected = "cuda"
+        else:
+            selected = "mps" if torch.backends.mps.is_available() else "cpu"
+    if selected == "cuda" and not torch.cuda.is_available():
+        raise RuntimeError("CUDA was requested but is not available")
     if selected == "mps" and not torch.backends.mps.is_available():
         raise RuntimeError("MPS was requested but is not available")
-    if selected not in {"cpu", "mps"}:
-        raise ValueError("device must be auto, cpu, or mps")
+    if selected not in {"cpu", "cuda", "mps"}:
+        raise ValueError("device must be auto, cpu, cuda, or mps")
     return torch.device(selected)
 
 

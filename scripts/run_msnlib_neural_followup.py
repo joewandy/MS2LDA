@@ -41,6 +41,7 @@ from benchmarks.neural_ms2lda.utils import (
 )
 from scripts.run_msnlib_model_comparison import (
     FragmentLossBalancedETM,
+    GatedFragmentLossBalancedETM,
     configure,
     dense_normalized,
     infer_etm,
@@ -153,6 +154,19 @@ def _etm_model(
             fragment_mask,
             hidden=int(config["hidden_dimensions"]),
         )
+    elif method.startswith("etm_balanced_gated_"):
+        vocabulary = load_vocabulary(run / "data")
+        fragment_mask = np.asarray(
+            [word.startswith("frag@") for word in vocabulary], dtype=bool
+        )
+        model = GatedFragmentLossBalancedETM(
+            embeddings,
+            topics,
+            fragment_mask,
+            gate_temperature=float(config["gate_temperature"]),
+            gate_gamma=float(config["gate_gamma"]),
+            hidden=int(config["hidden_dimensions"]),
+        )
     elif method == "etm":
         model = FixedETM(
             embeddings,
@@ -160,7 +174,9 @@ def _etm_model(
             hidden=int(config["hidden_dimensions"]),
         )
     else:
-        raise ValueError("ETM diagnostics support etm or etm_balanced")
+        raise ValueError(
+            "ETM diagnostics support etm, etm_balanced, or a gated balanced ETM"
+        )
     state = torch.load(
         run / "models" / method / "weights.pt",
         map_location="cpu",
@@ -734,7 +750,9 @@ def diagnose_etm_temperature(
     device: torch.device,
 ) -> dict[str, Any]:
     """Sweep one trained ETM variant after its fixed beta has been annotated."""
-    if method not in {"etm", "etm_balanced"}:
+    if method not in {"etm", "etm_balanced"} and not method.startswith(
+        "etm_balanced_gated_"
+    ):
         raise ValueError("temperature sweep requires an ETM method")
     protocol = read_json(run / "protocol.json")
     records = load_heldout_records(run / "data", "validation")
@@ -863,30 +881,36 @@ def main(argv: Sequence[str] | None = None) -> int:
     diagnose.add_argument("--run", required=True, type=Path)
     diagnose.add_argument("--m1-run", required=True, type=Path)
     diagnose.add_argument("--output", required=True, type=Path)
-    diagnose.add_argument("--device", choices=("cpu", "mps", "auto"), default="cpu")
+    diagnose.add_argument(
+        "--device", choices=("cpu", "cuda", "mps", "auto"), default="cpu"
+    )
 
     smoke = commands.add_parser("balanced-smoke")
     smoke.add_argument("--run", required=True, type=Path)
     smoke.add_argument("--output", required=True, type=Path)
-    smoke.add_argument("--device", choices=("cpu", "mps", "auto"), default="cpu")
+    smoke.add_argument(
+        "--device", choices=("cpu", "cuda", "mps", "auto"), default="cpu"
+    )
 
     select = commands.add_parser("select-temperature")
     select.add_argument("--run", required=True, type=Path)
-    select.add_argument(
-        "--method", choices=("pooled_likelihood", "etm", "etm_balanced"), required=True
-    )
+    select.add_argument("--method", required=True)
     select.add_argument("--temperature", required=True, type=float)
     select.add_argument("--output", required=True, type=Path)
-    select.add_argument("--device", choices=("cpu", "mps", "auto"), default="cpu")
+    select.add_argument(
+        "--device", choices=("cpu", "cuda", "mps", "auto"), default="cpu"
+    )
 
     sweep = commands.add_parser("sweep-etm-temperature")
     sweep.add_argument("--run", required=True, type=Path)
-    sweep.add_argument("--method", choices=("etm", "etm_balanced"), required=True)
+    sweep.add_argument("--method", required=True)
     sweep.add_argument(
         "--temperatures", nargs="+", type=float, default=ETM_TEMPERATURES
     )
     sweep.add_argument("--output", required=True, type=Path)
-    sweep.add_argument("--device", choices=("cpu", "mps", "auto"), default="cpu")
+    sweep.add_argument(
+        "--device", choices=("cpu", "cuda", "mps", "auto"), default="cpu"
+    )
 
     args = parser.parse_args(argv)
     run = args.run.expanduser().resolve()

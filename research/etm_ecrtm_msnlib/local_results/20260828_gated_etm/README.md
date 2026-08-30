@@ -17,9 +17,15 @@ A separately trained `tau_g=1, gamma=2` diagnostic improves chemistry to 220
 evaluable / 138 useful motifs and mean SOS 0.645148, but it does not sharpen
 documents: median effective topics increase again to 65.57 and only 22.55% of
 spectra reach maximum theta 0.5. It remains far below the frozen breadth gates.
-No temperature/gamma cross-product was run. Separation is not justified because
-neither gated model has a beta pair at cosine 0.999. NPMI is not justified
-because good document assignment has not been established.
+
+The final bounded post-hoc inference-temperature experiment sharpens this
+already-trained gamma-2 theta without changing beta, model weights, MAG
+annotations, or the locked `theta >= 0.5` membership threshold. Sharpening
+increases evaluable breadth to 409 at `tau=0.3`, but useful motifs peak at 248
+and mean SOS never reaches 0.651498. The completion-NLL gate passes only through
+`tau=0.8`, where breadth is still 316 evaluable / 192 useful. No temperature
+passes all gates, so inference calibration does not rescue the architecture.
+The ETM path stops and M1 multiseed stability is the next campaign.
 
 ## Validation headline
 
@@ -30,6 +36,8 @@ because good document assignment has not been established.
 | Fragment/loss-balanced ETM | 911 | 166 | 104 | 0.629819 | 0.632929 | 8.766069 | Fail breadth/SOS |
 | Balanced ETM + gate, tau 1 gamma 1 | 890 | 181 | 108 | 0.630221 | 0.629630 | 8.695312 | Fail breadth/SOS |
 | Balanced ETM + gate, tau 1 gamma 2 | 889 | 220 | 138 | 0.645148 | 0.642500 | 8.686967 | Fail breadth/SOS |
+| Gamma 2 post-hoc, inference tau 0.8 | 889 | 316 | 192 | 0.633681 | 0.634037 | 9.285261 | Fail breadth/SOS |
+| Gamma 2 post-hoc, inference tau 0.3 | 889 | 409 | 248 | 0.642442 | 0.647287 | 13.863323 | Fail useful/SOS/NLL |
 
 ## What the frozen gate buys
 
@@ -67,6 +75,14 @@ and no-catastrophic-duplicate gates. The stronger gamma fails evaluable motifs
 (220 < 388), useful motifs (138 < 252), and mean SOS
 (0.645148 < 0.651498). It is not near passing and must not advance to test.
 
+Post-hoc calibration confirms a hard tradeoff rather than an all-gate region.
+Temperatures 1.0, 0.9, and 0.8 retain completion NLL but fail all three
+chemistry gates. Temperatures 0.5, 0.4, and 0.3 reach the evaluable gate but
+fail useful motifs, mean SOS, and completion NLL. No row reaches either the
+useful or mean-SOS gate, so the optional intermediate temperature was not
+justified. Beta diagnostics remain fixed at maximum cosine 0.993538, no pair at
+or above 0.999, and no catastrophic duplicate component.
+
 ## Explicit scientific questions
 
 1. **Does the gate materially improve balanced ETM?** Yes for NLL, topic use,
@@ -80,11 +96,15 @@ and no-catastrophic-duplicate gates. The stronger gamma fails evaluable motifs
 5. **Does it reduce duplication without separation?** Yes. Neither gated model
    has a pair above cosine 0.999; gamma 2 maximum cosine is 0.99354.
 6. **Does it preserve the NLL gate?** Yes; gamma 2 improves NLL to 8.686967.
-7. **Does either gated model pass all frozen validation gates?** No.
+7. **Does any trained or calibrated gated model pass all frozen validation
+   gates?** No.
 8. **What single failure remains?** M1-level high-confidence chemistry breadth
    remains absent; the immediate measured mechanism is diffuse theta.
-9. **Did the targeted gamma-2 experiment fix it?** No. It materially improves
-   chemistry but remains 168 evaluable and 114 useful motifs below the gates.
+9. **Did gamma 2 plus bounded inference calibration fix it?** No. At `tau=0.8`,
+   the strongest NLL-preserving diagnostic remains 72 evaluable and 60 useful
+   motifs below the gates and mean SOS is 0.017817 below its gate. Stronger
+   sharpening reaches evaluable breadth only by breaking completion NLL, while
+   useful motifs and mean SOS still fail.
 10. **Is the model still recognizably ETM?** Yes. It retains the original ETM
     variational encoder, logistic-normal theta, KL, embedding decoder, optimizer,
     and parameter count, adding only channel normalization and a parameter-free
@@ -92,9 +112,12 @@ and no-catastrophic-duplicate gates. The stronger gamma fails evaluable motifs
 11. **Is it scientifically preferable to M1?** No. It is simpler to explain,
     but M1 alone achieves the required chemistry and substantially sparser
     document assignments.
-12. **Should it advance to test?** No candidate is authorized for test in this
-    validation-only campaign.
+12. **Should it advance to test?** No. Candidate test data remained locked and
+    was not accessed.
 
-Exact expanded diagnostics are in `comparison.csv` and the per-model artifact
-directories. Experiment rationale and decisions are in `EXPERIMENT_LOG.md`;
-large local artifacts and SHA-256 hashes are in `provenance.json`.
+Exact sweep metrics are in `gated_etm_gamma2_temperature_sweep.csv`; the
+decision record and M1 comparison are in
+`gated_etm_gamma2_temperature_summary.json`. Expanded diagnostics are in
+`comparison.csv`, experiment rationale is in `EXPERIMENT_LOG.md`, and external
+validation-artifact hashes are in `provenance.json`. No calibrated theta or
+beta arrays are committed.

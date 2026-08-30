@@ -9,11 +9,16 @@ import pytest
 import torch
 
 from scripts import run_msnlib_model_comparison as comparison
+from scripts.package_gated_etm_temperature import (
+    select_nll_preserving_temperature,
+    should_add_intermediate,
+)
 from scripts.run_msnlib_model_comparison import (
     FragmentLossBalancedETM,
     GatedFragmentLossBalancedETM,
     ProbeECR,
     gated_method_name,
+    resolve_device,
 )
 from scripts.run_msnlib_neural_followup import (
     _completion_nll,
@@ -127,6 +132,48 @@ def test_gated_etm_inference_is_deterministic_for_identical_inputs() -> None:
 
 def test_gated_artifact_name_records_temperature_and_gamma() -> None:
     assert gated_method_name(1.0, 0.5) == "etm_balanced_gated_t1_g0p5"
+
+
+def test_cuda_device_requires_available_runtime(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(torch.cuda, "is_available", lambda: False)
+    with pytest.raises(RuntimeError, match="CUDA was requested"):
+        resolve_device("cuda")
+
+
+def test_temperature_selection_retains_nll_gate_and_maximizes_breadth() -> None:
+    rows = [
+        {
+            "theta_temperature": 0.9,
+            "gate_completion_nll": True,
+            "evaluable_motifs": 274,
+            "useful_motifs": 172,
+            "mean_sos": 0.64,
+            "gate_useful": False,
+            "gate_mean_sos": False,
+        },
+        {
+            "theta_temperature": 0.8,
+            "gate_completion_nll": True,
+            "evaluable_motifs": 316,
+            "useful_motifs": 192,
+            "mean_sos": 0.63,
+            "gate_useful": False,
+            "gate_mean_sos": False,
+        },
+        {
+            "theta_temperature": 0.7,
+            "gate_completion_nll": False,
+            "evaluable_motifs": 353,
+            "useful_motifs": 214,
+            "mean_sos": 0.64,
+            "gate_useful": False,
+            "gate_mean_sos": False,
+        },
+    ]
+    assert select_nll_preserving_temperature(rows) == 0.8
+    assert not should_add_intermediate(rows)
 
 
 def test_etm_campaign_matrix_routing_is_validation_only(

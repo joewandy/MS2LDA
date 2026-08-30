@@ -90,19 +90,70 @@ or summarized during this campaign.
   and the fraction above theta 0.5 falls from 26.23% to 22.55%. Relative to
   balanced ETM it gains 54 evaluable and 34 useful motifs and 0.015329 mean
   SOS, but remains far below M1's 408/265 breadth and 0.658079 mean SOS.
-- **Decision:** stop the gated-ETM study. Gamma 2 passes optimized, NLL,
+- **Decision at result commit `5cfed890`:** stop the gated-ETM study. Gamma 2 passes optimized, NLL,
   finite/stable, and no-catastrophic-duplicate gates, but fails evaluable
   (220 < 388), useful (138 < 252), and mean SOS
   (0.645148 < 0.651498). It is not near passing. A stronger gamma or post-hoc
   calibration would be another open-ended rescue rather than a bounded
   diagnostic. Separation remains unjustified because strict duplication is
   absent. NPMI remains unjustified because high-confidence document assignment
-  is still poor. No candidate advances to test.
+  is still poor. No candidate advances to test. This decision was subsequently
+  reopened for exactly the bounded post-hoc calibration diagnostic below; no
+  retraining or architectural extension was authorized.
 
-## Follow-up rule
+## 3. Bounded post-hoc gamma-2 inference calibration
 
-The only follow-up was the pre-recorded one-dimensional gamma-2 experiment.
-No separation, NPMI, post-hoc calibration, or additional gate-strength run was
-performed. Separation remained conditional on a duplicate-component failure,
-which neither gated model displayed; NPMI remained conditional on good
-assignment with isolated weak chemistry, which was also not observed.
+- **Question:** is gamma-2 gated ETM's remaining failure merely inference
+  calibration, or does it still lack M1-like high-confidence spectrum
+  assignment?
+- **Frozen source:** the already-trained `etm_balanced_gated_t1_g2` model from
+  result commit `5cfed890d86d5a102d6b6f16f1a2a2431be5b4a6`, sourced from
+  `6dbbefa149179460acf9c39eaf10bf428244af1c`. Model weights, beta, and MAG
+  annotations were unchanged.
+- **Transformation:** for each validation document, apply
+  `theta_tau[k] proportional to theta[k] ** (1 / tau)` using the repository's
+  numerically stable log-space implementation. The fixed grid was 1.0, 0.9,
+  0.8, 0.7, 0.6, 0.5, 0.4, and 0.3. The membership threshold remained 0.5.
+- **Execution:** validation observed theta was reconstructed once from the
+  frozen gamma-2 weights; saved validation full theta and beta were used, and
+  the existing 1,000 MAG annotations were rescored without rerunning MAG.
+  Computation ran with PyTorch 2.10.0+cu128 on an NVIDIA GeForce RTX 5070.
+- **Command:**
+  `python -m scripts.run_msnlib_neural_followup sweep-etm-temperature --run /home/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42 --method etm_balanced_gated_t1_g2 --temperatures 1.0 0.9 0.8 0.7 0.6 0.5 0.4 0.3 --output /tmp/ms2lda-gamma2-fixed-grid-20260830 --device cuda`
+
+| Inference tau | Evaluable | Useful | Mean SOS | Median SOS | Completion NLL | Median effective topics | Median max theta | Pass all |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | :---: |
+| 1.0 | 220 | 138 | 0.645148 | 0.642500 | 8.686967 | 65.568 | 0.3024 | No |
+| 0.9 | 274 | 172 | 0.641640 | 0.640513 | 8.925447 | 27.356 | 0.3997 | No |
+| 0.8 | 316 | 192 | 0.633681 | 0.634037 | 9.285261 | 10.830 | 0.5055 | No |
+| 0.7 | 353 | 214 | 0.638489 | 0.631579 | 9.805137 | 4.748 | 0.6071 | No |
+| 0.6 | 376 | 228 | 0.638026 | 0.631579 | 10.524386 | 2.693 | 0.7018 | No |
+| 0.5 | 392 | 236 | 0.637598 | 0.634870 | 11.468965 | 1.982 | 0.7974 | No |
+| 0.4 | 399 | 239 | 0.639042 | 0.637931 | 12.620825 | 1.580 | 0.8801 | No |
+| 0.3 | 409 | 248 | 0.642442 | 0.647287 | 13.863323 | 1.264 | 0.9465 | No |
+
+- **Checks:** the `tau=1` row reproduces the committed chemistry counts exactly;
+  completion NLL differs by only `7.54e-8`, mean SOS is exact, and median
+  effective topics differs by `3.67e-6`. Top-1 and top-3 assignments are 100%
+  stable at every temperature. All rows are finite. Optimized motifs remain
+  889. Beta remains unchanged with maximum pair cosine 0.993538, no pair at or
+  above 0.999, and no catastrophic duplicate component.
+- **Best constrained diagnostic:** `tau=0.8` maximizes evaluable breadth among
+  temperatures that retain the frozen completion-NLL gate. It reaches 316
+  evaluable / 192 useful motifs and mean SOS 0.633681, versus M1's 408 / 265
+  and 0.658079. Its NLL is 9.285261 versus M1's 8.974140, and its median
+  effective topics are 10.83 versus M1's 7.20.
+- **Intermediate rule:** no value was added. No fixed-grid row reaches either
+  the useful-motif gate or the mean-SOS gate, so adjacent points cannot bracket
+  an all-gate-passing region.
+- **Decision:** no temperature passes all frozen gates. Stop the ETM
+  architecture path. Balanced ETM plus detached geometry gate plus inference
+  calibration remains insufficient; M1 multiseed stability is the next
+  campaign. Candidate test data remain locked.
+
+## Final follow-up rule
+
+The gamma-2 inference-temperature grid was the single bounded post-hoc
+follow-up. No intermediate value, separation, NPMI, Sinkhorn, new gate-training
+run, gamma 3/4, token routing, or other architecture component was added. No
+candidate advances to test.
