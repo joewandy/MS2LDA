@@ -193,3 +193,46 @@ This makes the novelty primarily **domain adaptation, validation, and biological
 17. Burkhardt S, Kramer S. Decoupling Sparsity and Smoothness in the Dirichlet Variational Autoencoder Topic Model. *JMLR*. 2019;20(131):1-27.
 18. Lau JH, Newman D, Baldwin T. Machine Reading Tea Leaves: Automatically Evaluating Topic Coherence and Topic Model Quality. *EACL*. 2014:530-539. doi:10.3115/v1/E14-1056.
 19. Nguyen T, Ngo Van L, Nguyen Duc A, Dinh Viet S. Global and local context in short text neural topic model. *Artificial Intelligence*. 2026;353:104502. doi:10.1016/j.artint.2026.104502.
+20. Martins AFT, Astudillo RF. From Softmax to Sparsemax: A Sparse Model of Attention and Multi-Label Classification. *ICML / PMLR*. 2016;48:1614-1623. https://proceedings.mlr.press/v48/martins16.html
+21. Lin T, Hu Z, Guo X. Sparsemax and Relaxed Wasserstein for Topic Sparsity. *WSDM*. 2019:141-149. doi:10.1145/3289600.3290957.
+22. Peters B, Niculae V, Martins AFT. Sparse Sequence-to-Sequence Models. *ACL*. 2019:1504-1519. doi:10.18653/v1/P19-1146.
+
+## 13. Literature decision for the principled sparse-ETM campaign
+
+The measured failure after the detached-gate campaign is unusually specific:
+the global topic-word inventory is broad and non-duplicated, but each short
+spectrum receives probability from many topics. This makes a sparse
+document-topic transformation the smallest published intervention that targets
+the failure directly.
+
+Sparsemax is the Euclidean projection of a real-valued score vector onto the
+probability simplex and therefore produces exact zeros with a tractable
+Jacobian [Martins and Astudillo, 2016]. Lin, Hu and Guo applied the corresponding
+Gaussian-sparsemax construction directly to neural topic models for short text,
+where exact document-topic support was the stated target [Lin et al., 2019].
+Their full NSMDM/NSMTM models also replace the usual KL regularizer with a
+relaxed-Wasserstein objective. That is a larger formulation change and should
+not be confounded with the first mechanism screen.
+
+Alpha-entmax provides a principled continuum from softmax (`alpha=1`) to
+sparsemax (`alpha=2`). The closed-form 1.5-entmax transform retains exact zeros
+but is less sparse and smoother than sparsemax, making it a useful paired
+comparator rather than an arbitrary sharpening constant [Peters et al., 2019].
+The campaign will use the authors' tested `entmax` implementation.
+
+The first synthetic intervention is therefore limited to replacing
+`theta=softmax(z)` with either `theta=entmax15(z)` or
+`theta=sparsemax(z)`. The Gaussian encoder, latent-space Gaussian KL, fixed
+train-only SGNS embedding decoder, channel balancing, optimizer and raw-count
+reconstruction remain unchanged. This is a Gaussian-sparse-transform ETM
+ablation, not a claim to reproduce Lin et al.'s relaxed-Wasserstein model.
+
+Pseudo-count scaling is a separate hypothesis. The fragment/loss intensities
+are relative measurements that are discretized as `round(100 I)`; they are not
+100 independent word draws. A reconstruction whose per-spectrum total mass is
+the number of distinct observed words preserves the within-spectrum intensity
+proportions while assigning one data-derived unit of effective evidence per
+observed feature. This directly tests whether arbitrary pseudo-count magnitude
+suppresses the KL/prior signal. It will first be paired with ordinary softmax,
+and only combined with a sparse transform if both interventions help
+independently.

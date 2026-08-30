@@ -35,6 +35,9 @@ dependencies:
       # stack share one interpreter. The editable install resolves the full
       # application runtime declared in pyproject.toml.
       - faiss-cpu==1.10.0
+      # Exact, tested sparsemax and 1.5-entmax probability transforms used by
+      # the bounded sparse-ETM research campaign.
+      - entmax==1.3
       - llvmlite==0.43.0
       - lxml==4.9.4
       - matchms==0.29.0

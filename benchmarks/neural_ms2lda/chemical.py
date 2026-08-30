@@ -192,7 +192,6 @@ def _mag_matches(
 ) -> tuple[Any, list[Any]]:
     """Embed motif spectra and retrieve leakage-filtered library neighbours."""
     import faiss
-
     from MS2LDA.Add_On.Spec2Vec.annotation import calc_embeddings, load_s2v_model
 
     spec2vec = load_s2v_model(str(inputs["spec2vec_model"]))
@@ -343,6 +342,7 @@ def run_chemical_scoring(
         "ecrtm_canonical_tau030",
         "etm",
         "etm_balanced",
+        "etm_balanced_entmax15_distinct_words",
         "neural",
         "pooled_likelihood",
         "pooled_mi005",
