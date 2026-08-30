@@ -236,3 +236,29 @@ observed feature. This directly tests whether arbitrary pseudo-count magnitude
 suppresses the KL/prior signal. It will first be paired with ordinary softmax,
 and only combined with a sparse transform if both interventions help
 independently.
+
+## 14. Updated decision after routing-informed ETM validation
+
+The sparse-transform campaign established that entmax alone solves exact support
+but starves the topic inventory. A bounded donor-transplant campaign then tested
+whether short-spectrum token evidence could repair the ETM posterior without
+changing its generator or likelihood. Top-2 contextual token evidence plus
+entmax passed K=36 multi-seed and K=128 recovery stress and was promoted to
+K=1000 MSnLib validation.
+
+The real result changes the literature decision. Median effective topics fell to
+3.70 with exact support 6, while 828 topics remained unique spectrum winners and
+538 were corpus-effective. Chemistry reached 445 evaluable and 289 useful
+motifs. The model therefore repairs the central short-document inference and
+inventory failures while remaining an ETM generator [Dieng et al., 2020] with a
+published sparse simplex transform [Peters et al., 2019]. It misses optimized
+coverage, mean SOS and completion NLL gates, so it is not authorized for test.
+
+The private M1 architecture is not the publication target or next campaign. Its
+ablations are used only to nominate small independently defensible mechanisms.
+The next such mechanism is positive-NPMI topic-coherence regularization, grounded
+in the established coherence literature [Lau et al., 2014]. It directly targets
+the remaining beta/MAG and SOS quality deficits and must be added alone, with
+synthetic promotion and the original NLL gate. If it fails, the correct action is
+to stop and reassess rather than rebuilding the private architecture piece by
+piece.

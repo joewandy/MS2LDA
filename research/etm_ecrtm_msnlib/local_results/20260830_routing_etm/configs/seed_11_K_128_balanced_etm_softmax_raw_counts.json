@@ -1,0 +1,24 @@
+{
+  "batch_size": 200,
+  "device": "cuda",
+  "epochs": 120,
+  "evidence": "truth-known synthetic train and validation only",
+  "fitted_topics": 128,
+  "fixed_train_only_sgns_dimensions": 48,
+  "fragment_loss_beta_mass": [
+    0.5,
+    0.5
+  ],
+  "hidden_dimensions": 800,
+  "learning_rate": 0.005,
+  "optimizer": "Adam",
+  "reconstruction_scaling": "raw_counts",
+  "seed": 11,
+  "stopping_rule": "fixed epochs or immediate non-finite loss/gradient",
+  "theta_transform": "softmax",
+  "threads": 6,
+  "training_documents": 800,
+  "true_topics": 18,
+  "validation_documents": 160,
+  "weight_decay": 1.2e-06
+}

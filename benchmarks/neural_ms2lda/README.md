@@ -1,5 +1,13 @@
 # Neural MS2LDA study
 
+> **Current publication direction (2026-08-30):** M1 remains a private benchmark
+> and donor evidence, not the proposed paper model. A published balanced ETM base
+> with top-2 contextual posterior evidence and entmax 1.5 now reaches 445
+> evaluable / 289 useful validation motifs with sparse, broad topic use. It misses
+> three frozen gates, so test remains locked; the next bounded experiment is an
+> NPMI-coherence addition to that ETM, not M1 multiseed. See
+> `research/etm_ecrtm_msnlib/local_results/20260830_routing_etm/README.md`.
+
 This directory contains the locked seed-42, K=1000 Neural MS2LDA M1 model with
 one-pass document inference. Each token has 48 train-only SGNS coordinates and
 two fragment/loss indicators. A bias-free projection maps those 50 features to

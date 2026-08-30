@@ -1,10 +1,12 @@
 # Neural MS2LDA published-model handoff
 
 This document preserves the scientific background and completed
-published-model campaign. The active higher-compute handoff is `NEXT_AGENT.md`:
-principled sparse-ETM research using sparsemax/entmax, a sparse prior, and/or
-pseudo-count objective scaling, screened synthetically before any warranted
-real-validation run. M1 multiseed stability is fallback-only.
+published-model campaign. The active handoff is `NEXT_AGENT.md`: a single
+positive-NPMI coherence addition to the validated routing-informed ETM,
+screened synthetically before any warranted real-validation run. The current
+ETM result has 445 evaluable / 289 useful motifs, median 3.70 effective topics
+and 828 unique top-1 topics, but misses optimized, mean-SOS and NLL gates. M1 is
+private donor evidence only; M1 multiseed is not the next campaign.
 
 ## Read the literature survey before changing the model
 
@@ -30,7 +32,7 @@ This combination creates two distinct failure modes that must not be conflated:
 
 Our simulations reproduced both failure modes under controlled truth.
 
-## Why the current M1 model is not discarded
+## Historical M1 benchmark
 
 The committed M1 model remains the incumbent because it has real MSnLib chemical evidence. At seed 42 and K=1000 its validation result is 884 optimized motifs, 408 high-confidence evaluable motifs, 265 useful motifs, mean SOS 0.6580793714, median SOS 0.6488636364 and completion NLL 8.9741399256.
 
@@ -71,7 +73,8 @@ The completed published-model campaign followed this deliberately narrow ladder:
 3. **Raw ECRTM and the already-frozen tau=0.30 theta calibration** — only to address the distinct short-spectrum mixture-calibration problem; do not tune tau on test.
 4. Add one further MS-specific mechanism only if the real validation result identifies a specific failure. For example, if beta predicts completion reasonably but MAG/SOS coherence falls, positive-NPMI is a targeted literature-supported mechanism to test. If representation quality is the bottleneck, a frozen DreaMS/contextual embedding is a separate later experiment, not something to combine immediately with ECRTM.
 
-M1 remains the incumbent/control throughout.
+M1 remains a locked historical comparator and source of donor ablation evidence;
+it is not the paper-facing base or next campaign.
 
 ## Real-data experiment: validation only
 

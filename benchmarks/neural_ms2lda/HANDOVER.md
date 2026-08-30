@@ -1,5 +1,17 @@
 # Neural MS2LDA handover
 
+## Current publication direction (2026-08-30)
+
+M1 is retained as a private benchmark and source of ablation evidence, not as
+the proposed publication model. The active direction is a published balanced
+ETM base with top-2 contextual posterior evidence and entmax 1.5. Its validation
+result is 803 optimized, 445 evaluable and 289 useful motifs, mean SOS 0.647153,
+completion NLL 9.542924, median 3.70 effective topics and 828 unique top-1
+topics. It passes the core evaluable/useful breadth gates but not the complete
+frozen contract. The next bounded experiment adds only train-derived
+positive-NPMI coherence regularization. M1 multiseed is not next, and test stays
+locked. See `research/etm_ecrtm_msnlib/NEXT_AGENT.md`.
+
 ## Current state
 
 The repository supports one locked seed-42, K=1000, 40-epoch Neural MS2LDA
@@ -113,7 +125,9 @@ remain separate and primary.
 | Ablation ledger | `benchmarks/neural_ms2lda/results/seed42/ablation_results.json` |
 | External validation comparison | `research/etm_ecrtm_msnlib/local_results/20260827_followup/comparison.csv` |
 | External experiment log | `research/etm_ecrtm_msnlib/local_results/20260827_followup/EXPERIMENT_LOG.md` |
-| Next M1 stability campaign | `research/etm_ecrtm_msnlib/M1_MULTISEED_HANDOFF.md` |
+| Historical M1 stability plan (not current) | `research/etm_ecrtm_msnlib/M1_MULTISEED_HANDOFF.md` |
+| Current routing-informed ETM evidence | `research/etm_ecrtm_msnlib/local_results/20260830_routing_etm/README.md` |
+| Current next campaign | `research/etm_ecrtm_msnlib/NEXT_AGENT.md` |
 
 `results.json` remains the sole numerical source for the locked M1/Tomotopy
 paper comparison. The separate committed `comparison.csv` is the numerical
@@ -177,9 +191,7 @@ deterministically, and visually inspect every rendered PDF page.
 
 ## Next compute
 
-The next campaign is principled sparse-ETM research: sparsemax/entmax, a sparse
-prior, and/or pseudo-count objective scaling. Screen these mechanisms first on
-the existing truth-known synthetic protocol and advance to real MSnLib
-validation only if warranted. M1 multiseed stability is the fallback only if
-the sparse-ETM campaign fails. The current workflow is in
-`research/etm_ecrtm_msnlib/NEXT_AGENT.md`. Test remains locked.
+The next campaign adds only train-derived positive-NPMI coherence regularization
+to the frozen routing-informed ETM. Screen it synthetically before any real
+validation. Do not start M1 multiseed. The current workflow is in
+`research/etm_ecrtm_msnlib/NEXT_AGENT.md`; candidate test remains locked.

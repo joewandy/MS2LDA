@@ -2,17 +2,21 @@
 
 ## Current next direction
 
-The next campaign is principled sparse-ETM research: sparsemax/entmax, a sparse
-prior, and/or pseudo-count objective scaling. It must be screened first on the
-truth-known synthetic protocol and may advance to real MSnLib validation only
-if warranted. M1 multiseed stability is the fallback only if this campaign
-fails. See `NEXT_AGENT.md`.
+The current paper-facing candidate is a published ETM base with top-2 contextual
+posterior evidence and alpha-entmax 1.5. It is not M1 and does not use the M1
+gate, Sinkhorn, separation, alternating optimizer or schedule.
 
-Status: **research handoff; real MSnLib candidate experiment has NOT been run**.
+Its completed K=1000 validation has sparse, broad topic use (median 3.70
+effective topics; 828 unique top-1 topics) and passes the evaluable/useful gates
+at 445/289. It narrowly fails optimized coverage, mean SOS and completion NLL,
+so candidate test remains locked. The next bounded experiment adds only
+train-derived positive-NPMI coherence regularization to this ETM formulation.
+M1 multiseed is not the next campaign. See `NEXT_AGENT.md` and
+`local_results/20260830_routing_etm/README.md`.
 
-Branch: `research/etm-ecrtm-msnlib-20260826`
+Status: **routing-informed ETM validation complete; bounded coherence follow-up**.
 
-Base: `main` at `20de0e45aec25203e6bc38770a795b25cc18bff7` (`Promote minimal nonlinear Neural MS2LDA`).
+Branch: `codex/unified-ms2lda-environment`
 
 ## Why this branch exists
 

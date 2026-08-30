@@ -343,6 +343,7 @@ def run_chemical_scoring(
         "etm",
         "etm_balanced",
         "etm_balanced_entmax15_distinct_words",
+        "etm_balanced_routing_top2_entmax15_raw_counts",
         "neural",
         "pooled_likelihood",
         "pooled_mi005",

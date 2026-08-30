@@ -2,6 +2,17 @@
 
 Status: validation-only architecture selection is closed. Candidate test data remain locked.
 
+## Publication-direction update (2026-08-30)
+
+The decision below remains the historical validation result for the private M1
+benchmark; it is not a recommendation to publish M1 or to run M1 multiseed.
+A later donor-transplant campaign produced a recognizably published ETM base
+with top-2 contextual posterior evidence and entmax 1.5. It reached 445 evaluable
+and 289 useful validation motifs with median 3.70 effective topics and 828 unique
+top-1 topics, while missing optimized, mean-SOS and NLL gates. That result makes
+routing-informed ETM, not M1, the current publication direction. See
+`research/etm_ecrtm_msnlib/local_results/20260830_routing_etm/README.md`.
+
 Evidence commits:
 
 - research handoff: `9baec8aa62f684480eba35d4fc7f626c46f7b804`
@@ -81,4 +92,7 @@ A large MAG-optimized count alone is not evidence of a usable topic inventory.
 
 ## Next compute
 
-The next campaign is principled sparse-ETM research using sparsemax/entmax, a sparse prior, and/or pseudo-count objective scaling. Screen it synthetically first and advance to real MSnLib validation only if warranted. M1 optimization-seed stability is the fallback only if sparse-ETM fails. Test remains locked. The current workflow is in `research/etm_ecrtm_msnlib/NEXT_AGENT.md`.
+The next campaign is a bounded positive-NPMI coherence addition to the frozen
+routing-informed ETM. Screen it synthetically first and advance to real MSnLib
+validation only if warranted. Do not start M1 multiseed. Test remains locked.
+The current workflow is in `research/etm_ecrtm_msnlib/NEXT_AGENT.md`.
