@@ -187,7 +187,6 @@ def _etm_training_outputs(run: Path, method: str) -> tuple[Path, ...]:
         model / "top_words.csv",
         model / "fragment_mass_summary.json",
         model / "duplicate_component_summary.json",
-        model / "validation_access_audit.json",
         run / "validation_evaluation" / method / "complete.json",
         beta,
         validation_theta,
@@ -424,7 +423,10 @@ def stage_plan(paths: ReproductionPaths) -> list[Stage]:
                     "--method",
                     "etm",
                 ),
-                (paths.controls / "validation_chemical/etm/complete.json",),
+                (
+                    paths.controls / "validation_chemical/etm/complete.json",
+                    paths.controls / "models/etm/validation_access_audit.json",
+                ),
             ),
             Stage(
                 "balanced_etm_train",
@@ -457,7 +459,10 @@ def stage_plan(paths: ReproductionPaths) -> list[Stage]:
                     "--method",
                     "etm_balanced",
                 ),
-                (paths.controls / "validation_chemical/etm_balanced/complete.json",),
+                (
+                    paths.controls / "validation_chemical/etm_balanced/complete.json",
+                    paths.controls / "models/etm_balanced/validation_access_audit.json",
+                ),
             ),
         ),
     )
@@ -496,7 +501,10 @@ def stage_plan(paths: ReproductionPaths) -> list[Stage]:
                         "--data-root",
                         str(paths.assets),
                     ),
-                    (run / "validation_chemical" / METHOD / "complete.json",),
+                    (
+                        run / "validation_chemical" / METHOD / "complete.json",
+                        run / "models" / METHOD / "validation_access_audit.json",
+                    ),
                 ),
             ),
         )

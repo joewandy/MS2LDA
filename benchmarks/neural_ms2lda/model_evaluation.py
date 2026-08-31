@@ -195,15 +195,7 @@ def score_chemical_validation(
         metrics["validation_chemistry"] = {
             **chemistry,
             "annotation_coverage": float(result["annotation_coverage"]),
-            "mag_failures": result.get(
-                "mag_failures",
-                {
-                    "clustering_count": 0,
-                    "clustering_topic_ids": [],
-                    "optimization_count": 0,
-                    "optimization_topic_ids": [],
-                },
-            ),
+            "mag_failures": result["mag_failures"],
             "heldout_compounds_excluded_from_mag": bool(
                 result["heldout_compounds_excluded_from_mag"]
             ),
