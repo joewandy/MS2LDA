@@ -19,6 +19,7 @@ from scripts.download_msnlib_validation_assets import safe_zip_members
 from scripts.evaluate_frozen_etm_test import evaluate_test
 from scripts.prepare_msnlib_test_view import expose_test_view
 from scripts.prepare_msnlib_validation_view import create_validation_view
+from scripts.run_contextual_sparse_etm import TrainingSettings, train_real_validation
 from scripts.run_contextual_sparse_etm_reproduction import (
     run_stage,
 )
@@ -44,6 +45,10 @@ from benchmarks.neural_ms2lda.data import (
 )
 from benchmarks.neural_ms2lda.evaluation import evaluate_neural
 from benchmarks.neural_ms2lda.mag import _connectivity_key, build_filtered_mag_index
+from benchmarks.neural_ms2lda.model_evaluation import (
+    TRAINING_ACCESS_AUDIT_FILENAME,
+    VALIDATION_ACCESS_AUDIT_FILENAME,
+)
 from benchmarks.neural_ms2lda.reproduction_plan import (
     Stage,
     probability_artifact_paths,
@@ -56,7 +61,7 @@ from benchmarks.neural_ms2lda.tomotopy import (
     _validate_alpha,
 )
 from benchmarks.neural_ms2lda.training import train_model
-from benchmarks.neural_ms2lda.utils import write_json, write_jsonl
+from benchmarks.neural_ms2lda.utils import read_json, write_json, write_jsonl
 
 from ._support import chemistry_result, mini_protocol, write_mini_mgf
 
@@ -120,6 +125,26 @@ def _prepare_mini_training_scaffold(
 def _mini_training_arguments(run: Path) -> dict[str, Any]:
     data = run / "data"
     return {"train": load_csr(data / "train.npz")}
+
+
+def _prepare_mini_frozen_source(root: Path) -> tuple[Path, dict[str, Any]]:
+    """Create one tiny prepared run reusable by validation-only model views."""
+    mgf = root / "mini.mgf"
+    write_mini_mgf(mgf)
+    protocol = mini_protocol(mgf)
+    prepared = root / "prepared"
+    write_json(prepared / "protocol.json", protocol)
+    _prepare_mini_training_scaffold(
+        prepared,
+        data_root=root,
+        protocol=protocol,
+    )
+    write_json(prepared / "mag/index/complete.json", {"retained_leak_rows": 0})
+    write_json(prepared / "mag/index/excluded_connectivity_keys.json", [])
+    (prepared / "mag/index").mkdir(parents=True, exist_ok=True)
+    np.save(prepared / "mag/index/kept_original_ids.npy", np.asarray([], dtype=int))
+    (prepared / "mag/index/spec2vec_filtered.faiss").write_bytes(b"mini-index")
+    return prepared, protocol
 
 
 def test_training_interface_exposes_no_test_inputs() -> None:
@@ -425,21 +450,7 @@ def test_miniature_mgf_through_results_and_model(tmp_path: Path) -> None:
 
 
 def test_frozen_etm_is_evaluated_only_after_validation(tmp_path: Path) -> None:
-    mgf = tmp_path / "mini.mgf"
-    write_mini_mgf(mgf)
-    protocol = mini_protocol(mgf)
-    prepared = tmp_path / "prepared"
-    write_json(prepared / "protocol.json", protocol)
-    _prepare_mini_training_scaffold(
-        prepared,
-        data_root=tmp_path,
-        protocol=protocol,
-    )
-    write_json(prepared / "mag/index/complete.json", {"retained_leak_rows": 0})
-    write_json(prepared / "mag/index/excluded_connectivity_keys.json", [])
-    (prepared / "mag/index").mkdir(parents=True, exist_ok=True)
-    np.save(prepared / "mag/index/kept_original_ids.npy", np.asarray([], dtype=int))
-    (prepared / "mag/index/spec2vec_filtered.faiss").write_bytes(b"mini-index")
+    prepared, _ = _prepare_mini_frozen_source(tmp_path)
 
     run = tmp_path / "frozen-etm"
     manifest = create_validation_view(run, prepared, expected_topics=4)
@@ -474,6 +485,95 @@ def test_frozen_etm_is_evaluated_only_after_validation(tmp_path: Path) -> None:
             batch_size=4,
             threads=1,
         )
+
+
+def test_training_audits_do_not_preempt_chemistry_stage_outputs(
+    tmp_path: Path,
+) -> None:
+    """Exercise the runner boundary that separates training and chemistry."""
+    paths = reproduction_paths(tmp_path / "reproduction")
+    paths.logs.mkdir(parents=True)
+    paths.stages.mkdir(parents=True)
+    prepared, _ = _prepare_mini_frozen_source(tmp_path)
+
+    create_validation_view(paths.controls, prepared, expected_topics=4)
+    train_etm(
+        paths.controls,
+        device=torch.device("cpu"),
+        epochs=1,
+        batch_size=4,
+        method="etm",
+    )
+    contextual_run = paths.contextual[7043]
+    create_validation_view(contextual_run, prepared, expected_topics=4)
+    train_real_validation(
+        contextual_run,
+        device=torch.device("cpu"),
+        settings=TrainingSettings(
+            epochs=1,
+            batch_size=4,
+            threads=1,
+            requested_seed=7043,
+        ),
+    )
+
+    stages = {stage.name: stage for stage in stage_plan(paths)}
+    cases = (
+        (
+            paths.controls,
+            "etm",
+            stages["canonical_etm_train"],
+            stages["canonical_etm_chemistry"],
+        ),
+        (
+            contextual_run,
+            "contextual_sparse_etm",
+            stages["contextual_seed_7043_train"],
+            stages["contextual_seed_7043_chemistry"],
+        ),
+    )
+    finalizer = "\n".join(
+        (
+            "import sys",
+            "from pathlib import Path",
+            (
+                "from benchmarks.neural_ms2lda.model_evaluation import "
+                "finalize_validation_access_audit"
+            ),
+            "from benchmarks.neural_ms2lda.utils import write_json",
+            "run = Path(sys.argv[1])",
+            "method = sys.argv[2]",
+            "complete = Path(sys.argv[3])",
+            "write_json(complete, {'split': 'validation'})",
+            "finalize_validation_access_audit(run, method)",
+        )
+    )
+    for run, method, training_stage, chemistry_stage in cases:
+        training_audit = run / "models" / method / TRAINING_ACCESS_AUDIT_FILENAME
+        final_audit = run / "models" / method / VALIDATION_ACCESS_AUDIT_FILENAME
+        assert training_audit in training_stage.outputs
+        assert final_audit in chemistry_stage.outputs
+        assert training_audit.is_file()
+        assert not final_audit.exists()
+        assert all(not output.exists() for output in chemistry_stage.outputs)
+
+        command = (
+            sys.executable,
+            "-c",
+            finalizer,
+            str(run),
+            method,
+            str(chemistry_stage.outputs[0]),
+        )
+        runnable_stage = Stage(
+            chemistry_stage.name,
+            command,
+            chemistry_stage.outputs,
+            chemistry_stage.requires_idle_system,
+        )
+        record = run_stage(paths, runnable_stage)
+        assert record["status"] == "complete"
+        assert read_json(final_audit)["chemical_split"] == "validation"
 
 
 def test_clean_reproduction_plan_has_unique_stage_ownership(tmp_path: Path) -> None:

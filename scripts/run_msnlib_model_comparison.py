@@ -43,6 +43,7 @@ from benchmarks.neural_ms2lda.diagnostics import model_selection_diagnostics
 from benchmarks.neural_ms2lda.followup import retemperature_theta, theta_distribution
 from benchmarks.neural_ms2lda.model_evaluation import (
     MODEL_SELECTION_EVALUATION_PROTOCOL,
+    TRAINING_ACCESS_AUDIT_FILENAME,
     entropy_diagnostics,
     save_validation,
     score_chemical_validation,
@@ -499,7 +500,10 @@ def train_etm(
     records = campaign_data["records"]
     vocabulary = load_vocabulary(run / "data")
     embeddings = sgns_only(run / "token_features/features.npy")
-    write_json(output / "validation_access_audit.json", validation_access_manifest(run))
+    write_json(
+        output / TRAINING_ACCESS_AUDIT_FILENAME,
+        validation_access_manifest(run),
+    )
     if method in {"etm_balanced", "etm_balanced_gated"}:
         fragment_mask = np.asarray(
             [word.startswith("frag@") for word in vocabulary], dtype=bool

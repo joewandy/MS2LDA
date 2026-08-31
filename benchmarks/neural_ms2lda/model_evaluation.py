@@ -17,6 +17,8 @@ from .reproducibility import write_csv_rows
 from .utils import atomic_save_numpy, read_json, write_json
 
 EPSILON = 1e-12
+TRAINING_ACCESS_AUDIT_FILENAME = "training_access_audit.json"
+VALIDATION_ACCESS_AUDIT_FILENAME = "validation_access_audit.json"
 MODEL_SELECTION_EVALUATION_PROTOCOL = {
     "active_topic_usage_threshold": 0.0005,
     "duplicate_cosine_thresholds": (0.95, 0.99, 0.999),
@@ -25,6 +27,34 @@ MODEL_SELECTION_EVALUATION_PROTOCOL = {
     "channel_extreme_lower": 0.1,
     "channel_extreme_upper": 0.9,
 }
+
+
+def finalize_validation_access_audit(run: Path, method: str) -> dict[str, Any]:
+    """Extend the sealed training-access record after validation chemistry.
+
+    Model fitting writes a training-only record under a distinct filename. The
+    chemistry stage owns the final audit path so the clean-room runner can
+    reject cached chemistry without mistaking the training record for a prior
+    chemistry result.
+    """
+    model_output = run / "models" / method
+    training_path = model_output / TRAINING_ACCESS_AUDIT_FILENAME
+    if not training_path.is_file():
+        message = f"missing sealed training-access record: {training_path}"
+        raise FileNotFoundError(message)
+    audit = read_json(training_path)
+    audit.update(
+        {
+            "chemical_split": "validation",
+            "candidate_test_chemistry_loaded": False,
+            "candidate_test_mag_or_sos_computed": False,
+            "reused_leakage_filtered_mag_index": str(
+                run / "mag/index/spec2vec_filtered.faiss"
+            ),
+        }
+    )
+    write_json(model_output / VALIDATION_ACCESS_AUDIT_FILENAME, audit)
+    return audit
 
 
 def entropy_diagnostics(theta: np.ndarray) -> dict[str, float]:
@@ -203,18 +233,5 @@ def score_chemical_validation(
         }
         write_json(metrics_path, metrics)
 
-    audit_path = model_output / "validation_access_audit.json"
-    if audit_path.is_file():
-        audit = read_json(audit_path)
-        audit.update(
-            {
-                "chemical_split": "validation",
-                "candidate_test_chemistry_loaded": False,
-                "candidate_test_mag_or_sos_computed": False,
-                "reused_leakage_filtered_mag_index": str(
-                    run / "mag/index/spec2vec_filtered.faiss"
-                ),
-            }
-        )
-        write_json(audit_path, audit)
+    finalize_validation_access_audit(run, method)
     return result

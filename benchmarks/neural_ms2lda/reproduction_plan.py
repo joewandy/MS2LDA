@@ -6,6 +6,8 @@ import sys
 from pathlib import Path
 from typing import NamedTuple
 
+from .model_evaluation import TRAINING_ACCESS_AUDIT_FILENAME
+
 METHOD = "contextual_sparse_etm"
 TRAINING_SEEDS = (7043, 23, 37)
 SYNTHETIC_SEEDS = (11, 23, 37)
@@ -187,6 +189,7 @@ def _etm_training_outputs(run: Path, method: str) -> tuple[Path, ...]:
         model / "top_words.csv",
         model / "fragment_mass_summary.json",
         model / "duplicate_component_summary.json",
+        model / TRAINING_ACCESS_AUDIT_FILENAME,
         run / "validation_evaluation" / method / "complete.json",
         beta,
         validation_theta,

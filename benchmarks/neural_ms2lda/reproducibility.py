@@ -15,6 +15,7 @@ import json
 import os
 import random
 import resource
+from collections.abc import Mapping
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -24,7 +25,7 @@ import torch
 from .utils import write_json
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping, Sequence
+    from collections.abc import Sequence
 
 VALIDATION_DATA_FILES = (
     "train.npz",

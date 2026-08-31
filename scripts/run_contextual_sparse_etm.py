@@ -28,6 +28,7 @@ from benchmarks.neural_ms2lda.diagnostics import model_selection_diagnostics
 from benchmarks.neural_ms2lda.followup import theta_distribution
 from benchmarks.neural_ms2lda.model_evaluation import (
     MODEL_SELECTION_EVALUATION_PROTOCOL,
+    TRAINING_ACCESS_AUDIT_FILENAME,
     entropy_diagnostics,
     save_validation,
     score_chemical_validation,
@@ -611,7 +612,7 @@ def train_real_validation(
             ),
         ),
     )
-    write_json(output / "validation_access_audit.json", data.input_manifest)
+    write_json(output / TRAINING_ACCESS_AUDIT_FILENAME, data.input_manifest)
 
     if device.type == "cuda":
         torch.cuda.reset_peak_memory_stats(device)
