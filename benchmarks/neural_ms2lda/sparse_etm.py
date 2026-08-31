@@ -5,27 +5,36 @@ from __future__ import annotations
 from typing import Literal
 
 import numpy as np
-import scipy.sparse as sp
 import torch
 from entmax import entmax15, sparsemax
 from torch import nn
 from torch.nn import functional as nnf
 
-from .diagnostics import normalize_mixtures
+from .model_evaluation import theta_support_diagnostics
+from .topic_model_training import (
+    RECONSTRUCTION_SCALINGS,
+    ReconstructionScaling,
+    dense_normalized,
+    sparse_reconstruction_loss,
+)
 
-EPS = 1e-12
 ThetaTransform = Literal["softmax", "entmax15", "sparsemax"]
-ReconstructionScaling = Literal["raw_counts", "distinct_words", "unit_mass"]
 THETA_TRANSFORMS: tuple[ThetaTransform, ...] = (
     "softmax",
     "entmax15",
     "sparsemax",
 )
-RECONSTRUCTION_SCALINGS: tuple[ReconstructionScaling, ...] = (
-    "raw_counts",
-    "distinct_words",
-    "unit_mass",
-)
+__all__ = [
+    "RECONSTRUCTION_SCALINGS",
+    "THETA_TRANSFORMS",
+    "BalancedSparseETM",
+    "ReconstructionScaling",
+    "ThetaTransform",
+    "dense_normalized",
+    "sparse_reconstruction_loss",
+    "theta_support_diagnostics",
+    "transform_theta",
+]
 
 
 def transform_theta(logits: torch.Tensor, transform: ThetaTransform) -> torch.Tensor:
@@ -137,101 +146,3 @@ class BalancedSparseETM(nn.Module):
         mu, logvar, kl = self.encode(normalized_bows)
         logits = mu + torch.randn_like(mu) * torch.exp(0.5 * logvar) if sample else mu
         return transform_theta(logits, self.theta_transform), kl
-
-
-def dense_normalized(
-    matrix: sp.csr_matrix,
-    rows: np.ndarray,
-    device: torch.device,
-) -> torch.Tensor:
-    """Return the canonical row-normalized dense ETM encoder input."""
-    values = torch.from_numpy(
-        matrix[rows].toarray().astype(np.float32, copy=False),
-    ).to(device)
-    return values / values.sum(dim=1, keepdim=True).clamp_min(1.0)
-
-
-def sparse_reconstruction_loss(
-    theta: torch.Tensor,
-    beta: torch.Tensor,
-    matrix: sp.csr_matrix,
-    rows: np.ndarray,
-    device: torch.device,
-    *,
-    scaling: ReconstructionScaling,
-) -> tuple[torch.Tensor, float]:
-    """Evaluate observed-word reconstruction with a predeclared mass scaling.
-
-    ``raw_counts`` is the canonical multinomial pseudo-count objective.
-    ``distinct_words`` preserves each row's relative intensity weights while
-    setting its total effective mass to its number of observed nonzero words.
-    ``unit_mass`` treats the row-normalized intensity vector as one observation.
-    """
-    if scaling not in RECONSTRUCTION_SCALINGS:
-        raise ValueError(f"unknown reconstruction scaling: {scaling}")
-    batch = matrix[rows].tocsr()
-    if batch.nnz == 0:
-        return theta.new_zeros(()), 0.0
-    lengths = np.diff(batch.indptr).astype(np.int64, copy=False)
-    row_ids_array = np.repeat(np.arange(len(rows), dtype=np.int64), lengths)
-    row_ids = torch.from_numpy(row_ids_array).to(device)
-    word_ids = torch.from_numpy(
-        batch.indices.astype(np.int64, copy=False),
-    ).to(device)
-    weights_array = batch.data.astype(np.float32, copy=True)
-    raw_totals = np.asarray(batch.sum(axis=1)).ravel().astype(np.float32)
-    if scaling == "distinct_words":
-        target_totals = lengths.astype(np.float32)
-    elif scaling == "unit_mass":
-        target_totals = (raw_totals > 0).astype(np.float32)
-    else:
-        target_totals = raw_totals
-    if scaling != "raw_counts":
-        scale = np.divide(
-            target_totals,
-            raw_totals,
-            out=np.zeros_like(target_totals),
-            where=raw_totals > 0,
-        )
-        weights_array *= scale[row_ids_array]
-    weights = torch.from_numpy(weights_array).to(device)
-    probability = torch.sum(
-        theta[row_ids] * beta[:, word_ids].T,
-        dim=1,
-    ).clamp_min(EPS)
-    per_document = theta.new_zeros((len(rows),))
-    per_document.index_add_(0, row_ids, -weights * torch.log(probability))
-    return per_document.mean(), float(target_totals.mean())
-
-
-def theta_support_diagnostics(theta: np.ndarray) -> dict[str, object]:
-    """Summarize exact support, entropy-effective topics and confidence."""
-    mixtures = normalize_mixtures(theta)
-    support = np.count_nonzero(mixtures > 0.0, axis=1)
-    entropy = -np.sum(
-        np.where(
-            mixtures > 0.0,
-            mixtures * np.log(np.clip(mixtures, EPS, None)),
-            0.0,
-        ),
-        axis=1,
-    )
-    maximum = mixtures.max(axis=1)
-    percentiles = {
-        str(percentile): float(np.percentile(support, percentile))
-        for percentile in (1, 5, 25, 50, 75, 95, 99)
-    }
-    return {
-        "minimum_exact_support": int(support.min()),
-        "support_size_percentiles": percentiles,
-        "median_exact_support": float(np.median(support)),
-        "mean_exact_support": float(support.mean()),
-        "maximum_exact_support": int(support.max()),
-        "fraction_support_le_3": float(np.mean(support <= 3)),
-        "median_effective_topics_per_spectrum": float(np.median(np.exp(entropy))),
-        "mean_effective_topics_per_spectrum": float(np.mean(np.exp(entropy))),
-        "median_maximum_theta": float(np.median(maximum)),
-        "fraction_max_theta_ge_0_5": float(np.mean(maximum >= 0.5)),
-        "fraction_max_theta_ge_0_3": float(np.mean(maximum >= 0.3)),
-        "fraction_max_theta_ge_0_2": float(np.mean(maximum >= 0.2)),
-    }

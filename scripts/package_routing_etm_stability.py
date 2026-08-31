@@ -8,6 +8,7 @@ import hashlib
 import json
 import shutil
 import statistics
+import subprocess
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -262,8 +263,11 @@ def package_stability(
         writer.writerows(rows)
 
     implementation_paths = (
-        Path("benchmarks/neural_ms2lda/routing_etm.py"),
-        Path("scripts/run_routing_etm_real.py"),
+        Path("benchmarks/neural_ms2lda/contextual_sparse_etm.py"),
+        Path("benchmarks/neural_ms2lda/model_evaluation.py"),
+        Path("benchmarks/neural_ms2lda/reproducibility.py"),
+        Path("benchmarks/neural_ms2lda/topic_model_training.py"),
+        Path("scripts/run_contextual_sparse_etm.py"),
         Path("scripts/package_routing_etm_stability.py"),
         Path("scripts/verify_routing_etm_stability.py"),
         Path("environment.yml"),
@@ -295,10 +299,18 @@ def package_stability(
             _assert_equal(f"seed {seed} validation inputs", linked, validation_inputs)
         external_artifacts[str(seed)] = provenance["local_artifacts"]
 
+    source_implementation_commit = subprocess.run(  # noqa: S603
+        ["git", "rev-parse", "HEAD"],  # noqa: S607
+        cwd=root,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
     manifest = {
         "schema_version": 1,
         "checkpoint_id": "routing-etm-real-training-seed-stability-20260830",
         "baseline_checkpoint_commit": "1bfac58ec7efc6720839a7c65c9e98ade3536027",
+        "source_implementation_commit": source_implementation_commit,
         "method": METHOD,
         "data_split_seed": 42,
         "training_seeds": [int(row["training_seed"]) for row in rows],

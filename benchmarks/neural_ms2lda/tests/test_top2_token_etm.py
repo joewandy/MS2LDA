@@ -98,8 +98,7 @@ def test_top2_token_entmax_has_finite_gradients_and_exact_zeros() -> None:
     reconstruction, _ = sparse_reconstruction_loss(
         theta,
         model.beta(),
-        matrix,
-        rows,
+        matrix[rows],
         torch.device("cpu"),
         scaling="raw_counts",
     )

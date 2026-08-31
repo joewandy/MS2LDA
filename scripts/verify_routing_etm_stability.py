@@ -7,6 +7,7 @@ import csv
 import hashlib
 import json
 import math
+import subprocess
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -76,10 +77,38 @@ def _verify_files(
     repo_root: Path,
     rows: Sequence[Mapping[str, object]],
     errors: list[str],
+    *,
+    source_commit: str | None = None,
 ) -> int:
     checks = 0
     for row in rows:
         relative = str(row["path"])
+        if source_commit is not None:
+            completed = subprocess.run(  # noqa: S603
+                ["git", "show", f"{source_commit}:{relative}"],  # noqa: S607
+                cwd=repo_root,
+                check=False,
+                capture_output=True,
+            )
+            if completed.returncode != 0:
+                errors.append(
+                    f"missing packaged implementation at {source_commit}: {relative}",
+                )
+                continue
+            checks += 1
+            _compare(
+                errors,
+                label=f"{relative} bytes at {source_commit}",
+                actual=len(completed.stdout),
+                expected=int(row["bytes"]),
+            )
+            _compare(
+                errors,
+                label=f"{relative} sha256 at {source_commit}",
+                actual=hashlib.sha256(completed.stdout).hexdigest(),
+                expected=str(row["sha256"]),
+            )
+            continue
         path = _repo_path(repo_root, relative)
         if not path.is_file():
             errors.append(f"missing packaged file: {relative}")
@@ -196,7 +225,12 @@ def verify_stability_package(
     )
     manifest = _read_json(manifest_file)
     errors: list[str] = []
-    checks = _verify_files(root, manifest["implementation_files"], errors)
+    checks = _verify_files(
+        root,
+        manifest["implementation_files"],
+        errors,
+        source_commit=str(manifest["source_implementation_commit"]),
+    )
     checks += _verify_files(root, manifest["packaged_files"], errors)
 
     summary_path = root / DEFAULT_OUTPUT / "stability_summary.json"

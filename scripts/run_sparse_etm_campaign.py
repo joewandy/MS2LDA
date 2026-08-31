@@ -7,13 +7,7 @@ only real-data path is added only after the synthetic promotion decision.
 from __future__ import annotations
 
 import argparse
-import contextlib
-import csv
-import hashlib
 import json
-import os
-import random
-import resource
 import time
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -32,6 +26,18 @@ from benchmarks.neural_ms2lda.data import (
 from benchmarks.neural_ms2lda.diagnostics import model_selection_diagnostics
 from benchmarks.neural_ms2lda.followup import theta_distribution
 from benchmarks.neural_ms2lda.objectives import completion_metrics
+from benchmarks.neural_ms2lda.reproducibility import (
+    configure_deterministic_execution,
+    flatten_support_summary,
+    prepare_validation_view,
+    read_json_object,
+    resolve_torch_device,
+    runtime_memory_metrics,
+    sample_runtime_memory,
+    sha256_file,
+    validate_probability_matrix,
+    write_csv_rows,
+)
 from benchmarks.neural_ms2lda.sparse_etm import (
     RECONSTRUCTION_SCALINGS,
     THETA_TRANSFORMS,
@@ -78,80 +84,6 @@ SYNTHETIC_EVALUATION_PROTOCOL = {
     "channel_extreme_lower": 0.1,
     "channel_extreme_upper": 0.9,
 }
-REAL_VALIDATION_DATA_FILES = (
-    "train.npz",
-    "validation_observed.npz",
-    "validation_completion.npz",
-    "validation_full.npz",
-    "validation_records.jsonl",
-    "vocabulary.json",
-)
-REAL_MAG_INDEX_FILES = (
-    "complete.json",
-    "excluded_connectivity_keys.json",
-    "kept_original_ids.npy",
-    "spec2vec_filtered.faiss",
-)
-
-
-def configure(seed: int, threads: int) -> None:
-    """Apply deterministic CPU/CUDA random and linear-algebra settings."""
-    os.environ.setdefault("CUBLAS_WORKSPACE_CONFIG", ":4096:8")
-    random.seed(seed)
-    torch.manual_seed(seed)
-    if torch.cuda.is_available():
-        torch.cuda.manual_seed_all(seed)
-    torch.set_num_threads(int(threads))
-    torch.use_deterministic_algorithms(True)  # noqa: FBT003
-    with contextlib.suppress(RuntimeError):
-        torch.set_num_interop_threads(1)
-    for name in (
-        "OMP_NUM_THREADS",
-        "MKL_NUM_THREADS",
-        "OPENBLAS_NUM_THREADS",
-        "NUMEXPR_NUM_THREADS",
-    ):
-        os.environ[name] = str(threads)
-
-
-def resolve_device(name: str) -> torch.device:
-    """Resolve a requested CPU or CUDA device."""
-    selected = "cuda" if name == "auto" and torch.cuda.is_available() else name
-    if selected == "auto":
-        selected = "cpu"
-    if selected == "cuda" and not torch.cuda.is_available():
-        message = "CUDA was requested but is unavailable"
-        raise RuntimeError(message)
-    if selected not in {"cpu", "cuda"}:
-        message = "device must be auto, cpu, or cuda"
-        raise ValueError(message)
-    return torch.device(selected)
-
-
-def read_json(path: Path) -> dict[str, Any]:
-    """Read one UTF-8 JSON object."""
-    with path.open(encoding="utf-8") as handle:
-        return dict(json.load(handle))
-
-
-def write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
-    """Write deterministic, small experiment tables."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    fieldnames = list(rows[0]) if rows else []
-    with path.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=fieldnames)
-        if fieldnames:
-            writer.writeheader()
-            writer.writerows(rows)
-
-
-def file_sha256(path: Path) -> str:
-    """Return a streaming SHA-256 digest for one local artifact."""
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(8 * 1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
 
 
 def method_label(
@@ -205,7 +137,7 @@ def _save_dataset_artifacts(
         path.name: {
             "path": str(path),
             "bytes": path.stat().st_size,
-            "sha256": file_sha256(path),
+            "sha256": sha256_file(path),
         }
         for path in files
     }
@@ -229,8 +161,8 @@ def prepare_synthetic_seed(
     )
     seed_directory = output_root / "synthetic_artifacts" / f"seed_{seed}"
     _save_dataset_artifacts(seed_directory, dataset)
-    protocol = read_json(SYNTHETIC_PROTOCOL_PATH)
-    configure(seed, threads)
+    protocol = read_json_object(SYNTHETIC_PROTOCOL_PATH)
+    configure_deterministic_execution(seed, threads)
     train_token_features(
         seed_directory / "token_features",
         dataset.train,
@@ -352,7 +284,7 @@ def run_synthetic(  # noqa: PLR0913, PLR0915
     output = output_root / "synthetic_runs" / f"seed_{seed}_K_{fitted_topics}_{label}"
     result_path = output / "result.json"
     if result_path.is_file():
-        return read_json(result_path)
+        return read_json_object(result_path)
     output.mkdir(parents=True, exist_ok=True)
     config = {
         "evidence": "truth-known synthetic train and validation only",
@@ -383,7 +315,7 @@ def run_synthetic(  # noqa: PLR0913, PLR0915
         training_documents=training_documents,
         validation_documents=validation_documents,
     )
-    configure(seed + 7001, threads)
+    configure_deterministic_execution(seed + 7001, threads)
     fragment_mask = np.asarray(
         [word.startswith("frag@") for word in dataset.vocabulary],
         dtype=bool,
@@ -422,8 +354,7 @@ def run_synthetic(  # noqa: PLR0913, PLR0915
             reconstruction, effective_mass = sparse_reconstruction_loss(
                 theta,
                 model.beta(),
-                dataset.train,
-                rows,
+                dataset.train[rows],
                 device,
                 scaling=reconstruction_scaling,
             )
@@ -462,7 +393,7 @@ def run_synthetic(  # noqa: PLR0913, PLR0915
             "seconds": time.perf_counter() - epoch_started,
         }
         history.append(row)
-        write_csv(output / "training_history.csv", history)
+        write_csv_rows(output / "training_history.csv", history)
         print(  # noqa: T201
             "SPARSE_ETM_EPOCH",
             json.dumps({"run": label, **row}),
@@ -541,12 +472,12 @@ def run_synthetic(  # noqa: PLR0913, PLR0915
         "token_features": {
             "path": str(seed_directory / "token_features/features.npy"),
             "bytes": (seed_directory / "token_features/features.npy").stat().st_size,
-            "sha256": file_sha256(seed_directory / "token_features/features.npy"),
+            "sha256": sha256_file(seed_directory / "token_features/features.npy"),
         },
         "weights": {
             "path": str(output / "weights.pt"),
             "bytes": (output / "weights.pt").stat().st_size,
-            "sha256": file_sha256(output / "weights.pt"),
+            "sha256": sha256_file(output / "weights.pt"),
         },
         "candidate_test_artifacts_accessed": False,
     }
@@ -559,150 +490,6 @@ def run_synthetic(  # noqa: PLR0913, PLR0915
     }
     write_json(result_path, result)
     return result
-
-
-def _ensure_file_link(destination: Path, source: Path) -> None:
-    """Create one immutable-input symlink and reject conflicting destinations."""
-    resolved_source = source.expanduser().resolve(strict=True)
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    if destination.is_symlink():
-        if destination.resolve(strict=True) != resolved_source:
-            message = f"existing link has a different source: {destination}"
-            raise ValueError(message)
-        return
-    if destination.exists():
-        message = f"validation-view destination already exists: {destination}"
-        raise FileExistsError(message)
-    destination.symlink_to(resolved_source)
-
-
-def prepare_real_validation_view(
-    real_run: Path,
-    prepared_run: Path,
-) -> dict[str, Any]:
-    """Expose only frozen training/validation inputs in a new writable run view."""
-    source = prepared_run.expanduser().resolve(strict=True)
-    destination = real_run.expanduser().resolve()
-    destination.mkdir(parents=True, exist_ok=True)
-    protocol_path = source / "protocol.json"
-    protocol = read_json(protocol_path)
-    if int(protocol["model"]["num_topics"]) != REAL_TOPICS:
-        message = "real sparse-ETM validation requires the frozen K=1000 protocol"
-        raise ValueError(message)
-    write_json(destination / "protocol.json", protocol)
-
-    linked_sources: list[Path] = []
-    for name in REAL_VALIDATION_DATA_FILES:
-        source_path = source / "data" / name
-        _ensure_file_link(destination / "data" / name, source_path)
-        linked_sources.append(source_path)
-    features_path = source / "token_features" / "features.npy"
-    _ensure_file_link(destination / "token_features" / "features.npy", features_path)
-    linked_sources.append(features_path)
-    for name in REAL_MAG_INDEX_FILES:
-        source_path = source / "mag" / "index" / name
-        _ensure_file_link(destination / "mag" / "index" / name, source_path)
-        linked_sources.append(source_path)
-
-    manifest = {
-        "evidence_boundary": "training plus validation only",
-        "prepared_run": str(source),
-        "candidate_test_artifacts_accessed": False,
-        "candidate_test_metrics_inspected": False,
-        "linked_inputs": [
-            {
-                "path": str(path),
-                "bytes": path.stat().st_size,
-                "sha256": file_sha256(path),
-            }
-            for path in [protocol_path, *linked_sources]
-        ],
-    }
-    write_json(destination / "validation_input_manifest.json", manifest)
-    return manifest
-
-
-class RuntimeMemoryTracker:
-    """Track process, system-available, and CUDA high-water memory."""
-
-    def __init__(self, device: torch.device) -> None:
-        self.device = device
-        self.peak_process_bytes = 0
-        self.minimum_system_available_bytes: int | None = None
-        self.sample()
-
-    @staticmethod
-    def _system_available_bytes() -> int | None:
-        path = Path("/proc/meminfo")
-        if not path.is_file():
-            return None
-        with path.open(encoding="utf-8") as handle:
-            for line in handle:
-                if line.startswith("MemAvailable:"):
-                    return int(line.split()[1]) * 1024
-        return None
-
-    def sample(self) -> None:
-        usage = int(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss) * 1024
-        self.peak_process_bytes = max(self.peak_process_bytes, usage)
-        available = self._system_available_bytes()
-        if available is not None:
-            current = self.minimum_system_available_bytes
-            self.minimum_system_available_bytes = (
-                available if current is None else min(current, available)
-            )
-
-    def result(self) -> dict[str, Any]:
-        self.sample()
-        return {
-            "measurement": (
-                "sampled per epoch; process is Linux ru_maxrss and system is "
-                "minimum /proc/meminfo MemAvailable"
-            ),
-            "peak_process_bytes": self.peak_process_bytes,
-            "minimum_system_available_bytes": self.minimum_system_available_bytes,
-            "peak_cuda_allocated_bytes": (
-                int(torch.cuda.max_memory_allocated(self.device))
-                if self.device.type == "cuda"
-                else None
-            ),
-            "peak_cuda_reserved_bytes": (
-                int(torch.cuda.max_memory_reserved(self.device))
-                if self.device.type == "cuda"
-                else None
-            ),
-        }
-
-
-def _validate_theta_contract(theta: np.ndarray, *, name: str) -> None:
-    """Fail closed unless inferred theta is a finite non-negative simplex."""
-    if not np.all(np.isfinite(theta)):
-        message = f"{name} theta contains non-finite values"
-        raise FloatingPointError(message)
-    if np.any(theta < 0):
-        message = f"{name} theta contains negative values"
-        raise FloatingPointError(message)
-    row_sums = theta.sum(axis=1, dtype=np.float64)
-    if not np.allclose(row_sums, 1.0, atol=2e-6):
-        maximum_deviation = float(np.max(np.abs(row_sums - 1.0)))
-        message = (
-            f"{name} theta rows do not sum to one: "
-            f"minimum={row_sums.min():.9g}, maximum={row_sums.max():.9g}, "
-            f"maximum_deviation={maximum_deviation:.9g}"
-        )
-        raise FloatingPointError(message)
-
-
-def _flat_theta_support(summary: dict[str, object]) -> dict[str, object]:
-    """Flatten support percentiles for a one-row reviewable CSV."""
-    row = {
-        key: value
-        for key, value in summary.items()
-        if key != "support_size_percentiles"
-    }
-    percentiles = dict(summary["support_size_percentiles"])  # type: ignore[arg-type]
-    row.update({f"support_p{key}": value for key, value in percentiles.items()})
-    return row
 
 
 def train_real_validation(  # noqa: C901, PLR0912, PLR0913, PLR0915
@@ -719,9 +506,13 @@ def train_real_validation(  # noqa: C901, PLR0912, PLR0913, PLR0915
     output = real_run / "models" / REAL_METHOD
     result_path = output / "result.json"
     if result_path.is_file():
-        return read_json(result_path)
-    input_manifest = prepare_real_validation_view(real_run, prepared_run)
-    protocol = read_json(real_run / "protocol.json")
+        return read_json_object(result_path)
+    input_manifest = prepare_validation_view(
+        real_run,
+        prepared_run,
+        expected_topics=REAL_TOPICS,
+    )
+    protocol = read_json_object(real_run / "protocol.json")
     seed = int(protocol["seed"])
     topics = int(protocol["model"]["num_topics"])
     data = real_run / "data"
@@ -745,7 +536,7 @@ def train_real_validation(  # noqa: C901, PLR0912, PLR0913, PLR0915
         message = "frozen validation records and matrices differ"
         raise ValueError(message)
 
-    configure(seed + 7001, threads)
+    configure_deterministic_execution(seed + 7001, threads)
     fragment_mask = np.asarray(
         [word.startswith("frag@") for word in vocabulary],
         dtype=bool,
@@ -828,7 +619,7 @@ def train_real_validation(  # noqa: C901, PLR0912, PLR0913, PLR0915
 
     if device.type == "cuda":
         torch.cuda.reset_peak_memory_stats(device)
-    memory = RuntimeMemoryTracker(device)
+    memory_state = sample_runtime_memory()
     for epoch in range(start_epoch, int(epochs)):
         model.train()
         order = rng.permutation(train.shape[0])
@@ -846,8 +637,7 @@ def train_real_validation(  # noqa: C901, PLR0912, PLR0913, PLR0915
             reconstruction, effective_mass = sparse_reconstruction_loss(
                 theta,
                 model.beta(),
-                train,
-                rows,
+                train[rows],
                 device,
                 scaling="distinct_words",
             )
@@ -874,7 +664,7 @@ def train_real_validation(  # noqa: C901, PLR0912, PLR0913, PLR0915
             kl_values.append(float(kl.mean().detach().cpu()))
             gradient_values.append(float(gradient_norm.detach().cpu()))
             effective_mass_values.append(effective_mass)
-        memory.sample()
+        memory_state = sample_runtime_memory(memory_state)
         row = {
             "epoch": epoch + 1,
             "reconstruction": float(np.mean(reconstruction_values)),
@@ -887,7 +677,7 @@ def train_real_validation(  # noqa: C901, PLR0912, PLR0913, PLR0915
             "seconds": time.perf_counter() - epoch_started,
         }
         history.append(row)
-        write_csv(output / "training_history.csv", history)
+        write_csv_rows(output / "training_history.csv", history)
         if (epoch + 1) % 5 == 0 or epoch + 1 == int(epochs):
             atomic_torch_save(
                 checkpoint_path,
@@ -927,8 +717,8 @@ def train_real_validation(  # noqa: C901, PLR0912, PLR0913, PLR0915
         batch_size=batch_size,
         device=device,
     )
-    _validate_theta_contract(theta_observed, name="validation observed")
-    _validate_theta_contract(theta_full, name="validation full")
+    validate_probability_matrix(theta_observed, name="validation observed theta")
+    validate_probability_matrix(theta_full, name="validation full theta")
     diagnostics = model_selection_diagnostics(
         theta_full,
         beta,
@@ -959,7 +749,7 @@ def train_real_validation(  # noqa: C901, PLR0912, PLR0913, PLR0915
             ),
             "validation_observed_spectra_per_second": observed_throughput,
             "validation_full_spectra_per_second": full_throughput,
-            "memory": memory.result(),
+            "memory": runtime_memory_metrics(memory_state, device),
         },
         "parameters": sum(parameter.numel() for parameter in model.parameters()),
     }
@@ -970,8 +760,11 @@ def train_real_validation(  # noqa: C901, PLR0912, PLR0913, PLR0915
     atomic_save_numpy(output / "beta.npy", beta)
     atomic_save_numpy(output / "validation_observed_theta.npy", theta_observed)
     atomic_save_numpy(output / "validation_full_theta.npy", theta_full)
-    write_csv(output / "top_words.csv", top_words)
-    write_csv(output / "theta_support_summary.csv", [_flat_theta_support(support)])
+    write_csv_rows(output / "top_words.csv", top_words)
+    write_csv_rows(
+        output / "theta_support_summary.csv",
+        [flatten_support_summary(support)],
+    )
     write_json(
         output / "duplicate_component_summary.json",
         {
@@ -1007,7 +800,7 @@ def train_real_validation(  # noqa: C901, PLR0912, PLR0913, PLR0915
             {
                 "path": str(path),
                 "bytes": path.stat().st_size,
-                "sha256": file_sha256(path),
+                "sha256": sha256_file(path),
             }
             for path in local_artifacts
         ],
@@ -1077,7 +870,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             reconstruction_scaling=args.reconstruction_scaling,
             epochs=args.epochs,
             batch_size=args.batch_size,
-            device=resolve_device(args.device),
+            device=resolve_torch_device(args.device),
             threads=args.threads,
             training_documents=args.training_documents,
             validation_documents=args.validation_documents,
@@ -1086,7 +879,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         result = train_real_validation(
             args.real_run,
             args.prepared_run,
-            device=resolve_device(args.device),
+            device=resolve_torch_device(args.device),
             epochs=args.epochs,
             batch_size=args.batch_size,
             threads=args.threads,

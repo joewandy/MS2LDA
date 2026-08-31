@@ -18,6 +18,13 @@ from benchmarks.neural_ms2lda.objectives import (
     prepare_cooccurrence_graph,
     torch_sparse_graph,
 )
+from benchmarks.neural_ms2lda.reproducibility import (
+    configure_deterministic_execution,
+    read_json_object,
+    resolve_torch_device,
+    sha256_file,
+    write_csv_rows,
+)
 from benchmarks.neural_ms2lda.routing_etm import (
     ROUTING_VARIANTS,
     RoutingInformedETM,
@@ -46,12 +53,7 @@ from scripts.run_sparse_etm_campaign import (
     SYNTHETIC_ACTIVE_USAGE_THRESHOLD,
     SYNTHETIC_EVALUATION_PROTOCOL,
     _matched_truth_metrics,
-    configure,
-    file_sha256,
     prepare_synthetic_seed,
-    read_json,
-    resolve_device,
-    write_csv,
 )
 
 if TYPE_CHECKING:
@@ -170,7 +172,7 @@ def run_synthetic(  # noqa: PLR0913, PLR0915
     output = output_root / "synthetic_runs" / f"seed_{seed}_K_{fitted_topics}_{label}"
     result_path = output / "result.json"
     if result_path.is_file():
-        return read_json(result_path)
+        return read_json_object(result_path)
     output.mkdir(parents=True, exist_ok=True)
     config = {
         "evidence": "truth-known synthetic training and validation only",
@@ -242,7 +244,7 @@ def run_synthetic(  # noqa: PLR0913, PLR0915
         graph_tensor = torch_sparse_graph(graph).to(device)
     # Match the existing sparse-ETM runner exactly so every routing variant
     # starts from the paired control's parameters and sees the same batch order.
-    configure(seed + 7001, threads)
+    configure_deterministic_execution(seed + 7001, threads)
     fragment_mask = np.asarray(
         [word.startswith("frag@") for word in dataset.vocabulary],
         dtype=bool,
@@ -294,8 +296,7 @@ def run_synthetic(  # noqa: PLR0913, PLR0915
             reconstruction, _ = sparse_reconstruction_loss(
                 theta,
                 beta_batch,
-                dataset.train,
-                rows,
+                dataset.train[rows],
                 device,
                 scaling=reconstruction_scaling,
             )
@@ -346,7 +347,7 @@ def run_synthetic(  # noqa: PLR0913, PLR0915
             "seconds": time.perf_counter() - epoch_started,
         }
         history.append(row)
-        write_csv(output / "training_history.csv", history)
+        write_csv_rows(output / "training_history.csv", history)
         print(  # noqa: T201
             "ROUTING_ETM_EPOCH",
             json.dumps({"run": label, **row}, sort_keys=True),
@@ -469,12 +470,12 @@ def run_synthetic(  # noqa: PLR0913, PLR0915
         "token_features": {
             "path": str(seed_directory / "token_features/features.npy"),
             "bytes": (seed_directory / "token_features/features.npy").stat().st_size,
-            "sha256": file_sha256(seed_directory / "token_features/features.npy"),
+            "sha256": sha256_file(seed_directory / "token_features/features.npy"),
         },
         "weights": {
             "path": str(output / "weights.pt"),
             "bytes": (output / "weights.pt").stat().st_size,
-            "sha256": file_sha256(output / "weights.pt"),
+            "sha256": sha256_file(output / "weights.pt"),
         },
         "candidate_test_artifacts_accessed": False,
         "positive_npmi_graph": (
@@ -483,7 +484,7 @@ def run_synthetic(  # noqa: PLR0913, PLR0915
                 "bytes": (output / "cooccurrence_graph/positive_npmi_graph.npz")
                 .stat()
                 .st_size,
-                "sha256": file_sha256(
+                "sha256": sha256_file(
                     output / "cooccurrence_graph/positive_npmi_graph.npz",
                 ),
             }
@@ -548,7 +549,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         reconstruction_scaling=args.reconstruction_scaling,
         epochs=args.epochs,
         batch_size=args.batch_size,
-        device=resolve_device(args.device),
+        device=resolve_torch_device(args.device),
         threads=args.threads,
         training_documents=args.training_documents,
         validation_documents=args.validation_documents,

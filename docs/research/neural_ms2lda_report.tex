@@ -480,7 +480,7 @@ where $c$ is one learned scalar.
 The word is scored against the same topic vectors that define the decoder:
 \begin{equation}
   a_{dwk}=h_{dw}^{\top}\widehat\alpha_k/\tau_r,
-  \qquad \tau_r=1.
+  \qquad \tau_r=1.0.
   \label{eq:routing-score}
 \end{equation}
 Let $\mathcal T_{dw}$ contain the two largest scores. The local contextual
@@ -545,11 +545,13 @@ the analytic standard-normal Gaussian KL divergence. One reparameterized Gaussia
 used per document and minibatch update:
 \begin{align}
   \mathcal L_{\mathrm{rec}}
-  &=-\frac1D\sum_d\sum_w c_{dw}\log p(w\mid d),\\
+  &=-\frac1D\sum_d\sum_w c_{dw}\log p(w\mid d),
+  \label{eq:reconstruction}\\
   \mathcal L_{\mathrm{KL}}
   &=-\frac{1}{2D}\sum_d\sum_k
   \left(1+\log\sigma_{dk}^2-\widetilde\mu_{dk}^{\,2}
-  -\exp(\log\sigma_{dk}^2)\right),\\
+  -\exp(\log\sigma_{dk}^2)\right),
+  \label{eq:kl}\\
   \mathcal L&=\mathcal L_{\mathrm{rec}}+\mathcal L_{\mathrm{KL}}.
   \label{eq:objective}
 \end{align}
@@ -561,7 +563,7 @@ is used.
 Figure~\ref{fig:model} shows how contextual evidence adjusts the posterior while the ETM
 generator and explicit topic--word output remain intact.
 
-\begin{figure}[ht]
+\begin{figure}[H]
 \centering
 \begin{tikzpicture}[node distance=0.45cm and 0.45cm]
   \node[modelnode,fill=softgray,text width=2.0cm] (bow) {
@@ -606,6 +608,17 @@ $1.5$-entmax produces a sparse topic-probability vector. Solid arrows denote
 computations used at both training and inference.}
 \label{fig:model}
 \end{figure}
+
+For auditability, the executable implementation follows this notation as a
+sequence of named tensor functions: channel-balanced topic--word probabilities,
+leave-one-out context, contextual top-2 evidence, the centred log-evidence
+offset, diagonal-Gaussian KL divergence, $1.5$-entmax and raw-count
+reconstruction each have one direct implementation listed in
+Appendix~\ref{tab:code-map}. A single thin PyTorch
+module registers the learned matrices, vectors and scalar needed for
+checkpointing; it contains no selectable model variants. Deterministic
+inference calls the same posterior sequence as training but sets
+$z_d=\widetilde\mu_d$ rather than drawing $\varepsilon$.
 
 With vocabulary size $V$, hidden width $H$, topics $K$ and embedding dimension
 $L$, the learned-parameter count is

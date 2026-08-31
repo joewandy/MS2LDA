@@ -11,6 +11,20 @@ The final layout uses a data-flow figure, an equation-matched model diagram,
 chemical-filter inventory bars and a breadth--quality plot where each visual
 answers a distinct scientific question.
 
+The maintained implementation is intentionally direct:
+
+- `benchmarks/neural_ms2lda/contextual_sparse_etm.py` exposes the decoder,
+  contextual evidence, posterior offset, Gaussian KL and 1.5-entmax equations
+  as named tensor functions;
+- `benchmarks/neural_ms2lda/topic_model_training.py` exposes the normalized
+  encoder input and raw pseudo-count reconstruction equation as plain
+  functions;
+- `ContextualSparseETM` is the only stateful shell and exists solely to register
+  PyTorch parameters and preserve checkpoint compatibility; and
+- `scripts/run_contextual_sparse_etm.py` performs training and deterministic
+  inference without importing any experimental-ablation model or campaign
+  runner.
+
 ## Evidence boundary
 
 The reported method uses training, synthetic and validation evidence only. Its
@@ -35,6 +49,7 @@ From the repository root:
     python -m scripts.generate_routing_etm_report
     conda run -n ms2lda-neural python -m scripts.verify_routing_etm_checkpoint
     conda run -n ms2lda-neural python -m scripts.verify_routing_etm_stability
+    conda run -n ms2lda-neural pytest -q benchmarks/neural_ms2lda/tests/test_contextual_sparse_etm.py
 
 The generator validates cross-file identities before writing:
 

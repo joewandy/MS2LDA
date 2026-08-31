@@ -588,24 +588,48 @@ def _generate_hyperparameters(evidence: dict[str, Any]) -> str:
 
 def _generate_code_map() -> str:
     rows = (
-        (r"Balanced ETM and $\beta$", r"\texttt{sparse\_etm.py: BalancedSparseETM}"),
-        ("Contextual token evidence", r"\texttt{routing\_etm.py: routing\_evidence}"),
         (
-            "Posterior offset and KL divergence",
-            r"\texttt{routing\_etm.py: encode}",
+            r"Channel-balanced $\beta$ (Eq.~\ref{eq:beta})",
+            r"\texttt{contextual\_sparse\_etm.py: "
+            r"channel\_balanced\_topic\_word\_distribution}",
         ),
-        (r"$1.5$-entmax $\theta$", r"\texttt{sparse\_etm.py: transform\_theta}"),
         (
-            "Reconstruction objective",
-            r"\texttt{sparse\_etm.py: sparse\_reconstruction\_loss}",
+            r"Leave-one-out context (Eq.~\ref{eq:loo-context})",
+            r"\texttt{contextual\_sparse\_etm.py: leave\_one\_out\_context}",
         ),
-        ("Real training and inference", r"\texttt{scripts/run\_routing\_etm\_real.py}"),
+        (
+            r"Contextual top-2 evidence (Eqs.~\ref{eq:contextual-word}--"
+            r"\ref{eq:document-evidence})",
+            r"\texttt{contextual\_sparse\_etm.py: contextual\_top2\_evidence}",
+        ),
+        (
+            r"Posterior offset (Eq.~\ref{eq:posterior-offset})",
+            r"\texttt{contextual\_sparse\_etm.py: centered\_log\_evidence\_offset}",
+        ),
+        (
+            r"Gaussian posterior and KL (Eqs.~\ref{eq:encoder}, \ref{eq:kl})",
+            r"\texttt{contextual\_sparse\_etm.py: posterior; "
+            r"diagonal\_gaussian\_kl}",
+        ),
+        (
+            r"$1.5$-entmax $\theta$ (Eqs.~\ref{eq:theta}, "
+            r"\ref{eq:entmax-closed-form})",
+            (r"\texttt{contextual\_sparse\_etm.py: " + r"entmax15\_document\_mixture}"),
+        ),
+        (
+            r"Reconstruction loss (Eq.~\ref{eq:reconstruction})",
+            r"\texttt{topic\_model\_training.py: raw\_count\_reconstruction\_loss}",
+        ),
+        (
+            "Real training and deterministic inference",
+            r"\texttt{scripts/run\_contextual\_sparse\_etm.py}",
+        ),
         ("Synthetic design", r"\texttt{scripts/run\_routing\_etm\_campaign.py}"),
         ("Document completion", r"\texttt{objectives.py: completion\_metrics}"),
         ("MAG and SOS", r"\texttt{mag.py; chemical.py}"),
         (
             "Equation--code correspondence test",
-            r"\texttt{tests/test\_routing\_etm.py}",
+            r"\texttt{tests/test\_contextual\_sparse\_etm.py}",
         ),
         (
             "Checkpoint verification",

@@ -105,9 +105,10 @@ For every candidate, also report collapse and sparsity diagnostics: corpus topic
 
 Current baseline code and evidence on this branch:
 
-- `benchmarks/neural_ms2lda/routing_etm.py` — selected ETM posterior adaptation.
+- `benchmarks/neural_ms2lda/contextual_sparse_etm.py` — maintained model equations and PyTorch parameter shell.
+- `benchmarks/neural_ms2lda/topic_model_training.py` — normalized count input and raw-count reconstruction equation.
 - `scripts/run_routing_etm_campaign.py` — synthetic mechanism runner.
-- `scripts/run_routing_etm_real.py` — validation-only real runner.
+- `scripts/run_contextual_sparse_etm.py` — maintained validation-only real runner.
 - `scripts/verify_routing_etm_checkpoint.py` — integrity and consistency check.
 - `scripts/verify_routing_etm_stability.py` — three-seed evidence verifier.
 - `local_results/20260830_routing_etm/README.md` — authoritative technical

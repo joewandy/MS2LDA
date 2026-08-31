@@ -30,7 +30,6 @@ import torch
 from torch.nn import functional as nnf
 
 from benchmarks.neural_ms2lda.artifacts import initialize_run
-from benchmarks.neural_ms2lda.chemical import run_chemical_scoring
 from benchmarks.neural_ms2lda.data import (
     iter_row_batches,
     load_csr,
@@ -42,6 +41,13 @@ from benchmarks.neural_ms2lda.data import (
 )
 from benchmarks.neural_ms2lda.diagnostics import model_selection_diagnostics
 from benchmarks.neural_ms2lda.followup import retemperature_theta, theta_distribution
+from benchmarks.neural_ms2lda.model_evaluation import (
+    MODEL_SELECTION_EVALUATION_PROTOCOL,
+    entropy_diagnostics,
+    save_validation,
+    score_chemical_validation,
+    topic_word_diagnostics,
+)
 from benchmarks.neural_ms2lda.objectives import completion_metrics
 from benchmarks.neural_ms2lda.pooled import (
     assignment_information_loss,
@@ -70,14 +76,8 @@ POOLED_ROOT = REPO_ROOT / "research/etm_ecrtm_msnlib/pooled_projected"
 ETM_METHODS = ("etm", "etm_balanced", "etm_balanced_gated")
 METHODS = ETM_METHODS + ("pooled_likelihood", "pooled_mi005")
 GATED_ETM_PREFIX = "etm_balanced_gated_"
-MODEL_SELECTION_EVALUATION_PROTOCOL = {
-    "active_topic_usage_threshold": 0.0005,
-    "duplicate_cosine_thresholds": (0.95, 0.99, 0.999),
-    "catastrophic_duplicate_component_fraction": 0.5,
-    "top_word_count": 20,
-    "channel_extreme_lower": 0.1,
-    "channel_extreme_upper": 0.9,
-}
+# Preserve the historical script-level callable for existing command imports.
+chemical = score_chemical_validation
 POOLED_PROTOCOLS = {
     "pooled_likelihood": POOLED_ROOT / "protocol_minimum.json",
     "pooled_mi005": POOLED_ROOT / "protocol_mi005.json",
@@ -404,94 +404,6 @@ def mixture_diagnostics(theta: np.ndarray, beta: np.ndarray) -> dict[str, Any]:
         "mean_nearest_topic_beta_cosine": float(np.max(similarity, axis=1).mean()),
         "maximum_pairwise_beta_cosine": float(similarity.max()),
     }
-
-
-def entropy_diagnostics(theta: np.ndarray) -> dict[str, float]:
-    """Return conditional entropy, marginal entropy, and their MI gap."""
-    values = theta.astype(np.float64)
-    values /= np.maximum(values.sum(axis=1, keepdims=True), EPS)
-    conditional = float(
-        np.mean(-np.sum(values * np.log(np.clip(values, EPS, None)), axis=1))
-    )
-    marginal = values.mean(axis=0)
-    marginal_entropy = float(-np.sum(marginal * np.log(np.clip(marginal, EPS, None))))
-    return {
-        "mean_conditional_theta_entropy": conditional,
-        "marginal_theta_entropy": marginal_entropy,
-        "mutual_information": marginal_entropy - conditional,
-    }
-
-
-def topic_word_diagnostics(
-    beta: np.ndarray,
-    vocabulary: list[str],
-    *,
-    top_n: int = 20,
-) -> tuple[dict[str, Any], list[dict[str, Any]]]:
-    """Summarize top-word uniqueness and fragment probability mass."""
-    count = min(int(top_n), beta.shape[1])
-    candidates = np.argpartition(-beta, count - 1, axis=1)[:, :count]
-    scores = np.take_along_axis(beta, candidates, axis=1)
-    order = np.argsort(-scores, axis=1, kind="stable")
-    indices = np.take_along_axis(candidates, order, axis=1)
-    rows = []
-    for topic_id, topic_indices in enumerate(indices):
-        rows.append(
-            {
-                "topic_id": topic_id,
-                "top_words": " ".join(vocabulary[index] for index in topic_indices),
-                "top_probabilities": " ".join(
-                    f"{float(beta[topic_id, index]):.10g}" for index in topic_indices
-                ),
-            }
-        )
-    unique = len(set(indices.ravel().tolist())) / indices.size
-    fragment_mask = np.asarray(
-        [word.startswith("frag@") for word in vocabulary], dtype=bool
-    )
-    fragment_mass = beta[:, fragment_mask].sum(axis=1).astype(np.float64)
-    percentiles = {
-        str(percentile): float(np.percentile(fragment_mass, percentile))
-        for percentile in (1, 5, 25, 50, 75, 95, 99)
-    }
-    return (
-        {
-            "top_word_count": count,
-            "top_word_uniqueness": float(unique),
-            "fragment_probability_mass": {
-                "minimum": float(fragment_mass.min()),
-                "percentiles": percentiles,
-                "median": float(np.median(fragment_mass)),
-                "maximum": float(fragment_mass.max()),
-                "extreme_definition": "fragment mass <0.1 or >0.9",
-                "fraction_extreme_skew": float(
-                    np.mean((fragment_mass < 0.1) | (fragment_mass > 0.9))
-                ),
-            },
-        },
-        rows,
-    )
-
-
-def save_validation(
-    run: Path,
-    method: str,
-    beta: np.ndarray,
-    theta: np.ndarray,
-    metrics: dict[str, Any],
-) -> None:
-    """Save only validation candidate arrays under the locked artifact layout."""
-    output = run / "validation_evaluation" / method
-    output.mkdir(parents=True, exist_ok=True)
-    atomic_save_numpy(output / "beta.npy", beta.astype(np.float32, copy=False))
-    atomic_save_numpy(
-        output / "validation_full_theta.npy",
-        theta.astype(np.float32, copy=False),
-    )
-    write_json(
-        output / "complete.json",
-        {"method": method, "split": "validation", "metrics": metrics},
-    )
 
 
 def prepare(run: Path, data_root: Path) -> dict[str, Any]:
@@ -1415,65 +1327,6 @@ def train_ecrtm_canonical(  # noqa: PLR0915
     atomic_save_numpy(
         calibrated_output / "validation_observed_theta.npy", calibrated_observed
     )
-    return result
-
-
-def chemical(run: Path, data_root: Path, method: str) -> dict[str, Any]:
-    """Run exact shared MAG/SOS scoring on validation only."""
-    protocol = read_json(run / "protocol.json")
-    result = run_chemical_scoring(
-        run,
-        method=method,
-        data_root=data_root,
-        protocol=protocol,
-        split="validation",
-        annotation_method=(
-            "ecrtm_canonical" if method == "ecrtm_canonical_tau030" else None
-        ),
-    )
-    rows = result["high_confidence_chemistry"].get("topic_scores", [])
-    model_output = run / "models" / method
-    write_csv(model_output / "chemical_scores.csv", rows)
-    write_json(model_output / "chemical_validation.json", result)
-    metrics_path = model_output / "metrics.json"
-    if metrics_path.is_file():
-        metrics = read_json(metrics_path)
-        chemistry = dict(result["high_confidence_chemistry"])
-        chemistry.pop("topic_scores", None)
-        chemistry["optimized_motifs"] = int(
-            round(float(result["annotation_coverage"]) * int(result["topics"]))
-        )
-        chemistry["useful_motifs"] = int(
-            sum(
-                bool(row["eligible"])
-                and row["sos"] is not None
-                and float(row["sos"]) >= 0.6
-                for row in rows
-            )
-        )
-        metrics["validation_chemistry"] = {
-            **chemistry,
-            "annotation_coverage": float(result["annotation_coverage"]),
-            "heldout_compounds_excluded_from_mag": bool(
-                result["heldout_compounds_excluded_from_mag"]
-            ),
-            "split": "validation",
-        }
-        write_json(metrics_path, metrics)
-    audit_path = model_output / "validation_access_audit.json"
-    if audit_path.is_file():
-        audit = read_json(audit_path)
-        audit.update(
-            {
-                "chemical_split": "validation",
-                "candidate_test_chemistry_loaded": False,
-                "candidate_test_mag_or_sos_computed": False,
-                "reused_leakage_filtered_mag_index": str(
-                    run / "mag/index/spec2vec_filtered.faiss"
-                ),
-            }
-        )
-        write_json(audit_path, audit)
     return result
 
 

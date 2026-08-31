@@ -9,15 +9,14 @@ import numpy as np
 import pytest
 import scipy.sparse as sp
 import torch
-from scripts.run_sparse_etm_campaign import (
-    REAL_MAG_INDEX_FILES,
-    REAL_METHOD,
-    REAL_TOPICS,
-    REAL_VALIDATION_DATA_FILES,
-    prepare_real_validation_view,
-)
+from scripts.run_sparse_etm_campaign import REAL_METHOD, REAL_TOPICS
 
 from benchmarks.neural_ms2lda.chemical import run_chemical_scoring
+from benchmarks.neural_ms2lda.reproducibility import (
+    VALIDATION_DATA_FILES,
+    VALIDATION_MAG_INDEX_FILES,
+    prepare_validation_view,
+)
 from benchmarks.neural_ms2lda.sparse_etm import (
     BalancedSparseETM,
     dense_normalized,
@@ -79,8 +78,7 @@ def test_sparse_etm_has_finite_gradients_and_deterministic_inference(
     reconstruction, _ = sparse_reconstruction_loss(
         theta,
         model.beta(),
-        matrix,
-        rows,
+        matrix[rows],
         torch.device("cpu"),
         scaling="raw_counts",
     )
@@ -97,14 +95,12 @@ def test_sparse_etm_has_finite_gradients_and_deterministic_inference(
 def test_distinct_word_scaling_is_invariant_to_pseudocount_multiplier() -> None:
     base = sp.csr_matrix(np.asarray([[2, 1, 0], [0, 3, 1]], dtype=np.float32))
     scaled = base * 100
-    rows = np.asarray([0, 1], dtype=np.int64)
     theta = torch.tensor([[0.7, 0.3], [0.2, 0.8]])
     beta = torch.tensor([[0.6, 0.3, 0.1], [0.1, 0.3, 0.6]])
     base_distinct, base_mass = sparse_reconstruction_loss(
         theta,
         beta,
         base,
-        rows,
         torch.device("cpu"),
         scaling="distinct_words",
     )
@@ -112,7 +108,6 @@ def test_distinct_word_scaling_is_invariant_to_pseudocount_multiplier() -> None:
         theta,
         beta,
         scaled,
-        rows,
         torch.device("cpu"),
         scaling="distinct_words",
     )
@@ -120,7 +115,6 @@ def test_distinct_word_scaling_is_invariant_to_pseudocount_multiplier() -> None:
         theta,
         beta,
         base,
-        rows,
         torch.device("cpu"),
         scaling="raw_counts",
     )
@@ -128,7 +122,6 @@ def test_distinct_word_scaling_is_invariant_to_pseudocount_multiplier() -> None:
         theta,
         beta,
         scaled,
-        rows,
         torch.device("cpu"),
         scaling="raw_counts",
     )
@@ -157,25 +150,30 @@ def test_real_validation_view_exposes_only_declared_inputs(tmp_path: Path) -> No
         json.dumps({"model": {"num_topics": REAL_TOPICS}}),
         encoding="utf-8",
     )
-    for name in REAL_VALIDATION_DATA_FILES:
+    for name in VALIDATION_DATA_FILES:
         (prepared / "data" / name).write_bytes(name.encode())
     (prepared / "token_features/features.npy").write_bytes(b"features")
-    for name in REAL_MAG_INDEX_FILES:
+    for name in VALIDATION_MAG_INDEX_FILES:
         (prepared / "mag/index" / name).write_bytes(name.encode())
     sentinel = prepared / "data/candidate_test_sentinel.bin"
     sentinel.write_bytes(b"must not be exposed")
 
-    manifest = prepare_real_validation_view(real_run, prepared)
+    manifest = prepare_validation_view(
+        real_run,
+        prepared,
+        expected_topics=REAL_TOPICS,
+    )
 
     assert manifest["candidate_test_artifacts_accessed"] is False
     assert manifest["candidate_test_metrics_inspected"] is False
     assert not (real_run / "data" / sentinel.name).exists()
     assert all(
-        (real_run / "data" / name).is_symlink() for name in REAL_VALIDATION_DATA_FILES
+        (real_run / "data" / name).is_symlink() for name in VALIDATION_DATA_FILES
     )
     assert (real_run / "token_features/features.npy").is_symlink()
     assert all(
-        (real_run / "mag/index" / name).is_symlink() for name in REAL_MAG_INDEX_FILES
+        (real_run / "mag/index" / name).is_symlink()
+        for name in VALIDATION_MAG_INDEX_FILES
     )
 
 

@@ -9,8 +9,7 @@ import numpy as np
 import pytest
 import scipy.sparse as sp
 import torch
-from scripts.run_routing_etm_real import REAL_METHOD, resolve_training_seed
-from torch.nn import functional as nnf
+from scripts.run_contextual_sparse_etm import REAL_METHOD, resolve_training_seed
 
 from benchmarks.neural_ms2lda.chemical import run_chemical_scoring
 from benchmarks.neural_ms2lda.routing_etm import (
@@ -141,127 +140,6 @@ def test_top2_context_routes_one_word_to_exactly_two_topics() -> None:
     assert torch.allclose(evidence.sum(dim=1), torch.ones(1), atol=1e-7)
 
 
-def _closed_form_entmax15(logits: torch.Tensor) -> torch.Tensor:
-    """Evaluate the report's threshold definition independently by bisection."""
-    scaled = logits.to(torch.float64) / 2.0
-    lower = scaled.min(dim=1, keepdim=True).values - 1.0
-    upper = scaled.max(dim=1, keepdim=True).values
-    for _ in range(80):
-        threshold = (lower + upper) / 2.0
-        mass = (
-            torch.clamp(scaled - threshold, min=0)
-            .square()
-            .sum(
-                dim=1,
-                keepdim=True,
-            )
-        )
-        lower = torch.where(mass > 1.0, threshold, lower)
-        upper = torch.where(mass > 1.0, upper, threshold)
-    values = torch.clamp(scaled - upper, min=0).square()
-    return (values / values.sum(dim=1, keepdim=True)).to(logits.dtype)
-
-
-def test_reported_contextual_sparse_etm_equations_match_code() -> None:
-    embeddings, fragment_mask, matrix = _inputs()
-    topics = 5
-    hidden_width = 7
-    torch.manual_seed(29)
-    model = RoutingInformedETM(
-        embeddings,
-        topics,
-        fragment_mask,
-        routing_variant="top2_context",
-        theta_transform="entmax15",
-        hidden=hidden_width,
-    )
-    with torch.no_grad():
-        model.context_scale.fill_(0.35)
-        model.mu.bias.copy_(torch.linspace(-4.0, 4.0, topics))
-    rows = np.arange(matrix.shape[0])
-    normalized = dense_normalized(matrix, rows, torch.device("cpu"))
-
-    logits = (model.rho @ model.alphas.weight.T).T
-    expected_beta = torch.empty_like(logits)
-    mask = model.fragment_mask
-    expected_beta[:, mask] = 0.5 * torch.softmax(logits[:, mask], dim=1)
-    expected_beta[:, ~mask] = 0.5 * torch.softmax(logits[:, ~mask], dim=1)
-    assert torch.allclose(model.beta(), expected_beta, atol=1e-7)
-    assert torch.allclose(expected_beta.sum(dim=1), torch.ones(topics), atol=1e-7)
-
-    rho = nnf.normalize(model.rho, dim=1)
-    alpha = nnf.normalize(model.alphas.weight, dim=1)
-    expected_evidence = torch.zeros((len(rows), topics), dtype=normalized.dtype)
-    for document, bow in enumerate(normalized):
-        document_sum = bow @ rho
-        for word in torch.nonzero(bow > 0, as_tuple=False).flatten():
-            weight = bow[word]
-            context = (document_sum - weight * rho[word]) / torch.clamp(
-                1.0 - weight,
-                min=1e-12,
-            )
-            route = nnf.normalize(
-                (rho[word] + model.context_scale * context).unsqueeze(0),
-                dim=1,
-            ).squeeze(0)
-            scores = route @ alpha.T
-            selected = torch.topk(scores, k=2).indices
-            local = torch.softmax(scores[selected], dim=0)
-            expected_evidence[document, selected] += weight * local
-    expected_evidence /= expected_evidence.sum(dim=1, keepdim=True)
-    actual_evidence = model.routing_evidence(normalized)
-    assert torch.allclose(actual_evidence, expected_evidence, atol=1e-7)
-
-    encoder_hidden = model.encoder(normalized)
-    base_mu = model.mu(encoder_hidden)
-    expected_logvar = model.logvar(encoder_hidden)
-    offset = torch.log(expected_evidence + 1.0 / topics)
-    offset -= offset.mean(dim=1, keepdim=True)
-    expected_mu = base_mu + offset
-    expected_kl = -0.5 * torch.sum(
-        1.0 + expected_logvar - expected_mu.square() - expected_logvar.exp(),
-        dim=1,
-    )
-    actual_mu, actual_logvar, actual_kl = model.encode(normalized)
-    assert torch.allclose(actual_mu, expected_mu, atol=1e-7)
-    assert torch.allclose(actual_logvar, expected_logvar, atol=1e-7)
-    assert torch.allclose(actual_kl, expected_kl, atol=1e-6)
-
-    expected_theta = _closed_form_entmax15(expected_mu)
-    actual_theta, _ = model.theta(normalized, sample=False)
-    assert torch.allclose(actual_theta, expected_theta, atol=2e-6)
-    assert torch.any(actual_theta == 0)
-
-    counts = torch.from_numpy(matrix.toarray().astype(np.float32))
-    probabilities = actual_theta @ expected_beta
-    expected_reconstruction = -(counts * probabilities.log()).sum(dim=1).mean()
-    actual_reconstruction, effective_mass = sparse_reconstruction_loss(
-        actual_theta,
-        model.beta(),
-        matrix,
-        rows,
-        torch.device("cpu"),
-        scaling="raw_counts",
-    )
-    assert torch.allclose(actual_reconstruction, expected_reconstruction, atol=1e-6)
-    assert effective_mass == pytest.approx(float(counts.sum(dim=1).mean()))
-
-    vocabulary, dimensions = embeddings.shape
-    expected_parameters = (
-        vocabulary * hidden_width
-        + hidden_width
-        + hidden_width * hidden_width
-        + hidden_width
-        + 2 * (topics * hidden_width + topics)
-        + topics * dimensions
-        + 1
-    )
-    assert (
-        sum(parameter.numel() for parameter in model.parameters())
-        == expected_parameters
-    )
-
-
 def test_routing_informed_entmax_theta_has_exact_zeros() -> None:
     embeddings, fragment_mask, matrix = _inputs()
     model = RoutingInformedETM(
@@ -306,8 +184,7 @@ def test_routing_etm_has_finite_gradients_and_deterministic_inference(
     reconstruction, _ = sparse_reconstruction_loss(
         theta,
         model.beta(),
-        matrix,
-        rows,
+        matrix[rows],
         torch.device("cpu"),
         scaling="raw_counts",
     )

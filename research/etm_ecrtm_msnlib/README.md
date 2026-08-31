@@ -173,9 +173,10 @@ results, runtime evidence and hashes are in
   report, compact per-seed evidence and machine-verifiable manifest.
 - `benchmarks/neural_ms2lda/FINAL_MODEL_SELECTION.md` — report-level comparison
   and current publication decision.
-- `benchmarks/neural_ms2lda/routing_etm.py` — model implementation.
+- `benchmarks/neural_ms2lda/contextual_sparse_etm.py` — maintained model equations and PyTorch parameter shell.
+- `benchmarks/neural_ms2lda/topic_model_training.py` — normalized count input and raw-count reconstruction equation.
 - `scripts/run_routing_etm_campaign.py` — truth-known synthetic runner.
-- `scripts/run_routing_etm_real.py` — validation-only real runner.
+- `scripts/run_contextual_sparse_etm.py` — maintained validation-only real runner.
 - `scripts/verify_routing_etm_checkpoint.py` — integrity and consistency checker.
 - `scripts/package_routing_etm_stability.py` and
   `scripts/verify_routing_etm_stability.py` — deterministic multiseed packaging

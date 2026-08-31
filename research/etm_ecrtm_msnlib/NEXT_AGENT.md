@@ -136,6 +136,7 @@ weights, NumPy arrays, databases or indexes.
   `local_results/20260830_routing_etm_npmi/README.md`
 - Stopped zero-parameter simplification:
   `local_results/20260830_routing_etm_top2_token/README.md`
-- Model implementation: `benchmarks/neural_ms2lda/routing_etm.py`
-- Real runner: `scripts/run_routing_etm_real.py`
+- Maintained model implementation: `benchmarks/neural_ms2lda/contextual_sparse_etm.py`
+- Maintained training equations: `benchmarks/neural_ms2lda/topic_model_training.py`
+- Maintained real runner: `scripts/run_contextual_sparse_etm.py`
 - Synthetic runner: `scripts/run_routing_etm_campaign.py`

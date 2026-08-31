@@ -44,6 +44,10 @@
 
 | Evidence | Source |
 | --- | --- |
+| Executable model equations | benchmarks/neural_ms2lda/contextual_sparse_etm.py |
+| Normalized encoder input and reconstruction equation | benchmarks/neural_ms2lda/topic_model_training.py |
+| Deterministic real-data inference | scripts/run_contextual_sparse_etm.py |
+| Equation-level correspondence and frozen-checkpoint parity | benchmarks/neural_ms2lda/tests/test_contextual_sparse_etm.py |
 | Data parsing, split, leakage and vocabulary counts | research/etm_ecrtm_msnlib/local_results/20260827_seed42_validation/preparation_summary.json |
 | Preprocessing, SGNS, Tomotopy and MAG settings | benchmarks/neural_ms2lda/protocol.json |
 | Proposed-model configuration and validation metrics | research/etm_ecrtm_msnlib/local_results/20260830_routing_etm/config.json and metrics.json |
