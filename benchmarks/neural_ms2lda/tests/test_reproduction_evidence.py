@@ -91,6 +91,14 @@ def test_fresh_chemistry_rejects_incomplete_sos_band_accounting() -> None:
         packager._chemistry_summary(result)
 
 
+def test_fresh_chemistry_rejects_recorded_mag_exceptions() -> None:
+    result = _valid_chemistry_result()
+    result["mag_failures"]["clustering_count"] = 1
+    result["mag_failures"]["clustering_topic_ids"] = [7]
+    with pytest.raises(RuntimeError, match="contains 1 MAG exceptions"):
+        packager._chemistry_summary(result)
+
+
 def test_csv_writer_preserves_method_specific_columns(tmp_path: Path) -> None:
     artifact = tmp_path / "comparison.csv"
     write_csv(

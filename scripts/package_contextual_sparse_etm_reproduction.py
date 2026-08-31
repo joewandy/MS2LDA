@@ -114,12 +114,17 @@ def _chemistry_summary(result: Mapping[str, Any]) -> dict[str, Any]:
         msg = f"SOS bands account for {band_total} motifs but {eligible} are evaluable"
         raise RuntimeError(msg)
     failures = result["mag_failures"]
+    total_failures = 0
     for kind in ("clustering", "optimization"):
         count = int(failures[f"{kind}_count"])
         topic_ids = failures[f"{kind}_topic_ids"]
         if count < 0 or count != len(topic_ids):
             msg = f"MAG {kind} exception count and topic IDs disagree"
             raise RuntimeError(msg)
+        total_failures += count
+    if total_failures:
+        msg = f"fresh chemical evidence contains {total_failures} MAG exceptions"
+        raise RuntimeError(msg)
     optimized = round(float(result["annotation_coverage"]) * topics)
     summary.update(
         {
