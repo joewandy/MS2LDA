@@ -27,6 +27,7 @@ from benchmarks.neural_ms2lda.model_evaluation import (
 from benchmarks.neural_ms2lda.objectives import completion_metrics
 from benchmarks.neural_ms2lda.reproducibility import (
     configure_deterministic_execution,
+    normalize_probability_rows,
     resolve_torch_device,
     sha256_file,
     validate_probability_matrix,
@@ -119,14 +120,17 @@ def _infer(
 
 
 def _beta(model: torch.nn.Module, method: str) -> np.ndarray:
-    """Evaluate the fitted topic-word equation."""
+    """Evaluate and canonically normalize the fitted topic-word equation."""
     with torch.inference_mode():
         values = (
             model.topic_word_distribution()  # type: ignore[attr-defined]
             if method == REAL_METHOD
             else model.beta()  # type: ignore[attr-defined]
         )
-    return values.detach().cpu().numpy().astype(np.float32)
+    return normalize_probability_rows(
+        values.detach().cpu().numpy(),
+        name=f"{method} beta",
+    )
 
 
 def _load_test_inputs(

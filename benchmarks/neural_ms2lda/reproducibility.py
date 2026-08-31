@@ -261,6 +261,36 @@ def validate_probability_matrix(probabilities: np.ndarray, *, name: str) -> None
         )
 
 
+def normalize_probability_rows(
+    probabilities: np.ndarray,
+    *,
+    name: str,
+) -> np.ndarray:
+    """Return a float32 row-stochastic matrix for persisted evaluation.
+
+    A wide float32 softmax is mathematically normalized, but rounding each of
+    tens of thousands of vocabulary probabilities can leave its float64 row
+    sum measurably different from one.  Re-normalizing the exported values in
+    float64 makes the stored matrix match the probability-simplex equation;
+    it does not alter training, model weights, or relative word probabilities.
+    """
+    values = np.asarray(probabilities)
+    if values.ndim != 2 or values.shape[1] == 0:
+        raise ValueError(f"{name} must be a non-empty row matrix")
+    if not np.all(np.isfinite(values)):
+        raise FloatingPointError(f"{name} contains non-finite values")
+    if np.any(values < 0):
+        raise FloatingPointError(f"{name} contains negative values")
+
+    precise = values.astype(np.float64, copy=False)
+    row_sums = precise.sum(axis=1, dtype=np.float64)
+    if np.any(row_sums <= 0):
+        raise FloatingPointError(f"{name} contains a zero-mass row")
+    normalized = (precise / row_sums[:, None]).astype(np.float32)
+    validate_probability_matrix(normalized, name=name)
+    return normalized
+
+
 def flatten_support_summary(summary: Mapping[str, object]) -> dict[str, object]:
     """Flatten support percentiles into one reviewable CSV row."""
     row = {

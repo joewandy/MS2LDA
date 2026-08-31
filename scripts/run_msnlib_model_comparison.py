@@ -56,6 +56,7 @@ from benchmarks.neural_ms2lda.pooled import (
     infer_pooled_theta,
     initialize_pooled_candidate,
 )
+from benchmarks.neural_ms2lda.reproducibility import normalize_probability_rows
 from benchmarks.neural_ms2lda.utils import (
     atomic_save_numpy,
     atomic_torch_save,
@@ -600,7 +601,10 @@ def train_etm(
     fitting_seconds = time.perf_counter() - started
     model.eval()
     with torch.inference_mode():
-        beta = model.beta().cpu().numpy().astype(np.float32)
+        beta = normalize_probability_rows(
+            model.beta().cpu().numpy(),
+            name=f"{artifact_method} validation beta",
+        )
     theta_observed, observed_throughput = infer_etm(
         model,
         observed,
@@ -806,7 +810,10 @@ def train_pooled(
     fitting_seconds = time.perf_counter() - started
     model.eval()
     with torch.inference_mode():
-        beta = model.topic_word_distribution().cpu().numpy().astype(np.float32)
+        beta = normalize_probability_rows(
+            model.topic_word_distribution().cpu().numpy(),
+            name=f"{method} validation beta",
+        )
     inference_started = time.perf_counter()
     theta_observed = infer_pooled_theta(
         model,
@@ -1241,8 +1248,10 @@ def train_ecrtm_canonical(  # noqa: PLR0915
     fitting_seconds = float(sum(float(row["seconds"]) for row in history))
     model.eval()
     with torch.inference_mode():
-        beta_internal = model.beta().cpu().numpy().astype(np.float32)
-    beta = beta_internal / np.maximum(beta_internal.sum(axis=1, keepdims=True), EPS)
+        beta = normalize_probability_rows(
+            model.beta().cpu().numpy(),
+            name=f"{method} validation beta",
+        )
     inference_started = time.perf_counter()
     theta_observed = infer_ecrtm(model, observed, int(batch_size))
     observed_seconds = time.perf_counter() - inference_started

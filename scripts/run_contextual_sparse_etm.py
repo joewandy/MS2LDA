@@ -40,6 +40,7 @@ from benchmarks.neural_ms2lda.reproducibility import (
     MemoryState,
     configure_deterministic_execution,
     flatten_support_summary,
+    normalize_probability_rows,
     read_json_object,
     resolve_torch_device,
     runtime_memory_metrics,
@@ -435,7 +436,10 @@ def _evaluate_and_persist(
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     """Run deterministic validation, calculate metrics, and save model outputs."""
     with torch.inference_mode():
-        beta = model.topic_word_distribution().cpu().numpy().astype(np.float32)
+        beta = normalize_probability_rows(
+            model.topic_word_distribution().cpu().numpy(),
+            name="contextual sparse ETM validation beta",
+        )
     theta_observed, observed_throughput = infer_document_topic_mixtures(
         model,
         data.observed,
