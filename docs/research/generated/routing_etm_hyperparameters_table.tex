@@ -1,0 +1,22 @@
+Data split seed & 42 \\
+Training seeds & 7043, 23, 37 \\
+Topics & 1000 \\
+Vocabulary & 21,233 train-only fragment/loss tokens \\
+Token coordinates & 48-dimensional train-only SGNS; fixed \\
+Encoder & 21,233 $\rightarrow$ 800 $\rightarrow$ 800; ReLU \\
+Variational outputs & 1,000-dimensional $\mu$ and $\log\sigma^2$ \\
+Topic-word decoder & ETM inner products; 50/50 fragment/loss mass \\
+Contextual evidence & leave-one-out context; top-2; temperature 1.0 \\
+Evidence pseudocount & fixed $1/K$ \\
+Numerical normalization floor & $10^{-12}$ \\
+Additional learned parameters & one context scalar \\
+Simplex transform & $1.5$-entmax \\
+Reconstruction & raw intensity pseudo-count multinomial \\
+Prior and KL & standard-normal analytic Gaussian KL \\
+Optimizer & Adam \\
+Learning rate; weight decay & 0.005; $1.2\times10^{-6}$ \\
+Batch size; epochs & 256; 120 \\
+Device; CPU threads & CUDA; 6 \\
+MAG query & top 20 words; search 1000; 10 unique molecules \\
+MAG/SOS thresholds & membership $\geq0.5$; cluster cosine 0.9; consensus 0.8 \\
+\bottomrule
