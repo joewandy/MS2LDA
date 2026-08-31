@@ -126,13 +126,15 @@ def validation_access_manifest(run: Path) -> dict[str, Any]:
 
 
 class MemoryTracker:
-    """Track practical process and MPS allocation high-water marks."""
+    """Track process and accelerator allocation high-water marks."""
 
     def __init__(self, device: torch.device) -> None:
         self.device = device
         self.peak_process_bytes = 0
         self.peak_mps_allocated_bytes = 0
         self.peak_mps_driver_bytes = 0
+        if self.device.type == "cuda":
+            torch.cuda.reset_peak_memory_stats(self.device)
         self.sample()
 
     def sample(self) -> None:
@@ -159,6 +161,16 @@ class MemoryTracker:
             ),
             "peak_mps_driver_bytes": (
                 self.peak_mps_driver_bytes if self.device.type == "mps" else None
+            ),
+            "peak_cuda_allocated_bytes": (
+                int(torch.cuda.max_memory_allocated(self.device))
+                if self.device.type == "cuda"
+                else None
+            ),
+            "peak_cuda_reserved_bytes": (
+                int(torch.cuda.max_memory_reserved(self.device))
+                if self.device.type == "cuda"
+                else None
             ),
         }
 
@@ -274,6 +286,8 @@ def configure(seed: int, threads: int) -> None:
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
     if torch.backends.mps.is_available():
         torch.mps.manual_seed(seed)
     torch.set_num_threads(int(threads))
@@ -288,6 +302,14 @@ def configure(seed: int, threads: int) -> None:
         "NUMEXPR_NUM_THREADS",
     ):
         os.environ[name] = str(threads)
+
+
+def synchronize_device(device: torch.device) -> None:
+    """Wait for queued accelerator work before reading a wall-clock timer."""
+    if device.type == "cuda":
+        torch.cuda.synchronize(device)
+    elif device.type == "mps":
+        torch.mps.synchronize()
 
 
 def resolve_device(name: str) -> torch.device:
@@ -372,6 +394,7 @@ def infer_etm(
 ) -> tuple[np.ndarray, float]:
     """Infer deterministic canonical ETM mixtures and throughput."""
     model.eval()
+    synchronize_device(device)
     started = time.perf_counter()
     values = []
     for start in range(0, matrix.shape[0], batch_size):
@@ -380,6 +403,7 @@ def infer_etm(
         )
         theta, _ = model.theta(dense_normalized(matrix, rows, device), sample=False)
         values.append(theta.cpu().numpy().astype(np.float32))
+    synchronize_device(device)
     elapsed = time.perf_counter() - started
     return np.concatenate(values), matrix.shape[0] / elapsed
 
@@ -534,6 +558,7 @@ def train_etm(
     rng = np.random.default_rng(seed + 7019)
     memory = MemoryTracker(device)
     history: list[dict[str, Any]] = []
+    synchronize_device(device)
     started = time.perf_counter()
     for epoch in range(int(epochs)):
         model.train()
@@ -557,6 +582,7 @@ def train_etm(
             kl_total += float(kl.mean().detach().cpu())
             batches += 1
         memory.sample()
+        synchronize_device(device)
         row = {
             "epoch": epoch + 1,
             "reconstruction": reconstruction_total / batches,
@@ -570,6 +596,7 @@ def train_etm(
             json.dumps(row, sort_keys=True),
             flush=True,
         )
+    synchronize_device(device)
     fitting_seconds = time.perf_counter() - started
     model.eval()
     with torch.inference_mode():
@@ -1343,14 +1370,18 @@ def main(argv: Sequence[str] | None = None) -> int:
     train = commands.add_parser("train")
     train.add_argument("--run", required=True, type=Path)
     train.add_argument("--method", required=True, choices=METHODS)
-    train.add_argument("--device", choices=("auto", "cpu", "mps"), default="auto")
+    train.add_argument(
+        "--device", choices=("auto", "cpu", "cuda", "mps"), default="auto"
+    )
     train.add_argument("--etm-epochs", type=int, default=120)
     train.add_argument("--etm-batch-size", type=int, default=256)
     train.add_argument("--gate-temperature", type=float, default=1.0)
     train.add_argument("--gate-gamma", type=float, default=1.0)
     smoke = commands.add_parser("smoke")
     smoke.add_argument("--run", required=True, type=Path)
-    smoke.add_argument("--device", choices=("auto", "cpu", "mps"), default="auto")
+    smoke.add_argument(
+        "--device", choices=("auto", "cpu", "cuda", "mps"), default="auto"
+    )
     score = commands.add_parser("chemical")
     score.add_argument("--run", required=True, type=Path)
     score.add_argument("--data-root", required=True, type=Path)

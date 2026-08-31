@@ -238,6 +238,7 @@ def evaluate_test(
     result = {
         "method": method,
         "split": "test",
+        "device": str(device),
         "model_config": config,
         "weights_sha256": weights_before,
         "weights_unchanged_after_evaluation": sha256_file(weights_path)
@@ -257,6 +258,7 @@ def evaluate_test(
             "test_input_manifest": str(run / "test_input_manifest.json"),
             "frozen_weights_sha256": weights_before,
             "training_or_optimization_performed": False,
+            "device": str(device),
         },
     )
     return result

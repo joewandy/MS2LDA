@@ -636,8 +636,8 @@ run. Models are
 trained for 120 fixed epochs with Adam, learning rate $0.005$, weight decay
 $1.2\times10^{-6}$ and batch size 256. PyTorch deterministic algorithms are
 enabled, non-finite objectives or gradients terminate execution, and six
-central processing unit (CPU) threads support training on an NVIDIA
-CUDA-compatible graphics processing unit (GPU).
+host worker threads feed training batches to an NVIDIA CUDA-compatible
+graphics processing unit (GPU).
 
 At validation and final test evaluation, the observed half-spectrum is encoded
 deterministically for document completion, while the full spectrum is encoded
@@ -1072,14 +1072,13 @@ already resident on the GPU, deterministic inference processes
 \TestThroughput{} full test spectra per second. Peak memory actively
 allocated by PyTorch and memory reserved by its CUDA cache are
 \PeakCudaAllocatedGB{} and \PeakCudaReservedGB{} GB, respectively. Peak process
-memory, including CPU memory, is \PeakProcessGB{} GB, while at least
+resident memory is \PeakProcessGB{} GB, while at least
 \MinimumSystemAvailableGB{} GB of system memory remains available.
 
 These measurements show that the method fits comfortably on the evaluated GPU
 system. They are implementation and hardware measurements rather than
-algorithm-independent complexity claims. The ETM and Tomotopy reference fits
-were executed on CPU, so their recorded wall times are not used for a direct
-training-speed ranking.
+algorithm-independent complexity claims, and runtime is not used for the
+scientific model ranking.
 
 \section{Discussion}
 

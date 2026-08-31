@@ -9,6 +9,7 @@ from typing import NamedTuple
 from .model_evaluation import TRAINING_ACCESS_AUDIT_FILENAME
 
 METHOD = "contextual_sparse_etm"
+NEURAL_DEVICE = "cuda"
 TRAINING_SEEDS = (7043, 23, 37)
 SYNTHETIC_SEEDS = (11, 23, 37)
 
@@ -61,6 +62,7 @@ def acceptance_policy() -> dict[str, object]:
     """Return the scientific acceptance rules frozen before result access."""
     return {
         "exact_gates": {
+            "neural_execution_device": NEURAL_DEVICE,
             "source_spectra": 41_568,
             "retained_spectra": 38_888,
             "connectivity_groups": 38_465,
@@ -156,7 +158,7 @@ def _synthetic_stage(
         "--batch-size",
         "200",
         "--device",
-        "cuda",
+        NEURAL_DEVICE,
         "--threads",
         "6",
         "--training-documents",
@@ -319,7 +321,7 @@ def stage_plan(paths: ReproductionPaths) -> list[Stage]:
                 "--batch-size",
                 "256",
                 "--device",
-                "cuda",
+                NEURAL_DEVICE,
                 "--threads",
                 "6",
                 "--training-seed",
@@ -405,7 +407,7 @@ def stage_plan(paths: ReproductionPaths) -> list[Stage]:
                     "--method",
                     "etm",
                     "--device",
-                    "cpu",
+                    NEURAL_DEVICE,
                     "--etm-epochs",
                     "120",
                     "--etm-batch-size",
@@ -441,7 +443,7 @@ def stage_plan(paths: ReproductionPaths) -> list[Stage]:
                     "--method",
                     "etm_balanced",
                     "--device",
-                    "cpu",
+                    NEURAL_DEVICE,
                     "--etm-epochs",
                     "120",
                     "--etm-batch-size",
@@ -485,7 +487,7 @@ def stage_plan(paths: ReproductionPaths) -> list[Stage]:
                         "--batch-size",
                         "256",
                         "--device",
-                        "cuda",
+                        NEURAL_DEVICE,
                         "--threads",
                         "6",
                         "--training-seed",
@@ -576,7 +578,7 @@ def stage_plan(paths: ReproductionPaths) -> list[Stage]:
                         "--method",
                         method,
                         "--device",
-                        "cpu",
+                        NEURAL_DEVICE,
                         "--batch-size",
                         "256",
                         "--threads",
@@ -634,7 +636,7 @@ def stage_plan(paths: ReproductionPaths) -> list[Stage]:
                         "--method",
                         METHOD,
                         "--device",
-                        "cuda",
+                        NEURAL_DEVICE,
                         "--batch-size",
                         "256",
                         "--threads",

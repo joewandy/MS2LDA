@@ -603,6 +603,12 @@ def test_clean_reproduction_plan_has_unique_stage_ownership(tmp_path: Path) -> N
     for run, method in method_runs:
         assert set(probability_artifact_paths(run, method)) <= owned
 
+    device_commands = [stage.command for stage in stages if "--device" in stage.command]
+    assert device_commands
+    assert all(
+        command[command.index("--device") + 1] == "cuda" for command in device_commands
+    )
+
 
 def test_completed_stage_rejects_changed_sealed_output(tmp_path: Path) -> None:
     paths = reproduction_paths(tmp_path / "reproduction")

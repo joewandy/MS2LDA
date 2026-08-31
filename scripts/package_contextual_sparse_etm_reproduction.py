@@ -27,6 +27,7 @@ from benchmarks.neural_ms2lda.reproduction_audit import (
 )
 from benchmarks.neural_ms2lda.reproduction_plan import (
     METHOD,
+    NEURAL_DEVICE,
     SYNTHETIC_SEEDS,
     TRAINING_SEEDS,
     ReproductionPaths,
@@ -146,6 +147,7 @@ def _chemistry_summary(result: Mapping[str, Any]) -> dict[str, Any]:
 def _synthetic_row(result: Mapping[str, Any], *, stage: str) -> dict[str, object]:
     """Extract one truth-known result row without rounding away evidence."""
     config = result["config"]
+    _require_neural_device(config.get("device"), label=f"synthetic stage {stage}")
     metrics = result["metrics"]
     recovery = metrics["truth_recovery"]
     support = metrics["theta_support"]
@@ -171,6 +173,13 @@ def _synthetic_row(result: Mapping[str, Any], *, stage: str) -> dict[str, object
         "maximum_beta_cosine": float(inventory["maximum_pairwise_beta_cosine"]),
         "catastrophic_duplicate": bool(inventory["catastrophic_duplicate_component"]),
     }
+
+
+def _require_neural_device(value: object, *, label: str) -> None:
+    """Reject evidence not executed on the reproduction's required device."""
+    if str(value).split(":", maxsplit=1)[0] != NEURAL_DEVICE:
+        msg = f"{label} was not executed on {NEURAL_DEVICE}: {value}"
+        raise RuntimeError(msg)
 
 
 def _synthetic_tables(
@@ -345,14 +354,25 @@ def _real_evidence(
     for label, method in (("canonical ETM", "etm"), ("balanced ETM", "etm_balanced")):
         model = paths.controls / "models" / method
         training_result = read_json(model / "result.json")
+        _require_neural_device(
+            training_result["config"].get("device"),
+            label=f"{label} training",
+        )
         training_metrics = training_result["metrics"]
+        test_evaluation = read_json(
+            paths.controls / "evaluation" / method / "complete.json",
+        )
+        _require_neural_device(
+            test_evaluation.get("device"),
+            label=f"{label} test inference",
+        )
         validation_chemistry = read_json(
             paths.controls / "validation_chemical" / method / "complete.json",
         )
         rows.append(
             _model_row(
                 label,
-                read_json(paths.controls / "evaluation" / method / "complete.json"),
+                test_evaluation,
                 read_json(paths.controls / "chemical" / method / "complete.json"),
                 training_result,
                 training_metrics,
@@ -374,6 +394,10 @@ def _real_evidence(
         training_result = read_json(model / "result.json")
         training_metrics = training_result["metrics"]
         config = training_result["config"]
+        _require_neural_device(
+            config.get("device"),
+            label=f"Contextual Sparse ETM seed {seed} training",
+        )
         validation_chemistry = read_json(
             paths.contextual[seed] / "validation_chemical" / METHOD / "complete.json",
         )
@@ -385,6 +409,10 @@ def _real_evidence(
             raise RuntimeError(msg)
         test_evaluation = read_json(
             paths.contextual[seed] / "evaluation" / METHOD / "complete.json",
+        )
+        _require_neural_device(
+            test_evaluation.get("device"),
+            label=f"Contextual Sparse ETM seed {seed} test inference",
         )
         row = _model_row(
             "Contextual Sparse ETM",
@@ -962,6 +990,10 @@ def _build_package(
 ) -> dict[str, Any]:
     """Build a verified package in a new staging directory."""
     manifest, stage_records = verify_stage_records(raw_root)
+    _require_neural_device(
+        manifest.get("neural_execution_device"),
+        label="reproduction manifest",
+    )
     validation_views = validate_model_views(raw_root)
     probability = probability_audit(raw_root)
     paths = reproduction_paths(raw_root)

@@ -825,7 +825,7 @@ def _generate_hyperparameters(evidence: dict[str, Any]) -> tuple[str, str]:
             f"${_tex_scientific(float(config['weight_decay']))}$",
         ),
         ("Batch size; epochs", f"{config['batch_size']}; {config['epochs']}"),
-        ("Device; CPU threads", f"{config['device']}; {config['threads']}"),
+        ("Device; host worker threads", f"{config['device']}; {config['threads']}"),
         (
             "Mass2Motif Annotation Guidance (MAG) query",
             f"top {chemistry['motif_spectrum_top_n']} words; search "

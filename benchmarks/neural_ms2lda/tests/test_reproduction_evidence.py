@@ -51,6 +51,12 @@ def test_fresh_chemistry_requires_explicit_mag_exception_counts() -> None:
         packager._chemistry_summary(result)
 
 
+def test_packager_rejects_non_cuda_neural_evidence() -> None:
+    packager._require_neural_device("cuda", label="test fixture")
+    with pytest.raises(RuntimeError, match="was not executed on cuda"):
+        packager._require_neural_device("mps", label="test fixture")
+
+
 def _valid_chemistry_result() -> dict[str, Any]:
     """Return one minimal package-facing chemical result."""
     return {

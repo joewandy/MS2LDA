@@ -24,6 +24,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from benchmarks.neural_ms2lda.reproduction_plan import (
+    NEURAL_DEVICE,
     ReproductionPaths,
     Stage,
     acceptance_policy,
@@ -145,6 +146,7 @@ def initialize(root: Path) -> dict[str, object]:
             },
         },
         "acceptance_policy": acceptance_policy(),
+        "neural_execution_device": NEURAL_DEVICE,
         "split_protocol": (
             "fit on train; select and ablate on validation; evaluate frozen models "
             "on test"
