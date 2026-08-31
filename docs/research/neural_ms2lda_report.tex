@@ -99,25 +99,29 @@ for Mass2Motif Discovery}
 \begin{abstract}
 Mass2Motifs are recurring fragment and neutral-loss patterns discovered by
 treating tandem mass spectra as short documents. Neural topic models can
-amortize spectrum-level inference, but short spectra require document mixtures
-that are simultaneously sparse and supported by a broad global topic inventory.
-We introduce Contextual Sparse ETM for this regime. The model starts from the
-published Embedded Topic Model (ETM): an explicit topic--word generator in a
-shared embedding space and an amortized Gaussian variational posterior. We use
+use one shared encoder to infer topic mixtures for every spectrum, but short
+spectra require mixtures that are simultaneously sparse and supported by a
+broad global topic inventory. We introduce Contextual Sparse ETM for this
+regime. The model starts from the published Embedded Topic Model (ETM): an
+explicit topic--word generator in a shared embedding space and a neural encoder
+that parameterizes a Gaussian posterior for each spectrum. We use
 fixed train-only spectral-word coordinates, balance fragment and neutral-loss
 probability mass, add contextual top-2 token-to-topic evidence to the posterior,
 and replace the dense document-topic softmax with $1.5$-entmax. The adaptations
 add one learned scalar to a
 \BaseParameters-parameter ETM.
 
-The method was evaluated on a scaffold- and compound-disjoint positive-mode
-MS$^{n}$Lib benchmark with \StudyTopics{} topics, \TrainingSpectra{} training
-spectra and \ValidationSpectra{} validation spectra. It produced
-\ContextualOptimized{} MAG-optimized, \ContextualEvaluable{} SOS-evaluable and
-\ContextualUseful{} chemically useful motifs, compared with
-\TomotopyOptimized{}, \TomotopyEvaluable{} and \TomotopyUseful{} for Tomotopy
-LDA. Completion negative log-likelihood was \ContextualNLL{} versus
-\TomotopyNLL{}, whereas Tomotopy had higher conditional mean SOS
+The method was evaluated on a positive-ion-mode MS$^{n}$Lib reference-spectral
+benchmark partitioned so that identical compounds and molecular scaffolds do
+not cross splits. It used \StudyTopics{} topics, \TrainingSpectra{} training
+spectra and \ValidationSpectra{} validation spectra. The model produced
+\ContextualOptimized{} motifs retained by Mass2Motif Annotation Guidance (MAG),
+\ContextualEvaluable{} with an evaluable substructure overlap score (SOS), and
+\ContextualUseful{} useful motifs with SOS at least 0.6. The corresponding
+Tomotopy latent Dirichlet allocation (LDA) counts were \TomotopyOptimized{},
+\TomotopyEvaluable{} and \TomotopyUseful{}. Held-out half-spectrum completion
+negative log-likelihood (NLL) was \ContextualNLL{} versus \TomotopyNLL{}, whereas
+Tomotopy had higher conditional mean SOS averaged over evaluable motifs
 (\TomotopyMeanSOS{} versus \ContextualMeanSOS{}). Across three training seeds on
 the same frozen split, evaluable and useful motif counts remained within
 \StabilityEvaluableRange{} and \StabilityUsefulRange{}, median effective topics
@@ -152,9 +156,10 @@ The Embedded Topic Model (ETM) is the base model used in this study. It
 retains an explicit topic--word distribution, represents topics and words in a
 shared embedding space, and replaces iterative document-level inference with a
 neural variational encoder \cite{dieng2020}. Spectral-word embeddings are also
-well motivated in mass spectrometry: Spec2Vec demonstrated that fragment and
-neutral-loss co-occurrence embeddings capture chemically useful relationships
-\cite{huber2021}. However, an ordinary ETM posterior does not explicitly use
+well motivated in mass spectrometry: Spec2Vec, a learned mass-spectral
+similarity method, demonstrated that fragment and neutral-loss co-occurrence
+embeddings capture chemically useful relationships \cite{huber2021}. However,
+an ordinary ETM posterior does not explicitly use
 the local co-occurrence pattern surrounding each word in a short spectrum, and
 softmax cannot produce exact zero topic probabilities.
 
@@ -166,11 +171,12 @@ words in its spectrum, matched to the two closest ETM topic vectors, and
 aggregated into document-level evidence that adjusts the ETM posterior mean.
 Third, published $1.5$-entmax replaces softmax to give exact document-topic
 zeros \cite{peters2019}. The ETM generator, multinomial likelihood, Gaussian
-variational family and analytic standard-normal KL remain intact. Channel
+variational family and analytic standard-normal Kullback--Leibler (KL)
+divergence remain intact. Channel
 balancing and entmax add no parameters; contextual evidence adds one learned
-scalar. Synthetic component ablations test context and entmax separately, while
-the real-data canonical-versus-balanced ETM comparison isolates channel
-balancing.
+scalar. Controlled synthetic component comparisons test context and entmax
+separately, while the real-data canonical-versus-balanced ETM comparison
+isolates channel balancing.
 
 This study makes three contributions:
 \begin{enumerate}
@@ -189,19 +195,22 @@ This study makes three contributions:
 \paragraph{Probabilistic and neural topic models.}
 Latent Dirichlet allocation (LDA) models each document as a mixture of
 categorical topic--word distributions \cite{blei2003}. Neural Variational
-Document Models and AVITM established amortized variational inference for topic
-models, including the practical importance of maintaining useful latent
-components \cite{miao2016,srivastava2017}. ETM subsequently parameterized
-topic--word natural parameters through topic and word embedding inner products
-while retaining a probabilistic document model \cite{dieng2020}. The present
-method uses this ETM generator and variational structure.
+Document Models and Autoencoding Variational Inference for Topic Models (AVITM)
+established amortized variational inference, in which one encoder replaces
+separate iterative inference for every document. They also showed the practical
+importance of maintaining useful latent components
+\cite{miao2016,srivastava2017}. ETM subsequently parameterized topic--word
+scores through topic and word embedding inner products while retaining a
+probabilistic document model \cite{dieng2020}. The present method uses this ETM
+generator and variational structure.
 
 \paragraph{Short-document topic inference.}
 Short-text models emphasize that individual documents provide limited
 co-occurrence evidence. The Biterm Topic Model aggregates word-pair statistics
 at corpus level \cite{yan2013}, while the Neural Sinkhorn Topic Model uses
-embedding geometry and optimal transport to improve neural topic modeling of
-short documents \cite{zhao2021}. Empirical studies further show that document
+embedding geometry and optimal transport, a geometry-aware
+distribution-matching objective, to improve neural topic modeling of short
+documents \cite{zhao2021}. Empirical studies further show that document
 length changes the relationship between topic-model hyperparameters and
 evaluation measures \cite{terragni2021}. Contextual Sparse ETM addresses
 the same statistical regime while preserving per-spectrum multi-topic mixtures
@@ -209,9 +218,10 @@ and the ETM likelihood.
 
 \paragraph{Sparse probability mappings.}
 Sparsemax and the entmax family replace dense softmax probabilities with
-simplex mappings that can return exact zeros \cite{martins2016,peters2019}.
-$1.5$-entmax lies between softmax and sparsemax and remains differentiable on
-its support. In the proposed model it acts only on document--topic logits; the
+probability-vector mappings that can return exact zeros
+\cite{martins2016,peters2019}. $1.5$-entmax lies between softmax and sparsemax
+and remains differentiable wherever its probabilities are non-zero. In the
+proposed model it acts only on document--topic logits; the
 topic--word decoder remains probabilistic and dense within each spectral
 channel.
 
@@ -234,52 +244,54 @@ collections using automated multi-stage fragmentation acquisition and
 processing. The complete resource contains more than 2.3 million MS$^{n}$
 spectra, including more than 357,000 MS$^{2}$ spectra for 30,008 unique
 structures across both ionization modes \cite{brungs2025}. We used the
-positive-mode benchmark input distributed with the MS2LDA 2.0 paper rather than
+positive-ion-mode benchmark input distributed with the MS2LDA 2.0 paper rather than
 resampling the complete resource \cite{torresortega2026}.
 
 The frozen assets are distributed in Zenodo record 20179680
 \cite{msnlibdata}. The acquisition script downloads \texttt{Data.zip} and
-\texttt{model\_positive\_mode.zip}, verifies the declared byte size and MD5,
-checks ZIP integrity and paths, extracts through a staging directory, verifies
-required files, and writes an acquisition manifest. The topic-model input is
+\texttt{model\_positive\_mode.zip}, verifies the declared byte size and MD5
+checksum, checks ZIP-archive integrity and paths, extracts through a staging
+directory, verifies required files, and writes an acquisition manifest. The topic-model input is
 \path{Data/Benchmark_MSn_Lib/Corinna_Library_filtered_positive.mgf}. The
-positive-mode Spec2Vec model, embedding matrix and SQLite spectral library are
-used only for downstream MAG evaluation. Known structures therefore support
-split construction and chemical scoring but are not labels for topic-model
-fitting.
+positive-ion-mode Spec2Vec model, embedding matrix and SQLite spectral-library
+database are used only for downstream MAG evaluation. Known structures
+therefore support split construction and chemical scoring but are not labels
+for topic-model fitting.
 
-The streaming MGF reader treats each
+The streaming Mascot Generic Format (MGF) reader treats each
 \texttt{BEGIN IONS}/\texttt{END IONS} block as one spectrum, parses peak lists
 rather than trusting \texttt{NUM\_PEAKS}, and requires a Universal Spectrum
-Identifier, feature identifier, SMILES, InChIKey and precursor $m/z$. RDKit
-reparses each SMILES and verifies agreement between the derived connectivity
-InChIKey and the deposited identifier. Figure~\ref{fig:data-pipeline} summarizes
-the complete hand-off from public data to model matrices.
+Identifier, feature identifier, SMILES molecular-structure string, InChIKey
+structure identifier and precursor mass-to-charge ratio ($m/z$). The RDKit
+cheminformatics toolkit reparses each SMILES string and verifies agreement
+between the derived connectivity InChIKey and the deposited identifier.
+Figure~\ref{fig:data-pipeline} summarizes the complete hand-off from public data
+to model matrices.
 
-\begin{figure}[t]
+\begin{figure}[H]
 \centering
 \begin{tikzpicture}[node distance=0.34cm]
   \node[pipelinebox] (zenodo) {Zenodo 20179680\\frozen archives};
-  \node[pipelinebox,right=of zenodo] (verify) {download\\size, MD5, ZIP checks};
+  \node[pipelinebox,right=of zenodo] (verify) {download\\size, checksum, archive checks};
   \node[pipelinebox,right=of verify] (extract) {staged extraction\\required-file checks};
   \node[pipelinebox,right=of extract] (parse) {stream MGF\\metadata and peak validation};
   \node[pipelinebox,right=of parse] (split) {grouped seed-42 split\\train-only vocabulary};
-  \node[pipelinebox,right=of split] (matrix) {SciPy CSR matrices\\held-out records};
+  \node[pipelinebox,right=of split] (matrix) {sparse count matrices\\held-out records};
   \draw[dataflow] (zenodo) -- (verify);
   \draw[dataflow] (verify) -- (extract);
   \draw[dataflow] (extract) -- (parse);
   \draw[dataflow] (parse) -- (split);
   \draw[dataflow] (split) -- (matrix);
 \end{tikzpicture}
-\caption{Reproducible MS$^{n}$Lib ingestion. The MGF supplies spectral
-documents; verified Spec2Vec assets branch from the extraction only for
-leakage-filtered chemical annotation.}
+\caption{Reproducible MS$^{n}$Lib ingestion. The Mascot Generic Format (MGF)
+file supplies spectral documents; verified Spec2Vec similarity-retrieval assets
+branch from the extraction only for leakage-filtered chemical annotation.}
 \label{fig:data-pipeline}
 \end{figure}
 
 \subsection{Dataset construction and leakage control}
 
-The input MGF contains \SourceSpectra{} positive-mode spectra. Within each
+The input MGF contains \SourceSpectra{} positive-ion-mode spectra. Within each
 spectrum, finite peak intensities are divided by the largest peak intensity.
 Peaks outside $m/z\in(0,2000]$ or normalized intensity $[0.01,1]$ are removed.
 If more than 1,000 peaks remain, the most intense are retained, and spectra with
@@ -297,8 +309,9 @@ tokens from the same peak are additionally retained as one physical peak group
 for document-completion splitting.
 
 To prevent structurally related compounds from crossing partitions, molecules
-are keyed by the connectivity block of the InChIKey. Cyclic molecules
-are grouped by non-chiral Bemis--Murcko scaffold \cite{bemismurcko1996}, while
+are keyed by the connectivity block of the InChIKey. Cyclic molecules are
+grouped by their non-chiral Bemis--Murcko core ring-and-linker scaffold
+\cite{bemismurcko1996}, while
 each acyclic connectivity group remains intact. The \SplitGroups{} resulting
 groups are sorted by descending size and assigned deterministically toward
 70/10/20 train, validation and test targets using seed 42. This produces
@@ -306,17 +319,19 @@ groups are sorted by descending size and assigned deterministically toward
 \TestSpectra{} test spectra from \ConnectivityGroups{} connectivity groups,
 with zero compound or split-group overlap.
 
-The vocabulary is built from training spectra only, requires document frequency
-at least three, preserves first-seen training order, and contains
+The vocabulary is built from training spectra only, requires each token to
+occur in at least three training spectra (document frequency at least three),
+preserves first-seen training order, and contains
 \VocabularySize{} fragment and neutral-loss tokens. Every split is stored in
-the same fixed column order as a SciPy CSR count matrix. All learned parameters,
-token embeddings, vocabulary entries and co-occurrence statistics use only the
-training partition. The present study uses training and validation evidence;
-the test partition was not loaded or scored for the proposed model.
+the same fixed column order as a SciPy compressed sparse-row (CSR) count matrix.
+All learned parameters, token embeddings, vocabulary entries and co-occurrence
+statistics use only the training partition. The present study uses training and
+validation evidence; the test partition was not loaded or scored for the
+proposed model.
 
 For predictive evaluation, validation spectra are deterministically divided
-50/50 by whole physical peak
-groups. A fragment and its corresponding neutral loss therefore cannot appear
+50/50 by whole physical peak groups. A fragment and its corresponding neutral
+loss therefore cannot appear
 on opposite sides. The observed half is renormalized without consulting the
 maximum intensity of the withheld half. Out-of-vocabulary withheld words are
 recorded but excluded from the likelihood numerator and denominator. The
@@ -324,13 +339,14 @@ completion result contains \CompletionDocuments{} eligible spectra and
 \CompletionTokens{} in-vocabulary withheld token copies; the withheld
 out-of-vocabulary fraction is \CompletionOOV{}.
 
-Finally, each vocabulary token has a fixed 48-dimensional skip-gram negative-sampling
-(SGNS) coordinate trained only on the training documents
+Finally, each vocabulary token has a fixed 48-dimensional skip-gram
+negative-sampling (SGNS) coordinate trained only on the training documents
 \cite{mikolov2013}. For five epochs, eight count-weighted positive pairs are
 sampled per document. Every positive pair uses five negative words drawn with
 probability proportional to corpus frequency raised to $0.75$. Source
 embeddings are initialized uniformly on $[-0.5/48,0.5/48]$, context embeddings
-at zero, and SparseAdam uses learning rate $0.01$ with batches of 8,192 pairs.
+at zero, and the PyTorch SparseAdam optimizer uses learning rate $0.01$ with
+batches of 8,192 pairs.
 Source and context embeddings are averaged and normalized after the fifth
 epoch. Molecular identifiers and structures do not enter this representation.
 Holding these coordinates fixed separates the geometry supplied to every ETM
@@ -346,7 +362,7 @@ Dieng et al.\ \cite{dieng2020}. ETM supplies the complete generative and
 variational backbone: topic and word vectors share an embedding space, their
 inner products define an explicit topic--word distribution, a neural encoder
 parameterizes a Gaussian document posterior, and a multinomial likelihood with
-analytic Gaussian KL trains the model end to end. We retain that backbone rather
+analytic Gaussian KL divergence trains the model end to end. We retain that backbone rather
 than introducing a different topic-model family.
 
 The adaptations in Table~\ref{tab:lineage} address properties specific to short
@@ -360,7 +376,8 @@ context scalar is learned in addition to the ETM parameters.
 \begin{table}[H]
 \centering
 \small
-\caption{Lineage of Contextual Sparse ETM. The canonical-versus-balanced real
+\caption{Lineage of Contextual Sparse ETM. ``Inherited'' means retained from
+the published Embedded Topic Model (ETM). The canonical-versus-balanced real
 comparison isolates channel balancing; the synthetic component study isolates
 contextual evidence and entmax.}
 \label{tab:lineage}
@@ -370,11 +387,11 @@ contextual evidence and entmax.}
 \toprule
 Component & Provenance & Purpose \\
 \midrule
-ETM generator, encoder, Gaussian posterior, likelihood and KL
+ETM generator, encoder, Gaussian posterior, likelihood and KL divergence
   & Inherited \cite{dieng2020}
   & Preserve a published probabilistic topic model with explicit $\beta$ and
     amortized document inference. \\
-Train-only SGNS word coordinates
+Train-only skip-gram (SGNS) word coordinates
   & ETM input configuration \cite{mikolov2013}
   & Supply leakage-free fragment/loss co-occurrence geometry. \\
 Fragment/loss-balanced $\beta$
@@ -484,8 +501,9 @@ Count-weighted aggregation yields one document evidence distribution,
   \label{eq:document-evidence}
 \end{equation}
 Because every local assignment and each $x_d$ are normalized, $r_d$ lies on the
-topic simplex. The implementation renormalizes its row sum once more to remove
-finite-precision accumulation error.
+topic probability simplex: its entries are non-negative and sum to one. The
+implementation renormalizes its row sum once more to remove finite-precision
+accumulation error.
 
 The document evidence is converted to a bounded, row-centred posterior offset:
 \begin{equation}
@@ -523,7 +541,7 @@ The conditional word probability remains the usual topic mixture,
 \end{equation}
 The stochastic loss supplied to Adam is the raw pseudo-count multinomial
 reconstruction (up to its parameter-independent combinatorial constant) plus
-the analytic standard-normal Gaussian KL. One reparameterized Gaussian draw is
+the analytic standard-normal Gaussian KL divergence. One reparameterized Gaussian draw is
 used per document and minibatch update:
 \begin{align}
   \mathcal L_{\mathrm{rec}}
@@ -558,7 +576,7 @@ generator and explicit topic--word output remain intact.
     Topic mixture\\$p(w\mid d)=\theta_d\beta$};
 
   \node[modelnode,fill=violet!9,text width=2.0cm,below=1.25cm of bow] (rho) {
-    Fixed SGNS words\\$\widehat\rho_w$};
+    Fixed spectral-word coordinates\\$\widehat\rho_w$};
   \node[modelnode,fill=violet!9,text width=2.15cm,right=of rho] (context) {
     Leave-one-out context\\one learned scalar $c$};
   \node[modelnode,fill=yellow!18,text width=2.15cm,right=of context] (routes) {
@@ -581,10 +599,11 @@ generator and explicit topic--word output remain intact.
   \draw[dataflow] (beta) -- (mixture);
   \draw[dataflow] (bow) -- (context);
 \end{tikzpicture}
-\caption{Contextual Sparse ETM. Contextual token assignments use the same fixed
-word and learned topic coordinates as the ETM decoder, then adjust the
-variational posterior before sparse simplex projection. Solid arrows are used
-at both training and inference.}
+\caption{Contextual Sparse Embedded Topic Model (ETM). Contextual token
+assignments use the same fixed word and learned topic coordinates as the ETM
+topic--word decoder, then adjust the Gaussian document posterior before
+$1.5$-entmax produces a sparse topic-probability vector. Solid arrows denote
+computations used at both training and inference.}
 \label{fig:model}
 \end{figure}
 
@@ -600,8 +619,9 @@ addition is $c$, which converged to \LearnedContextScale{} in the representative
 run. Models are
 trained for 120 fixed epochs with Adam, learning rate $0.005$, weight decay
 $1.2\times10^{-6}$ and batch size 256. PyTorch deterministic algorithms are
-enabled, non-finite objectives or gradients terminate execution, and six CPU
-threads support the CUDA training run.
+enabled, non-finite objectives or gradients terminate execution, and six
+central processing unit (CPU) threads support training on an NVIDIA
+CUDA-compatible graphics processing unit (GPU).
 
 At validation, the observed half-spectrum is encoded deterministically for
 document completion, while the full spectrum is encoded for topic-inventory and
@@ -616,23 +636,28 @@ words. Each spectrum contains one to three generating motifs. Training-only
 vocabulary construction and SGNS match the real workflow, and intensities use
 the same raw pseudo-count reconstruction. The primary experiment uses 800
 training and 160 validation spectra, fits $K=36$ topics, and averages seeds 11,
-23 and 37. A high-overcompleteness experiment fixes seed 11 and increases the
-fitted inventory to $K=128$ while retaining 18 planted motifs.
+23 and 37. A high-overcompleteness experiment, in which fitted topics greatly
+outnumber planted motifs, fixes seed 11 and increases the fitted inventory to
+$K=128$ while retaining 18 planted motifs.
 
 The synthetic endpoints are completion NLL, cosine recovery of the planted
 topic--word matrix, cosine recovery of the planted document mixtures, dominant
 motif accuracy, median effective topics, materially active topics and unique
-top-1 topics. Optimal one-to-one matching aligns fitted topics to planted
-motifs before recovery is calculated.
+top-1 topics. Dominant motif accuracy compares the largest fitted mixture
+component with the largest planted component; a top-1 topic is the fitted topic
+with the largest weight in one spectrum. Optimal one-to-one matching aligns
+fitted topics to planted motifs before recovery is calculated.
 
 For real-data validation, four methods are fitted to the same training and
 validation matrices:
 \begin{enumerate}
-  \item a canonical fixed-SGNS ETM with global topic--word softmax;
-  \item the same ETM with separate 50/50 fragment and neutral-loss
-  normalization;
-  \item Contextual Sparse ETM; and
-  \item Tomotopy 0.13.0 LDA as the established MS2LDA-style comparator
+  \item canonical ETM: fixed SGNS coordinates, global topic--word softmax and
+  dense document-topic softmax;
+  \item fragment/loss-balanced ETM: the same model with separate 50/50
+  fragment and neutral-loss decoder normalization;
+  \item Contextual Sparse ETM: the balanced decoder plus contextual top-2
+  posterior evidence and $1.5$-entmax document mixtures; and
+  \item Tomotopy 0.13.0 LDA: the established MS2LDA-style comparator
   \cite{tomotopy}.
 \end{enumerate}
 The first three rows therefore follow the model lineage from published ETM to
@@ -670,27 +695,32 @@ entropy-effective topic count
 \end{equation}
 Writing $\bar\theta_k=D^{-1}\sum_d\theta_{dk}$, the corpus-effective inventory is
 $\exp[-\sum_k\bar\theta_k\log\bar\theta_k]$. Global inventory use is also
-summarized by the number of unique top-1 topics, topics above mean usage
-$0.0005$, maximum mean topic usage and topic--word cosine redundancy. A duplicate
-component is catastrophic only if at least half of the 1,000 topics join one
-connected component at cosine similarity at least $0.999$.
+summarized by the number of topics that are the largest mixture component for
+at least one spectrum (unique top-1 topics), topics with mean mixture weight
+above $0.0005$, maximum mean topic weight and cosine similarity between
+topic--word probability vectors. A duplicate component is catastrophic only if
+at least half of the 1,000 topics join one connected component in the
+cosine-similarity graph at threshold $0.999$.
 
-Chemical utility is evaluated with the MS2LDA 2.0 MAG and SOS framework
+Chemical utility is evaluated with the MS2LDA 2.0 Mass2Motif Annotation
+Guidance (MAG) and substructure overlap score (SOS) framework
 \cite{torresortega2026}. Every Spec2Vec-library row sharing a validation
-connectivity InChIKey is removed before constructing the FAISS search index.
-The evaluated molecule therefore cannot be retrieved as its own annotation
-evidence.
+connectivity InChIKey is removed before constructing the FAISS
+vector-similarity search index. The evaluated molecule therefore cannot be
+retrieved as its own annotation evidence.
 
 For each topic, the 20 highest-probability fragment or neutral-loss words form a
-Mass2Motif pseudo-spectrum. MAG searches up to 1,000 neighbours, retains at most
-ten unique molecules, clusters and refines them at cosine threshold 0.9, and
-optimizes the motif against the selected cluster. A topic is \emph{optimized}
-when at least one fragment or loss survives this procedure.
+Mass2Motif pseudo-spectrum: a spectrum-like list synthesized from the learned
+topic probabilities. MAG searches up to 1,000 neighbours, retains at most ten
+unique molecules, clusters and refines them at spectral cosine-similarity
+threshold 0.9, and optimizes the motif against the selected cluster. A topic is
+\emph{optimized} when at least one fragment or loss survives this procedure.
 
-Clustered MAG molecules are converted to MACCS structural-key fingerprints
+Clustered MAG molecules are converted to binary MACCS structural-key
+fingerprints, whose bits indicate predefined molecular features
 \cite{durant2002}. A bit is retained in consensus fingerprint $A_k$ when it
 appears in at least 80\% of the cluster. A validation molecule $i$ is associated
-with topic $k$ when its full-spectrum mixture satisfies
+with topic $k$ when its full-spectrum topic weight satisfies
 $\theta_{ik}\geq0.5$. Repeated spectra with the same connectivity InChIKey are
 collapsed. With $B_i$ the associated molecule fingerprint,
 \begin{equation}
@@ -707,9 +737,9 @@ atom mapping, fragmentation-pathway proof or expert-confirmed annotation.
 
 \section{Results}
 
-\subsection{Synthetic ablations isolate complementary context and sparsity}
+\subsection{Synthetic component comparisons isolate complementary context and sparsity}
 
-The $K=36$ experiment is a component ablation of the two posterior changes.
+The $K=36$ experiment is a controlled comparison of the two posterior changes.
 Starting from the channel-balanced ETM with softmax, adding contextual top-2
 evidence while retaining softmax improves both planted topic--word ($\beta$) and
 document-mixture ($\theta$) recovery, improves completion NLL, and increases the
@@ -722,16 +752,19 @@ Combining contextual evidence with $1.5$-entmax yields the strongest mean
 $\beta$ and $\theta$ recovery, retains a median of two effective topics per
 spectrum, and uses 13 distinct topics as winners, consistent with the
 one-to-three motif simulator. Its completion NLL is slightly worse than the
-context-plus-softmax ablation, so the evidence supports complementarity rather
+context-plus-softmax variant, so the evidence supports complementarity rather
 than uniform dominance: context preserves and disambiguates the topic inventory,
 while entmax converts that evidence into exact sparse support.
 
 \begin{table}[H]
 \centering
 \small
-\caption{$K=36$ synthetic results averaged over seeds 11, 23 and 37.
-Beta and theta columns are cosine recovery against planted truth; active topics
-have mean corpus usage above 0.005.}
+\caption{$K=36$ synthetic results averaged over seeds 11, 23 and 37. NLL is
+held-out completion negative log-likelihood (lower is better). Beta and theta
+are cosine recovery of the planted topic--word and document--topic matrices;
+median eff. is the median entropy-effective topic count. Active topics have
+mean corpus weight above 0.005, and unique top-1 counts distinct document
+winners.}
 \label{tab:synthetic}
 \begin{tabular}{@{}lrrrrrr@{}}
 \toprule
@@ -752,7 +785,10 @@ NLL of the three high-$K$ formulations.
 \centering
 \small
 \caption{Seed-11 synthetic stress with 18 planted motifs and 128 fitted topics.
-Support is exact document-topic support.}
+NLL is completion negative log-likelihood; beta and theta are planted-matrix
+recovery; accuracy compares the dominant fitted and planted motif. Eff. is the
+entropy-effective topic count, support counts exactly non-zero document-topic
+weights, and unique counts distinct document winners.}
 \label{tab:high-k}
 \begin{tabular}{@{}lrrrrrrr@{}}
 \toprule
@@ -772,7 +808,8 @@ ETM, \BalancedEvaluable{}/\BalancedUseful{} for fragment/loss-balanced ETM and
 shows that the gain occurs after chemical evaluation rather than merely through
 creating a large unfiltered topic inventory.
 
-The canonical-versus-balanced ETM rows provide the real-data ablation of the
+The canonical-versus-balanced ETM rows provide the real-data controlled
+comparison of the
 decoder change. Channel balancing raises optimized motifs from
 \CanonicalOptimized{} to \BalancedOptimized{}, evaluable motifs from
 \CanonicalEvaluable{} to \BalancedEvaluable{}, and useful motifs from
@@ -781,7 +818,8 @@ decoder change. Channel balancing raises optimized motifs from
 \CanonicalNLL{} to \BalancedNLL{}. It therefore broadens the candidate inventory
 modestly but does not explain the complete model's \ContextualEvaluable{}
 evaluable and \ContextualUseful{} useful motifs. The larger gain appears only
-after adding the contextual sparse posterior tested in the synthetic ablations.
+after adding the contextual sparse posterior tested in the synthetic component
+comparisons.
 
 \begin{figure}[H]
 \centering
@@ -833,17 +871,28 @@ after adding the contextual sparse posterior tested in the synthetic ablations.
     coordinates {(LDA,\TomotopyUseful)};
 \end{groupplot}
 \end{tikzpicture}
-\caption{Validation motif inventory after successive chemical filters.
-Contextual denotes Contextual Sparse ETM; LDA denotes Tomotopy. Counts use the same
-$K=1000$ training/validation split and leakage-filtered MAG/SOS protocol.}
+\caption{Validation motif inventory after successive chemical filters. ETM is
+the canonical Embedded Topic Model with fixed train-only spectral-word
+coordinates and dense softmax document mixtures. Balanced is the same ETM with
+separate 50/50 fragment and neutral-loss decoder normalization. Contextual is
+the complete Contextual Sparse ETM, which adds contextual top-2 posterior
+evidence and $1.5$-entmax to Balanced. LDA is Tomotopy 0.13.0 latent Dirichlet
+allocation. Optimized means that Mass2Motif Annotation Guidance (MAG) retains
+at least one fragment or loss;
+SOS-evaluable means that the substructure overlap score can be computed from at
+least one associated molecule; useful means SOS at least 0.6. All four models
+use $K=1000$ and the same frozen training/validation split and
+chemical-evaluation protocol.}
 \label{fig:inventory}
 \end{figure}
 
 \begin{table}[H]
 \centering
 \small
-\caption{Validation comparison. Bold values are the numerically strongest
-entry in each metric; no single metric defines overall model quality.}
+\caption{Validation comparison. SOS is the substructure overlap score and NLL
+is held-out completion negative log-likelihood, for which lower is better. Bold
+values are the numerically strongest entry in each metric; no single metric
+defines overall model quality.}
 \label{tab:validation}
 \begin{tabular}{@{}lrrrrrr@{}}
 \toprule
@@ -902,10 +951,12 @@ higher-quality but lower-breadth corner.
 \end{axis}
 \end{tikzpicture}
 \caption{Discovery breadth versus conditional chemical quality on the frozen
-validation split. Horizontal position counts motifs for which SOS can be
-evaluated; vertical position averages SOS only over that model-specific set.
-The axes therefore answer complementary questions rather than forming a single
-combined score.}
+validation split. Horizontal position counts motifs for which the substructure
+overlap score (SOS) can be evaluated; vertical position averages SOS only over
+that model-specific set. The axes therefore answer complementary questions
+rather than forming a single combined score. Points compare canonical and
+fragment/loss-balanced Embedded Topic Models (ETMs), the complete Contextual
+Sparse ETM and Tomotopy LDA.}
 \label{fig:breadth-quality}
 \end{figure}
 
@@ -935,9 +986,11 @@ validation spectrum. No run contains a catastrophic duplicate component.
 \begin{table}[H]
 \centering
 \scriptsize
-\caption{Same-split training-seed stability. The final row reports descriptive
-sample mean and standard deviation for three initializations, not population
-uncertainty.}
+\caption{Same-split training-seed stability. SOS is the substructure overlap
+score, NLL is completion negative log-likelihood and median eff. is the median
+entropy-effective topic count; unique counts distinct document winners. The
+final row reports the descriptive sample mean and standard deviation for three
+initializations, not population uncertainty.}
 \label{tab:stability}
 \resizebox{\textwidth}{!}{%
 \begin{tabular}{@{}lrrrrrrrr@{}}
@@ -963,15 +1016,19 @@ topics and median exact support \MedianExactSupport{} per validation spectrum;
 95\% of spectra have support at most \NinetyFifthExactSupport{}. At corpus level,
 \UniqueTopOneTopics{} of 1,000 topics win at least one spectrum,
 \ActiveTopics{} exceed mean usage 0.0005 and the corpus-effective topic count is
-\CorpusEffectiveTopics{}. The largest connected component at beta cosine
-$\geq0.999$ contains only \LargestStrictDuplicateComponent{} topics.
+\CorpusEffectiveTopics{}. The largest connected component at topic--word cosine
+similarity $\geq0.999$ contains only
+\LargestStrictDuplicateComponent{} topics.
 
 \begin{table}[H]
 \centering
 \footnotesize
-\caption{Validation sparsity and inventory diagnostics. Active topics use mean
-usage above 0.0005; nearest beta is the mean cosine to each topic's nearest
-neighbour.}
+\caption{Validation sparsity and inventory diagnostics. Eff. is the
+entropy-effective topic count; support counts exactly non-zero mixture weights;
+unique top-1 counts distinct document winners; and active topics have mean
+weight above 0.0005. Corpus eff. applies the entropy-effective count to mean
+corpus weights, and nearest beta is mean nearest-neighbour cosine similarity
+between topic--word probability vectors.}
 \label{tab:diagnostics}
 \begin{tabular}{@{}lrrrrrr@{}}
 \toprule
@@ -985,20 +1042,21 @@ The ETM baselines spread each spectrum across roughly 44--47 effective topics
 while using only 260 unique winners. Contextual Sparse ETM reverses both
 properties: individual spectra are sparse, yet more than 800 topics receive a
 top-1 assignment somewhere in validation. Its maximum mean topic usage is only
-\MaximumMeanTopicUsage{}, and mean nearest-topic beta cosine is
-\MeanNearestBetaCosine{}, providing additional evidence that sparsity does not
-come from a single dominant or globally duplicated topic group.
+\MaximumMeanTopicUsage{}, and mean nearest-topic topic--word cosine similarity
+is \MeanNearestBetaCosine{}, providing additional evidence that sparsity does
+not come from a single dominant or globally duplicated topic group.
 
 Computationally, the 120-epoch optimization loop takes
-\TrainingMinutesMean{} $\pm$ \TrainingMinutesSD{} minutes. The representative
-run processes \ValidationThroughput{} full validation spectra per second during
-resident deterministic inference. Peak PyTorch CUDA allocation and reservation
-are \PeakCudaAllocatedGB{} and \PeakCudaReservedGB{} GB, respectively. Process
-high-water memory is \PeakProcessGB{} GB, while at least
+\TrainingMinutesMean{} $\pm$ \TrainingMinutesSD{} minutes. With the trained model
+already resident on the GPU, deterministic inference processes
+\ValidationThroughput{} full validation spectra per second. Peak memory actively
+allocated by PyTorch and memory reserved by its CUDA cache are
+\PeakCudaAllocatedGB{} and \PeakCudaReservedGB{} GB, respectively. Peak process
+memory, including CPU memory, is \PeakProcessGB{} GB, while at least
 \MinimumSystemAvailableGB{} GB of system memory remains available.
 
-These measurements show that the method fits comfortably on the evaluated
-CUDA system. They are implementation and hardware measurements rather than
+These measurements show that the method fits comfortably on the evaluated GPU
+system. They are implementation and hardware measurements rather than
 algorithm-independent complexity claims. The ETM and Tomotopy reference fits
 were executed on CPU, so their recorded wall times are not used for a direct
 training-speed ranking.
@@ -1064,7 +1122,7 @@ breadth while preserving sparse assignments and a broad global inventory.
 
 These axes correspond to different uses. Completion NLL tests probabilistic
 generalization, support diagnostics test whether spectrum explanations remain
-compact, and MAG/SOS measures determine how much chemically interpretable
+compact, and the MAG and SOS measures determine how much chemically interpretable
 material reaches a downstream analyst. For discovery, the larger useful set is
 valuable even when it should subsequently be ranked or filtered by conditional
 chemical evidence. Reporting all three prevents a favourable result on one axis
@@ -1077,11 +1135,12 @@ frozen, the untouched test partition can provide a single confirmatory
 evaluation. Negative-mode spectra, biological samples and instrument-shifted
 data would establish a broader domain of validity. These extensions should
 retain the same reporting contract: predictive fit, per-spectrum sparsity,
-global inventory use, MAG/SOS breadth and conditional chemical quality.
+global inventory use, MAG-retrieved and SOS-evaluable motif breadth, and
+conditional chemical quality.
 
 \section{Limitations}
 
-This is a validation study on one positive-mode MS$^{n}$Lib benchmark. The
+This is a validation study on one positive-ion-mode MS$^{n}$Lib benchmark. The
 three training seeds change initialization and minibatch order but not the
 data split, vocabulary, topic count or hyperparameters. Their sample standard
 deviations are descriptive and should not be interpreted as confidence
@@ -1095,32 +1154,33 @@ biological validity.
 
 The observation model treats rounded relative intensities as multinomial
 pseudo-counts. Those copies are weights, not independent ion observations, and
-their absolute scaling changes the balance between reconstruction and KL. The
-fixed 50/50 fragment/loss mass is an explicit domain prior that removes
+their absolute scaling changes the balance between reconstruction and KL
+divergence. The fixed 50/50 fragment/loss mass is an explicit domain prior that removes
 vocabulary-size bias but may not be optimal for every acquisition regime.
 
 MAG and SOS depend on the Spec2Vec reference library, leakage filter, retrieval
-and clustering settings, MACCS keys, 80\% consensus threshold and
+and clustering settings, MACCS fingerprint bits, 80\% consensus threshold and
 $\theta\geq0.5$ molecule-association threshold. SOS is an asymmetric
 containment measure and does not establish an exact substructure. Reference
 library coverage can also influence which topics become evaluable.
 
-Finally, the runtime measurements describe one implementation and CUDA system.
+Finally, the runtime measurements describe one implementation and GPU system.
 The dense ETM encoder scales with vocabulary size, and peak memory or throughput
 will change with hardware, batch size, numerical precision and software
 versions.
 
 \section{Data, code and reproducibility}
 
-The benchmark input and positive-mode annotation assets are available from
+The benchmark input and positive-ion-mode annotation assets are available from
 Zenodo record 20179680 \cite{msnlibdata}. The repository records the exact data
 preparation protocol, model implementation, compact result packages,
 per-topic chemical scores, epoch-level training records, environment manifest and
-SHA-256 provenance. Test artifacts for the proposed model are explicitly
+SHA-256 file checksums. Test artifacts for the proposed model are explicitly
 excluded from the current evidence boundary.
 
-Every numerical fragment in this report is generated from the frozen JSON and
-CSV evidence:
+Every numerical fragment in this report is generated from frozen
+machine-readable evidence files in JavaScript Object Notation (JSON) and
+comma-separated values (CSV) formats:
 \begin{verbatim}
 python -m scripts.generate_routing_etm_report
 python -m scripts.verify_routing_etm_checkpoint
@@ -1133,7 +1193,7 @@ artifact and input hashes can additionally be checked on the originating host.
 The focused equation--code test in
 \texttt{benchmarks/neural\_ms2lda/tests/test\_routing\_etm.py} independently
 reconstructs the channel-balanced $\beta$, contextual top-2 evidence, centred
-posterior mean, analytic KL, threshold form of $1.5$-entmax, raw-count
+posterior mean, analytic KL divergence, threshold form of $1.5$-entmax, raw-count
 reconstruction and learned-parameter count, then compares each quantity with
 the implementation.
 
@@ -1141,7 +1201,8 @@ the implementation.
 
 Contextual Sparse ETM is a direct extension of the published ETM rather than a
 separate topic-model family. It retains ETM's embedded topic--word generator,
-Gaussian variational encoder, multinomial objective and analytic KL. Equal
+Gaussian variational encoder, multinomial objective and analytic KL divergence.
+Equal
 fragment/loss decoder mass supplies the domain constraint; shared word/topic
 geometry supplies contextual top-2 evidence; and $1.5$-entmax produces exact
 document-topic support. The complete adaptation adds only one learned scalar.
@@ -1211,14 +1272,15 @@ Report component & Implementation \\
 \toprule
 Metric & Definition & Reading \\
 \midrule
-Completion NLL &
+Completion negative log-likelihood (NLL) &
 Count-weighted log loss on withheld in-vocabulary words after observing the
 other physical peak groups. &
 Lower is better predictive fit. \\
 Optimized motifs &
-Topics for which MAG retains at least one fragment or neutral loss. &
+Topics for which Mass2Motif Annotation Guidance (MAG) retains at least one
+fragment or neutral loss. &
 Breadth of annotatable topic spectra. \\
-SOS-evaluable motifs &
+Substructure-overlap-score (SOS)-evaluable motifs &
 Optimized topics with at least one unique associated validation molecule and a
 valid fingerprint. &
 Inventory eligible for chemical scoring. \\

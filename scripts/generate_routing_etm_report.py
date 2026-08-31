@@ -540,29 +540,41 @@ def _generate_hyperparameters(evidence: dict[str, Any]) -> str:
         ("Training seeds", "7043, 23, 37"),
         ("Topics", str(config["topics"])),
         ("Vocabulary", r"21,233 train-only fragment/loss tokens"),
-        ("Token coordinates", r"48-dimensional train-only SGNS; fixed"),
-        ("Encoder", r"21,233 $\rightarrow$ 800 $\rightarrow$ 800; ReLU"),
+        (
+            "Token coordinates",
+            "48-dimensional train-only skip-gram negative-sampling (SGNS); fixed",
+        ),
+        (
+            "Encoder",
+            r"21,233 $\rightarrow$ 800 $\rightarrow$ 800; rectified linear unit (ReLU)",
+        ),
         ("Variational outputs", r"1,000-dimensional $\mu$ and $\log\sigma^2$"),
-        ("Topic-word decoder", r"ETM inner products; 50/50 fragment/loss mass"),
+        (
+            "Topic-word decoder",
+            "Embedded Topic Model (ETM) inner products; 50/50 fragment/loss mass",
+        ),
         ("Contextual evidence", r"leave-one-out context; top-2; temperature 1.0"),
         ("Evidence pseudocount", r"fixed $1/K$"),
         ("Numerical normalization floor", r"$10^{-12}$"),
         ("Additional learned parameters", "one context scalar"),
-        ("Simplex transform", r"$1.5$-entmax"),
+        ("Document-topic probability transform", r"$1.5$-entmax"),
         ("Reconstruction", "raw intensity pseudo-count multinomial"),
-        ("Prior and KL", "standard-normal analytic Gaussian KL"),
+        (
+            "Prior and KL divergence",
+            "standard-normal analytic Gaussian Kullback--Leibler divergence",
+        ),
         ("Optimizer", "Adam"),
         ("Learning rate; weight decay", "0.005; $1.2\\times10^{-6}$"),
         ("Batch size; epochs", "256; 120"),
-        ("Device; CPU threads", f"CUDA; {config['threads']}"),
+        ("Device; CPU threads", f"NVIDIA CUDA GPU; {config['threads']}"),
         (
-            "MAG query",
+            "Mass2Motif Annotation Guidance (MAG) query",
             f"top {chemistry['motif_spectrum_top_n']} words; search "
             f"{chemistry['mag_search_k']}; "
             f"{chemistry['mag_unique_molecules']} unique molecules",
         ),
         (
-            "MAG/SOS thresholds",
+            "MAG and substructure overlap score (SOS) thresholds",
             f"membership $\\geq{chemistry['membership_threshold']}$; "
             f"cluster cosine {chemistry['mag_cluster_cosine']}; "
             f"consensus {chemistry['mag_fingerprint_threshold']}",
@@ -578,7 +590,10 @@ def _generate_code_map() -> str:
     rows = (
         (r"Balanced ETM and $\beta$", r"\texttt{sparse\_etm.py: BalancedSparseETM}"),
         ("Contextual token evidence", r"\texttt{routing\_etm.py: routing\_evidence}"),
-        ("Posterior offset and KL", r"\texttt{routing\_etm.py: encode}"),
+        (
+            "Posterior offset and KL divergence",
+            r"\texttt{routing\_etm.py: encode}",
+        ),
         (r"$1.5$-entmax $\theta$", r"\texttt{sparse\_etm.py: transform\_theta}"),
         (
             "Reconstruction objective",

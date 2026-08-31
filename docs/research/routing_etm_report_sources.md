@@ -26,6 +26,20 @@
 | Recommended next evidence | Discussion: Breadth--quality trade-offs and validation priorities |
 | Further questions | Limitations and validation priorities |
 
+## Reader-facing terminology contract
+
+- Expand uncommon abbreviations at first use in the abstract or main text;
+  repeat the expansion in a figure or table caption when the item should stand
+  alone.
+- Figure 3 defines ETM, Balanced, Contextual and LDA in the caption rather than
+  relying on the experimental-design section.
+- Quantitative table captions define NLL, SOS, effective-topic counts, support
+  and winner counts before the reader interprets their columns.
+- Describe implementation terms by function on first use: MGF as the spectrum
+  file format, CSR as sparse matrix storage, FAISS as vector-similarity search,
+  MACCS as binary molecular-feature fingerprints, and CUDA allocation versus
+  reservation as distinct GPU-memory measurements.
+
 ## Source inventory
 
 | Evidence | Source |
