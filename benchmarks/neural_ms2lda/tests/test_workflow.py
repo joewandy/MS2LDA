@@ -46,6 +46,7 @@ from benchmarks.neural_ms2lda.evaluation import evaluate_neural
 from benchmarks.neural_ms2lda.mag import _connectivity_key, build_filtered_mag_index
 from benchmarks.neural_ms2lda.reproduction_plan import (
     Stage,
+    probability_artifact_paths,
     reproduction_paths,
     stage_plan,
 )
@@ -476,7 +477,8 @@ def test_frozen_etm_is_evaluated_only_after_validation(tmp_path: Path) -> None:
 
 
 def test_clean_reproduction_plan_has_unique_stage_ownership(tmp_path: Path) -> None:
-    stages = stage_plan(reproduction_paths(tmp_path / "reproduction"))
+    paths = reproduction_paths(tmp_path / "reproduction")
+    stages = stage_plan(paths)
     names = [stage.name for stage in stages]
     outputs = [str(path) for stage in stages for path in stage.outputs]
     assert len(stages) == 54
@@ -491,6 +493,15 @@ def test_clean_reproduction_plan_has_unique_stage_ownership(tmp_path: Path) -> N
         "seal_validation_view_contextual_seed_23",
         "seal_validation_view_contextual_seed_37",
     }
+    owned = {path for stage in stages for path in stage.outputs}
+    method_runs = (
+        (paths.controls, "etm"),
+        (paths.controls, "etm_balanced"),
+        (paths.tomotopy, "tomotopy"),
+        *((paths.contextual[seed], "contextual_sparse_etm") for seed in (7043, 23, 37)),
+    )
+    for run, method in method_runs:
+        assert set(probability_artifact_paths(run, method)) <= owned
 
 
 def test_completed_stage_rejects_changed_sealed_output(tmp_path: Path) -> None:

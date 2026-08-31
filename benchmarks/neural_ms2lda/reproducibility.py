@@ -144,20 +144,24 @@ def prepare_validation_view(
         raise ValueError(
             f"validation protocol must specify K={expected_topics}",
         )
-    write_json(destination / "protocol.json", protocol)
+    destination_protocol = destination / "protocol.json"
+    write_json(destination_protocol, protocol)
 
-    linked_sources: list[Path] = []
+    visible_inputs: list[tuple[Path, Path]] = [(protocol_path, destination_protocol)]
     for name in VALIDATION_DATA_FILES:
         source_path = source / "data" / name
-        _ensure_file_link(destination / "data" / name, source_path)
-        linked_sources.append(source_path)
+        linked_path = destination / "data" / name
+        _ensure_file_link(linked_path, source_path)
+        visible_inputs.append((source_path, linked_path))
     features_path = source / "token_features" / "features.npy"
-    _ensure_file_link(destination / "token_features" / "features.npy", features_path)
-    linked_sources.append(features_path)
+    linked_features = destination / "token_features" / "features.npy"
+    _ensure_file_link(linked_features, features_path)
+    visible_inputs.append((features_path, linked_features))
     for name in VALIDATION_MAG_INDEX_FILES:
         source_path = source / "mag" / "index" / name
-        _ensure_file_link(destination / "mag" / "index" / name, source_path)
-        linked_sources.append(source_path)
+        linked_path = destination / "mag" / "index" / name
+        _ensure_file_link(linked_path, source_path)
+        visible_inputs.append((source_path, linked_path))
 
     manifest = {
         "evidence_boundary": "training plus validation only",
@@ -167,10 +171,11 @@ def prepare_validation_view(
         "linked_inputs": [
             {
                 "path": str(path),
+                "linked_path": str(linked_path),
                 "bytes": path.stat().st_size,
                 "sha256": sha256_file(path),
             }
-            for path in [protocol_path, *linked_sources]
+            for path, linked_path in visible_inputs
         ],
     }
     write_json(destination / "validation_input_manifest.json", manifest)

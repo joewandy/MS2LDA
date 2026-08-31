@@ -68,10 +68,7 @@ SUMMARY_FIELDS = (
     "training_wall_seconds",
 )
 COMPACT_MODEL_FILES = (
-    "config.json",
-    "metrics.json",
-    "chemical_validation.json",
-    "chemical_scores.csv",
+    "result.json",
     "training_history.csv",
     "theta_support_summary.csv",
     "routing_evidence_support_summary.csv",
@@ -82,10 +79,7 @@ COMPACT_MODEL_FILES = (
     "provenance.json",
 )
 COMPACT_CONTROL_FILES = (
-    "config.json",
-    "metrics.json",
-    "chemical_validation.json",
-    "chemical_scores.csv",
+    "result.json",
     "training_history.csv",
     "duplicate_component_summary.json",
     "fragment_mass_summary.json",
@@ -100,10 +94,32 @@ def _chemistry_summary(result: Mapping[str, Any]) -> dict[str, Any]:
     if "mag_failures" not in result:
         msg = "fresh chemical evidence lacks explicit MAG exception accounting"
         raise RuntimeError(msg)
+    if result.get("heldout_compounds_excluded_from_mag") is not True:
+        msg = "fresh chemical evidence does not exclude held-out compounds from MAG"
+        raise RuntimeError(msg)
     summary = dict(result["high_confidence_chemistry"])
     summary.pop("topic_scores", None)
     topics = int(result["topics"])
     bands = summary["sos_bands"]
+    eligible = int(summary["eligible_topics"])
+    band_total = sum(
+        int(bands[name])
+        for name in (
+            "high_gt_0_8",
+            "intermediate_0_6_to_0_8",
+            "low_lt_0_6",
+        )
+    )
+    if band_total != eligible:
+        msg = f"SOS bands account for {band_total} motifs but {eligible} are evaluable"
+        raise RuntimeError(msg)
+    failures = result["mag_failures"]
+    for kind in ("clustering", "optimization"):
+        count = int(failures[f"{kind}_count"])
+        topic_ids = failures[f"{kind}_topic_ids"]
+        if count < 0 or count != len(topic_ids):
+            msg = f"MAG {kind} exception count and topic IDs disagree"
+            raise RuntimeError(msg)
     optimized = round(float(result["annotation_coverage"]) * topics)
     summary.update(
         {
@@ -115,6 +131,7 @@ def _chemistry_summary(result: Mapping[str, Any]) -> dict[str, Any]:
                 result["heldout_compounds_excluded_from_mag"],
             ),
             "mag_failures": result["mag_failures"],
+            "sos_band_accounting_valid": True,
             "split": str(result["split"]),
         },
     )
@@ -270,6 +287,10 @@ def _model_row(
         "mag_optimization_failures": int(
             chemistry["mag_failures"]["optimization_count"],
         ),
+        "heldout_compounds_excluded_from_mag": bool(
+            chemistry["heldout_compounds_excluded_from_mag"],
+        ),
+        "sos_band_accounting_valid": bool(chemistry["sos_band_accounting_valid"]),
     }
 
 
@@ -277,9 +298,10 @@ def _validation_model_row(
     label: str,
     training_result: Mapping[str, Any],
     training_metrics: Mapping[str, Any],
+    chemistry_result: Mapping[str, Any],
 ) -> dict[str, object]:
     """Extract the development-split row retained beside final test evidence."""
-    chemistry = training_metrics["validation_chemistry"]
+    chemistry = _chemistry_summary(chemistry_result)
     inventory = training_metrics["topic_inventory"]
     support = training_metrics.get("theta_support", {})
     return {
@@ -318,7 +340,10 @@ def _real_evidence(
     for label, method in (("canonical ETM", "etm"), ("balanced ETM", "etm_balanced")):
         model = paths.controls / "models" / method
         training_result = read_json(model / "result.json")
-        training_metrics = read_json(model / "metrics.json")
+        training_metrics = training_result["metrics"]
+        validation_chemistry = read_json(
+            paths.controls / "validation_chemical" / method / "complete.json",
+        )
         rows.append(
             _model_row(
                 label,
@@ -329,7 +354,12 @@ def _real_evidence(
             ),
         )
         validation_rows.append(
-            _validation_model_row(label, training_result, training_metrics),
+            _validation_model_row(
+                label,
+                training_result,
+                training_metrics,
+                validation_chemistry,
+            ),
         )
 
     seed_rows = []
@@ -337,8 +367,11 @@ def _real_evidence(
     for seed in TRAINING_SEEDS:
         model = paths.contextual[seed] / "models" / METHOD
         training_result = read_json(model / "result.json")
-        training_metrics = read_json(model / "metrics.json")
-        config = read_json(model / "config.json")
+        training_metrics = training_result["metrics"]
+        config = training_result["config"]
+        validation_chemistry = read_json(
+            paths.contextual[seed] / "validation_chemical" / METHOD / "complete.json",
+        )
         if (
             int(config["training_seed"]) != seed
             or int(config["resumed_from_epoch"]) != 0
@@ -386,7 +419,10 @@ def _real_evidence(
             proposed = {
                 "config": config,
                 "metrics": test_metrics,
-                "validation_metrics": training_metrics,
+                "validation_metrics": {
+                    **training_metrics,
+                    "validation_chemistry": _chemistry_summary(validation_chemistry),
+                },
             }
             rows.append(row)
             validation_rows.append(
@@ -394,6 +430,7 @@ def _real_evidence(
                     "Contextual Sparse ETM",
                     training_result,
                     training_metrics,
+                    validation_chemistry,
                 ),
             )
     if proposed is None:
@@ -475,6 +512,12 @@ def _real_evidence(
             "mag_optimization_failures": tomotopy_test_chemistry["mag_failures"][
                 "optimization_count"
             ],
+            "heldout_compounds_excluded_from_mag": bool(
+                tomotopy_test_chemistry["heldout_compounds_excluded_from_mag"],
+            ),
+            "sos_band_accounting_valid": bool(
+                tomotopy_test_chemistry["sos_band_accounting_valid"],
+            ),
         },
     )
     validation_rows.append(
@@ -522,6 +565,10 @@ def _stability(
             ),
             "mag_clustering_failures": int(row["mag_clustering_failures"]),
             "mag_optimization_failures": int(row["mag_optimization_failures"]),
+            "heldout_compounds_excluded_from_mag": bool(
+                row["heldout_compounds_excluded_from_mag"],
+            ),
+            "sos_band_accounting_valid": bool(row["sos_band_accounting_valid"]),
         }
         for row in seed_rows
     ]
@@ -552,6 +599,12 @@ def _stability(
                 row["mag_clustering_failures"] == 0
                 and row["mag_optimization_failures"] == 0
                 for row in by_seed
+            ),
+            "heldout_compounds_excluded_from_mag_on_all_seeds": all(
+                row["heldout_compounds_excluded_from_mag"] for row in by_seed
+            ),
+            "sos_bands_account_for_evaluable_motifs_on_all_seeds": all(
+                row["sos_band_accounting_valid"] for row in by_seed
             ),
             "test_released_only_after_model_freeze": True,
             "primary_seed_exceeds_every_comparator_evaluable": int(
@@ -672,6 +725,40 @@ def _claim_checks(
     return {"all_passed": all(checks.values()), "checks": checks}
 
 
+def _chemical_integrity_checks(
+    comparison: Sequence[Mapping[str, object]],
+    stability: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Apply leakage, SOS-accounting, and MAG-exception gates to every fit."""
+    checks = {
+        "comparison_models_have_zero_mag_exceptions": all(
+            int(row["mag_clustering_failures"]) == 0
+            and int(row["mag_optimization_failures"]) == 0
+            for row in comparison
+        ),
+        "all_contextual_seeds_have_zero_mag_exceptions": bool(
+            stability["direction_checks"]["zero_mag_exceptions_on_all_seeds"],
+        ),
+        "comparison_models_exclude_heldout_compounds_from_mag": all(
+            bool(row["heldout_compounds_excluded_from_mag"]) for row in comparison
+        ),
+        "all_contextual_seeds_exclude_heldout_compounds_from_mag": bool(
+            stability["direction_checks"][
+                "heldout_compounds_excluded_from_mag_on_all_seeds"
+            ],
+        ),
+        "comparison_model_sos_bands_account_for_evaluable_motifs": all(
+            bool(row["sos_band_accounting_valid"]) for row in comparison
+        ),
+        "all_contextual_seed_sos_bands_account_for_evaluable_motifs": bool(
+            stability["direction_checks"][
+                "sos_bands_account_for_evaluable_motifs_on_all_seeds"
+            ],
+        ),
+    }
+    return {"all_passed": all(checks.values()), "checks": checks}
+
+
 def _copy_compact(source: Path, destination: Path, names: Sequence[str]) -> None:
     """Copy required compact files and fail on omissions."""
     destination.mkdir(parents=True, exist_ok=True)
@@ -722,6 +809,10 @@ def _copy_model_evidence(
     shutil.copy2(
         run / "chemical" / method / "complete.json",
         destination / "test_chemical.json",
+    )
+    shutil.copy2(
+        run / "validation_chemical" / method / "complete.json",
+        destination / "validation_chemical.json",
     )
     for name in ("validation_input_manifest.json", "test_input_manifest.json"):
         shutil.copy2(run / name, destination / name)
@@ -882,20 +973,17 @@ def _build_package(
     )
     stability = _stability(seed_rows, comparison)
     claims = _claim_checks(comparison, stability, high_k)
-    zero_mag_failures = all(
-        int(row["mag_clustering_failures"]) == 0
-        and int(row["mag_optimization_failures"]) == 0
-        for row in comparison
-    )
+    chemical_integrity = _chemical_integrity_checks(comparison, stability)
+    chemical_integrity_passed = chemical_integrity["all_passed"]
     data_quality = {
-        "status": "pass" if zero_mag_failures else "fail",
+        "status": "pass" if chemical_integrity_passed else "fail",
         "exact_data_checks": data_checks,
         "validation_views": validation_views,
         "probability_matrices": probability,
-        "zero_mag_exceptions": zero_mag_failures,
+        "chemical_integrity": chemical_integrity,
     }
-    if not zero_mag_failures:
-        msg = "MAG exceptions make the clean reproduction incomplete"
+    if not chemical_integrity_passed:
+        msg = "chemical integrity checks make the clean reproduction incomplete"
         raise RuntimeError(msg)
 
     evidence = {

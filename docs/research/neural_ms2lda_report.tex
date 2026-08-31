@@ -682,8 +682,11 @@ the channel-balanced decoder and then the complete contextual sparse posterior.
 The two ETM baselines use the same 48-dimensional embeddings, two-layer
 800-unit encoder, $K=1000$, raw pseudo-count objective, Adam settings, batch
 size, 120 epochs and training seed 7043. Tomotopy uses $K=1000$,
-$\alpha=0.6$, $\eta=0.1$, six workers, parallel scheme 3 and 750 training
-iterations; validation and test inference use 100 iterations and parallel scheme 1.
+$\alpha=0.6$, $\eta=0.1$, \TomotopyWorkers{} workers and parallel scheme
+\TomotopyParallelScheme{}. It trains until convergence or
+\TomotopyMaximumIterations{} iterations, ending at
+\TomotopyTrainingIterations{} iterations in this run; validation and test
+inference use \TomotopyInferenceIterations{} iterations and parallel scheme 1.
 
 Initialization robustness is assessed by repeating the proposed model with
 training seeds 7043, 23 and 37. The data split, vocabulary, SGNS embeddings,
@@ -766,8 +769,9 @@ reduces both recovery measures and uses fewer planted components. Thus sparsity
 alone is not the successful mechanism.
 
 Combining contextual evidence with $1.5$-entmax yields the strongest mean
-$\beta$ and $\theta$ recovery, retains a median of two effective topics per
-spectrum, and uses 13 distinct topics as winners, consistent with the
+$\beta$ and $\theta$ recovery, retains a median of
+\SyntheticContextualMedianEffective{} effective topics per spectrum, and uses
+\SyntheticContextualUniqueTopOne{} distinct topics as winners, consistent with the
 one-to-three motif simulator. Its completion NLL is slightly worse than the
 context-plus-softmax variant, so the evidence supports complementarity rather
 than uniform dominance: context preserves and disambiguates the topic inventory,
@@ -792,11 +796,14 @@ Formulation & NLL & Beta & Theta & Median eff. & Active & Unique top-1 \\
 \end{table}
 
 The high-overcompleteness experiment strengthens this interpretation. At
-$K=128$, entmax without context has exact support two but uses only three of the
-18 planted motifs as winners. Contextual Sparse ETM keeps exact support two,
-recovers all 18 planted motifs as distinct winners, achieves beta/theta recovery
-0.6638/0.9556 and dominant-motif accuracy 0.9313, and gives the lowest completion
-NLL of the three high-$K$ formulations.
+$K=128$, entmax without context has median exact support
+\HighKEntmaxMedianSupport{} but uses only \HighKEntmaxUniqueTopOne{} of the 18
+planted motifs as winners. Contextual Sparse ETM keeps median exact support
+\HighKContextualMedianSupport{}, recovers \HighKContextualUniqueTopOne{} planted
+motifs as distinct winners, achieves beta/theta recovery
+\HighKContextualBetaRecovery{}/\HighKContextualThetaRecovery{} and dominant-motif
+accuracy \HighKContextualDominantAccuracy{}, and gives the lowest completion NLL
+of the three high-$K$ formulations.
 
 \begin{table}[H]
 \centering
@@ -1017,11 +1024,10 @@ Seed & Optimized & Evaluable & Useful & Mean SOS & Median SOS & NLL & Median eff
 }
 \end{table}
 
-The NLL and sparsity ranges test whether the mechanism is specific to one
-initialization. Chemical scores vary more than predictive fit across seeds.
-This pattern is consistent with a breadth--quality trade-off and motivates
-reporting motif counts together with the SOS distribution rather than reducing
-performance to one average.
+The NLL, sparsity and chemical-score ranges test whether the mechanism is
+specific to one initialization. Their joint variation motivates reporting motif
+counts together with the SOS distribution and predictive fit rather than
+reducing performance to one average.
 
 \subsection{Sparse spectrum mixtures, broad topic use and computational cost}
 
@@ -1194,7 +1200,7 @@ SHA-256 file checksums. The compact evidence bundle includes separate validation
 and frozen-model test results together with manifests proving that test inputs
 were released only after fitting and validation were complete.
 
-Every numerical fragment in this report is generated from frozen
+Every paper-facing result table and result macro is generated from frozen
 machine-readable evidence files in JavaScript Object Notation (JSON) and
 comma-separated values (CSV) formats:
 \begin{verbatim}

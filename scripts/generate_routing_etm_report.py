@@ -26,6 +26,20 @@ EXPECTED_METHOD = "contextual_sparse_etm"
 EXPECTED_TRAINING_SEEDS = [7043, 23, 37]
 EXPECTED_SYNTHETIC_FORMULATIONS = 4
 EXPECTED_HIGH_K_ROWS = 3
+BALANCED_SOFTMAX = "balanced ETM softmax raw"
+BALANCED_ENTMAX = "balanced ETM plus entmax15"
+CONTEXT_SOFTMAX = "balanced ETM plus top-2-context routing and softmax"
+CONTEXT_ENTMAX = "balanced ETM plus top-2-context routing and entmax15"
+EXPECTED_OUTPUTS = {
+    "routing_etm_macros.tex",
+    "routing_etm_synthetic_table.tex",
+    "routing_etm_high_k_table.tex",
+    "routing_etm_test_table.tex",
+    "routing_etm_stability_table.tex",
+    "routing_etm_diagnostics_table.tex",
+    "routing_etm_hyperparameters_table.tex",
+    "routing_etm_code_table.tex",
+}
 
 
 def _json(path: Path) -> dict[str, Any]:
@@ -57,6 +71,117 @@ def _validate_package_integrity(root: Path, checkpoint: dict[str, Any]) -> None:
         ):
             msg = f"packaged evidence changed after sealing: {path}"
             raise ValueError(msg)
+
+
+def _require_reportable_claims(acceptance: dict[str, Any]) -> None:
+    """Stop stale affirmative prose when a predeclared direction does not hold.
+
+    The evidence package remains a valid record of a failed scientific
+    hypothesis.  The current manuscript, however, contains prose interpreting
+    the predeclared directions as observed, so it must not be regenerated until
+    that prose has been revised to match the evidence.
+    """
+    if acceptance.get("all_passed") is not True:
+        failed = sorted(
+            name for name, passed in acceptance.get("checks", {}).items() if not passed
+        )
+        msg = (
+            "directional claims failed; revise the report before rendering: "
+            + ", ".join(
+                failed,
+            )
+        )
+        raise ValueError(msg)
+
+
+def _require_manuscript_claims(evidence: dict[str, Any]) -> None:
+    """Verify every data-dependent comparison stated by the static manuscript."""
+    comparison = evidence["comparison"]
+    canonical = comparison["canonical ETM"]
+    balanced = comparison["balanced ETM"]
+    contextual = comparison["Contextual Sparse ETM"]
+    tomotopy = comparison["Tomotopy LDA"]
+    synthetic = {row["formulation"]: row for row in evidence["synthetic"]}
+    high_k = {row["formulation"]: row for row in evidence["high_k"]}
+    base = synthetic[BALANCED_SOFTMAX]
+    sparse = synthetic[BALANCED_ENTMAX]
+    context_dense = synthetic[CONTEXT_SOFTMAX]
+    complete = synthetic[CONTEXT_ENTMAX]
+    high_complete = high_k[CONTEXT_ENTMAX]
+
+    checks = {
+        "k36_context_improves_beta": _float(context_dense, "mean_true_beta_cosine")
+        > _float(base, "mean_true_beta_cosine"),
+        "k36_context_improves_theta": _float(context_dense, "mean_true_theta_cosine")
+        > _float(base, "mean_true_theta_cosine"),
+        "k36_context_improves_nll": _float(context_dense, "mean_nll")
+        < _float(base, "mean_nll"),
+        "k36_context_uses_more_winners": _float(
+            context_dense,
+            "mean_unique_top1_topics",
+        )
+        > _float(base, "mean_unique_top1_topics"),
+        "k36_entmax_alone_reduces_beta": _float(sparse, "mean_true_beta_cosine")
+        < _float(base, "mean_true_beta_cosine"),
+        "k36_entmax_alone_reduces_theta": _float(sparse, "mean_true_theta_cosine")
+        < _float(base, "mean_true_theta_cosine"),
+        "k36_entmax_alone_uses_fewer_winners": _float(
+            sparse,
+            "mean_unique_top1_topics",
+        )
+        < _float(base, "mean_unique_top1_topics"),
+        "k36_complete_has_strongest_beta": _float(
+            complete,
+            "mean_true_beta_cosine",
+        )
+        == max(_float(row, "mean_true_beta_cosine") for row in synthetic.values()),
+        "k36_complete_has_strongest_theta": _float(
+            complete,
+            "mean_true_theta_cosine",
+        )
+        == max(_float(row, "mean_true_theta_cosine") for row in synthetic.values()),
+        "k36_complete_nll_is_worse_than_context_softmax": _float(complete, "mean_nll")
+        > _float(context_dense, "mean_nll"),
+        "high_k_complete_has_lowest_nll": _float(high_complete, "nll")
+        == min(_float(row, "nll") for row in high_k.values()),
+        "balancing_raises_optimized_motifs": _integer(balanced, "optimized_motifs")
+        > _integer(canonical, "optimized_motifs"),
+        "balancing_raises_evaluable_motifs": _integer(balanced, "evaluable_motifs")
+        > _integer(canonical, "evaluable_motifs"),
+        "balancing_raises_useful_motifs": _integer(balanced, "useful_motifs")
+        > _integer(canonical, "useful_motifs"),
+        "contextual_mean_sos_exceeds_both_etm_controls": _float(
+            contextual,
+            "mean_sos",
+        )
+        > max(_float(canonical, "mean_sos"), _float(balanced, "mean_sos")),
+        "contextual_has_fewer_optimized_motifs_than_balanced": _integer(
+            contextual,
+            "optimized_motifs",
+        )
+        < _integer(balanced, "optimized_motifs"),
+        "contextual_nll_is_lower_than_tomotopy": _float(contextual, "completion_nll")
+        < _float(tomotopy, "completion_nll"),
+        "etm_controls_have_more_effective_topics": min(
+            _float(canonical, "median_effective_topics"),
+            _float(balanced, "median_effective_topics"),
+        )
+        > _float(contextual, "median_effective_topics"),
+        "etm_controls_have_fewer_unique_winners": max(
+            _integer(canonical, "unique_top1_topics"),
+            _integer(balanced, "unique_top1_topics"),
+        )
+        < _integer(contextual, "unique_top1_topics"),
+    }
+    failed = sorted(name for name, passed in checks.items() if not passed)
+    if failed:
+        msg = (
+            "manuscript result prose is not supported by fresh evidence: "
+            + ", ".join(
+                failed,
+            )
+        )
+        raise ValueError(msg)
 
 
 def _csv(path: Path) -> list[dict[str, str]]:
@@ -103,11 +228,31 @@ def _tex_scientific(value: float) -> str:
     return rf"{coefficient:.3g}\times10^{{{exponent}}}"
 
 
-def _write(output: Path, name: str, lines: list[str]) -> str:
+def _render(name: str, lines: list[str]) -> tuple[str, str]:
+    """Render one complete TeX fragment in memory without touching the output."""
+    return name, "\n".join(lines) + "\n"
+
+
+def _publish_artifacts(output: Path, artifacts: list[tuple[str, str]]) -> list[str]:
+    """Publish a fully rendered, complete fragment set through atomic file moves."""
+    names = [name for name, _ in artifacts]
+    if len(names) != len(set(names)) or set(names) != EXPECTED_OUTPUTS:
+        msg = "rendered report fragment set is incomplete or ambiguous"
+        raise ValueError(msg)
     output.mkdir(parents=True, exist_ok=True)
-    path = output / name
-    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    return str(path.resolve())
+    temporary_paths: list[tuple[Path, Path]] = []
+    try:
+        for name, content in artifacts:
+            target = output / name
+            temporary = output / f".{name}.tmp"
+            temporary.write_text(content, encoding="utf-8")
+            temporary_paths.append((temporary, target))
+        for temporary, target in temporary_paths:
+            temporary.replace(target)
+    finally:
+        for temporary, _ in temporary_paths:
+            temporary.unlink(missing_ok=True)
+    return [str((output / name).resolve()) for name in names]
 
 
 def _bold_if(value: str, *, condition: bool) -> str:
@@ -142,6 +287,7 @@ def _validate_and_load(  # noqa: C901, PLR0912, PLR0915
     if checkpoint["acceptance_all_passed"] is not acceptance["all_passed"]:
         msg = "checkpoint and detailed claim checks disagree"
         raise ValueError(msg)
+    _require_reportable_claims(acceptance)
     if data_quality["status"] != "pass":
         msg = "fresh evidence did not pass data-quality checks"
         raise ValueError(msg)
@@ -242,7 +388,7 @@ def _validate_and_load(  # noqa: C901, PLR0912, PLR0915
         msg = "high-K planted topic count changed"
         raise ValueError(msg)
 
-    return {
+    evidence = {
         "preparation": preparation,
         "protocol": protocol,
         "config": config,
@@ -255,9 +401,11 @@ def _validate_and_load(  # noqa: C901, PLR0912, PLR0915
         "tomotopy_nll": tomotopy_nll,
         "evidence_root": root,
     }
+    _require_manuscript_claims(evidence)
+    return evidence
 
 
-def _generate_macros(evidence: dict[str, Any], output: Path) -> str:
+def _generate_macros(evidence: dict[str, Any]) -> tuple[str, str]:
     preparation = evidence["preparation"]
     data = preparation["data"]
     metrics = evidence["metrics"]
@@ -274,6 +422,13 @@ def _generate_macros(evidence: dict[str, Any], output: Path) -> str:
     memory = runtime["memory"]
     aggregate = stability["aggregate"]
     training_wall = aggregate["training_wall_seconds"]
+    synthetic = {row["formulation"]: row for row in evidence["synthetic"]}
+    high_k = {row["formulation"]: row for row in evidence["high_k"]}
+    synthetic_complete = synthetic[CONTEXT_ENTMAX]
+    high_k_sparse = high_k[BALANCED_ENTMAX]
+    high_k_complete = high_k[CONTEXT_ENTMAX]
+    tomotopy_training = evidence["tomotopy"]["training"]
+    tomotopy_config = evidence["protocol"]["tomotopy"]
 
     def pct(numerator: float, denominator: float) -> str:
         return f"{100.0 * numerator / denominator:.1f}\\%"
@@ -372,15 +527,45 @@ def _generate_macros(evidence: dict[str, Any], output: Path) -> str:
         "MinimumSystemAvailableGB": (
             f"{memory['minimum_system_available_bytes'] / 1e9:.2f}"
         ),
+        "TomotopyTrainingIterations": tomotopy_training["training_iterations"],
+        "TomotopyMaximumIterations": tomotopy_config["maximum_iterations"],
+        "TomotopyInferenceIterations": tomotopy_config["inference_iterations"],
+        "TomotopyParallelScheme": tomotopy_config["parallel"],
+        "TomotopyWorkers": evidence["protocol"]["cpu_threads"],
+        "SyntheticContextualMedianEffective": (
+            f"{_float(synthetic_complete, 'mean_median_effective_topics'):.2f}"
+        ),
+        "SyntheticContextualUniqueTopOne": (
+            f"{_float(synthetic_complete, 'mean_unique_top1_topics'):.2f}"
+        ),
+        "HighKEntmaxMedianSupport": (
+            f"{_float(high_k_sparse, 'median_exact_support'):.0f}"
+        ),
+        "HighKEntmaxUniqueTopOne": _integer(high_k_sparse, "unique_top1_topics"),
+        "HighKContextualMedianSupport": (
+            f"{_float(high_k_complete, 'median_exact_support'):.0f}"
+        ),
+        "HighKContextualUniqueTopOne": _integer(
+            high_k_complete,
+            "unique_top1_topics",
+        ),
+        "HighKContextualBetaRecovery": (
+            f"{_float(high_k_complete, 'true_beta_cosine'):.4f}"
+        ),
+        "HighKContextualThetaRecovery": (
+            f"{_float(high_k_complete, 'true_theta_cosine'):.4f}"
+        ),
+        "HighKContextualDominantAccuracy": (
+            f"{_float(high_k_complete, 'top_motif_accuracy'):.4f}"
+        ),
     }
-    return _write(
-        output,
+    return _render(
         "routing_etm_macros.tex",
         [_command(name, value) for name, value in values.items()],
     )
 
 
-def _generate_synthetic_table(evidence: dict[str, Any], output: Path) -> str:
+def _generate_synthetic_table(evidence: dict[str, Any]) -> tuple[str, str]:
     labels = {
         "balanced ETM softmax raw": "Balanced ETM + softmax",
         "balanced ETM plus entmax15": r"Balanced ETM + $1.5$-entmax",
@@ -409,10 +594,10 @@ def _generate_synthetic_table(evidence: dict[str, Any], output: Path) -> str:
             + r" \\",
         )
     lines.append(r"\bottomrule")
-    return _write(output, "routing_etm_synthetic_table.tex", lines)
+    return _render("routing_etm_synthetic_table.tex", lines)
 
 
-def _generate_high_k_table(evidence: dict[str, Any], output: Path) -> str:
+def _generate_high_k_table(evidence: dict[str, Any]) -> tuple[str, str]:
     labels = {
         "balanced ETM softmax raw": "Balanced ETM + softmax",
         "balanced ETM plus entmax15": r"Balanced ETM + $1.5$-entmax",
@@ -439,10 +624,10 @@ def _generate_high_k_table(evidence: dict[str, Any], output: Path) -> str:
             + r" \\",
         )
     lines.append(r"\bottomrule")
-    return _write(output, "routing_etm_high_k_table.tex", lines)
+    return _render("routing_etm_high_k_table.tex", lines)
 
 
-def _generate_test_table(evidence: dict[str, Any], output: Path) -> str:
+def _generate_test_table(evidence: dict[str, Any]) -> tuple[str, str]:
     comparison = evidence["comparison"]
     tomotopy = evidence["tomotopy"]["test"]
     rows = [
@@ -492,10 +677,10 @@ def _generate_test_table(evidence: dict[str, Any], output: Path) -> str:
             )
         lines.append(" & ".join(rendered) + r" \\")
     lines.append(r"\bottomrule")
-    return _write(output, "routing_etm_test_table.tex", lines)
+    return _render("routing_etm_test_table.tex", lines)
 
 
-def _generate_stability_table(evidence: dict[str, Any], output: Path) -> str:
+def _generate_stability_table(evidence: dict[str, Any]) -> tuple[str, str]:
     stability = evidence["stability"]
     lines = [
         (
@@ -543,10 +728,10 @@ def _generate_stability_table(evidence: dict[str, Any], output: Path) -> str:
         + r" \\",
     )
     lines.append(r"\bottomrule")
-    return _write(output, "routing_etm_stability_table.tex", lines)
+    return _render("routing_etm_stability_table.tex", lines)
 
 
-def _generate_diagnostics_table(evidence: dict[str, Any], output: Path) -> str:
+def _generate_diagnostics_table(evidence: dict[str, Any]) -> tuple[str, str]:
     comparison = evidence["comparison"]
     labels = (
         ("canonical ETM", "Canonical ETM"),
@@ -572,10 +757,10 @@ def _generate_diagnostics_table(evidence: dict[str, Any], output: Path) -> str:
             + r" \\",
         )
     lines.append(r"\bottomrule")
-    return _write(output, "routing_etm_diagnostics_table.tex", lines)
+    return _render("routing_etm_diagnostics_table.tex", lines)
 
 
-def _generate_hyperparameters(evidence: dict[str, Any], output: Path) -> str:
+def _generate_hyperparameters(evidence: dict[str, Any]) -> tuple[str, str]:
     config = evidence["config"]
     protocol = evidence["protocol"]
     preparation = evidence["preparation"]
@@ -654,14 +839,13 @@ def _generate_hyperparameters(evidence: dict[str, Any], output: Path) -> str:
             f"consensus {chemistry['mag_fingerprint_threshold']}",
         ),
     )
-    return _write(
-        output,
+    return _render(
         "routing_etm_hyperparameters_table.tex",
         [f"{name} & {value} \\\\" for name, value in rows] + [r"\bottomrule"],
     )
 
 
-def _generate_code_map(output: Path) -> str:
+def _generate_code_map() -> tuple[str, str]:
     rows = (
         (
             r"Channel-balanced $\beta$ (Eq.~\ref{eq:beta})",
@@ -717,8 +901,7 @@ def _generate_code_map(output: Path) -> str:
             r"\texttt{package\_contextual\_sparse\_etm\_reproduction.py}",
         ),
     )
-    return _write(
-        output,
+    return _render(
         "routing_etm_code_table.tex",
         [f"{name} & {location} \\\\" for name, location in rows] + [r"\bottomrule"],
     )
@@ -730,16 +913,17 @@ def generate(
 ) -> dict[str, Any]:
     """Validate frozen evidence and regenerate every canonical paper fragment."""
     evidence = _validate_and_load(evidence_root)
-    outputs = [
-        _generate_macros(evidence, output),
-        _generate_synthetic_table(evidence, output),
-        _generate_high_k_table(evidence, output),
-        _generate_test_table(evidence, output),
-        _generate_stability_table(evidence, output),
-        _generate_diagnostics_table(evidence, output),
-        _generate_hyperparameters(evidence, output),
-        _generate_code_map(output),
+    artifacts = [
+        _generate_macros(evidence),
+        _generate_synthetic_table(evidence),
+        _generate_high_k_table(evidence),
+        _generate_test_table(evidence),
+        _generate_stability_table(evidence),
+        _generate_diagnostics_table(evidence),
+        _generate_hyperparameters(evidence),
+        _generate_code_map(),
     ]
+    outputs = _publish_artifacts(output, artifacts)
     return {
         "status": "generated",
         "method": EXPECTED_METHOD,

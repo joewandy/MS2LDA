@@ -31,11 +31,12 @@ def _file_record(path: Path) -> dict[str, object]:
     }
 
 
-def _model_file(run: Path, method: str) -> Path:
-    """Resolve the frozen fitted-model artifact for one method."""
+def _model_files(run: Path, method: str) -> tuple[Path, ...]:
+    """Resolve every model-side artifact that must remain frozen for test use."""
     if method == "tomotopy":
-        return run / "tomotopy/model.bin"
-    return run / "models" / method / "weights.pt"
+        return (run / "tomotopy/model.bin",)
+    output = run / "models" / method
+    return (output / "weights.pt", output / "config.json", output / "result.json")
 
 
 def verify_released_model(
@@ -50,10 +51,32 @@ def verify_released_model(
     if method not in manifest.get("methods", []):
         msg = f"method was not frozen when test inputs were released: {method}"
         raise RuntimeError(msg)
+    expected_files = {
+        path.expanduser().resolve(strict=True) for path in _model_files(run, method)
+    }
+    method_records = [
+        row for row in manifest.get("frozen_models", []) if row.get("method") == method
+    ]
+    recorded_files = {
+        Path(row["path"]).expanduser().resolve(strict=True) for row in method_records
+    }
+    if recorded_files != expected_files:
+        msg = f"test-release manifest has incomplete frozen inputs for {method}"
+        raise RuntimeError(msg)
+    for row in method_records:
+        path = Path(row["path"]).expanduser().resolve(strict=True)
+        if int(row["bytes"]) != path.stat().st_size or str(
+            row["sha256"],
+        ) != sha256_file(
+            path,
+        ):
+            msg = f"frozen model changed after test release: {path}"
+            raise RuntimeError(msg)
+
     resolved_model = model_path.expanduser().resolve(strict=True)
     matches = [
         row
-        for row in manifest.get("frozen_models", [])
+        for row in method_records
         if Path(row["path"]).resolve(strict=True) == resolved_model
     ]
     if len(matches) != 1:
@@ -88,16 +111,19 @@ def expose_test_view(
     frozen_models = []
     validation_outputs = []
     for method in methods:
-        model = _model_file(run, method)
         evaluation = run / "validation_evaluation" / method / "complete.json"
         chemistry = run / "validation_chemical" / method / "complete.json"
-        for path in (model, evaluation, chemistry):
+        model_files = _model_files(run, method)
+        for path in (*model_files, evaluation, chemistry):
             if not path.is_file():
                 msg = f"test exposure requires completed validation artifact: {path}"
                 raise FileNotFoundError(
                     msg,
                 )
-        frozen_models.append(_file_record(model))
+        for model_file in model_files:
+            record = _file_record(model_file)
+            record["method"] = method
+            frozen_models.append(record)
         validation_outputs.extend((_file_record(evaluation), _file_record(chemistry)))
 
     linked_inputs = []
@@ -109,7 +135,9 @@ def expose_test_view(
             raise FileExistsError(msg)
         source.resolve(strict=True)
         destination.symlink_to(source)
-        linked_inputs.append(_file_record(source))
+        record = _file_record(source)
+        record["linked_path"] = str(destination)
+        linked_inputs.append(record)
 
     result = {
         "split": "test",

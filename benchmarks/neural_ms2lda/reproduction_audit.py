@@ -15,6 +15,7 @@ from benchmarks.neural_ms2lda.reproducibility import validate_probability_matrix
 from benchmarks.neural_ms2lda.reproduction_plan import (
     METHOD,
     TRAINING_SEEDS,
+    probability_artifact_paths,
     reproduction_paths,
     stage_plan,
 )
@@ -45,9 +46,15 @@ def write_json(path: Path, value: Mapping[str, Any]) -> None:
 
 
 def write_csv(path: Path, rows: Sequence[Mapping[str, object]]) -> None:
-    """Write one deterministic compact table."""
+    """Write one deterministic compact table, including heterogeneous rows.
+
+    Result tables deliberately mix shared comparison fields with method-specific
+    diagnostics.  Preserve the first-seen column order while taking the union of
+    every row's keys so a later method cannot be rejected or silently truncated.
+    Missing values are emitted as empty CSV cells by :class:`csv.DictWriter`.
+    """
     path.parent.mkdir(parents=True, exist_ok=True)
-    fieldnames = list(rows[0]) if rows else []
+    fieldnames = list(dict.fromkeys(key for row in rows for key in row))
     with path.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=fieldnames)
         if fieldnames:
@@ -130,6 +137,29 @@ def _manifest_identity(manifest: Mapping[str, Any]) -> list[tuple[str, int, str]
     ]
 
 
+def verify_linked_inputs(
+    manifest: Mapping[str, Any],
+    *,
+    field: str,
+) -> None:
+    """Re-hash source and model-visible paths recorded by one input manifest."""
+    for row in manifest[field]:
+        if "linked_path" not in row:
+            msg = f"{field} row lacks its model-visible linked path"
+            raise RuntimeError(msg)
+        expected_size = int(row["bytes"])
+        expected_digest = str(row["sha256"])
+        for key in ("path", "linked_path"):
+            path = Path(row[key])
+            if (
+                not path.is_file()
+                or path.stat().st_size != expected_size
+                or sha256_file(path) != expected_digest
+            ):
+                msg = f"manifest-owned input changed: {path}"
+                raise RuntimeError(msg)
+
+
 def validate_model_views(root: Path) -> dict[str, Any]:
     """Prove identical inputs and verify that test followed model freezing."""
     paths = reproduction_paths(root)
@@ -147,6 +177,7 @@ def validate_model_views(root: Path) -> dict[str, Any]:
         if validation_manifest.get("candidate_test_artifacts_accessed") is not False:
             msg = f"{name} does not preserve the validation boundary"
             raise RuntimeError(msg)
+        verify_linked_inputs(validation_manifest, field="linked_inputs")
         identity = _manifest_identity(validation_manifest)
         if reference is None:
             reference = identity
@@ -158,6 +189,7 @@ def validate_model_views(root: Path) -> dict[str, Any]:
         if test_manifest.get("exposed_after_validation") is not True:
             msg = f"{name} test release was not validation-gated"
             raise RuntimeError(msg)
+        verify_linked_inputs(test_manifest, field="linked_test_inputs")
         test_identity = [
             (Path(row["path"]).name, int(row["bytes"]), str(row["sha256"]))
             for row in test_manifest["linked_test_inputs"]
@@ -172,7 +204,11 @@ def validate_model_views(root: Path) -> dict[str, Any]:
             *test_manifest["completed_validation_outputs"],
         ):
             path = Path(row["path"])
-            if sha256_file(path) != row["sha256"]:
+            if (
+                not path.is_file()
+                or path.stat().st_size != int(row["bytes"])
+                or sha256_file(path) != row["sha256"]
+            ):
                 msg = f"frozen artifact changed after test release: {path}"
                 raise RuntimeError(msg)
     return {
@@ -205,11 +241,7 @@ def probability_audit(root: Path) -> dict[str, Any]:
     }
     rows = []
     for label, (run, method) in methods.items():
-        validation = run / "validation_evaluation" / method
-        test = run / "evaluation" / method
-        beta_path = validation / "beta.npy"
-        theta_path = validation / "validation_full_theta.npy"
-        test_theta_path = test / "test_full_theta.npy"
+        beta_path, theta_path, test_theta_path = probability_artifact_paths(run, method)
         beta = np.load(beta_path, mmap_mode="r")
         theta = np.load(theta_path, mmap_mode="r")
         test_theta = np.load(test_theta_path, mmap_mode="r")

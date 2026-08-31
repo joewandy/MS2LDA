@@ -402,6 +402,8 @@ def run_chemical_scoring(
         data_root=data_root,
         protocol=protocol,
     )
+    if "mag_failures" not in annotation:
+        raise RuntimeError("MAG annotation evidence lacks explicit failure accounting")
     summary = _topic_scores(
         theta=theta,
         records=records,
@@ -420,15 +422,7 @@ def run_chemical_scoring(
         "heldout_compounds_excluded_from_mag": annotation[
             "heldout_compounds_excluded_from_mag"
         ],
-        "mag_failures": annotation.get(
-            "mag_failures",
-            {
-                "clustering_count": 0,
-                "clustering_topic_ids": [],
-                "optimization_count": 0,
-                "optimization_topic_ids": [],
-            },
-        ),
+        "mag_failures": annotation["mag_failures"],
     }
     write_json(output / "complete.json", result)
     return result

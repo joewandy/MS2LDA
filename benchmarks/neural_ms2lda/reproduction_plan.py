@@ -166,6 +166,58 @@ def _synthetic_stage(
     return Stage(f"synthetic_{name}", command, (result,))
 
 
+def probability_artifact_paths(run: Path, method: str) -> tuple[Path, Path, Path]:
+    """Return the beta, validation-theta, and test-theta files used by the paper."""
+    return (
+        run / "validation_evaluation" / method / "beta.npy",
+        run / "validation_evaluation" / method / "validation_full_theta.npy",
+        run / "evaluation" / method / "test_full_theta.npy",
+    )
+
+
+def _etm_training_outputs(run: Path, method: str) -> tuple[Path, ...]:
+    """Return immutable ETM training and validation artifacts used downstream."""
+    model = run / "models" / method
+    beta, validation_theta, _ = probability_artifact_paths(run, method)
+    return (
+        model / "result.json",
+        model / "weights.pt",
+        model / "config.json",
+        model / "training_history.csv",
+        model / "top_words.csv",
+        model / "fragment_mass_summary.json",
+        model / "duplicate_component_summary.json",
+        model / "validation_access_audit.json",
+        run / "validation_evaluation" / method / "complete.json",
+        beta,
+        validation_theta,
+    )
+
+
+def _contextual_training_outputs(run: Path) -> tuple[Path, ...]:
+    """Return immutable Contextual Sparse ETM artifacts used downstream."""
+    model = run / "models" / METHOD
+    return (
+        *_etm_training_outputs(run, METHOD),
+        model / "theta_support_summary.csv",
+        model / "routing_evidence_support_summary.csv",
+        model / "provenance.json",
+    )
+
+
+def _etm_test_outputs(run: Path, method: str) -> tuple[Path, ...]:
+    """Return every frozen-test ETM artifact used by audit or packaging."""
+    output = run / "evaluation" / method
+    _, _, test_theta = probability_artifact_paths(run, method)
+    return (
+        output / "complete.json",
+        output / "test_access_audit.json",
+        output / "beta.npy",
+        output / "test_observed_theta.npy",
+        test_theta,
+    )
+
+
 def _validated_stage_plan(stages: list[Stage]) -> list[Stage]:
     """Reject ambiguous stage names or multiply owned output artifacts."""
     names = [stage.name for stage in stages]
@@ -212,6 +264,7 @@ def stage_plan(paths: ReproductionPaths) -> list[Stage]:
             ),
             (
                 paths.prepared / "comparison_preparation.json",
+                paths.prepared / "protocol.json",
                 paths.prepared / "data/complete.json",
                 paths.prepared / "token_features/complete.json",
             ),
@@ -270,7 +323,7 @@ def stage_plan(paths: ReproductionPaths) -> list[Stage]:
                 "--training-seed",
                 "7043",
             ),
-            (paths.smoke / "models" / METHOD / "result.json",),
+            _contextual_training_outputs(paths.smoke),
             requires_idle_system=True,
         ),
     )
@@ -315,7 +368,14 @@ def stage_plan(paths: ReproductionPaths) -> list[Stage]:
                     "--run",
                     str(paths.tomotopy),
                 ),
-                (paths.tomotopy / "tomotopy/validation_only_result.json",),
+                (
+                    paths.tomotopy / "tomotopy/validation_only_result.json",
+                    paths.tomotopy / "tomotopy/model.bin",
+                    paths.tomotopy / "tomotopy/complete.json",
+                    paths.tomotopy / "tomotopy/validation_access_audit.json",
+                    paths.tomotopy / "validation_evaluation/tomotopy/complete.json",
+                    *probability_artifact_paths(paths.tomotopy, "tomotopy")[:2],
+                ),
                 requires_idle_system=True,
             ),
             Stage(
@@ -349,7 +409,7 @@ def stage_plan(paths: ReproductionPaths) -> list[Stage]:
                     "--etm-batch-size",
                     "256",
                 ),
-                (paths.controls / "models/etm/result.json",),
+                _etm_training_outputs(paths.controls, "etm"),
                 requires_idle_system=True,
             ),
             Stage(
@@ -382,7 +442,7 @@ def stage_plan(paths: ReproductionPaths) -> list[Stage]:
                     "--etm-batch-size",
                     "256",
                 ),
-                (paths.controls / "models/etm_balanced/result.json",),
+                _etm_training_outputs(paths.controls, "etm_balanced"),
                 requires_idle_system=True,
             ),
             Stage(
@@ -423,7 +483,7 @@ def stage_plan(paths: ReproductionPaths) -> list[Stage]:
                         "--training-seed",
                         str(seed),
                     ),
-                    (run / "models" / METHOD / "result.json",),
+                    _contextual_training_outputs(run),
                     requires_idle_system=True,
                 ),
                 Stage(
@@ -511,7 +571,7 @@ def stage_plan(paths: ReproductionPaths) -> list[Stage]:
                         "--threads",
                         "6",
                     ),
-                    (paths.controls / "evaluation" / method / "complete.json",),
+                    _etm_test_outputs(paths.controls, method),
                     requires_idle_system=True,
                 ),
                 Stage(
@@ -541,7 +601,12 @@ def stage_plan(paths: ReproductionPaths) -> list[Stage]:
                 "--data-root",
                 str(paths.assets),
             ),
-            (paths.tomotopy / "tomotopy/test_result.json",),
+            (
+                paths.tomotopy / "tomotopy/test_result.json",
+                paths.tomotopy / "evaluation/tomotopy/complete.json",
+                probability_artifact_paths(paths.tomotopy, "tomotopy")[2],
+                paths.tomotopy / "chemical/tomotopy/complete.json",
+            ),
             requires_idle_system=True,
         ),
     )
@@ -564,7 +629,7 @@ def stage_plan(paths: ReproductionPaths) -> list[Stage]:
                         "--threads",
                         "6",
                     ),
-                    (run / "evaluation" / METHOD / "complete.json",),
+                    _etm_test_outputs(run, METHOD),
                     requires_idle_system=True,
                 ),
                 Stage(
