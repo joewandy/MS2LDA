@@ -5,7 +5,7 @@ neural_ms2lda_report.pdf is its reviewed rendering.
 
 The paper is self-contained. It starts from the published ETM, identifies each
 domain-specific extension and its rationale, then reports the complete MSnLib
-preparation pipeline, component ablations, real chemical validation,
+preparation pipeline, component ablations, held-out chemical evaluation,
 training-seed robustness, system load, limitations and reproducibility.
 The final layout uses a data-flow figure, an equation-matched model diagram,
 chemical-filter inventory bars and a breadth--quality plot where each visual
@@ -27,17 +27,14 @@ The maintained implementation is intentionally direct:
 
 ## Evidence boundary
 
-The reported method uses training, synthetic and validation evidence only. Its
-held-out test partition has not been loaded or scored. The paper labels the
-study as validation and does not reuse test results from another model.
+Models are fitted on the training split and developed on validation. Their
+weights and validation outputs are frozen before the test matrices are exposed.
+The final comparison and three-seed robustness results report that held-out test
+evaluation; test evaluation performs no fitting or model selection.
 
-Primary committed evidence:
+The single committed evidence package is:
 
-- research/etm_ecrtm_msnlib/local_results/20260830_routing_etm/
-- research/etm_ecrtm_msnlib/local_results/20260830_routing_etm_stability/
-- research/etm_ecrtm_msnlib/local_results/20260827_seed42_validation/preparation_summary.json
-- benchmarks/neural_ms2lda/results/seed42/results.json (Tomotopy validation row only)
-- benchmarks/neural_ms2lda/protocol.json
+- research/etm_ecrtm_msnlib/local_results/20260831_contextual_sparse_etm_reproduction/
 
 The source inventory and figure/table design map are recorded in
 routing_etm_report_sources.md.
@@ -46,17 +43,18 @@ routing_etm_report_sources.md.
 
 From the repository root:
 
-    python -m scripts.generate_routing_etm_report
-    conda run -n ms2lda-neural python -m scripts.verify_routing_etm_checkpoint
-    conda run -n ms2lda-neural python -m scripts.verify_routing_etm_stability
-    conda run -n ms2lda-neural pytest -q benchmarks/neural_ms2lda/tests/test_contextual_sparse_etm.py
+    python -m scripts.run_contextual_sparse_etm_reproduction initialize --root RUN
+    python -m scripts.run_contextual_sparse_etm_reproduction run --root RUN
+    python -m scripts.package_contextual_sparse_etm_reproduction --root RUN --output EVIDENCE
+    python -m scripts.generate_routing_etm_report --evidence-root EVIDENCE
+    pytest -q benchmarks/neural_ms2lda/tests
 
 The generator validates cross-file identities before writing:
 
 - generated/routing_etm_macros.tex
 - generated/routing_etm_synthetic_table.tex
 - generated/routing_etm_high_k_table.tex
-- generated/routing_etm_validation_table.tex
+- generated/routing_etm_test_table.tex
 - generated/routing_etm_stability_table.tex
 - generated/routing_etm_diagnostics_table.tex
 - generated/routing_etm_hyperparameters_table.tex

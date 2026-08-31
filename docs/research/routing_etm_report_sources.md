@@ -6,11 +6,12 @@
 - Question: can an ETM-based model produce sparse per-spectrum mixtures while
   retaining a broad, chemically useful Mass2Motif inventory?
 - Scope: truth-known synthetic experiments and one scaffold/compound-disjoint
-  positive-mode MSnLib training/validation split.
+  positive-mode MSnLib train/validation/test partition.
 - Comparison basis: canonical fixed-SGNS ETM, fragment/loss-balanced ETM and
   Tomotopy LDA on the same real split; controlled ETM component variants on
   synthetic data.
-- Evidence boundary: the proposed model's test partition is untouched.
+- Evidence boundary: models are fitted on training data, developed on validation
+  data, frozen and then evaluated once on the held-out test split.
 - Primary interpretation: discovery breadth, predictive fit and conditional
   chemical quality are separate axes and are reported together.
 
@@ -23,8 +24,8 @@
 | Scope, data and metric definitions | Materials and methods: Dataset construction and leakage control; Evaluation measures |
 | Model specification and experimental design | Materials and methods: Contextual Sparse ETM; Experimental design and comparators |
 | Robustness and uncertainty | Results: Real-data motif discovery and initialization stability; Limitations |
-| Recommended next evidence | Discussion: Breadth--quality trade-offs and validation priorities |
-| Further questions | Limitations and validation priorities |
+| Recommended next evidence | Discussion: Breadth--quality trade-offs and generalization priorities |
+| Further questions | Limitations |
 
 ## Reader-facing terminology contract
 
@@ -48,15 +49,15 @@
 | Normalized encoder input and reconstruction equation | benchmarks/neural_ms2lda/topic_model_training.py |
 | Deterministic real-data inference | scripts/run_contextual_sparse_etm.py |
 | Equation-level correspondence and frozen-checkpoint parity | benchmarks/neural_ms2lda/tests/test_contextual_sparse_etm.py |
-| Data parsing, split, leakage and vocabulary counts | research/etm_ecrtm_msnlib/local_results/20260827_seed42_validation/preparation_summary.json |
-| Preprocessing, SGNS, Tomotopy and MAG settings | benchmarks/neural_ms2lda/protocol.json |
-| Proposed-model configuration and validation metrics | research/etm_ecrtm_msnlib/local_results/20260830_routing_etm/config.json and metrics.json |
-| Synthetic K=36 component isolation | research/etm_ecrtm_msnlib/local_results/20260830_routing_etm/synthetic_summary.csv |
-| Synthetic K=128 stress | research/etm_ecrtm_msnlib/local_results/20260830_routing_etm/high_k_stress.csv |
-| Real ETM baseline comparison | research/etm_ecrtm_msnlib/local_results/20260830_routing_etm/comparison.csv |
-| Tomotopy validation comparator | benchmarks/neural_ms2lda/results/seed42/results.json |
-| Three-seed real robustness | research/etm_ecrtm_msnlib/local_results/20260830_routing_etm_stability/stability_summary.json |
-| Integrity and provenance | Both proposed-model checkpoint manifests and verification scripts |
+| Data parsing, split, leakage and vocabulary counts | research/etm_ecrtm_msnlib/local_results/20260831_contextual_sparse_etm_reproduction/preparation_summary.json |
+| Preprocessing, SGNS, Tomotopy and MAG settings | research/etm_ecrtm_msnlib/local_results/20260831_contextual_sparse_etm_reproduction/protocol.json |
+| Proposed-model configuration and final test metrics | research/etm_ecrtm_msnlib/local_results/20260831_contextual_sparse_etm_reproduction/config.json and metrics.json |
+| Synthetic K=36 component isolation | research/etm_ecrtm_msnlib/local_results/20260831_contextual_sparse_etm_reproduction/synthetic_summary.csv |
+| Synthetic K=128 stress | research/etm_ecrtm_msnlib/local_results/20260831_contextual_sparse_etm_reproduction/high_k_stress.csv |
+| Final real-model comparison | research/etm_ecrtm_msnlib/local_results/20260831_contextual_sparse_etm_reproduction/comparison.csv |
+| Development-split comparison | research/etm_ecrtm_msnlib/local_results/20260831_contextual_sparse_etm_reproduction/validation_comparison.csv |
+| Three-seed test robustness | research/etm_ecrtm_msnlib/local_results/20260831_contextual_sparse_etm_reproduction/stability_summary.json |
+| Integrity and provenance | fresh_evidence_manifest.json, checkpoint_manifest.json, reproduction_manifest.json and stage_records/ in the same package |
 
 ## Figure and table map
 
@@ -68,10 +69,10 @@
 | Figure 4 | How does evaluable breadth relate to conditional chemical quality? | Labelled scatter plot | Contextual Sparse ETM expands breadth while Tomotopy retains the highest conditional mean SOS | Shared axes, direct labels and no composite score |
 | Table 1 | Which parts are inherited from ETM and which are added? | Lineage table | The generator and variational backbone remain ETM; the adaptations have explicit purposes | Inspect provenance and parameter claims |
 | Tables 2--3 | Which posterior additions are necessary? | Exact ablation tables | Contextual evidence prevents the component loss caused by sparsity alone | No conditional colour; inspect width |
-| Table 4 | How do real validation metrics compare? | Exact comparison table | Breadth, SOS and NLL point in different directions | Bold per-column extrema; inspect that caption explains this |
+| Table 4 | How do held-out test metrics compare? | Exact comparison table | Breadth, SOS and NLL point in different directions | Bold per-column extrema; inspect that caption explains this |
 | Table 5 | Does initialization change the result? | Exact robustness table | Central sparsity and breadth persist across three seeds | Resized full-width table; inspect readability |
 | Table 6 | Is local sparsity caused by global collapse? | Diagnostic table | Sparse spectra coexist with broad topic use | Exact values; inspect long row labels |
 | Tables 7--9 | Can settings, code correspondence and metric meanings be audited? | Appendix tables | The reported model and evidence can be reproduced and interpreted without hidden conventions | Inspect page fit and monospaced paths |
 
-The source inventory is limited to the admissible training, synthetic and
-validation evidence listed above.
+The source inventory is limited to the sealed acquisition, synthetic,
+validation and frozen-model test evidence listed above.

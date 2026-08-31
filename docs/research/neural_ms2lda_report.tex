@@ -114,7 +114,8 @@ add one learned scalar to a
 The method was evaluated on a positive-ion-mode MS$^{n}$Lib reference-spectral
 benchmark partitioned so that identical compounds and molecular scaffolds do
 not cross splits. It used \StudyTopics{} topics, \TrainingSpectra{} training
-spectra and \ValidationSpectra{} validation spectra. The model produced
+spectra, \ValidationSpectra{} validation spectra for development and
+\TestSpectra{} test spectra for final evaluation. The frozen model produced
 \ContextualOptimized{} motifs retained by Mass2Motif Annotation Guidance (MAG),
 \ContextualEvaluable{} with an evaluable substructure overlap score (SOS), and
 \ContextualUseful{} useful motifs with SOS at least 0.6. The corresponding
@@ -125,11 +126,11 @@ Tomotopy had higher conditional mean SOS averaged over evaluable motifs
 (\TomotopyMeanSOS{} versus \ContextualMeanSOS{}). Across three training seeds on
 the same frozen split, evaluable and useful motif counts remained within
 \StabilityEvaluableRange{} and \StabilityUsefulRange{}, median effective topics
-remained approximately 3.7, and \StabilityUniqueRange{} topics became the
-largest component for at least one validation spectrum. These results support
+remained \MedianEffectiveTopics{}, and \StabilityUniqueRange{} topics became the
+largest component for at least one test spectrum. These results support
 a reproducible breadth--quality trade-off: the method discovers a substantially
-larger usable motif inventory while preserving sparse spectrum assignments.
-The held-out test partition was not accessed in this validation study.
+larger usable motif inventory while preserving sparse spectrum assignments on
+the held-out test split.
 \end{abstract}
 
 \section{Introduction}
@@ -186,7 +187,7 @@ This study makes three contributions:
   preprocessing, train-only token embeddings, document completion, MAG and SOS;
   and
   \item truth-known synthetic validation together with three-seed real
-  MS$^{n}$Lib validation of predictive fit, chemical utility, sparsity, global
+  MS$^{n}$Lib test evaluation of predictive fit, chemical utility, sparsity, global
   topic use and computational load.
 \end{enumerate}
 
@@ -325,12 +326,14 @@ preserves first-seen training order, and contains
 \VocabularySize{} fragment and neutral-loss tokens. Every split is stored in
 the same fixed column order as a SciPy compressed sparse-row (CSR) count matrix.
 All learned parameters, token embeddings, vocabulary entries and co-occurrence
-statistics use only the training partition. The present study uses training and
-validation evidence; the test partition was not loaded or scored for the
-proposed model.
+statistics use only the training partition. Model formulation and component
+comparisons use validation evidence. After all fitted models and validation
+outputs are frozen, the test matrices are released once for final evaluation;
+test evaluation performs no fitting, model selection or spectrum-specific
+optimization.
 
-For predictive evaluation, validation spectra are deterministically divided
-50/50 by whole physical peak groups. A fragment and its corresponding neutral
+For predictive evaluation, validation and test spectra are each deterministically
+divided 50/50 by whole physical peak groups. A fragment and its corresponding neutral
 loss therefore cannot appear
 on opposite sides. The observed half is renormalized without consulting the
 maximum intensity of the withheld half. Out-of-vocabulary withheld words are
@@ -636,11 +639,11 @@ enabled, non-finite objectives or gradients terminate execution, and six
 central processing unit (CPU) threads support training on an NVIDIA
 CUDA-compatible graphics processing unit (GPU).
 
-At validation, the observed half-spectrum is encoded deterministically for
-document completion, while the full spectrum is encoded for topic-inventory and
-chemical analyses. All \StudyTopics{} topic--word distributions are exported
-for MAG. Training and inference use the same equations; no spectrum-specific
-optimization loop is required.
+At validation and final test evaluation, the observed half-spectrum is encoded
+deterministically for document completion, while the full spectrum is encoded
+for topic-inventory and chemical analyses. All \StudyTopics{} topic--word
+distributions are exported for MAG. Training and inference use the same
+equations; no spectrum-specific optimization loop is required.
 
 \subsection{Experimental design and comparators}
 
@@ -661,8 +664,9 @@ component with the largest planted component; a top-1 topic is the fitted topic
 with the largest weight in one spectrum. Optimal one-to-one matching aligns
 fitted topics to planted motifs before recovery is calculated.
 
-For real-data validation, four methods are fitted to the same training and
-validation matrices:
+For the real-data experiment, four methods are fitted to the same training
+matrix, compared on the same validation matrices, frozen and finally evaluated
+on the same test matrices:
 \begin{enumerate}
   \item canonical ETM: fixed SGNS coordinates, global topic--word softmax and
   dense document-topic softmax;
@@ -679,7 +683,7 @@ The two ETM baselines use the same 48-dimensional embeddings, two-layer
 800-unit encoder, $K=1000$, raw pseudo-count objective, Adam settings, batch
 size, 120 epochs and training seed 7043. Tomotopy uses $K=1000$,
 $\alpha=0.6$, $\eta=0.1$, six workers, parallel scheme 3 and 750 training
-iterations; validation inference uses 100 iterations and parallel scheme 1.
+iterations; validation and test inference use 100 iterations and parallel scheme 1.
 
 Initialization robustness is assessed by repeating the proposed model with
 training seeds 7043, 23 and 37. The data split, vocabulary, SGNS embeddings,
@@ -717,7 +721,7 @@ cosine-similarity graph at threshold $0.999$.
 
 Chemical utility is evaluated with the MS2LDA 2.0 Mass2Motif Annotation
 Guidance (MAG) and substructure overlap score (SOS) framework
-\cite{torresortega2026}. Every Spec2Vec-library row sharing a validation
+\cite{torresortega2026}. Every Spec2Vec-library row sharing a validation or test
 connectivity InChIKey is removed before constructing the FAISS
 vector-similarity search index. The evaluated molecule therefore cannot be
 retrieved as its own annotation evidence.
@@ -732,7 +736,7 @@ threshold 0.9, and optimizes the motif against the selected cluster. A topic is
 Clustered MAG molecules are converted to binary MACCS structural-key
 fingerprints, whose bits indicate predefined molecular features
 \cite{durant2002}. A bit is retained in consensus fingerprint $A_k$ when it
-appears in at least 80\% of the cluster. A validation molecule $i$ is associated
+appears in at least 80\% of the cluster. An evaluation molecule $i$ is associated
 with topic $k$ when its full-spectrum topic weight satisfies
 $\theta_{ik}\geq0.5$. Repeated spectra with the same connectivity InChIKey are
 collapsed. With $B_i$ the associated molecule fingerprint,
@@ -813,7 +817,7 @@ Formulation & NLL & Beta & Theta & Accuracy & Eff. & Support & Unique \\
 
 \subsection{Real-data motif discovery and initialization stability}
 
-On the real MS$^{n}$Lib validation split, Contextual Sparse ETM produces
+On the held-out MS$^{n}$Lib test split, Contextual Sparse ETM produces
 \ContextualEvaluable{} SOS-evaluable and \ContextualUseful{} useful motifs. The
 corresponding counts are \CanonicalEvaluable{}/\CanonicalUseful{} for canonical
 ETM, \BalancedEvaluable{}/\BalancedUseful{} for fragment/loss-balanced ETM and
@@ -855,7 +859,7 @@ comparisons.
   nodes near coords,
   every node near coord/.append style={font=\tiny}
 ]
-\nextgroupplot[title={Optimized motifs},ymin=0,ymax=1000]
+\nextgroupplot[title={Optimized motifs},ymin=0]
   \addplot[fill=midgray!65,draw=darkgray,bar shift=0pt]
     coordinates {(ETM,\CanonicalOptimized)};
   \addplot[fill=midgray!30,draw=darkgray,bar shift=0pt]
@@ -864,7 +868,7 @@ comparisons.
     coordinates {(Contextual,\ContextualOptimized)};
   \addplot[fill=tomotopycolor!72,draw=tomotopycolor,bar shift=0pt]
     coordinates {(LDA,\TomotopyOptimized)};
-\nextgroupplot[title={SOS-evaluable motifs},ymin=0,ymax=500]
+\nextgroupplot[title={SOS-evaluable motifs},ymin=0]
   \addplot[fill=midgray!65,draw=darkgray,bar shift=0pt]
     coordinates {(ETM,\CanonicalEvaluable)};
   \addplot[fill=midgray!30,draw=darkgray,bar shift=0pt]
@@ -873,7 +877,7 @@ comparisons.
     coordinates {(Contextual,\ContextualEvaluable)};
   \addplot[fill=tomotopycolor!72,draw=tomotopycolor,bar shift=0pt]
     coordinates {(LDA,\TomotopyEvaluable)};
-\nextgroupplot[title={Useful motifs},ymin=0,ymax=330]
+\nextgroupplot[title={Useful motifs},ymin=0]
   \addplot[fill=midgray!65,draw=darkgray,bar shift=0pt]
     coordinates {(ETM,\CanonicalUseful)};
   \addplot[fill=midgray!30,draw=darkgray,bar shift=0pt]
@@ -884,7 +888,7 @@ comparisons.
     coordinates {(LDA,\TomotopyUseful)};
 \end{groupplot}
 \end{tikzpicture}
-\caption{Validation motif inventory after successive chemical filters. ETM is
+\caption{Held-out test motif inventory after successive chemical filters. ETM is
 the canonical Embedded Topic Model with fixed train-only spectral-word
 coordinates and dense softmax document mixtures. Balanced is the same ETM with
 separate 50/50 fragment and neutral-loss decoder normalization. Contextual is
@@ -894,7 +898,7 @@ allocation. Optimized means that Mass2Motif Annotation Guidance (MAG) retains
 at least one fragment or loss;
 SOS-evaluable means that the substructure overlap score can be computed from at
 least one associated molecule; useful means SOS at least 0.6. All four models
-use $K=1000$ and the same frozen training/validation split and
+use $K=1000$, the same training split, the same held-out test split and the same
 chemical-evaluation protocol.}
 \label{fig:inventory}
 \end{figure}
@@ -902,16 +906,16 @@ chemical-evaluation protocol.}
 \begin{table}[H]
 \centering
 \small
-\caption{Validation comparison. SOS is the substructure overlap score and NLL
+\caption{Final held-out test comparison. SOS is the substructure overlap score and NLL
 is held-out completion negative log-likelihood, for which lower is better. Bold
 values are the numerically strongest entry in each metric; no single metric
 defines overall model quality.}
-\label{tab:validation}
+\label{tab:test-comparison}
 \begin{tabular}{@{}lrrrrrr@{}}
 \toprule
 Model & Optimized & Evaluable & Useful & Mean SOS & Median SOS & NLL $\downarrow$ \\
 \midrule
-\input{generated/routing_etm_validation_table.tex}
+\input{generated/routing_etm_test_table.tex}
 \end{tabular}
 \end{table}
 
@@ -927,8 +931,6 @@ higher-quality but lower-breadth corner.
 \begin{axis}[
   width=0.76\textwidth,
   height=6.0cm,
-  xmin=90,xmax=480,
-  ymin=0.61,ymax=0.69,
   xlabel={SOS-evaluable motifs},
   ylabel={Conditional mean SOS},
   tick label style={font=\small},
@@ -963,8 +965,8 @@ higher-quality but lower-breadth corner.
     {Tomotopy};
 \end{axis}
 \end{tikzpicture}
-\caption{Discovery breadth versus conditional chemical quality on the frozen
-validation split. Horizontal position counts motifs for which the substructure
+\caption{Discovery breadth versus conditional chemical quality on the held-out
+test split. Horizontal position counts motifs for which the substructure
 overlap score (SOS) can be evaluated; vertical position averages SOS only over
 that model-specific set. The axes therefore answer complementary questions
 rather than forming a single combined score. Points compare canonical and
@@ -975,10 +977,10 @@ Sparse ETM and Tomotopy LDA.}
 
 The proposed model converts \ContextualEvaluableConversion{} of optimized motifs
 into evaluable motifs and \ContextualUsefulConversion{} into useful motifs. Its
-\ContextualOptimized{} optimized motifs are fewer than the balanced ETM's 911, but
-far more survive spectrum association and SOS evaluation. Relative to Tomotopy,
-the proposed model adds 239 evaluable and 151 useful motifs and also lowers
-completion NLL from \TomotopyNLL{} to \ContextualNLL{}.
+\ContextualOptimized{} optimized motifs are fewer than the balanced ETM's
+\BalancedOptimized{}, but more survive spectrum association and SOS evaluation.
+Relative to Tomotopy, the proposed model yields more evaluable and useful motifs
+and lowers completion NLL from \TomotopyNLL{} to \ContextualNLL{}.
 
 The result is not uniform dominance. Tomotopy's smaller evaluable set has higher
 mean and median SOS (\TomotopyMeanSOS{}/\TomotopyMedianSOS{}) than the proposed
@@ -992,9 +994,9 @@ gain depends on one fitted checkpoint. The three runs give
 \StabilityOptimizedRange{} optimized, \StabilityEvaluableRange{} evaluable and
 \StabilityUsefulRange{} useful motifs. Mean SOS spans
 \StabilitySOSRange{} and completion NLL spans only
-\StabilityNLLRange{}. Median exact support is six for every run, and
+\StabilityNLLRange{}. Across the runs,
 \StabilityUniqueRange{} topics become the largest component for at least one
-validation spectrum. No run contains a catastrophic duplicate component.
+test spectrum. No run contains a catastrophic duplicate component.
 
 \begin{table}[H]
 \centering
@@ -1015,17 +1017,16 @@ Seed & Optimized & Evaluable & Useful & Mean SOS & Median SOS & NLL & Median eff
 }
 \end{table}
 
-The tight NLL and sparsity ranges show that the mechanism is not specific to
-one initialization. Chemical scores vary more than predictive fit: seed 23
-produces the largest evaluable inventory and the lowest mean SOS. This pattern
-is consistent with a breadth--quality trade-off and motivates reporting motif
-counts together with the SOS distribution rather than reducing performance to
-one average.
+The NLL and sparsity ranges test whether the mechanism is specific to one
+initialization. Chemical scores vary more than predictive fit across seeds.
+This pattern is consistent with a breadth--quality trade-off and motivates
+reporting motif counts together with the SOS distribution rather than reducing
+performance to one average.
 
 \subsection{Sparse spectrum mixtures, broad topic use and computational cost}
 
 The representative run has median \MedianEffectiveTopics{} entropy-effective
-topics and median exact support \MedianExactSupport{} per validation spectrum;
+topics and median exact support \MedianExactSupport{} per test spectrum;
 95\% of spectra have support at most \NinetyFifthExactSupport{}. At corpus level,
 \UniqueTopOneTopics{} of 1,000 topics win at least one spectrum,
 \ActiveTopics{} exceed mean usage 0.0005 and the corpus-effective topic count is
@@ -1036,7 +1037,7 @@ similarity $\geq0.999$ contains only
 \begin{table}[H]
 \centering
 \footnotesize
-\caption{Validation sparsity and inventory diagnostics. Eff. is the
+\caption{Held-out test sparsity and inventory diagnostics. Eff. is the
 entropy-effective topic count; support counts exactly non-zero mixture weights;
 unique top-1 counts distinct document winners; and active topics have mean
 weight above 0.0005. Corpus eff. applies the entropy-effective count to mean
@@ -1051,10 +1052,10 @@ Model & Median eff. & Median support & Unique top-1 & Active & Corpus eff. & Nea
 \end{tabular}
 \end{table}
 
-The ETM baselines spread each spectrum across roughly 44--47 effective topics
-while using only 260 unique winners. Contextual Sparse ETM reverses both
-properties: individual spectra are sparse, yet more than 800 topics receive a
-top-1 assignment somewhere in validation. Its maximum mean topic usage is only
+The ETM baselines retain dense spectrum-level mixtures and use fewer distinct
+document winners. Contextual Sparse ETM reverses both properties: individual
+spectra are sparse, yet \UniqueTopOneTopics{} topics receive a top-1 assignment
+somewhere in the test set. Its maximum mean topic usage is only
 \MaximumMeanTopicUsage{}, and mean nearest-topic topic--word cosine similarity
 is \MeanNearestBetaCosine{}, providing additional evidence that sparsity does
 not come from a single dominant or globally duplicated topic group.
@@ -1062,7 +1063,7 @@ not come from a single dominant or globally duplicated topic group.
 Computationally, the 120-epoch optimization loop takes
 \TrainingMinutesMean{} $\pm$ \TrainingMinutesSD{} minutes. With the trained model
 already resident on the GPU, deterministic inference processes
-\ValidationThroughput{} full validation spectra per second. Peak memory actively
+\TestThroughput{} full test spectra per second. Peak memory actively
 allocated by PyTorch and memory reserved by its CUDA cache are
 \PeakCudaAllocatedGB{} and \PeakCudaReservedGB{} GB, respectively. Peak process
 memory, including CPU memory, is \PeakProcessGB{} GB, while at least
@@ -1113,17 +1114,18 @@ of a MAG-derived consensus fingerprint. Chemical naming, atom-level mapping and
 fragmentation-mechanism claims still require expert review and, ideally,
 orthogonal experimental evidence.
 
-\subsection{Breadth--quality trade-offs and validation priorities}
+\subsection{Breadth--quality trade-offs and generalization priorities}
 
 Optimized, evaluable and useful motif counts measure how much of the learned
 inventory becomes available for chemical interpretation. Mean and median SOS
 measure chemical containment conditional on passing the evaluability filter.
 A model can therefore expose more useful motifs in absolute terms while having
 a lower average over that larger set. Contextual Sparse ETM exhibits exactly
-this pattern relative to Tomotopy: it more than doubles evaluable and useful
-counts, whereas Tomotopy retains higher conditional SOS. The breadth--quality
+this pattern relative to Tomotopy: it increases evaluable and useful counts,
+whereas Tomotopy retains higher conditional SOS. The breadth--quality
 plot makes this conditional denominator explicit and avoids treating an average
-over 445 motifs as though it summarized the same set as an average over 206.
+over one model-specific motif set as though it summarized the same set for every
+model.
 
 Completion NLL provides a third axis. The proposed model predicts withheld
 evidence better than Tomotopy but not as well as the dense ETM baselines. This
@@ -1143,22 +1145,22 @@ from concealing collapse on another.
 
 The next decisive experiment is generalization beyond the present frozen split.
 A second scaffold split or an external spectral library would test sensitivity
-to data composition. Once the method and interpretation are independently
-frozen, the untouched test partition can provide a single confirmatory
-evaluation. Negative-mode spectra, biological samples and instrument-shifted
-data would establish a broader domain of validity. These extensions should
+to data composition. Negative-mode spectra, biological samples and
+instrument-shifted data would establish a broader domain of validity. These extensions should
 retain the same reporting contract: predictive fit, per-spectrum sparsity,
 global inventory use, MAG-retrieved and SOS-evaluable motif breadth, and
 conditional chemical quality.
 
 \section{Limitations}
 
-This is a validation study on one positive-ion-mode MS$^{n}$Lib benchmark. The
+This study uses one positive-ion-mode MS$^{n}$Lib benchmark and one fixed
+train/validation/test partition. The
 three training seeds change initialization and minibatch order but not the
 data split, vocabulary, topic count or hyperparameters. Their sample standard
 deviations are descriptive and should not be interpreted as confidence
-intervals over future datasets. The test split remains untouched for the
-proposed model.
+intervals over future datasets or alternative splits. The held-out test results
+are confirmatory for this fixed benchmark, not evidence of performance under
+external library or instrument shift.
 
 The synthetic simulator supplies known truth but cannot represent the complete
 chemical, instrumental and noise structure of measured spectra. Its recovery
@@ -1188,23 +1190,26 @@ The benchmark input and positive-ion-mode annotation assets are available from
 Zenodo record 20179680 \cite{msnlibdata}. The repository records the exact data
 preparation protocol, model implementation, compact result packages,
 per-topic chemical scores, epoch-level training records, environment manifest and
-SHA-256 file checksums. Test artifacts for the proposed model are explicitly
-excluded from the current evidence boundary.
+SHA-256 file checksums. The compact evidence bundle includes separate validation
+and frozen-model test results together with manifests proving that test inputs
+were released only after fitting and validation were complete.
 
 Every numerical fragment in this report is generated from frozen
 machine-readable evidence files in JavaScript Object Notation (JSON) and
 comma-separated values (CSV) formats:
 \begin{verbatim}
-python -m scripts.generate_routing_etm_report
-python -m scripts.verify_routing_etm_checkpoint
-python -m scripts.verify_routing_etm_stability
+python -m scripts.run_contextual_sparse_etm_reproduction initialize --root RUN
+python -m scripts.run_contextual_sparse_etm_reproduction run --root RUN
+python -m scripts.package_contextual_sparse_etm_reproduction --root RUN --output EVIDENCE
+python -m scripts.generate_routing_etm_report --evidence-root EVIDENCE
 \end{verbatim}
-The first command validates cross-file identities and regenerates the LaTeX
-tables. The two verification commands check the primary and three-seed
-checkpoint packages without requiring retained large local arrays. Full
-artifact and input hashes can additionally be checked on the originating host.
+The first two commands initialize and execute the complete acquisition-to-test
+stage plan. The third verifies stage chronology, file ownership, split release,
+probability matrices and MAG exception counts before creating an atomic compact
+package. The final command rechecks the package seal and regenerates the LaTeX
+tables.
 The focused equation--code test in
-\texttt{benchmarks/neural\_ms2lda/tests/test\_routing\_etm.py} independently
+\texttt{benchmarks/neural\_ms2lda/tests/test\_contextual\_sparse\_etm.py} independently
 reconstructs the channel-balanced $\beta$, contextual top-2 evidence, centred
 posterior mean, analytic KL divergence, threshold form of $1.5$-entmax, raw-count
 reconstruction and learned-parameter count, then compares each quantity with
@@ -1220,15 +1225,16 @@ fragment/loss decoder mass supplies the domain constraint; shared word/topic
 geometry supplies contextual top-2 evidence; and $1.5$-entmax produces exact
 document-topic support. The complete adaptation adds only one learned scalar.
 
-On scaffold- and compound-disjoint MS$^{n}$Lib validation, the model produces
+On the scaffold- and compound-disjoint MS$^{n}$Lib test split, the model produces
 substantially more motifs eligible for SOS and more useful motifs than canonical ETM,
-fragment- and loss-balanced ETM and Tomotopy, while retaining approximately 3.7
-effective topics per spectrum and more than 800 unique validation winners.
+fragment- and loss-balanced ETM and Tomotopy, while retaining
+\MedianEffectiveTopics{} effective topics per spectrum and
+\UniqueTopOneTopics{} unique test winners.
 The result is stable across three initializations. Tomotopy retains higher
 conditional SOS, and dense ETM retains better completion likelihood, so the
-scientific conclusion is a reproducible discovery-breadth advantage with
-quantified quality and predictive trade-offs. External data and the untouched
-test partition are required for confirmatory generalization.
+scientific conclusion is a reproducible discovery-breadth advantage on this
+held-out split with quantified quality and predictive trade-offs. External data
+are required to assess broader generalization.
 
 \clearpage
 \appendix
@@ -1294,7 +1300,7 @@ Topics for which Mass2Motif Annotation Guidance (MAG) retains at least one
 fragment or neutral loss. &
 Breadth of annotatable topic spectra. \\
 Substructure-overlap-score (SOS)-evaluable motifs &
-Optimized topics with at least one unique associated validation molecule and a
+Optimized topics with at least one unique associated test molecule and a
 valid fingerprint. &
 Inventory eligible for chemical scoring. \\
 Mean/median SOS &
@@ -1308,7 +1314,7 @@ Effective topics &
 Exponentiated entropy of one spectrum's topic mixture. &
 Lower means a more concentrated mixture. \\
 Unique top-1 topics &
-Topics that are the largest mixture component for at least one validation
+Topics that are the largest mixture component for at least one test
 spectrum. &
 Breadth of document-level topic use. \\
 \bottomrule

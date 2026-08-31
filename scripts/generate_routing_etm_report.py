@@ -1,12 +1,14 @@
 """Generate the Contextual Sparse ETM paper tables from frozen evidence.
 
-The report deliberately consumes only training, synthetic, and validation
-artifacts.  The current model's test partition is outside this evidence set.
+The report consumes synthetic ablations, validation development evidence, and
+the final frozen-model test evaluation from one sealed reproduction bundle.
 """
 
 from __future__ import annotations
 
+import argparse
 import csv
+import hashlib
 import json
 import math
 from pathlib import Path
@@ -14,20 +16,13 @@ from typing import Any
 
 REPO = Path(__file__).resolve().parents[1]
 GENERATED = REPO / "docs/research/generated"
-
-PREPARATION = (
+DEFAULT_EVIDENCE = (
     REPO
-    / "research/etm_ecrtm_msnlib/local_results/20260827_seed42_validation"
-    / "preparation_summary.json"
-)
-PROTOCOL = REPO / "benchmarks/neural_ms2lda/protocol.json"
-LOCKED_COMPARATOR = REPO / "benchmarks/neural_ms2lda/results/seed42/results.json"
-ROUTING = REPO / "research/etm_ecrtm_msnlib/local_results/20260830_routing_etm"
-STABILITY = (
-    REPO / "research/etm_ecrtm_msnlib/local_results/20260830_routing_etm_stability"
+    / "research/etm_ecrtm_msnlib/local_results"
+    / "20260831_contextual_sparse_etm_reproduction"
 )
 
-EXPECTED_METHOD = "etm_balanced_routing_top2_entmax15_raw_counts"
+EXPECTED_METHOD = "contextual_sparse_etm"
 EXPECTED_TRAINING_SEEDS = [7043, 23, 37]
 EXPECTED_SYNTHETIC_FORMULATIONS = 4
 EXPECTED_HIGH_K_ROWS = 3
@@ -35,6 +30,33 @@ EXPECTED_HIGH_K_ROWS = 3
 
 def _json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _sha256_file(path: Path) -> str:
+    """Hash one evidence artifact without loading it all into memory."""
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(8 * 1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _validate_package_integrity(root: Path, checkpoint: dict[str, Any]) -> None:
+    """Verify the package seal and every compact evidence artifact it owns."""
+    manifest_path = root / "fresh_evidence_manifest.json"
+    if _sha256_file(manifest_path) != checkpoint["fresh_evidence_manifest_sha256"]:
+        msg = "fresh evidence manifest changed after checkpointing"
+        raise ValueError(msg)
+    manifest = _json(manifest_path)
+    for row in manifest["packaged_files"]:
+        path = root / row["path"]
+        if (
+            not path.is_file()
+            or path.stat().st_size != int(row["bytes"])
+            or _sha256_file(path) != row["sha256"]
+        ):
+            msg = f"packaged evidence changed after sealing: {path}"
+            raise ValueError(msg)
 
 
 def _csv(path: Path) -> list[dict[str, str]]:
@@ -69,42 +91,68 @@ def _tex_integer(value: int) -> str:
     return f"{int(value):,}".replace(",", r"{,}")
 
 
-def _write(name: str, lines: list[str]) -> str:
-    GENERATED.mkdir(parents=True, exist_ok=True)
-    path = GENERATED / name
+def _tex_scientific(value: float) -> str:
+    """Format a positive scientific-notation value as valid LaTeX math."""
+    if not math.isfinite(value) or value <= 0:
+        msg = f"expected a finite positive value, got {value}"
+        raise ValueError(msg)
+    exponent = math.floor(math.log10(value))
+    coefficient = value / (10**exponent)
+    if math.isclose(coefficient, 1.0, rel_tol=1e-12, abs_tol=1e-12):
+        return rf"10^{{{exponent}}}"
+    return rf"{coefficient:.3g}\times10^{{{exponent}}}"
+
+
+def _write(output: Path, name: str, lines: list[str]) -> str:
+    output.mkdir(parents=True, exist_ok=True)
+    path = output / name
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    return str(path.relative_to(REPO))
+    return str(path.resolve())
 
 
 def _bold_if(value: str, *, condition: bool) -> str:
     return rf"\textbf{{{value}}}" if condition else value
 
 
-def _validate_and_load() -> dict[str, Any]:  # noqa: C901, PLR0912, PLR0915
-    preparation = _json(PREPARATION)
-    protocol = _json(PROTOCOL)
-    comparator = _json(LOCKED_COMPARATOR)
-    checkpoint = _json(ROUTING / "checkpoint_manifest.json")
-    config = _json(ROUTING / "config.json")
-    metrics = _json(ROUTING / "metrics.json")
-    comparison = {row["model"]: row for row in _csv(ROUTING / "comparison.csv")}
-    synthetic = _csv(ROUTING / "synthetic_summary.csv")
-    high_k = _csv(ROUTING / "high_k_stress.csv")
-    stability = _json(STABILITY / "stability_summary.json")
+def _validate_and_load(  # noqa: C901, PLR0912, PLR0915
+    evidence_root: Path,
+) -> dict[str, Any]:
+    root = evidence_root.expanduser().resolve(strict=True)
+    preparation = _json(root / "preparation_summary.json")
+    protocol = _json(root / "protocol.json")
+    checkpoint = _json(root / "checkpoint_manifest.json")
+    _validate_package_integrity(root, checkpoint)
+    config = _json(root / "config.json")
+    metrics = _json(root / "metrics.json")
+    comparison = {row["model"]: row for row in _csv(root / "comparison.csv")}
+    synthetic = _csv(root / "synthetic_summary.csv")
+    high_k = _csv(root / "high_k_stress.csv")
+    stability = _json(root / "stability_summary.json")
+    tomotopy = _json(root / "tomotopy.json")
+    acceptance = _json(root / "acceptance.json")
+    data_quality = _json(root / "data_quality.json")
 
-    if checkpoint["method"] != EXPECTED_METHOD or config["method"] != EXPECTED_METHOD:
+    config_method = config.get("artifact_method_id", config.get("method"))
+    if checkpoint["method"] != EXPECTED_METHOD or config_method != EXPECTED_METHOD:
         msg = "Contextual Sparse ETM method identity changed"
         raise ValueError(msg)
-    if checkpoint["evidence_boundary"] != (
-        "training plus validation only; candidate test remains locked"
-    ):
-        msg = "checkpoint evidence boundary changed"
+    if checkpoint["test_released_after_model_and_validation_freeze"] is not True:
+        msg = "test split was not released after model and validation freeze"
+        raise ValueError(msg)
+    if checkpoint["acceptance_all_passed"] is not acceptance["all_passed"]:
+        msg = "checkpoint and detailed claim checks disagree"
+        raise ValueError(msg)
+    if data_quality["status"] != "pass":
+        msg = "fresh evidence did not pass data-quality checks"
         raise ValueError(msg)
     if config["candidate_test_artifacts_accessed"] is not False:
-        msg = "current-model test artifacts must remain untouched"
+        msg = "training configuration indicates test access"
         raise ValueError(msg)
-    if stability["direction_checks"]["candidate_test_remained_locked"] is not True:
-        msg = "stability evidence no longer preserves the test boundary"
+    if (
+        stability["direction_checks"]["test_released_only_after_model_freeze"]
+        is not True
+    ):
+        msg = "stability evidence does not preserve split ordering"
         raise ValueError(msg)
     if (
         stability["runs"] != len(EXPECTED_TRAINING_SEEDS)
@@ -127,21 +175,19 @@ def _validate_and_load() -> dict[str, Any]:  # noqa: C901, PLR0912, PLR0915
         msg = "vocabulary size mismatch"
         raise ValueError(msg)
 
-    # Frozen comparison artifacts retain the experiment-time method key; all
-    # rendered report labels use the final public model name.
     required_models = {
         "canonical ETM",
         "balanced ETM",
-        "routing-informed sparse ETM",
+        "Contextual Sparse ETM",
     }
     if not required_models.issubset(comparison):
         msg = "comparison is missing a required ETM baseline"
         raise ValueError(msg)
-    proposed_row = comparison["routing-informed sparse ETM"]
+    proposed_row = comparison["Contextual Sparse ETM"]
     if proposed_row["finite_stable"] != "True":
         msg = "Contextual Sparse ETM is not marked finite and stable"
         raise ValueError(msg)
-    chemistry = metrics["validation_chemistry"]
+    chemistry = metrics["test_chemistry"]
     completion = metrics["document_completion"]
     for key, source_key in (
         ("optimized_motifs", "optimized_motifs"),
@@ -157,29 +203,25 @@ def _validate_and_load() -> dict[str, Any]:  # noqa: C901, PLR0912, PLR0915
         completion["nll_per_token"],
         name="completion NLL",
     )
-    if metrics["parameters"] != config["context_parameters"] + 19_278_000:
+    if int(metrics["parameters"]) != _integer(proposed_row, "parameters"):
         msg = "unexpected Contextual Sparse ETM parameter count"
         raise ValueError(msg)
-
-    methods = {row["method"]: row for row in comparator["methods"]}
-    if "tomotopy" not in methods:
-        msg = "locked Tomotopy comparator is missing"
+    if int(metrics["parameters"]) - _integer(
+        comparison["canonical ETM"],
+        "parameters",
+    ) != int(config["context_parameters"]):
+        msg = "Contextual Sparse ETM parameter increment changed"
         raise ValueError(msg)
-    tomotopy = methods["tomotopy"]
-    tomotopy_validation = tomotopy["validation"]
-    tomotopy_nll = comparator["secondary"]["completion_nll_per_token"]["tomotopy"]
-    expected_tomotopy = checkpoint["expected_validation_metrics"]["tomotopy"]
-    for key, source_key in (
-        ("optimized_motifs", "optimized_motifs"),
-        ("evaluable_motifs", "high_confidence_evaluable_motifs"),
-        ("useful_motifs", "useful_high_confidence_motifs"),
-    ):
-        if int(expected_tomotopy[key]) != int(tomotopy_validation[source_key]):
-            msg = f"Tomotopy {key} changed"
-            raise ValueError(msg)
+
+    if tomotopy.get("method") != "tomotopy":
+        msg = "fresh Tomotopy comparator is missing"
+        raise ValueError(msg)
+    tomotopy_test = tomotopy["test"]
+    tomotopy_nll = float(tomotopy_test["completion_nll"])
+    tomotopy_row = comparison["Tomotopy LDA"]
     _close(
-        expected_tomotopy["completion_nll"],
-        tomotopy_nll["validation"],
+        _float(tomotopy_row, "completion_nll"),
+        tomotopy_nll,
         name="Tomotopy completion NLL",
     )
 
@@ -210,24 +252,25 @@ def _validate_and_load() -> dict[str, Any]:  # noqa: C901, PLR0912, PLR0915
         "high_k": high_k,
         "stability": stability,
         "tomotopy": tomotopy,
-        "tomotopy_nll": float(tomotopy_nll["validation"]),
+        "tomotopy_nll": tomotopy_nll,
+        "evidence_root": root,
     }
 
 
-def _generate_macros(evidence: dict[str, Any]) -> str:
+def _generate_macros(evidence: dict[str, Any], output: Path) -> str:
     preparation = evidence["preparation"]
     data = preparation["data"]
     metrics = evidence["metrics"]
     config = evidence["config"]
     canonical = evidence["comparison"]["canonical ETM"]
     balanced = evidence["comparison"]["balanced ETM"]
-    tomotopy = evidence["tomotopy"]["validation"]
+    tomotopy = evidence["tomotopy"]["test"]
     stability = evidence["stability"]
-    chemistry = metrics["validation_chemistry"]
+    chemistry = metrics["test_chemistry"]
     completion = metrics["document_completion"]
     theta = metrics["theta_support"]
     inventory = metrics["topic_inventory"]
-    runtime = metrics["runtime"]
+    runtime = metrics["training_runtime"]
     memory = runtime["memory"]
     aggregate = stability["aggregate"]
     training_wall = aggregate["training_wall_seconds"]
@@ -322,7 +365,7 @@ def _generate_macros(evidence: dict[str, Any]) -> str:
         ),
         "TrainingMinutesMean": f"{training_wall['mean'] / 60:.1f}",
         "TrainingMinutesSD": (f"{training_wall['sample_standard_deviation'] / 60:.1f}"),
-        "ValidationThroughput": f"{runtime['validation_full_spectra_per_second']:,.0f}",
+        "TestThroughput": f"{metrics['runtime']['test_full_spectra_per_second']:,.0f}",
         "PeakCudaAllocatedGB": f"{memory['peak_cuda_allocated_bytes'] / 1e9:.3f}",
         "PeakCudaReservedGB": f"{memory['peak_cuda_reserved_bytes'] / 1e9:.3f}",
         "PeakProcessGB": f"{memory['peak_process_bytes'] / 1e9:.3f}",
@@ -331,12 +374,13 @@ def _generate_macros(evidence: dict[str, Any]) -> str:
         ),
     }
     return _write(
+        output,
         "routing_etm_macros.tex",
         [_command(name, value) for name, value in values.items()],
     )
 
 
-def _generate_synthetic_table(evidence: dict[str, Any]) -> str:
+def _generate_synthetic_table(evidence: dict[str, Any], output: Path) -> str:
     labels = {
         "balanced ETM softmax raw": "Balanced ETM + softmax",
         "balanced ETM plus entmax15": r"Balanced ETM + $1.5$-entmax",
@@ -365,10 +409,10 @@ def _generate_synthetic_table(evidence: dict[str, Any]) -> str:
             + r" \\",
         )
     lines.append(r"\bottomrule")
-    return _write("routing_etm_synthetic_table.tex", lines)
+    return _write(output, "routing_etm_synthetic_table.tex", lines)
 
 
-def _generate_high_k_table(evidence: dict[str, Any]) -> str:
+def _generate_high_k_table(evidence: dict[str, Any], output: Path) -> str:
     labels = {
         "balanced ETM softmax raw": "Balanced ETM + softmax",
         "balanced ETM plus entmax15": r"Balanced ETM + $1.5$-entmax",
@@ -395,12 +439,12 @@ def _generate_high_k_table(evidence: dict[str, Any]) -> str:
             + r" \\",
         )
     lines.append(r"\bottomrule")
-    return _write("routing_etm_high_k_table.tex", lines)
+    return _write(output, "routing_etm_high_k_table.tex", lines)
 
 
-def _generate_validation_table(evidence: dict[str, Any]) -> str:
+def _generate_test_table(evidence: dict[str, Any], output: Path) -> str:
     comparison = evidence["comparison"]
-    tomotopy = evidence["tomotopy"]["validation"]
+    tomotopy = evidence["tomotopy"]["test"]
     rows = [
         {
             **comparison["canonical ETM"],
@@ -411,7 +455,7 @@ def _generate_validation_table(evidence: dict[str, Any]) -> str:
             "model": "Fragment/loss-balanced ETM",
         },
         {
-            **comparison["routing-informed sparse ETM"],
+            **comparison["Contextual Sparse ETM"],
             "model": "Contextual Sparse ETM",
         },
         {
@@ -448,10 +492,10 @@ def _generate_validation_table(evidence: dict[str, Any]) -> str:
             )
         lines.append(" & ".join(rendered) + r" \\")
     lines.append(r"\bottomrule")
-    return _write("routing_etm_validation_table.tex", lines)
+    return _write(output, "routing_etm_test_table.tex", lines)
 
 
-def _generate_stability_table(evidence: dict[str, Any]) -> str:
+def _generate_stability_table(evidence: dict[str, Any], output: Path) -> str:
     stability = evidence["stability"]
     lines = [
         (
@@ -499,15 +543,15 @@ def _generate_stability_table(evidence: dict[str, Any]) -> str:
         + r" \\",
     )
     lines.append(r"\bottomrule")
-    return _write("routing_etm_stability_table.tex", lines)
+    return _write(output, "routing_etm_stability_table.tex", lines)
 
 
-def _generate_diagnostics_table(evidence: dict[str, Any]) -> str:
+def _generate_diagnostics_table(evidence: dict[str, Any], output: Path) -> str:
     comparison = evidence["comparison"]
     labels = (
         ("canonical ETM", "Canonical ETM"),
         ("balanced ETM", "Fragment/loss-balanced ETM"),
-        ("routing-informed sparse ETM", r"\textbf{Contextual Sparse ETM}"),
+        ("Contextual Sparse ETM", r"\textbf{Contextual Sparse ETM}"),
     )
     lines = []
     for key, label in labels:
@@ -528,45 +572,75 @@ def _generate_diagnostics_table(evidence: dict[str, Any]) -> str:
             + r" \\",
         )
     lines.append(r"\bottomrule")
-    return _write("routing_etm_diagnostics_table.tex", lines)
+    return _write(output, "routing_etm_diagnostics_table.tex", lines)
 
 
-def _generate_hyperparameters(evidence: dict[str, Any]) -> str:
+def _generate_hyperparameters(evidence: dict[str, Any], output: Path) -> str:
     config = evidence["config"]
     protocol = evidence["protocol"]
+    preparation = evidence["preparation"]
     chemistry = protocol["chemistry"]
+    vocabulary_size = int(preparation["vocabulary_size"])
+    embedding_dimensions = int(config["fixed_train_only_sgns_dimensions"])
+    hidden = int(config["hidden_dimensions"])
+    topics = int(config["topics"])
+    training_seeds = ", ".join(
+        str(seed) for seed in evidence["stability"]["training_seeds"]
+    )
     rows = (
         ("Data split seed", str(protocol["seed"])),
-        ("Training seeds", "7043, 23, 37"),
-        ("Topics", str(config["topics"])),
-        ("Vocabulary", r"21,233 train-only fragment/loss tokens"),
+        ("Training seeds", training_seeds),
+        ("Topics", str(topics)),
+        ("Vocabulary", f"{vocabulary_size:,} train-only fragment/loss tokens"),
         (
             "Token coordinates",
-            "48-dimensional train-only skip-gram negative-sampling (SGNS); fixed",
+            f"{embedding_dimensions}-dimensional train-only skip-gram "
+            "negative-sampling (SGNS); fixed",
         ),
         (
             "Encoder",
-            r"21,233 $\rightarrow$ 800 $\rightarrow$ 800; rectified linear unit (ReLU)",
+            f"{vocabulary_size:,} $\\rightarrow$ {hidden} $\\rightarrow$ "
+            f"{hidden}; rectified linear unit (ReLU)",
         ),
-        ("Variational outputs", r"1,000-dimensional $\mu$ and $\log\sigma^2$"),
+        (
+            "Variational outputs",
+            f"{topics:,}-dimensional $\\mu$ and $\\log\\sigma^2$",
+        ),
         (
             "Topic-word decoder",
             "Embedded Topic Model (ETM) inner products; 50/50 fragment/loss mass",
         ),
-        ("Contextual evidence", r"leave-one-out context; top-2; temperature 1.0"),
-        ("Evidence pseudocount", r"fixed $1/K$"),
-        ("Numerical normalization floor", r"$10^{-12}$"),
-        ("Additional learned parameters", "one context scalar"),
-        ("Document-topic probability transform", r"$1.5$-entmax"),
-        ("Reconstruction", "raw intensity pseudo-count multinomial"),
+        (
+            "Contextual evidence",
+            f"leave-one-out context; top-{config['context_top_k']}; "
+            f"temperature {config['context_temperature']}",
+        ),
+        ("Evidence pseudocount", f"fixed ${config['evidence_pseudocount']}$"),
+        (
+            "Numerical normalization floor",
+            f"${_tex_scientific(float(config['numerical_probability_floor']))}$",
+        ),
+        (
+            "Additional learned parameters",
+            f"{config['context_parameters']} context scalar",
+        ),
+        (
+            "Document-topic probability transform",
+            f"${config['entmax_alpha']}$-entmax",
+        ),
+        ("Reconstruction", str(config["reconstruction"])),
         (
             "Prior and KL divergence",
             "standard-normal analytic Gaussian Kullback--Leibler divergence",
         ),
-        ("Optimizer", "Adam"),
-        ("Learning rate; weight decay", "0.005; $1.2\\times10^{-6}$"),
-        ("Batch size; epochs", "256; 120"),
-        ("Device; CPU threads", f"NVIDIA CUDA GPU; {config['threads']}"),
+        ("Optimizer", str(config["optimizer"])),
+        (
+            "Learning rate; weight decay",
+            f"{config['learning_rate']}; "
+            f"${_tex_scientific(float(config['weight_decay']))}$",
+        ),
+        ("Batch size; epochs", f"{config['batch_size']}; {config['epochs']}"),
+        ("Device; CPU threads", f"{config['device']}; {config['threads']}"),
         (
             "Mass2Motif Annotation Guidance (MAG) query",
             f"top {chemistry['motif_spectrum_top_n']} words; search "
@@ -581,12 +655,13 @@ def _generate_hyperparameters(evidence: dict[str, Any]) -> str:
         ),
     )
     return _write(
+        output,
         "routing_etm_hyperparameters_table.tex",
         [f"{name} & {value} \\\\" for name, value in rows] + [r"\bottomrule"],
     )
 
 
-def _generate_code_map() -> str:
+def _generate_code_map(output: Path) -> str:
     rows = (
         (
             r"Channel-balanced $\beta$ (Eq.~\ref{eq:beta})",
@@ -632,40 +707,57 @@ def _generate_code_map() -> str:
             r"\texttt{tests/test\_contextual\_sparse\_etm.py}",
         ),
         (
-            "Checkpoint verification",
-            r"\texttt{scripts/verify\_routing\_etm\_checkpoint.py}",
+            "Clean-room orchestration",
+            r"\texttt{reproduction\_plan.py}; "
+            r"\texttt{run\_contextual\_sparse\_etm\_reproduction.py}",
         ),
         (
-            "Stability verification",
-            r"\texttt{scripts/verify\_routing\_etm\_stability.py}",
+            "Evidence verification and packaging",
+            r"\texttt{reproduction\_audit.py}; "
+            r"\texttt{package\_contextual\_sparse\_etm\_reproduction.py}",
         ),
     )
     return _write(
+        output,
         "routing_etm_code_table.tex",
         [f"{name} & {location} \\\\" for name, location in rows] + [r"\bottomrule"],
     )
 
 
-def generate() -> dict[str, Any]:
+def generate(
+    evidence_root: Path = DEFAULT_EVIDENCE,
+    output: Path = GENERATED,
+) -> dict[str, Any]:
     """Validate frozen evidence and regenerate every canonical paper fragment."""
-    evidence = _validate_and_load()
+    evidence = _validate_and_load(evidence_root)
     outputs = [
-        _generate_macros(evidence),
-        _generate_synthetic_table(evidence),
-        _generate_high_k_table(evidence),
-        _generate_validation_table(evidence),
-        _generate_stability_table(evidence),
-        _generate_diagnostics_table(evidence),
-        _generate_hyperparameters(evidence),
-        _generate_code_map(),
+        _generate_macros(evidence, output),
+        _generate_synthetic_table(evidence, output),
+        _generate_high_k_table(evidence, output),
+        _generate_test_table(evidence, output),
+        _generate_stability_table(evidence, output),
+        _generate_diagnostics_table(evidence, output),
+        _generate_hyperparameters(evidence, output),
+        _generate_code_map(output),
     ]
     return {
         "status": "generated",
         "method": EXPECTED_METHOD,
-        "evidence_boundary": "training, synthetic, and validation only; test untouched",
+        "reported_split": "test",
+        "evidence_root": str(evidence["evidence_root"]),
         "outputs": outputs,
     }
 
 
 if __name__ == "__main__":
-    print(json.dumps(generate(), indent=2, sort_keys=True))  # noqa: T201
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--evidence-root", type=Path, default=DEFAULT_EVIDENCE)
+    parser.add_argument("--output", type=Path, default=GENERATED)
+    arguments = parser.parse_args()
+    print(  # noqa: T201
+        json.dumps(
+            generate(arguments.evidence_root, arguments.output),
+            indent=2,
+            sort_keys=True,
+        ),
+    )

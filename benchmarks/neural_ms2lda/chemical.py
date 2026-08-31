@@ -236,6 +236,8 @@ def _annotate_topics(
     for topic_id, (motif, match) in enumerate(zip(spectra, matches, strict=True)):
         clustered_smiles: list[str] = []
         clustered_spectra: list[Any] = []
+        clustering_failure: dict[str, str] | None = None
+        optimization_failure: dict[str, str] | None = None
         try:
             clustered_spectra_rows, clustered_smiles_rows, _ = hit_clustering(
                 s2v_similarity=spec2vec,
@@ -249,6 +251,10 @@ def _annotate_topics(
             )
             clustered_smiles = clustered_smiles_rows[0] if clustered_smiles_rows else []
         except Exception as exc:  # noqa: BLE001
+            clustering_failure = {
+                "exception_type": type(exc).__name__,
+                "message": str(exc),
+            }
             print(f"MAG clustering failed for topic {topic_id}: {exc}", file=sys.stderr)
         optimized_count = 0
         if clustered_spectra and clustered_smiles:
@@ -260,6 +266,10 @@ def _annotate_topics(
                     optimized[0] if optimized else None
                 )
             except Exception as exc:  # noqa: BLE001
+                optimization_failure = {
+                    "exception_type": type(exc).__name__,
+                    "message": str(exc),
+                }
                 print(
                     f"MAG optimization failed for topic {topic_id}: {exc}",
                     file=sys.stderr,
@@ -269,6 +279,8 @@ def _annotate_topics(
                 "topic_id": topic_id,
                 "clustered_smiles": clustered_smiles,
                 "optimized_feature_count": optimized_count,
+                "clustering_failure": clustering_failure,
+                "optimization_failure": optimization_failure,
             }
         )
     return annotations
@@ -313,6 +325,16 @@ def _shared_annotations(
     spec2vec, matches = _mag_matches(directory, inputs, spectra, protocol)
     annotations = _annotate_topics(spectra, matches, spec2vec, protocol)
     write_jsonl(annotations_path, annotations)
+    clustering_failures = [
+        int(row["topic_id"])
+        for row in annotations
+        if row.get("clustering_failure") is not None
+    ]
+    optimization_failures = [
+        int(row["topic_id"])
+        for row in annotations
+        if row.get("optimization_failure") is not None
+    ]
     result = {
         "method": method,
         "topics": len(annotations),
@@ -321,6 +343,12 @@ def _shared_annotations(
         )
         / len(annotations),
         "heldout_compounds_excluded_from_mag": index_summary["retained_leak_rows"] == 0,
+        "mag_failures": {
+            "clustering_count": len(clustering_failures),
+            "clustering_topic_ids": clustering_failures,
+            "optimization_count": len(optimization_failures),
+            "optimization_topic_ids": optimization_failures,
+        },
     }
     write_json(complete_path, result)
     return annotations, result
@@ -344,6 +372,7 @@ def run_chemical_scoring(
         "etm_balanced",
         "etm_balanced_entmax15_distinct_words",
         "etm_balanced_routing_top2_entmax15_raw_counts",
+        "contextual_sparse_etm",
         "neural",
         "pooled_likelihood",
         "pooled_mi005",
@@ -391,6 +420,15 @@ def run_chemical_scoring(
         "heldout_compounds_excluded_from_mag": annotation[
             "heldout_compounds_excluded_from_mag"
         ],
+        "mag_failures": annotation.get(
+            "mag_failures",
+            {
+                "clustering_count": 0,
+                "clustering_topic_ids": [],
+                "optimization_count": 0,
+                "optimization_topic_ids": [],
+            },
+        ),
     }
     write_json(output / "complete.json", result)
     return result

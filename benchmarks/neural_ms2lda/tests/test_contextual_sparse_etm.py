@@ -2,11 +2,17 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import numpy as np
 import pytest
 import scipy.sparse as sp
 import torch
-from scripts.run_contextual_sparse_etm import infer_document_topic_mixtures
+from scripts.run_contextual_sparse_etm import (
+    _load_validation_data,
+    infer_document_topic_mixtures,
+)
+from scripts.run_routing_etm_campaign import build_synthetic_model
 from torch.nn import functional as nnf
 
 from benchmarks.neural_ms2lda.contextual_sparse_etm import (
@@ -26,6 +32,7 @@ from benchmarks.neural_ms2lda.topic_model_training import (
     dense_normalized,
     raw_count_reconstruction_loss,
 )
+from benchmarks.neural_ms2lda.utils import write_json
 
 
 def _scientific_inputs() -> tuple[np.ndarray, np.ndarray, sp.csr_matrix]:
@@ -74,6 +81,33 @@ def _closed_form_entmax15(logits: torch.Tensor) -> torch.Tensor:
         upper = torch.where(mass > 1.0, upper, threshold)
     theta = torch.clamp(scaled_logits - upper, min=0).square()
     return (theta / theta.sum(dim=1, keepdim=True)).to(logits.dtype)
+
+
+def test_synthetic_treatment_uses_the_canonical_model_class() -> None:
+    """The proposed synthetic row must execute the maintained implementation."""
+    embeddings, fragment_mask, _ = _scientific_inputs()
+
+    treatment = build_synthetic_model(
+        embeddings,
+        5,
+        fragment_mask,
+        routing_variant="top2_context",
+        theta_transform="entmax15",
+        reconstruction_scaling="raw_counts",
+        hidden=7,
+    )
+    softmax_ablation = build_synthetic_model(
+        embeddings,
+        5,
+        fragment_mask,
+        routing_variant="top2_context",
+        theta_transform="softmax",
+        reconstruction_scaling="raw_counts",
+        hidden=7,
+    )
+
+    assert isinstance(treatment, ContextualSparseETM)
+    assert isinstance(softmax_ablation, RoutingInformedETM)
 
 
 def test_channel_balanced_decoder_matches_equation_beta() -> None:
@@ -323,6 +357,25 @@ def test_empty_spectrum_has_explicit_uniform_evidence_fallback() -> None:
         centered_log_evidence_offset(evidence),
         torch.zeros_like(evidence),
     )
+
+
+def test_training_loader_rejects_any_test_file_in_the_sealed_view(
+    tmp_path: Path,
+) -> None:
+    write_json(
+        tmp_path / "validation_input_manifest.json",
+        {
+            "prepared_run": "/not-opened-by-training",
+            "candidate_test_artifacts_accessed": False,
+        },
+    )
+    write_json(tmp_path / "protocol.json", {"model": {"num_topics": 1000}, "seed": 42})
+    test_file = tmp_path / "data/test_full.npz"
+    test_file.parent.mkdir(parents=True)
+    test_file.touch()
+
+    with pytest.raises(RuntimeError, match="sealed training view exposes test files"):
+        _load_validation_data(tmp_path)
 
 
 def test_batched_inference_is_the_deterministic_theta_equation() -> None:

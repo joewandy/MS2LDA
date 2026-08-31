@@ -39,7 +39,6 @@ from benchmarks.neural_ms2lda.reproducibility import (
     MemoryState,
     configure_deterministic_execution,
     flatten_support_summary,
-    prepare_validation_view,
     read_json_object,
     resolve_torch_device,
     runtime_memory_metrics,
@@ -64,9 +63,7 @@ if TYPE_CHECKING:
     import scipy.sparse as sp
 
 MODEL_NAME = "Contextual Sparse ETM"
-# This identifier is retained only because the frozen validation artifacts use
-# it as their directory and lookup key.  It is not the scientific model name.
-REAL_METHOD = "etm_balanced_routing_top2_entmax15_raw_counts"
+REAL_METHOD = "contextual_sparse_etm"
 REAL_TOPICS = 1000
 LEARNING_RATE = 0.005
 WEIGHT_DECAY = 1.2e-6
@@ -141,18 +138,24 @@ def _validate_settings(settings: TrainingSettings) -> None:
 
 def _load_validation_data(
     run_directory: Path,
-    prepared_run: Path,
 ) -> ValidationData:
     """Load and cross-check the frozen training and validation arrays."""
-    input_manifest = prepare_validation_view(
-        run_directory,
-        prepared_run,
-        expected_topics=REAL_TOPICS,
+    input_manifest = read_json_object(
+        run_directory / "validation_input_manifest.json",
     )
+    if input_manifest.get("candidate_test_artifacts_accessed") is not False:
+        message = "validation view does not preserve the test boundary"
+        raise RuntimeError(message)
     protocol = read_json_object(run_directory / "protocol.json")
     topics = int(protocol["model"]["num_topics"])
     data_seed = int(protocol["seed"])
     data_directory = run_directory / "data"
+    forbidden = sorted(
+        path.name for path in data_directory.glob("test*") if path.is_file()
+    )
+    if forbidden:
+        message = f"sealed training view exposes test files: {forbidden}"
+        raise RuntimeError(message)
     train = load_csr(data_directory / "train.npz")
     observed = load_csr(data_directory / "validation_observed.npz")
     completion = load_csr(data_directory / "validation_completion.npz")
@@ -209,15 +212,13 @@ def _training_contract(
         Path(row["path"]).name: row["sha256"]
         for row in data.input_manifest["linked_inputs"]
     }
-    # Historical field values are retained here so an interrupted frozen run
-    # can resume with the cleaned, state-dict-compatible implementation.
     return {
         "method": REAL_METHOD,
         "topics": data.topics,
-        "routing_variant": "top2_context",
-        "routing_temperature": 1.0,
-        "theta_transform": "entmax15",
-        "reconstruction_scaling": "raw_counts",
+        "context_top_k": 2,
+        "context_temperature": 1.0,
+        "entmax_alpha": 1.5,
+        "reconstruction": "raw_counts",
         "epochs": settings.epochs,
         "batch_size": settings.batch_size,
         "seed": training_seed,
@@ -230,7 +231,6 @@ def _training_contract(
 
 def _run_configuration(
     data: ValidationData,
-    prepared_run: Path,
     settings: TrainingSettings,
     execution: ExecutionState,
 ) -> dict[str, Any]:
@@ -239,18 +239,23 @@ def _run_configuration(
         "model_name": MODEL_NAME,
         "artifact_method_id": REAL_METHOD,
         "evidence": "frozen MSnLib training plus validation only",
-        "prepared_run": str(prepared_run.expanduser().resolve()),
+        "prepared_run": data.input_manifest["prepared_run"],
         "published_base": "Embedded Topic Model",
         "topics": data.topics,
         "fixed_train_only_sgns_dimensions": int(data.embeddings.shape[1]),
         "fragment_loss_beta_mass": [0.5, 0.5],
         "hidden_dimensions": 800,
         "context_parameters": 1,
+        "context_top_k": 2,
+        "context_temperature": 1.0,
         "contextual_evidence": (
             "count-weighted top-2 assignments from leave-one-out token context"
         ),
         "posterior_offset": "centered log of evidence plus a fixed 1/K pseudocount",
+        "evidence_pseudocount": "1/K",
+        "numerical_probability_floor": EPSILON,
         "document_topic_transform": "1.5-entmax",
+        "entmax_alpha": 1.5,
         "variational_posterior": "diagonal Gaussian with analytic standard-normal KL",
         "reconstruction": "raw pseudo-count multinomial negative log-likelihood",
         "epochs": settings.epochs,
@@ -557,21 +562,19 @@ def _evaluate_and_persist(
 
 def train_real_validation(
     real_run: Path,
-    prepared_run: Path,
     *,
     device: torch.device,
     settings: TrainingSettings,
 ) -> dict[str, Any]:
     """Train the model on frozen training data and evaluate validation only."""
     _validate_settings(settings)
-    run_directory = real_run.expanduser().resolve()
-    prepared_directory = prepared_run.expanduser().resolve(strict=True)
+    run_directory = real_run.expanduser().resolve(strict=True)
     output = run_directory / "models" / REAL_METHOD
     result_path = output / "result.json"
     if result_path.is_file():
         return read_json_object(result_path)
 
-    data = _load_validation_data(run_directory, prepared_directory)
+    data = _load_validation_data(run_directory)
     training_seed = resolve_training_seed(data.data_seed, settings.requested_seed)
     configure_deterministic_execution(training_seed, settings.threads)
     model = ContextualSparseETM(
@@ -600,7 +603,6 @@ def train_real_validation(
         output / "config.json",
         _run_configuration(
             data,
-            prepared_directory,
             settings,
             ExecutionState(
                 training_seed=training_seed,
@@ -689,7 +691,6 @@ def main(argv: Sequence[str] | None = None) -> int:
     commands = parser.add_subparsers(dest="command", required=True)
     train = commands.add_parser("train")
     train.add_argument("--real-run", required=True, type=Path)
-    train.add_argument("--prepared-run", required=True, type=Path)
     train.add_argument("--epochs", type=int, default=120)
     train.add_argument("--batch-size", type=int, default=256)
     train.add_argument("--device", choices=("auto", "cpu", "cuda"), default="auto")
@@ -706,7 +707,6 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.command == "train":
         result = train_real_validation(
             args.real_run,
-            args.prepared_run,
             device=resolve_torch_device(args.device),
             settings=TrainingSettings(
                 epochs=args.epochs,

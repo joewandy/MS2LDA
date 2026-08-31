@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any, Literal
 import numpy as np
 import torch
 
+from benchmarks.neural_ms2lda.contextual_sparse_etm import ContextualSparseETM
 from benchmarks.neural_ms2lda.diagnostics import model_selection_diagnostics
 from benchmarks.neural_ms2lda.objectives import (
     beta_cooccurrence_topic_loss,
@@ -79,6 +80,86 @@ POSITIVE_NPMI_GRAPH_CONFIG = {
 }
 
 
+def build_synthetic_model(  # noqa: PLR0913
+    embeddings: np.ndarray,
+    fitted_topics: int,
+    fragment_mask: np.ndarray,
+    *,
+    routing_variant: CampaignRoutingVariant,
+    theta_transform: ThetaTransform,
+    reconstruction_scaling: ReconstructionScaling,
+    hidden: int = 800,
+) -> torch.nn.Module:
+    """Construct one synthetic formulation without duplicating model equations.
+
+    The paper-facing treatment is instantiated from :class:`ContextualSparseETM`,
+    the maintained implementation used for real-data training and inference.
+    Historical configurable classes remain only for the controlled softmax and
+    entmax ablations that are not themselves the proposed model.
+    """
+    is_contextual_sparse_etm = (
+        routing_variant == "top2_context"
+        and theta_transform == "entmax15"
+        and reconstruction_scaling == "raw_counts"
+    )
+    if is_contextual_sparse_etm:
+        return ContextualSparseETM(
+            embeddings,
+            fitted_topics,
+            fragment_mask,
+            hidden=hidden,
+        )
+    if routing_variant == TOP2_ROUTING_VARIANT:
+        return Top2TokenETM(
+            embeddings,
+            fitted_topics,
+            fragment_mask,
+            theta_transform=theta_transform,
+            routing_temperature=1.0,
+            hidden=hidden,
+        )
+    return RoutingInformedETM(
+        embeddings,
+        fitted_topics,
+        fragment_mask,
+        routing_variant=routing_variant,
+        theta_transform=theta_transform,
+        routing_temperature=1.0,
+        hidden=hidden,
+    )
+
+
+def _model_theta(
+    model: torch.nn.Module,
+    normalized_bows: torch.Tensor,
+    *,
+    sample: bool,
+) -> tuple[torch.Tensor, torch.Tensor]:
+    """Evaluate the document-mixture equation for any controlled formulation."""
+    if isinstance(model, ContextualSparseETM):
+        return model.document_topic_mixture(normalized_bows, sample=sample)
+    return model.theta(normalized_bows, sample=sample)
+
+
+def _model_beta(model: torch.nn.Module) -> torch.Tensor:
+    """Evaluate the topic-word equation for any controlled formulation."""
+    if isinstance(model, ContextualSparseETM):
+        return model.topic_word_distribution()
+    return model.beta()
+
+
+def _model_evidence(
+    model: torch.nn.Module,
+    normalized_bows: torch.Tensor,
+) -> torch.Tensor | None:
+    """Return contextual evidence when the formulation defines it."""
+    if isinstance(model, ContextualSparseETM):
+        return model.contextual_evidence(normalized_bows)
+    if model.routing_variant == "etm":
+        return None
+    return model.routing_evidence(normalized_bows)
+
+
 def method_label(
     variant: CampaignRoutingVariant,
     theta_transform: ThetaTransform,
@@ -97,7 +178,7 @@ def method_label(
 
 @torch.inference_mode()
 def infer_theta(
-    model: RoutingInformedETM,
+    model: torch.nn.Module,
     matrix: sp.csr_matrix,
     *,
     batch_size: int,
@@ -113,7 +194,8 @@ def infer_theta(
             min(start + int(batch_size), matrix.shape[0]),
             dtype=np.int64,
         )
-        theta, _ = model.theta(
+        theta, _ = _model_theta(
+            model,
             dense_normalized(matrix, rows, device),
             sample=False,
         )
@@ -124,15 +206,13 @@ def infer_theta(
 
 @torch.inference_mode()
 def infer_routing_evidence(
-    model: RoutingInformedETM,
+    model: torch.nn.Module,
     matrix: sp.csr_matrix,
     *,
     batch_size: int,
     device: torch.device,
 ) -> np.ndarray | None:
     """Infer the auditable token-evidence distribution used by the posterior."""
-    if model.routing_variant == "etm":
-        return None
     model.eval()
     values = []
     for start in range(0, matrix.shape[0], int(batch_size)):
@@ -141,7 +221,12 @@ def infer_routing_evidence(
             min(start + int(batch_size), matrix.shape[0]),
             dtype=np.int64,
         )
-        evidence = model.routing_evidence(dense_normalized(matrix, rows, device))
+        evidence = _model_evidence(
+            model,
+            dense_normalized(matrix, rows, device),
+        )
+        if evidence is None:
+            return None
         values.append(evidence.cpu().numpy().astype(np.float32))
     return np.concatenate(values)
 
@@ -249,25 +334,17 @@ def run_synthetic(  # noqa: PLR0913, PLR0915
         [word.startswith("frag@") for word in dataset.vocabulary],
         dtype=bool,
     )
-    if routing_variant == TOP2_ROUTING_VARIANT:
-        model = Top2TokenETM(
-            embeddings,
-            fitted_topics,
-            fragment_mask,
-            theta_transform=theta_transform,
-            routing_temperature=1.0,
-            hidden=800,
-        ).to(device)
-    else:
-        model = RoutingInformedETM(
-            embeddings,
-            fitted_topics,
-            fragment_mask,
-            routing_variant=routing_variant,
-            theta_transform=theta_transform,
-            routing_temperature=1.0,
-            hidden=800,
-        ).to(device)
+    model = build_synthetic_model(
+        embeddings,
+        fitted_topics,
+        fragment_mask,
+        routing_variant=routing_variant,
+        theta_transform=theta_transform,
+        reconstruction_scaling=reconstruction_scaling,
+        hidden=800,
+    ).to(device)
+    config["implementation_class"] = type(model).__name__
+    write_json(output / "config.json", config)
     optimizer = torch.optim.Adam(
         model.parameters(),
         lr=0.005,
@@ -288,11 +365,12 @@ def run_synthetic(  # noqa: PLR0913, PLR0915
         epoch_started = time.perf_counter()
         for start in range(0, len(order), int(batch_size)):
             rows = order[start : start + int(batch_size)]
-            theta, kl = model.theta(
+            theta, kl = _model_theta(
+                model,
                 dense_normalized(dataset.train, rows, device),
                 sample=True,
             )
-            beta_batch = model.beta()
+            beta_batch = _model_beta(model)
             reconstruction, _ = sparse_reconstruction_loss(
                 theta,
                 beta_batch,
@@ -356,7 +434,7 @@ def run_synthetic(  # noqa: PLR0913, PLR0915
     training_seconds = time.perf_counter() - training_started
     model.eval()
     with torch.inference_mode():
-        beta_tensor = model.beta()
+        beta_tensor = _model_beta(model)
         final_npmi_loss = (
             float(
                 beta_cooccurrence_topic_loss(
