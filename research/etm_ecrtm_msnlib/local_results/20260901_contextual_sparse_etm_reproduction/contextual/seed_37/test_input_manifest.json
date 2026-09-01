@@ -1,0 +1,65 @@
+{
+  "completed_validation_outputs": [
+    {
+      "bytes": 5706,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/contextual_seed_37/validation_evaluation/contextual_sparse_etm/complete.json",
+      "sha256": "df41ec2ca9a578798ff3f09c0fbe6d545e4aaa46d7c77965fbe1d8aea86aae30"
+    },
+    {
+      "bytes": 162361,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/contextual_seed_37/validation_chemical/contextual_sparse_etm/complete.json",
+      "sha256": "c6119652de3e7afdc28dea7a5bb700ca5300cc166137f75f62b57aa307078d1d"
+    }
+  ],
+  "exposed_after_validation": true,
+  "frozen_models": [
+    {
+      "bytes": 81193102,
+      "method": "contextual_sparse_etm",
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/contextual_seed_37/models/contextual_sparse_etm/weights.pt",
+      "sha256": "9613491a4e604c123a8fe1cd797877b9847ad7201a30eebcf0a14d4094bc5833"
+    },
+    {
+      "bytes": 1370,
+      "method": "contextual_sparse_etm",
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/contextual_seed_37/models/contextual_sparse_etm/config.json",
+      "sha256": "635d3233a5a1994399e2f49eddf41f0072627d23470fb7eafd4ce35137a4b20e"
+    },
+    {
+      "bytes": 14541,
+      "method": "contextual_sparse_etm",
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/contextual_seed_37/models/contextual_sparse_etm/result.json",
+      "sha256": "d694c49a21c3b34025d8a3e9f89de67a1c76aaad3370e486452c4c0c61e1c978"
+    }
+  ],
+  "linked_test_inputs": [
+    {
+      "bytes": 1482593,
+      "linked_path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/contextual_seed_37/data/test_observed.npz",
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/prepared/data/test_observed.npz",
+      "sha256": "855154fb1ee2c72f8dc56bef5258de997e951075042b458cbafe7877ab355f33"
+    },
+    {
+      "bytes": 1484769,
+      "linked_path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/contextual_seed_37/data/test_completion.npz",
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/prepared/data/test_completion.npz",
+      "sha256": "328f5970632ee03877c0151846db6034d98d0041f4012f9603d6519552553c45"
+    },
+    {
+      "bytes": 2917737,
+      "linked_path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/contextual_seed_37/data/test_full.npz",
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/prepared/data/test_full.npz",
+      "sha256": "45b931c5c5a56d8a4f86ca0d19942d09089056c815a41210aae55c12e692cd01"
+    },
+    {
+      "bytes": 2481149,
+      "linked_path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/contextual_seed_37/data/test_records.jsonl",
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/prepared/data/test_records.jsonl",
+      "sha256": "94647034814f2d040e2912e76ff5d919d414613429bd6809cdbf0ce87b436ac5"
+    }
+  ],
+  "methods": [
+    "contextual_sparse_etm"
+  ],
+  "split": "test"
+}

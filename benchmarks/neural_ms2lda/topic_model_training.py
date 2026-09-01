@@ -24,7 +24,7 @@ def dense_normalized(
 ) -> torch.Tensor:
     """Return row-normalized spectral-word counts for the ETM encoder.
 
-    The returned tensor is ``x`` in equation ``eq:normalized-input`` of the
+    The returned tensor is ``x`` in equation ``eq:normalized-bow`` of the
     report.  Empty rows remain all-zero; prepared training and validation
     spectra are non-empty after preprocessing.
     """

@@ -126,8 +126,8 @@ Tomotopy had higher conditional mean SOS averaged over evaluable motifs
 (\TomotopyMeanSOS{} versus \ContextualMeanSOS{}). Across three training seeds on
 the same frozen split, evaluable and useful motif counts remained within
 \StabilityEvaluableRange{} and \StabilityUsefulRange{}, median effective topics
-remained \MedianEffectiveTopics{}, and \StabilityUniqueRange{} topics became the
-largest component for at least one test spectrum. These results support
+remained within \StabilityMedianEffectiveRange{}, and \StabilityUniqueRange{}
+topics became the largest component for at least one test spectrum. These results support
 a reproducible breadth--quality trade-off: the method discovers a substantially
 larger usable motif inventory while preserving sparse spectrum assignments on
 the held-out test split.
@@ -933,7 +933,7 @@ Model & Optimized & Evaluable & Useful & Mean SOS & Median SOS & NLL $\downarrow
 Figure~\ref{fig:breadth-quality} places conditional chemical quality against
 the size of the evaluable inventory. It makes the central comparison visible:
 Contextual Sparse ETM moves far to the right of all three comparators while
-retaining mean SOS above both ETM baselines; Tomotopy occupies the
+placing between the two ETM baselines in mean SOS; Tomotopy occupies the
 higher-quality but lower-breadth corner.
 
 \begin{figure}[H]
@@ -997,15 +997,17 @@ The result is not uniform dominance. Tomotopy's smaller evaluable set has higher
 mean and median SOS (\TomotopyMeanSOS{}/\TomotopyMedianSOS{}) than the proposed
 model (\ContextualMeanSOS{}/\ContextualMedianSOS{}). Canonical and balanced ETM have
 lower completion NLL but produce substantially fewer evaluable and useful
-motifs. The primary result is therefore increased discovery breadth with an
-explicit conditional-quality and predictive-fit trade-off.
+motifs. The proposed model's mean SOS is higher than canonical ETM's but lower
+than balanced ETM's. The primary result is therefore increased discovery
+breadth with an explicit conditional-quality and predictive-fit trade-off.
 
 Changing only initialization and minibatch order tests whether this discovery
 gain depends on one fitted checkpoint. The three runs give
 \StabilityOptimizedRange{} optimized, \StabilityEvaluableRange{} evaluable and
 \StabilityUsefulRange{} useful motifs. Mean SOS spans
 \StabilitySOSRange{} and completion NLL spans only
-\StabilityNLLRange{}. Across the runs,
+\StabilityNLLRange{}. Median effective topics remain within
+\StabilityMedianEffectiveRange{}. Across the runs,
 \StabilityUniqueRange{} topics become the largest component for at least one
 test spectrum. No run contains a catastrophic duplicate component.
 

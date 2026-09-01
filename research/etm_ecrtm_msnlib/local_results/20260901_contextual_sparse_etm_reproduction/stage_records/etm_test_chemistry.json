@@ -1,0 +1,30 @@
+{
+  "command": [
+    "/home/joewandy/miniforge3/envs/ms2lda-repro-ba9443b/bin/python",
+    "-m",
+    "benchmarks.neural_ms2lda.chemical",
+    "--run",
+    "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/controls",
+    "--data-root",
+    "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/assets",
+    "--method",
+    "etm",
+    "--split",
+    "test"
+  ],
+  "finished_utc": "2026-09-01T01:46:47.108381+00:00",
+  "log": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/logs/etm_test_chemistry.log",
+  "name": "etm_test_chemistry",
+  "outputs": [
+    {
+      "bytes": 159646,
+      "modified_ns": 1788227206835133520,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/controls/chemical/etm/complete.json",
+      "sha256": "d5d6e3db4b678f8adaa310781c6b2527a8c8e96bb42c3913ee36b6748f70d8ae"
+    }
+  ],
+  "pre_stage_load": null,
+  "return_code": 0,
+  "started_utc": "2026-09-01T01:46:42.476799+00:00",
+  "status": "complete"
+}

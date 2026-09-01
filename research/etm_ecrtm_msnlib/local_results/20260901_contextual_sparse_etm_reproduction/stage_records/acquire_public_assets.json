@@ -1,0 +1,24 @@
+{
+  "command": [
+    "/home/joewandy/miniforge3/envs/ms2lda-repro-ba9443b/bin/python",
+    "-m",
+    "scripts.download_msnlib_validation_assets",
+    "--data-root",
+    "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/assets"
+  ],
+  "finished_utc": "2026-09-01T00:10:22.626500+00:00",
+  "log": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/logs/acquire_public_assets.log",
+  "name": "acquire_public_assets",
+  "outputs": [
+    {
+      "bytes": 1167,
+      "modified_ns": 1788221422582221562,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/assets/acquisition_manifest.json",
+      "sha256": "cef903f5ad7a7f8d59680abda1592734f01d15b9692fe10c863d6eb00ceb2211"
+    }
+  ],
+  "pre_stage_load": null,
+  "return_code": 0,
+  "started_utc": "2026-08-31T23:56:45.865053+00:00",
+  "status": "complete"
+}

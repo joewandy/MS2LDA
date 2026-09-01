@@ -1,0 +1,7 @@
+{
+  "device": "cuda",
+  "frozen_weights_sha256": "e7578b0a0799b1900d38778a93bd046cc6dbb749829845b0273bb6506aa924b3",
+  "split": "test",
+  "test_input_manifest": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/contextual_seed_7043/test_input_manifest.json",
+  "training_or_optimization_performed": false
+}

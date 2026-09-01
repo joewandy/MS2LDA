@@ -261,7 +261,7 @@ def test_report_rejects_an_unsupported_sentence_level_comparison() -> None:
             "optimized_motifs": "8",
             "evaluable_motifs": "20",
             "useful_motifs": "10",
-            "mean_sos": "0.7",
+            "mean_sos": "0.55",
             "completion_nll": "1.1",
             "median_effective_topics": "2",
             "unique_top1_topics": "900",

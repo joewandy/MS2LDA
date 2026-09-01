@@ -1,0 +1,46 @@
+{
+  "command": [
+    "/home/joewandy/miniforge3/envs/ms2lda-repro-ba9443b/bin/python",
+    "-m",
+    "scripts.run_routing_etm_campaign",
+    "--output-root",
+    "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/synthetic",
+    "--seed",
+    "11",
+    "--fitted-topics",
+    "36",
+    "--routing-variant",
+    "top2_context",
+    "--theta-transform",
+    "entmax15",
+    "--reconstruction-scaling",
+    "raw_counts",
+    "--epochs",
+    "120",
+    "--batch-size",
+    "200",
+    "--device",
+    "cuda",
+    "--threads",
+    "6",
+    "--training-documents",
+    "800",
+    "--validation-documents",
+    "160"
+  ],
+  "finished_utc": "2026-09-01T00:16:34.039594+00:00",
+  "log": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/logs/synthetic_seed_11_K_36_balanced_etm_routing_top2_context_entmax15_raw_counts.log",
+  "name": "synthetic_seed_11_K_36_balanced_etm_routing_top2_context_entmax15_raw_counts",
+  "outputs": [
+    {
+      "bytes": 10260,
+      "modified_ns": 1788221793578764299,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/synthetic/synthetic_runs/seed_11_K_36_balanced_etm_routing_top2_context_entmax15_raw_counts/result.json",
+      "sha256": "c49095ba751ea07b3aa846f93b70ed7efc3c520bb39f8d57d2cce0b7cc9762cc"
+    }
+  ],
+  "pre_stage_load": null,
+  "return_code": 0,
+  "started_utc": "2026-09-01T00:16:23.642816+00:00",
+  "status": "complete"
+}

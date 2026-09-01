@@ -1,0 +1,118 @@
+{
+  "command": [
+    "/home/joewandy/miniforge3/envs/ms2lda-repro-ba9443b/bin/python",
+    "-m",
+    "scripts.run_contextual_sparse_etm",
+    "train",
+    "--real-run",
+    "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/contextual_seed_7043",
+    "--epochs",
+    "120",
+    "--batch-size",
+    "256",
+    "--device",
+    "cuda",
+    "--threads",
+    "6",
+    "--training-seed",
+    "7043"
+  ],
+  "finished_utc": "2026-09-01T01:17:16.387298+00:00",
+  "log": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/logs/contextual_seed_7043_train.log",
+  "name": "contextual_seed_7043_train",
+  "outputs": [
+    {
+      "bytes": 14583,
+      "modified_ns": 1788225435851812715,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/contextual_seed_7043/models/contextual_sparse_etm/result.json",
+      "sha256": "af1b3f31f0527a97f4e66460d9ae6d5ea7f9db9ad7f8726e466fba6cd72186f6"
+    },
+    {
+      "bytes": 81193102,
+      "modified_ns": 1788225435579219959,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/contextual_seed_7043/models/contextual_sparse_etm/weights.pt",
+      "sha256": "e7578b0a0799b1900d38778a93bd046cc6dbb749829845b0273bb6506aa924b3"
+    },
+    {
+      "bytes": 1372,
+      "modified_ns": 1788224607799894518,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/contextual_seed_7043/models/contextual_sparse_etm/config.json",
+      "sha256": "ec914e1a5abf2ccf671661abcaeea48c773035c445e88fdf1478b20971449276"
+    },
+    {
+      "bytes": 16102,
+      "modified_ns": 1788225433486563060,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/contextual_seed_7043/models/contextual_sparse_etm/training_history.csv",
+      "sha256": "b242bbe147bbdf1532ddbf26c3a5882feaf4406adc868e6f0382c7d1663c4c48"
+    },
+    {
+      "bytes": 531583,
+      "modified_ns": 1788225435651524127,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/contextual_seed_7043/models/contextual_sparse_etm/top_words.csv",
+      "sha256": "fc21d2bd9aae75ce26814d7329d3339de5fbee9bd0ae2072617ae240d072ddf1"
+    },
+    {
+      "bytes": 418,
+      "modified_ns": 1788225435655521343,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/contextual_seed_7043/models/contextual_sparse_etm/fragment_mass_summary.json",
+      "sha256": "e816118056a2928a1f719b40f2a96d171efb255af1d77656232194c68c7e3a31"
+    },
+    {
+      "bytes": 653,
+      "modified_ns": 1788225435655443147,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/contextual_seed_7043/models/contextual_sparse_etm/duplicate_component_summary.json",
+      "sha256": "d783013697ad7606835626196324f9f49aca2866111cd2c0b25238af82d06e1b"
+    },
+    {
+      "bytes": 5100,
+      "modified_ns": 1788224607800027237,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/contextual_seed_7043/models/contextual_sparse_etm/training_access_audit.json",
+      "sha256": "2f38c572ab5c9f1b57651a824f3de13fb43d13b87c2ecaf95d8b6acd4d233f77"
+    },
+    {
+      "bytes": 5710,
+      "modified_ns": 1788225435707355508,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/contextual_seed_7043/validation_evaluation/contextual_sparse_etm/complete.json",
+      "sha256": "d1bc65b1e8450ef2efc858009a4d85a4230eb2140e594014d69b02cc5fa1b796"
+    },
+    {
+      "bytes": 84932128,
+      "modified_ns": 1788225435667225382,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/contextual_seed_7043/validation_evaluation/contextual_sparse_etm/beta.npy",
+      "sha256": "6a92e3db42cca54d83a37b204af07801f813f602410fbd73486be8b26821064f"
+    },
+    {
+      "bytes": 15556128,
+      "modified_ns": 1788225435699227356,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/contextual_seed_7043/validation_evaluation/contextual_sparse_etm/validation_full_theta.npy",
+      "sha256": "0ac05e4dce032442c2cc5bc552ffc72d76535b86362682c8945dec4f16ee8cf2"
+    },
+    {
+      "bytes": 550,
+      "modified_ns": 1788225435655228047,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/contextual_seed_7043/models/contextual_sparse_etm/theta_support_summary.csv",
+      "sha256": "91894e30f53f114b278b4c5baa4540ab283ee07f4dfca2c77acde63703c80a29"
+    },
+    {
+      "bytes": 573,
+      "modified_ns": 1788225435655316290,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/contextual_seed_7043/models/contextual_sparse_etm/routing_evidence_support_summary.csv",
+      "sha256": "97d07a140e4d67c746c53cfc9a743a62433feebb01d96414ad94423849d7b717"
+    },
+    {
+      "bytes": 7126,
+      "modified_ns": 1788225435846370095,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/contextual_seed_7043/models/contextual_sparse_etm/provenance.json",
+      "sha256": "8cb2ec3078cd239aecd69e6c3089164917c6f647a1c61a0bf36cbb8d0c417ffe"
+    }
+  ],
+  "pre_stage_load": {
+    "available_memory_bytes": 13849509888,
+    "gpu_compute_processes": [],
+    "one_minute_load_average": 1.0537109375,
+    "utc": "2026-09-01T01:03:26.148479+00:00"
+  },
+  "return_code": 0,
+  "started_utc": "2026-09-01T01:03:26.148497+00:00",
+  "status": "complete"
+}

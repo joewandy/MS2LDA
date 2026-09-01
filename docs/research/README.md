@@ -34,7 +34,7 @@ evaluation; test evaluation performs no fitting or model selection.
 
 The single committed evidence package is:
 
-- research/etm_ecrtm_msnlib/local_results/20260831_contextual_sparse_etm_reproduction/
+- research/etm_ecrtm_msnlib/local_results/20260901_contextual_sparse_etm_reproduction/
 
 The source inventory and figure/table design map are recorded in
 routing_etm_report_sources.md.

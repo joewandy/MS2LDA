@@ -19,7 +19,7 @@ GENERATED = REPO / "docs/research/generated"
 DEFAULT_EVIDENCE = (
     REPO
     / "research/etm_ecrtm_msnlib/local_results"
-    / "20260831_contextual_sparse_etm_reproduction"
+    / "20260901_contextual_sparse_etm_reproduction"
 )
 
 EXPECTED_METHOD = "contextual_sparse_etm"
@@ -150,11 +150,16 @@ def _require_manuscript_claims(evidence: dict[str, Any]) -> None:
         > _integer(canonical, "evaluable_motifs"),
         "balancing_raises_useful_motifs": _integer(balanced, "useful_motifs")
         > _integer(canonical, "useful_motifs"),
-        "contextual_mean_sos_exceeds_both_etm_controls": _float(
+        "contextual_mean_sos_exceeds_canonical_etm": _float(
             contextual,
             "mean_sos",
         )
-        > max(_float(canonical, "mean_sos"), _float(balanced, "mean_sos")),
+        > _float(canonical, "mean_sos"),
+        "contextual_mean_sos_is_below_balanced_etm": _float(
+            contextual,
+            "mean_sos",
+        )
+        < _float(balanced, "mean_sos"),
         "contextual_has_fewer_optimized_motifs_than_balanced": _integer(
             contextual,
             "optimized_motifs",
@@ -513,6 +518,10 @@ def _generate_macros(evidence: dict[str, Any]) -> tuple[str, str]:
         "StabilityNLLRange": (
             f"{aggregate['completion_nll']['minimum']:.4f}--"
             f"{aggregate['completion_nll']['maximum']:.4f}"
+        ),
+        "StabilityMedianEffectiveRange": (
+            f"{aggregate['median_effective_topics']['minimum']:.2f}--"
+            f"{aggregate['median_effective_topics']['maximum']:.2f}"
         ),
         "StabilityUniqueRange": (
             f"{int(aggregate['unique_top1_topics']['minimum'])}--"

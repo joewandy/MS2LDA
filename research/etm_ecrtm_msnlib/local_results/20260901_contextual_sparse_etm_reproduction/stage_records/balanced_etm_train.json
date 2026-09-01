@@ -1,0 +1,98 @@
+{
+  "command": [
+    "/home/joewandy/miniforge3/envs/ms2lda-repro-ba9443b/bin/python",
+    "-m",
+    "scripts.run_msnlib_model_comparison",
+    "train",
+    "--run",
+    "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/controls",
+    "--method",
+    "etm_balanced",
+    "--device",
+    "cuda",
+    "--etm-epochs",
+    "120",
+    "--etm-batch-size",
+    "256"
+  ],
+  "finished_utc": "2026-09-01T01:02:52.207113+00:00",
+  "log": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/logs/balanced_etm_train.log",
+  "name": "balanced_etm_train",
+  "outputs": [
+    {
+      "bytes": 4705,
+      "modified_ns": 1788224571616199209,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/controls/models/etm_balanced/result.json",
+      "sha256": "6c2a9726832c8d20794e63e908fe9175b625ad5d1102c03c4ee0153afc7f3acf"
+    },
+    {
+      "bytes": 81192837,
+      "modified_ns": 1788224571607230764,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/controls/models/etm_balanced/weights.pt",
+      "sha256": "4bb2c23f08957ef965b7eef8be5f1e6a61468b06da26c4481cf6c67e6dfcbba2"
+    },
+    {
+      "bytes": 723,
+      "modified_ns": 1788224571612003302,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/controls/models/etm_balanced/config.json",
+      "sha256": "b24605d1a4f763ce2ffb4b4176136394660bbaa2cec90f7d915b7feb1c7ab75b"
+    },
+    {
+      "bytes": 7090,
+      "modified_ns": 1788224569833116695,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/controls/models/etm_balanced/training_history.csv",
+      "sha256": "ce6ed5d8186cd512b90268dec5aae095537aec2dfb55646b1e4d699520bc2cca"
+    },
+    {
+      "bytes": 526818,
+      "modified_ns": 1788224571612166495,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/controls/models/etm_balanced/top_words.csv",
+      "sha256": "9c9747fbc5e7cebf3b94d87584cb586da08683b327d208e708dc617ad6e9ba4f"
+    },
+    {
+      "bytes": 420,
+      "modified_ns": 1788224571615704084,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/controls/models/etm_balanced/fragment_mass_summary.json",
+      "sha256": "282d04f4d00969df4accff265efb14b6b4d7dc4bd311459c74dd12b66e71071d"
+    },
+    {
+      "bytes": 654,
+      "modified_ns": 1788224571615991349,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/controls/models/etm_balanced/duplicate_component_summary.json",
+      "sha256": "e1539d2bddadb6e27dd4b3c302f692b78fe1b33a821eb6bed321c40f7e9bc1b5"
+    },
+    {
+      "bytes": 2199,
+      "modified_ns": 1788223866750959818,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/controls/models/etm_balanced/training_access_audit.json",
+      "sha256": "9d8f4beda32a8ac98c7a7479982e4711b4594962955e168b8c10b5ee72e9aca5"
+    },
+    {
+      "bytes": 3885,
+      "modified_ns": 1788224571665811199,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/controls/validation_evaluation/etm_balanced/complete.json",
+      "sha256": "aa4f5f0c029611a8f90838411fe6c621e12a51f06ca83e7a2ee1c16df76324cf"
+    },
+    {
+      "bytes": 84932128,
+      "modified_ns": 1788224571631232105,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/controls/validation_evaluation/etm_balanced/beta.npy",
+      "sha256": "aa70082e0841b307b62f5728560343134f8778a27f6b5f7080df33d548dfe81c"
+    },
+    {
+      "bytes": 15556128,
+      "modified_ns": 1788224571658039565,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/controls/validation_evaluation/etm_balanced/validation_full_theta.npy",
+      "sha256": "6246974dea8bea335712a96c0ac39d8bc59b51c125370d1d1de42ad0adea3908"
+    }
+  ],
+  "pre_stage_load": {
+    "available_memory_bytes": 13852364800,
+    "gpu_compute_processes": [],
+    "one_minute_load_average": 1.18017578125,
+    "utc": "2026-09-01T00:51:05.303021+00:00"
+  },
+  "return_code": 0,
+  "started_utc": "2026-09-01T00:51:05.303044+00:00",
+  "status": "complete"
+}

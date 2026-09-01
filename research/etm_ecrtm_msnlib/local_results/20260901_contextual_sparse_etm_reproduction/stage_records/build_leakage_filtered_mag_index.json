@@ -1,0 +1,27 @@
+{
+  "command": [
+    "/home/joewandy/miniforge3/envs/ms2lda-repro-ba9443b/bin/python",
+    "-m",
+    "benchmarks.neural_ms2lda.campaign",
+    "prepare-shared-index",
+    "--run",
+    "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/prepared",
+    "--data-root",
+    "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/assets"
+  ],
+  "finished_utc": "2026-09-01T00:13:36.708357+00:00",
+  "log": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/logs/build_leakage_filtered_mag_index.log",
+  "name": "build_leakage_filtered_mag_index",
+  "outputs": [
+    {
+      "bytes": 169,
+      "modified_ns": 1788221616366751682,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/prepared/mag/index/complete.json",
+      "sha256": "6157d53dc131841a8e02e9f6047efbb7e18163a003ff2e70ff5ae3950f3bb25b"
+    }
+  ],
+  "pre_stage_load": null,
+  "return_code": 0,
+  "started_utc": "2026-09-01T00:11:25.743656+00:00",
+  "status": "complete"
+}

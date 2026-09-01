@@ -205,6 +205,7 @@ def contextual_top2_evidence(
         k=TOPICS_PER_TOKEN,
         dim=1,
     )
+    # q_dwk from equation (eq:top2-route).
     q_dwk = nnf.softmax(top_scores, dim=1)
 
     # r_dk = sum_w x_dw q_dwk (equation eq:document-evidence).  Flattening the

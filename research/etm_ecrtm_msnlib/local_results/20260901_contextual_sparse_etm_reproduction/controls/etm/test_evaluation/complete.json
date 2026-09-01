@@ -1,0 +1,152 @@
+{
+  "device": "cuda",
+  "evaluated_utc_unix": 1788227201.9655106,
+  "method": "etm",
+  "metrics": {
+    "document_completion": {
+      "eligible_documents": 7776,
+      "in_vocabulary_tokens": 2534703,
+      "nll_per_token": 8.686003061301614,
+      "oov_fraction": 0.026880442765611186,
+      "out_of_vocabulary_tokens": 70016,
+      "total_documents": 7777
+    },
+    "finite_stable": true,
+    "fragment_probability_mass": {
+      "extreme_definition": "fragment mass <0.1 or >0.9",
+      "fraction_extreme_skew": 0.154,
+      "maximum": 0.9980004582919124,
+      "median": 0.3302684406551422,
+      "minimum": 0.010729518126799613,
+      "percentiles": {
+        "1": 0.020715536915395575,
+        "25": 0.17590893616187656,
+        "5": 0.05727731186798451,
+        "50": 0.3302684406551422,
+        "75": 0.5321081957822078,
+        "95": 0.8861116744391763,
+        "99": 0.972545994696044
+      }
+    },
+    "runtime": {
+      "test_full_spectra_per_second": 44375.61630883998,
+      "test_observed_spectra_per_second": 17671.94114775134
+    },
+    "theta_distribution": {
+      "fraction_max_theta_ge_0_2": 0.7874501735887874,
+      "fraction_max_theta_ge_0_3": 0.6218336119326219,
+      "fraction_max_theta_ge_0_5": 0.31001671595731,
+      "max_theta_p10": 0.12773961397705333,
+      "max_theta_p25": 0.2204189331255471,
+      "max_theta_p50": 0.37054632065722043,
+      "max_theta_p75": 0.5478437174795165,
+      "max_theta_p90": 0.7275446451513833,
+      "max_theta_p95": 0.8314393536005413,
+      "mean_effective_topics_per_spectrum": 101.42741030454917,
+      "median_effective_topics_per_spectrum": 41.78368436008375,
+      "median_max_theta": 0.37054632065722043,
+      "unique_top1_topics": 318
+    },
+    "theta_information": {
+      "marginal_theta_entropy": 5.8462119950656195,
+      "mean_conditional_theta_entropy": 3.684614548826867,
+      "mutual_information": 2.1615974462387526
+    },
+    "theta_support": {
+      "fraction_max_theta_ge_0_2": 0.7874501735887874,
+      "fraction_max_theta_ge_0_3": 0.6218336119326219,
+      "fraction_max_theta_ge_0_5": 0.31001671595731,
+      "fraction_support_le_3": 0.0,
+      "maximum_exact_support": 1000,
+      "mean_effective_topics_per_spectrum": 101.42741030454917,
+      "mean_exact_support": 1000.0,
+      "median_effective_topics_per_spectrum": 41.78368436008375,
+      "median_exact_support": 1000.0,
+      "median_maximum_theta": 0.37054632065722043,
+      "minimum_exact_support": 1000,
+      "support_size_percentiles": {
+        "1": 1000.0,
+        "25": 1000.0,
+        "5": 1000.0,
+        "50": 1000.0,
+        "75": 1000.0,
+        "95": 1000.0,
+        "99": 1000.0
+      }
+    },
+    "topic_inventory": {
+      "active_topic_usage_threshold": 0.0005,
+      "active_topics_above_usage_threshold": 300,
+      "active_topics_mean_usage_ge_1_over_k": 157,
+      "catastrophic_duplicate_component": false,
+      "catastrophic_duplicate_component_fraction": 0.5,
+      "corpus_effective_topic_count": 345.92154301930475,
+      "documents": 7777,
+      "duplicate_components": [
+        {
+          "duplicate_component_count": 3,
+          "largest_component_size": 3,
+          "pair_count": 5,
+          "threshold": 0.95,
+          "topics_in_duplicate_components": 7
+        },
+        {
+          "duplicate_component_count": 3,
+          "largest_component_size": 2,
+          "pair_count": 3,
+          "threshold": 0.99,
+          "topics_in_duplicate_components": 6
+        },
+        {
+          "duplicate_component_count": 2,
+          "largest_component_size": 2,
+          "pair_count": 2,
+          "threshold": 0.999,
+          "topics_in_duplicate_components": 4
+        }
+      ],
+      "largest_strict_duplicate_component": 2,
+      "maximum_mean_topic_usage": 0.0422495607403503,
+      "maximum_pairwise_beta_cosine": 0.9998781681060791,
+      "mean_effective_topics_per_spectrum": 101.42741030454917,
+      "mean_nearest_topic_beta_cosine": 0.30804839730262756,
+      "median_beta_effective_words": 101.76005554199219,
+      "median_beta_max_probability": 0.1617852747440338,
+      "median_beta_top_n_mass": 0.6105638742446899,
+      "median_effective_topics_per_spectrum": 41.78368436008375,
+      "median_nearest_topic_beta_cosine": 0.2700768709182739,
+      "strictest_duplicate_cosine_threshold": 0.999,
+      "top_word_count": 20,
+      "top_word_uniqueness": 0.3395,
+      "topics": 1000,
+      "topics_never_top1": 682,
+      "unique_top1_topics": 318
+    }
+  },
+  "model_config": {
+    "architecture": "canonical fixed-pretrained-SGNS ETM",
+    "batch_size": 256,
+    "decoder_normalization": "global topic-word softmax",
+    "device": "cuda",
+    "embedding_dimensions": 48,
+    "epochs": 120,
+    "gate_detached_before_theta_multiplication": null,
+    "gate_gamma": null,
+    "gate_logit_scale": null,
+    "gate_temperature": null,
+    "gate_used_during_training": null,
+    "hidden_dimensions": 800,
+    "learning_rate": 0.005,
+    "only_scientific_change": null,
+    "optimizer": "Adam",
+    "paired_reference_method": null,
+    "seed": 7043,
+    "topics": 1000,
+    "trained_separately": true,
+    "weight_decay": 1.2e-06
+  },
+  "parameters": 19278000,
+  "split": "test",
+  "weights_sha256": "f765b7057d3d7484051a5061ab23ca56bb2398923b9e642699903e613ee39d77",
+  "weights_unchanged_after_evaluation": true
+}

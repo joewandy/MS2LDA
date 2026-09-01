@@ -826,6 +826,12 @@ evidence; `comparison.csv` and `stability_by_seed.csv` contain final test result
 Predeclared directional claims passed: **{claims['all_passed']}**. Inspect
 `acceptance.json`, `data_quality.json`, `fresh_evidence_manifest.json`, and the
 CSV/JSON result tables for the complete evidence trail.
+
+`reproduction_manifest.json` is the immutable raw controller declaration.
+`acceptance.json` is the authoritative audited interpretation of its scientific
+gates. In particular, high-K planted-motif recovery is counted by one-to-one
+truth matching at topic-word cosine at least 0.50; it is not the same quantity
+as the number of fitted topics that become a document-level top-1 winner.
 """
 
 

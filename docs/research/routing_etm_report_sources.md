@@ -49,14 +49,14 @@
 | Normalized encoder input and reconstruction equation | benchmarks/neural_ms2lda/topic_model_training.py |
 | Deterministic real-data inference | scripts/run_contextual_sparse_etm.py |
 | Equation-level correspondence and frozen-checkpoint parity | benchmarks/neural_ms2lda/tests/test_contextual_sparse_etm.py |
-| Data parsing, split, leakage and vocabulary counts | research/etm_ecrtm_msnlib/local_results/20260831_contextual_sparse_etm_reproduction/preparation_summary.json |
-| Preprocessing, SGNS, Tomotopy and MAG settings | research/etm_ecrtm_msnlib/local_results/20260831_contextual_sparse_etm_reproduction/protocol.json |
-| Proposed-model configuration and final test metrics | research/etm_ecrtm_msnlib/local_results/20260831_contextual_sparse_etm_reproduction/config.json and metrics.json |
-| Synthetic K=36 component isolation | research/etm_ecrtm_msnlib/local_results/20260831_contextual_sparse_etm_reproduction/synthetic_summary.csv |
-| Synthetic K=128 stress | research/etm_ecrtm_msnlib/local_results/20260831_contextual_sparse_etm_reproduction/high_k_stress.csv |
-| Final real-model comparison | research/etm_ecrtm_msnlib/local_results/20260831_contextual_sparse_etm_reproduction/comparison.csv |
-| Development-split comparison | research/etm_ecrtm_msnlib/local_results/20260831_contextual_sparse_etm_reproduction/validation_comparison.csv |
-| Three-seed test robustness | research/etm_ecrtm_msnlib/local_results/20260831_contextual_sparse_etm_reproduction/stability_summary.json |
+| Data parsing, split, leakage and vocabulary counts | research/etm_ecrtm_msnlib/local_results/20260901_contextual_sparse_etm_reproduction/preparation_summary.json |
+| Preprocessing, SGNS, Tomotopy and MAG settings | research/etm_ecrtm_msnlib/local_results/20260901_contextual_sparse_etm_reproduction/protocol.json |
+| Proposed-model configuration and final test metrics | research/etm_ecrtm_msnlib/local_results/20260901_contextual_sparse_etm_reproduction/config.json and metrics.json |
+| Synthetic K=36 component isolation | research/etm_ecrtm_msnlib/local_results/20260901_contextual_sparse_etm_reproduction/synthetic_summary.csv |
+| Synthetic K=128 stress | research/etm_ecrtm_msnlib/local_results/20260901_contextual_sparse_etm_reproduction/high_k_stress.csv |
+| Final real-model comparison | research/etm_ecrtm_msnlib/local_results/20260901_contextual_sparse_etm_reproduction/comparison.csv |
+| Development-split comparison | research/etm_ecrtm_msnlib/local_results/20260901_contextual_sparse_etm_reproduction/validation_comparison.csv |
+| Three-seed test robustness | research/etm_ecrtm_msnlib/local_results/20260901_contextual_sparse_etm_reproduction/stability_summary.json |
 | Integrity and provenance | fresh_evidence_manifest.json, checkpoint_manifest.json, reproduction_manifest.json and stage_records/ in the same package |
 
 ## Figure and table map
