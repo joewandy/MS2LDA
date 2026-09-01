@@ -18,13 +18,18 @@ from benchmarks.neural_ms2lda.data import (
     load_vocabulary,
 )
 from benchmarks.neural_ms2lda.diagnostics import model_selection_diagnostics
-from benchmarks.neural_ms2lda.followup import theta_distribution
+from benchmarks.neural_ms2lda.etm_baselines import (
+    CanonicalETM,
+    ChannelBalancedETM,
+    load_sgns_embeddings,
+)
 from benchmarks.neural_ms2lda.model_evaluation import (
     MODEL_SELECTION_EVALUATION_PROTOCOL,
+    completion_metrics,
     entropy_diagnostics,
+    mixture_distribution_summary,
     theta_support_diagnostics,
 )
-from benchmarks.neural_ms2lda.objectives import completion_metrics
 from benchmarks.neural_ms2lda.reproducibility import (
     configure_deterministic_execution,
     normalize_probability_rows,
@@ -32,26 +37,20 @@ from benchmarks.neural_ms2lda.reproducibility import (
     sha256_file,
     validate_probability_matrix,
 )
+from benchmarks.neural_ms2lda.study_protocol import METHOD
 from benchmarks.neural_ms2lda.utils import (
     atomic_save_numpy,
     read_json,
     write_json,
 )
 from scripts.prepare_msnlib_test_view import verify_released_model
-from scripts.run_contextual_sparse_etm import (
-    REAL_METHOD,
-    infer_document_topic_mixtures,
-)
-from scripts.run_msnlib_model_comparison import (
-    FragmentLossBalancedETM,
-    infer_etm,
-)
-from scripts.run_published_topic_models_msnlib import FixedETM, sgns_only
+from scripts.run_contextual_sparse_etm import infer_document_topic_mixtures
+from scripts.run_etm_controls import infer_document_topics
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-SUPPORTED_METHODS = ("etm", "etm_balanced", REAL_METHOD)
+SUPPORTED_METHODS = ("etm", "etm_balanced", METHOD)
 
 
 def _load_model(
@@ -64,11 +63,11 @@ def _load_model(
     config = read_json(output / "config.json")
     protocol = read_json(run / "protocol.json")
     vocabulary = load_vocabulary(run / "data")
-    embeddings = sgns_only(run / "token_features/features.npy")
+    embeddings = load_sgns_embeddings(run / "token_features/features.npy")
     topics = int(protocol["model"]["num_topics"])
     hidden = int(config["hidden_dimensions"])
     if method == "etm":
-        model: torch.nn.Module = FixedETM(embeddings, topics, hidden=hidden)
+        model: torch.nn.Module = CanonicalETM(embeddings, topics, hidden=hidden)
     else:
         fragment_mask = np.asarray(
             [word.startswith("frag@") for word in vocabulary],
@@ -81,8 +80,8 @@ def _load_model(
                 fragment_mask,
                 hidden=hidden,
             )
-            if method == REAL_METHOD
-            else FragmentLossBalancedETM(
+            if method == METHOD
+            else ChannelBalancedETM(
                 embeddings,
                 topics,
                 fragment_mask,
@@ -105,13 +104,13 @@ def _infer(
     device: torch.device,
 ) -> tuple[np.ndarray, float]:
     """Apply the deterministic inference equation for the fitted architecture."""
-    if method == REAL_METHOD:
+    if method == METHOD:
         return infer_document_topic_mixtures(
             model,  # type: ignore[arg-type]
             matrix,
             batch_size=batch_size,
         )
-    return infer_etm(
+    return infer_document_topics(
         model,  # type: ignore[arg-type]
         matrix,
         batch_size=batch_size,
@@ -122,11 +121,7 @@ def _infer(
 def _beta(model: torch.nn.Module, method: str) -> np.ndarray:
     """Evaluate and canonically normalize the fitted topic-word equation."""
     with torch.inference_mode():
-        values = (
-            model.topic_word_distribution()  # type: ignore[attr-defined]
-            if method == REAL_METHOD
-            else model.beta()  # type: ignore[attr-defined]
-        )
+        values = model.topic_word_distribution()  # type: ignore[attr-defined]
     return normalize_probability_rows(
         values.detach().cpu().numpy(),
         name=f"{method} beta",
@@ -227,7 +222,7 @@ def evaluate_test(
         ),
         **diagnostics,
         "theta_support": theta_support_diagnostics(theta_full),
-        "theta_distribution": theta_distribution(theta_full),
+        "theta_distribution": mixture_distribution_summary(theta_full),
         "theta_information": entropy_diagnostics(theta_full),
         "finite_stable": True,
         "runtime": {
@@ -273,7 +268,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run", required=True, type=Path)
     parser.add_argument("--method", required=True, choices=SUPPORTED_METHODS)
-    parser.add_argument("--device", choices=("auto", "cpu", "cuda"), default="auto")
+    parser.add_argument("--device", choices=("auto", "cpu", "cuda"), default="cuda")
     parser.add_argument("--batch-size", type=int, default=256)
     parser.add_argument("--threads", type=int, default=6)
     args = parser.parse_args(argv)

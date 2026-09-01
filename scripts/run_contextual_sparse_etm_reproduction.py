@@ -24,13 +24,13 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from benchmarks.neural_ms2lda.reproduction_plan import (
-    NEURAL_DEVICE,
     ReproductionPaths,
     Stage,
     acceptance_policy,
     reproduction_paths,
     stage_plan,
 )
+from benchmarks.neural_ms2lda.study_protocol import NEURAL_DEVICE
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -245,8 +245,45 @@ def _verify_recorded_outputs(
     return actual
 
 
+def _next_attempt(paths: ReproductionPaths, stage: Stage) -> int:
+    """Return the next append-only attempt number for one stage."""
+    failed = paths.stages.glob(f"{stage.name}.attempt-*.failed.json")
+    return 1 + sum(1 for _ in failed)
+
+
+def _discard_failed_outputs(
+    outputs: Sequence[Path],
+    *,
+    started_ns: int,
+) -> list[str]:
+    """Remove only declared files created by a failed stage attempt.
+
+    A retry must never consume a partial result as if it were a cache.  Stage
+    outputs are deliberately individual files rather than directories, so the
+    cleanup is narrow and cannot remove artifacts owned by an earlier stage.
+    """
+    discarded = []
+    for output in outputs:
+        if not output.exists():
+            continue
+        if not output.is_file():
+            msg = f"declared stage output is not a file: {output}"
+            raise RuntimeError(msg)
+        if output.stat().st_mtime_ns < started_ns:
+            msg = f"failed stage encountered a pre-existing output: {output}"
+            raise RuntimeError(msg)
+        output.unlink()
+        discarded.append(str(output))
+    return discarded
+
+
 def run_stage(paths: ReproductionPaths, stage: Stage) -> dict[str, object]:
-    """Run one uncached stage, stream its log, and seal its outputs."""
+    """Run one uncached stage, stream its log, and seal its outputs.
+
+    Failed attempts receive separate immutable records and logs.  Their
+    declared partial files are removed, which permits a scientifically clean
+    retry without hiding the failed attempt or accepting cached output.
+    """
     record_path = paths.stages / f"{stage.name}.json"
     if record_path.is_file():
         record = read_json(record_path)
@@ -262,10 +299,11 @@ def run_stage(paths: ReproductionPaths, stage: Stage) -> dict[str, object]:
             msg,
         )
 
+    attempt = _next_attempt(paths, stage)
     load_snapshot = assert_idle_system() if stage.requires_idle_system else None
     started = utc_now()
     started_ns = time.time_ns()
-    log_path = paths.logs / f"{stage.name}.log"
+    log_path = paths.logs / f"{stage.name}.attempt-{attempt}.log"
     environment = os.environ.copy()
     environment.update(
         {
@@ -281,45 +319,55 @@ def run_stage(paths: ReproductionPaths, stage: Stage) -> dict[str, object]:
     )
     Path(environment["NUMBA_CACHE_DIR"]).mkdir(parents=True, exist_ok=True)
     Path(environment["MPLCONFIGDIR"]).mkdir(parents=True, exist_ok=True)
-    with log_path.open("w", encoding="utf-8") as log:
-        process = subprocess.Popen(  # noqa: S603
-            list(stage.command),
-            cwd=REPO,
-            env=environment,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-            bufsize=1,
-        )
-        if process.stdout is None:
-            msg = "stage subprocess has no output stream"
+    try:
+        with log_path.open("w", encoding="utf-8") as log:
+            process = subprocess.Popen(  # noqa: S603
+                list(stage.command),
+                cwd=REPO,
+                env=environment,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                bufsize=1,
+            )
+            if process.stdout is None:
+                msg = "stage subprocess has no output stream"
+                raise RuntimeError(msg)
+            for line in process.stdout:
+                log.write(line)
+                log.flush()
+                print(line, end="", flush=True)  # noqa: T201
+            return_code = process.wait()
+        if return_code != 0:
+            raise subprocess.CalledProcessError(return_code, stage.command)
+
+        outputs = _output_records(stage.outputs)
+        if any(int(row["modified_ns"]) < started_ns for row in outputs):
+            msg = f"stage output predates execution: {stage.name}"
             raise RuntimeError(msg)
-        for line in process.stdout:
-            log.write(line)
-            log.flush()
-            print(line, end="", flush=True)  # noqa: T201
-        return_code = process.wait()
-    if return_code != 0:
+    except Exception as error:
+        discarded = _discard_failed_outputs(stage.outputs, started_ns=started_ns)
         failed = {
             "name": stage.name,
             "status": "failed",
+            "attempt": attempt,
             "command": list(stage.command),
             "started_utc": started,
             "finished_utc": utc_now(),
-            "return_code": return_code,
+            "return_code": getattr(error, "returncode", None),
+            "error_type": type(error).__name__,
+            "error": str(error),
             "log": str(log_path),
             "pre_stage_load": load_snapshot,
+            "discarded_partial_outputs": discarded,
         }
-        write_json(record_path, failed)
-        raise subprocess.CalledProcessError(return_code, stage.command)
-
-    outputs = _output_records(stage.outputs)
-    if any(int(row["modified_ns"]) < started_ns for row in outputs):
-        msg = f"stage output predates execution: {stage.name}"
-        raise RuntimeError(msg)
+        failed_path = paths.stages / f"{stage.name}.attempt-{attempt}.failed.json"
+        write_json(failed_path, failed)
+        raise
     record = {
         "name": stage.name,
         "status": "complete",
+        "attempt": attempt,
         "command": list(stage.command),
         "started_utc": started,
         "finished_utc": utc_now(),

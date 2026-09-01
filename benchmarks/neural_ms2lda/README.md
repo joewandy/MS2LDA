@@ -1,98 +1,88 @@
 # Contextual Sparse ETM study
 
-This directory contains the scientific implementation and tests for
-**Contextual Sparse ETM**, an Embedded Topic Model (ETM) adapted to short
+This package contains the scientific implementation and clean-room evaluation
+for Contextual Sparse ETM, an Embedded Topic Model (ETM) adapted to short
 tandem-mass-spectrometry documents.
 
-The model retains the published ETM generator, embedding-space topic--word
-decoder, Gaussian variational posterior, multinomial reconstruction term and
-analytic Gaussian KL divergence. It makes three explicit adaptations:
+The published ETM supplies the embedded topic--word decoder, Gaussian
+variational encoder, multinomial reconstruction objective and analytic
+standard-normal KL divergence. The study adds three explicit operations:
 
-1. fragment and neutral-loss decoder channels each receive half of every
-   topic's probability mass;
-2. leave-one-out token context contributes top-2 evidence to the ETM posterior
-   mean through one learned scalar; and
-3. published 1.5-entmax replaces posterior softmax to produce exact zeros in
-   each spectrum's topic mixture.
+1. each topic assigns half of its probability mass to fragment words and half
+   to neutral-loss words;
+2. count-weighted top-2 assignments from leave-one-out token context shift the
+   posterior mean through one learned scalar; and
+3. 1.5-entmax maps the latent document vector to an exactly sparse topic
+   mixture.
 
-The only learned parameter added to the channel-balanced ETM is the context
-scalar. The model-specific mathematics is implemented as named tensor
-functions in `contextual_sparse_etm.py`; the sole `nn.Module` is a thin
-parameter and checkpoint shell. Normalized count input and the raw pseudo-count
-reconstruction equation live in `topic_model_training.py`.
+The numerical model is expressed as named tensor functions in
+`contextual_sparse_etm.py`. `ContextualSparseETM` is only the small PyTorch
+parameter container required for optimization and serialization. The canonical
+ETM and channel-balanced ETM controls live in `etm_baselines.py` and reuse the
+same decoder function where their mathematics overlaps.
 
-## Final held-out test comparison
+## Scientific workflow
 
-All neural rows use the same train-only vocabulary and SGNS coordinates,
-K=1,000, training seed 7043, 120 epochs and CUDA execution. Models were fitted
-on train, developed on validation, frozen, and evaluated once on the fixed test
-split.
+`study_protocol.py` is the single source of truth for method names, seeds,
+synthetic formulations and evidence filenames. `protocol.json` contains the
+data, SGNS, evaluation, Tomotopy and chemistry settings.
 
-| Model | Optimized | Evaluable | Useful | Mean SOS | Median SOS | Completion NLL |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Canonical ETM | 601 | 171 | 101 | 0.631759 | 0.633333 | **8.686003** |
-| Balanced ETM | **887** | 207 | 130 | 0.644232 | 0.640351 | 8.779686 |
-| **Contextual Sparse ETM** | 799 | **572** | **343** | 0.637702 | 0.639500 | 9.535540 |
-| Tomotopy LDA | 609 | 319 | 188 | **0.652752** | **0.651515** | 9.739090 |
+The execution order is declared in `reproduction_plan.py`:
 
-The result is a breadth--quality trade-off, not uniform dominance. Contextual
-Sparse ETM has the broadest evaluable and useful motif inventory and sparse
-per-spectrum mixtures. Dense ETM controls retain better completion NLL, while
-Tomotopy retains the highest conditional SOS over a smaller evaluable set.
+- acquire the public MSnLib and annotation assets;
+- create a deterministic connectivity-group train/validation/test split;
+- train the vocabulary and SGNS coordinates on training spectra only;
+- prepare and fit four truth-known synthetic formulations;
+- fit canonical ETM, channel-balanced ETM and Contextual Sparse ETM on CUDA;
+- fit Tomotopy LDA as the published non-neural comparator;
+- score validation chemistry and freeze every fitted model;
+- expose the test matrices only after that freeze; and
+- evaluate the frozen models, audit the artifacts and build the compact
+  evidence package.
 
-Across training seeds 7043, 23 and 37, Contextual Sparse ETM yields 557--582
-evaluable and 327--353 useful test motifs, median 3.68--3.74 effective topics
-per spectrum and 914--922 unique top-1 topics. Every run is finite, has zero MAG
-clustering or optimization exceptions, and avoids a catastrophic duplicate
-component.
+No test artifact is visible to model fitting or validation. Runtime values are
+reported only within a backend and are not used to compare ETM with Tomotopy.
 
-## Canonical files
+## Maintained implementation
 
-- `contextual_sparse_etm.py` -- decoder, contextual evidence, posterior, KL and
-  entmax equations.
-- `topic_model_training.py` -- normalized count input and sparse raw-count
-  reconstruction.
-- `reproduction_plan.py` -- ordered 54-stage clean-room protocol.
-- `reproduction_audit.py` -- chronology, split-boundary, hash and probability
+- `contextual_sparse_etm.py`: channel-balanced decoder, contextual evidence,
+  posterior offset, Gaussian KL and 1.5-entmax equations.
+- `etm_baselines.py`: canonical and channel-balanced published ETM controls.
+- `topic_model_training.py`: normalized encoder input and raw-count
+  reconstruction objective.
+- `synthetic_msms.py`: truth-known short-spectrum generator and matching
+  metrics.
+- `data.py`, `spectra.py`: data preparation and leakage-controlled splitting.
+- `mag.py`, `chemical.py`: leakage-filtered annotation and substructure overlap
+  scoring.
+- `reproduction_audit.py`: chronology, hash, probability and split-boundary
   checks.
-- `tests/test_contextual_sparse_etm.py` -- equation-level and deterministic
-  inference correspondence.
-- `tests/test_reproduction_evidence.py` -- evidence and manuscript-claim gates.
-- `FINAL_MODEL_SELECTION.md` -- final scientific decision and interpretation.
-- `HANDOVER.md` -- exact evidence locations and continuation rules.
+- `tests/`: equation correspondence, data-boundary and evidence-contract tests.
 
-The complete scientific report is
-`docs/research/neural_ms2lda_report.tex`, with its reviewed PDF beside it.
+The report and reviewed PDF are
+`docs/research/contextual_sparse_etm_report.tex` and
+`docs/research/contextual_sparse_etm_report.pdf`. The committed evidence package
+is `research/contextual_sparse_etm_msnlib/evidence/20260901_clean_room/`.
 
 ## Verification
 
-From the repository root, in the recorded reproduction environment:
+Run from the repository root in the recorded `ms2lda-neural` environment:
 
 ```bash
 pytest -q benchmarks/neural_ms2lda/tests
-black --check \
-  benchmarks/neural_ms2lda/contextual_sparse_etm.py \
-  benchmarks/neural_ms2lda/model_evaluation.py \
-  benchmarks/neural_ms2lda/reproducibility.py \
-  benchmarks/neural_ms2lda/reproduction_audit.py \
-  benchmarks/neural_ms2lda/reproduction_plan.py \
-  benchmarks/neural_ms2lda/topic_model_training.py \
-  scripts/run_contextual_sparse_etm.py \
-  scripts/run_contextual_sparse_etm_reproduction.py \
-  scripts/package_contextual_sparse_etm_reproduction.py \
-  scripts/generate_routing_etm_report.py
-ruff check \
-  benchmarks/neural_ms2lda/contextual_sparse_etm.py \
-  benchmarks/neural_ms2lda/model_evaluation.py \
-  benchmarks/neural_ms2lda/reproducibility.py \
-  benchmarks/neural_ms2lda/reproduction_audit.py \
-  benchmarks/neural_ms2lda/reproduction_plan.py \
-  benchmarks/neural_ms2lda/topic_model_training.py \
-  scripts/run_contextual_sparse_etm.py \
-  scripts/run_contextual_sparse_etm_reproduction.py \
-  scripts/package_contextual_sparse_etm_reproduction.py \
-  scripts/generate_routing_etm_report.py
+black --check benchmarks/neural_ms2lda scripts
+ruff check --config benchmarks/neural_ms2lda/ruff.toml \
+  benchmarks/neural_ms2lda scripts
+python -m scripts.generate_contextual_sparse_etm_report
 ```
 
-The packaged evidence and its machine-verifiable acceptance status are under
-`research/etm_ecrtm_msnlib/local_results/20260901_contextual_sparse_etm_reproduction/`.
+The complete clean-room workflow is:
+
+```bash
+python -m scripts.run_contextual_sparse_etm_reproduction initialize --root RUN
+python -m scripts.run_contextual_sparse_etm_reproduction run --root RUN
+python -m scripts.package_contextual_sparse_etm_reproduction \
+  --root RUN --output EVIDENCE
+python -m scripts.generate_contextual_sparse_etm_report \
+  --evidence-root EVIDENCE
+```

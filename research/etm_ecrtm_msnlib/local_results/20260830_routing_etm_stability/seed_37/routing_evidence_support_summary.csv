@@ -1,2 +1,0 @@
-minimum_exact_support,median_exact_support,mean_exact_support,maximum_exact_support,fraction_support_le_3,median_effective_topics_per_spectrum,mean_effective_topics_per_spectrum,median_maximum_theta,fraction_max_theta_ge_0_5,fraction_max_theta_ge_0_3,fraction_max_theta_ge_0_2,support_p1,support_p5,support_p25,support_p50,support_p75,support_p95,support_p99
-3,47.0,55.989457444073025,270,0.00025713551041398817,18.767018628856366,22.59598442786693,0.1576136794730766,0.0007714065312419646,0.04937001799948573,0.2843918745178709,10.0,16.0,30.0,47.0,74.0,126.0,170.1199999999999

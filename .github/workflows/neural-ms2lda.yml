@@ -1,4 +1,4 @@
-name: Neural MS2LDA
+name: Contextual Sparse ETM
 
 on:
   push:
@@ -25,17 +25,41 @@ jobs:
       - name: Install project without production dependency resolution
         run: python -m pip install --no-deps -e .
       - name: Black
-        run: >-
-          black --check benchmarks/neural_ms2lda
-          scripts/download_msnlib_validation_assets.py
-          scripts/generate_neural_ms2lda_report.py
+        run: |
+          black --check benchmarks/neural_ms2lda \
+            scripts/download_msnlib_validation_assets.py \
+            scripts/evaluate_frozen_etm_test.py \
+            scripts/evaluate_frozen_tomotopy_test.py \
+            scripts/generate_contextual_sparse_etm_report.py \
+            scripts/package_contextual_sparse_etm_reproduction.py \
+            scripts/prepare_contextual_sparse_etm_data.py \
+            scripts/prepare_contextual_sparse_etm_synthetic.py \
+            scripts/prepare_msnlib_test_view.py \
+            scripts/prepare_msnlib_validation_view.py \
+            scripts/run_contextual_sparse_etm.py \
+            scripts/run_contextual_sparse_etm_reproduction.py \
+            scripts/run_contextual_sparse_etm_synthetic.py \
+            scripts/run_etm_controls.py \
+            scripts/run_tomotopy_validation.py
       - name: Ruff
-        run: >-
-          ruff check --select E,F,I
-          benchmarks/neural_ms2lda
-          scripts/download_msnlib_validation_assets.py
-          scripts/generate_neural_ms2lda_report.py
-      - name: Neural model tests
+        run: |
+          ruff check --config benchmarks/neural_ms2lda/ruff.toml \
+            benchmarks/neural_ms2lda \
+            scripts/download_msnlib_validation_assets.py \
+            scripts/evaluate_frozen_etm_test.py \
+            scripts/evaluate_frozen_tomotopy_test.py \
+            scripts/generate_contextual_sparse_etm_report.py \
+            scripts/package_contextual_sparse_etm_reproduction.py \
+            scripts/prepare_contextual_sparse_etm_data.py \
+            scripts/prepare_contextual_sparse_etm_synthetic.py \
+            scripts/prepare_msnlib_test_view.py \
+            scripts/prepare_msnlib_validation_view.py \
+            scripts/run_contextual_sparse_etm.py \
+            scripts/run_contextual_sparse_etm_reproduction.py \
+            scripts/run_contextual_sparse_etm_synthetic.py \
+            scripts/run_etm_controls.py \
+            scripts/run_tomotopy_validation.py
+      - name: Scientific tests
         run: pytest -q benchmarks/neural_ms2lda/tests
 
   upstream-regression:
@@ -60,6 +84,22 @@ jobs:
       - name: Build and isolated wheel import
         run: |
           python -m build --wheel
+          python - <<'PY'
+          import glob
+          import zipfile
+
+          wheel = glob.glob("dist/*.whl")[0]
+          with zipfile.ZipFile(wheel) as archive:
+              names = set(archive.namelist())
+          assert "scripts/ms2lda_runfull.py" in names
+          forbidden = {
+              name
+              for name in names
+              if name.startswith("scripts/")
+              and name not in {"scripts/__init__.py", "scripts/ms2lda_runfull.py"}
+          }
+          assert not forbidden, sorted(forbidden)
+          PY
           python -m pip install --no-deps --force-reinstall dist/*.whl
           cd /tmp
           python -c "import MS2LDA; print(MS2LDA.__file__)"
@@ -71,9 +111,12 @@ jobs:
       TZ: UTC
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
       - name: Regenerate report inputs
         run: |
-          python scripts/generate_neural_ms2lda_report.py
+          python -m scripts.generate_contextual_sparse_etm_report
           report_drift="$(git status --porcelain --untracked-files=all -- docs/research/generated)"
           if [ -n "$report_drift" ]; then
             echo "$report_drift"
@@ -81,5 +124,5 @@ jobs:
           fi
       - uses: xu-cheng/latex-action@v3
         with:
-          root_file: neural_ms2lda_report.tex
+          root_file: contextual_sparse_etm_report.tex
           working_directory: docs/research

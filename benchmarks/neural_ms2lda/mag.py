@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import argparse
+import json
 import pickle
 import sqlite3
 from pathlib import Path
@@ -224,3 +226,23 @@ def optimized_feature_count(spectrum: Any | None) -> int:
     peaks = getattr(getattr(spectrum, "peaks", None), "mz", ())
     losses = getattr(getattr(spectrum, "losses", None), "mz", ())
     return len(peaks) + len(losses)
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    """Build the leakage-filtered MAG index owned by this module."""
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--run", required=True, type=Path)
+    parser.add_argument("--data-root", required=True, type=Path)
+    arguments = parser.parse_args(argv)
+    run = arguments.run.expanduser().resolve()
+    result = build_filtered_mag_index(
+        run,
+        data_root=arguments.data_root.expanduser().resolve(),
+        protocol=read_json(run / "protocol.json"),
+    )
+    print(json.dumps(result, indent=2, sort_keys=True), flush=True)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -9,8 +9,8 @@ import pytest
 
 from benchmarks.neural_ms2lda.chemical import _sos_bands
 from benchmarks.neural_ms2lda.contextual_sparse_etm import (
+    CONTEXT_TEMPERATURE,
     FRAGMENT_CHANNEL_MASS,
-    ROUTING_TEMPERATURE,
     TOPICS_PER_TOKEN,
 )
 from benchmarks.neural_ms2lda.data import build_token_features
@@ -19,6 +19,7 @@ from benchmarks.neural_ms2lda.spectra import (
     audit_split_disjointness,
     build_training_vocabulary,
 )
+from scripts.generate_contextual_sparse_etm_report import _generate_code_map
 
 from ._support import spectrum_record
 
@@ -69,18 +70,16 @@ def test_token_features_are_sgns_plus_fragment_loss_indicators() -> None:
 
 def test_report_constants_match_the_executable_model() -> None:
     research_directory = Path(__file__).parents[3] / "docs/research"
-    report = (research_directory / "neural_ms2lda_report.tex").read_text(
+    report = (research_directory / "contextual_sparse_etm_report.tex").read_text(
         encoding="utf-8"
     )
-    code_map = (research_directory / "generated/routing_etm_code_table.tex").read_text(
-        encoding="utf-8"
-    )
+    _, code_map = _generate_code_map()
 
     assert FRAGMENT_CHANNEL_MASS == 0.5
-    assert ROUTING_TEMPERATURE == 1.0
+    assert CONTEXT_TEMPERATURE == 1.0
     assert TOPICS_PER_TOKEN == 2
     assert r"\tfrac12" in report
-    assert r"\tau_r=1.0" in report
+    assert r"\tau_c=1.0" in report
     assert r"\tfrac1K" in report
     assert r"\centerop" in report
     assert r"\entmax" in report

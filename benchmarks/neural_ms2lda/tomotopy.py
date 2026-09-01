@@ -10,7 +10,7 @@ from typing import Any, Sequence
 import numpy as np
 
 from .data import load_csr, load_heldout_records, load_vocabulary
-from .objectives import completion_metrics
+from .model_evaluation import completion_metrics
 from .utils import (
     atomic_save_numpy,
     read_json,

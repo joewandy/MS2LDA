@@ -7,12 +7,6 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from scripts import generate_routing_etm_report as report_generator
-from scripts import package_contextual_sparse_etm_reproduction as packager
-from scripts.generate_routing_etm_report import (
-    _require_reportable_claims,
-    _validate_package_integrity,
-)
 
 from benchmarks.neural_ms2lda.reproduction_audit import (
     file_record,
@@ -20,6 +14,13 @@ from benchmarks.neural_ms2lda.reproduction_audit import (
     verify_linked_inputs,
     write_csv,
     write_json,
+)
+from benchmarks.neural_ms2lda.study_protocol import FINAL_SYNTHETIC_LABEL
+from scripts import generate_contextual_sparse_etm_report as report_generator
+from scripts import package_contextual_sparse_etm_reproduction as packager
+from scripts.generate_contextual_sparse_etm_report import (
+    _require_reportable_claims,
+    _validate_package_integrity,
 )
 
 
@@ -132,6 +133,31 @@ def test_csv_writer_preserves_method_specific_columns(tmp_path: Path) -> None:
     assert rows[1]["training_seed"] == "7043"
 
 
+def test_packaged_json_paths_are_made_host_independent(tmp_path: Path) -> None:
+    package = tmp_path / "package"
+    package.mkdir()
+    machine_home = "/" + "home/researcher"
+    raw_run = "/" + "tmp/run"
+    write_json(
+        package / "record.json",
+        {
+            "command": [f"{machine_home}/env/bin/python", f"{raw_run}/model.py"],
+            "output": f"{raw_run}/result.json",
+        },
+    )
+    replacements = (
+        (machine_home, "<home>"),
+        (raw_run, "<reproduction-root>"),
+    )
+
+    packager._rewrite_json_as_portable(package, replacements)
+    packager._assert_no_machine_paths(package)
+
+    text = (package / "record.json").read_text(encoding="utf-8")
+    assert machine_home not in text
+    assert raw_run not in text
+
+
 def test_chemical_integrity_gate_includes_every_contextual_seed() -> None:
     comparison = [
         {
@@ -211,7 +237,7 @@ def _claim_check_fixture(
     }
     high_k = [
         {
-            "formulation": ("balanced ETM plus top-2-context routing and entmax15"),
+            "formulation": FINAL_SYNTHETIC_LABEL,
             "true_topics": 18,
             "planted_motifs_recovered_cosine_ge_0_50": recovered_planted_motifs,
             "unique_top1_topics": 19,
@@ -310,7 +336,7 @@ def test_report_render_failure_does_not_mix_generated_fragments(
 ) -> None:
     output = tmp_path / "generated"
     output.mkdir()
-    existing = output / "routing_etm_macros.tex"
+    existing = output / "contextual_sparse_etm_macros.tex"
     existing.write_text("old\n", encoding="utf-8")
     monkeypatch.setattr(report_generator, "_validate_and_load", lambda _root: {})
     generators = (
@@ -323,7 +349,7 @@ def test_report_render_failure_does_not_mix_generated_fragments(
         "_generate_hyperparameters",
     )
     artifact_names = sorted(
-        report_generator.EXPECTED_OUTPUTS - {"routing_etm_code_table.tex"}
+        report_generator.EXPECTED_OUTPUTS - {"contextual_sparse_etm_code_table.tex"}
     )
     for function_name, artifact_name in zip(generators, artifact_names, strict=True):
         monkeypatch.setattr(

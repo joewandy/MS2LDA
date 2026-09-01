@@ -156,9 +156,7 @@ deepmol.egg-info
 
 *.png
 !docs/research/figures/*.png
-!docs/research/neural_ms2lda_report.pdf
-!benchmarks/neural_ms2lda/results/
-!benchmarks/neural_ms2lda/results/**
+!docs/research/contextual_sparse_etm_report.pdf
 *.tsv
 *.mgf
 *.npy

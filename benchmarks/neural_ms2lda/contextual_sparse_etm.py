@@ -1,7 +1,7 @@
 """Executable equations for the Contextual Sparse Embedded Topic Model.
 
 This module is the canonical implementation of the model described in
-``docs/research/neural_ms2lda_report.tex``.  The notation in the docstrings
+``docs/research/contextual_sparse_etm_report.tex``.  The notation in the docstrings
 matches the notation in that report:
 
 ``x``
@@ -19,9 +19,9 @@ matches the notation in that report:
 
 The model-specific mathematics is deliberately implemented as small tensor
 functions.  :class:`ContextualSparseETM` exists only because PyTorch needs an
-``nn.Module`` to register trainable parameters and checkpoint them.  It does
+``nn.Module`` to register trainable parameters and serialize them.  It does
 not inherit from an experimental model base class and has no selectable modes,
-routing strategies, or configurable helper objects.
+experimental modes or configurable helper objects.
 """
 
 from __future__ import annotations
@@ -35,7 +35,7 @@ from torch.nn import functional as nnf
 EPSILON = 1e-12
 FRAGMENT_CHANNEL_MASS = 0.5
 TOPICS_PER_TOKEN = 2
-ROUTING_TEMPERATURE = 1.0
+CONTEXT_TEMPERATURE = 1.0
 DEFAULT_HIDDEN_WIDTH = 800
 
 
@@ -48,7 +48,7 @@ def unit_normalize_rows(vectors: torch.Tensor) -> torch.Tensor:
 
     independently for each row.  Keeping this operation explicit makes the
     geometry used by contextual evidence easy to compare with equations
-    ``eq:loo-context``--``eq:routing-score`` in the report.
+    ``eq:loo-context``--``eq:context-score`` in the report.
     """
     if vectors.ndim != 2 or vectors.shape[1] == 0:
         raise ValueError("vectors must be a non-empty row matrix")
@@ -134,7 +134,7 @@ def contextual_top2_evidence(
     topic_embeddings: torch.Tensor,
     context_scale: torch.Tensor,
 ) -> torch.Tensor:
-    """Compute document evidence ``r`` from the contextual-routing equations.
+    """Compute document evidence ``r`` from the contextual evidence equations.
 
     This implements equations ``eq:loo-context`` through
     ``eq:document-evidence`` in the report.
@@ -197,15 +197,15 @@ def contextual_top2_evidence(
         rho_hat[word_indices] + context_scale * rho_bar,
     )
 
-    # a_dwk from equation (eq:routing-score).  The temperature is fixed at one
+    # a_dwk from equation (eq:context-score).  The temperature is fixed at one
     # in the reported model but remains visible here to preserve the equation.
-    routing_scores = (contextual_words @ alpha_hat.T) / ROUTING_TEMPERATURE
+    context_scores = (contextual_words @ alpha_hat.T) / CONTEXT_TEMPERATURE
     top_scores, top_topics = torch.topk(
-        routing_scores,
+        context_scores,
         k=TOPICS_PER_TOKEN,
         dim=1,
     )
-    # q_dwk from equation (eq:top2-route).
+    # q_dwk from equation (eq:top2-assignment).
     q_dwk = nnf.softmax(top_scores, dim=1)
 
     # r_dk = sum_w x_dw q_dwk (equation eq:document-evidence).  Flattening the
@@ -321,7 +321,7 @@ class ContextualSparseETM(nn.Module):
     and posterior mathematics is delegated to the pure tensor functions above.
 
     The parameter and buffer names directly describe the tensors in the model
-    equations and form the complete checkpoint state.
+    equations and form the complete serialized model state.
     """
 
     def __init__(

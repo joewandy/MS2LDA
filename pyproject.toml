@@ -57,7 +57,19 @@ exclude = [
 
   # Research tooling remains clone-runnable, not part of the public API.
   "scripts/download_msnlib_validation_assets.py",
-  "scripts/generate_neural_ms2lda_report.py"
+  "scripts/evaluate_frozen_etm_test.py",
+  "scripts/evaluate_frozen_tomotopy_test.py",
+  "scripts/generate_contextual_sparse_etm_report.py",
+  "scripts/package_contextual_sparse_etm_reproduction.py",
+  "scripts/prepare_contextual_sparse_etm_data.py",
+  "scripts/prepare_contextual_sparse_etm_synthetic.py",
+  "scripts/prepare_msnlib_test_view.py",
+  "scripts/prepare_msnlib_validation_view.py",
+  "scripts/run_contextual_sparse_etm.py",
+  "scripts/run_contextual_sparse_etm_reproduction.py",
+  "scripts/run_contextual_sparse_etm_synthetic.py",
+  "scripts/run_etm_controls.py",
+  "scripts/run_tomotopy_validation.py"
 ]
 
 [tool.poetry.dependencies]

@@ -11,14 +11,16 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
+import scipy.sparse as sp
 
 from .diagnostics import normalize_mixtures
-from .reproducibility import write_csv_rows
+from .study_protocol import (
+    TRAINING_ACCESS_AUDIT_FILENAME,
+    VALIDATION_ACCESS_AUDIT_FILENAME,
+)
 from .utils import atomic_save_numpy, read_json, write_json
 
 EPSILON = 1e-12
-TRAINING_ACCESS_AUDIT_FILENAME = "training_access_audit.json"
-VALIDATION_ACCESS_AUDIT_FILENAME = "validation_access_audit.json"
 MODEL_SELECTION_EVALUATION_PROTOCOL = {
     "active_topic_usage_threshold": 0.0005,
     "duplicate_cosine_thresholds": (0.95, 0.99, 0.999),
@@ -27,6 +29,53 @@ MODEL_SELECTION_EVALUATION_PROTOCOL = {
     "channel_extreme_lower": 0.1,
     "channel_extreme_upper": 0.9,
 }
+
+
+def completion_metrics(
+    theta: np.ndarray,
+    beta: np.ndarray,
+    completion: sp.csr_matrix,
+    records: list[dict[str, Any]],
+) -> dict[str, Any]:
+    """Score held-out token counts under the exact mixture ``theta @ beta``."""
+    if theta.ndim != 2 or beta.ndim != 2:
+        raise ValueError("theta and beta must be matrices")
+    if theta.shape[1] != beta.shape[0] or completion.shape != (
+        theta.shape[0],
+        beta.shape[1],
+    ):
+        raise ValueError("theta, beta and completion matrix shapes do not align")
+    if len(records) != completion.shape[0]:
+        raise ValueError("completion records must match completion rows")
+    total_loss = 0.0
+    in_vocabulary = 0
+    out_of_vocabulary = 0
+    eligible = 0
+    for row in range(completion.shape[0]):
+        start, stop = completion.indptr[row], completion.indptr[row + 1]
+        words = completion.indices[start:stop]
+        counts = completion.data[start:stop]
+        token_count = int(counts.sum())
+        out_of_vocabulary += int(records[row]["completion_oov_tokens"])
+        if not token_count:
+            continue
+        probability = theta[row] @ beta[:, words]
+        total_loss -= float(
+            np.sum(counts * np.log(np.clip(probability, EPSILON, None))),
+        )
+        in_vocabulary += token_count
+        eligible += 1
+    if in_vocabulary <= 0:
+        raise ValueError("completion split contains no in-vocabulary tokens")
+    total = in_vocabulary + out_of_vocabulary
+    return {
+        "nll_per_token": total_loss / in_vocabulary,
+        "in_vocabulary_tokens": in_vocabulary,
+        "out_of_vocabulary_tokens": out_of_vocabulary,
+        "oov_fraction": out_of_vocabulary / total,
+        "eligible_documents": eligible,
+        "total_documents": completion.shape[0],
+    }
 
 
 def finalize_validation_access_audit(run: Path, method: str) -> dict[str, Any]:
@@ -105,6 +154,35 @@ def theta_support_diagnostics(theta: np.ndarray) -> dict[str, object]:
         "fraction_max_theta_ge_0_5": float(np.mean(maximum >= 0.5)),
         "fraction_max_theta_ge_0_3": float(np.mean(maximum >= 0.3)),
         "fraction_max_theta_ge_0_2": float(np.mean(maximum >= 0.2)),
+    }
+
+
+def mixture_distribution_summary(theta: np.ndarray) -> dict[str, float | int]:
+    """Summarize mixture concentration and the number of document winners.
+
+    This is the compact compatibility view retained in model result files.  The
+    richer exact-support and inventory diagnostics remain the canonical inputs
+    to the paper.
+    """
+    mixtures = normalize_mixtures(theta)
+    entropy = -np.sum(
+        mixtures * np.log(np.clip(mixtures, EPSILON, None)),
+        axis=1,
+    )
+    maximum = mixtures.max(axis=1)
+    percentiles = {
+        f"max_theta_p{percentile}": float(np.percentile(maximum, percentile))
+        for percentile in (10, 25, 50, 75, 90, 95)
+    }
+    return {
+        "median_effective_topics_per_spectrum": float(np.median(np.exp(entropy))),
+        "mean_effective_topics_per_spectrum": float(np.mean(np.exp(entropy))),
+        "median_max_theta": float(np.median(maximum)),
+        **percentiles,
+        "fraction_max_theta_ge_0_5": float(np.mean(maximum >= 0.5)),
+        "fraction_max_theta_ge_0_3": float(np.mean(maximum >= 0.3)),
+        "fraction_max_theta_ge_0_2": float(np.mean(maximum >= 0.2)),
+        "unique_top1_topics": int(len(np.unique(np.argmax(mixtures, axis=1)))),
     }
 
 
@@ -197,41 +275,6 @@ def score_chemical_validation(
         data_root=data_root,
         protocol=protocol,
         split="validation",
-        annotation_method=(
-            "ecrtm_canonical" if method == "ecrtm_canonical_tau030" else None
-        ),
     )
-    rows = result["high_confidence_chemistry"].get("topic_scores", [])
-    model_output = run / "models" / method
-    write_csv_rows(model_output / "chemical_scores.csv", rows)
-    write_json(model_output / "chemical_validation.json", result)
-
-    metrics_path = model_output / "metrics.json"
-    if metrics_path.is_file():
-        metrics = read_json(metrics_path)
-        chemistry = dict(result["high_confidence_chemistry"])
-        chemistry.pop("topic_scores", None)
-        chemistry["optimized_motifs"] = int(
-            round(float(result["annotation_coverage"]) * int(result["topics"]))
-        )
-        chemistry["useful_motifs"] = int(
-            sum(
-                bool(row["eligible"])
-                and row["sos"] is not None
-                and float(row["sos"]) >= 0.6
-                for row in rows
-            )
-        )
-        metrics["validation_chemistry"] = {
-            **chemistry,
-            "annotation_coverage": float(result["annotation_coverage"]),
-            "mag_failures": result["mag_failures"],
-            "heldout_compounds_excluded_from_mag": bool(
-                result["heldout_compounds_excluded_from_mag"]
-            ),
-            "split": "validation",
-        }
-        write_json(metrics_path, metrics)
-
     finalize_validation_access_audit(run, method)
     return result

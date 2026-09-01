@@ -6,12 +6,14 @@ import sys
 from pathlib import Path
 from typing import NamedTuple
 
-from .model_evaluation import TRAINING_ACCESS_AUDIT_FILENAME
-
-METHOD = "contextual_sparse_etm"
-NEURAL_DEVICE = "cuda"
-TRAINING_SEEDS = (7043, 23, 37)
-SYNTHETIC_SEEDS = (11, 23, 37)
+from .study_protocol import (
+    METHOD,
+    NEURAL_DEVICE,
+    SYNTHETIC_ARTIFACT_LABELS,
+    SYNTHETIC_SEEDS,
+    TRAINING_ACCESS_AUDIT_FILENAME,
+    TRAINING_SEEDS,
+)
 
 
 class ReproductionPaths(NamedTuple):
@@ -119,15 +121,13 @@ def _module(*arguments: str) -> tuple[str, ...]:
 def _synthetic_output_name(
     seed: int,
     topics: int,
-    routing_variant: str,
-    theta_transform: str,
+    formulation: str,
 ) -> str:
-    if routing_variant == "etm":
-        method = f"balanced_etm_{theta_transform}_raw_counts"
-    else:
-        suffix = "" if theta_transform == "softmax" else f"_{theta_transform}"
-        method = f"balanced_etm_routing_{routing_variant}{suffix}_raw_counts"
-    return f"seed_{seed}_K_{topics}_{method}"
+    try:
+        label = SYNTHETIC_ARTIFACT_LABELS[formulation]
+    except KeyError as error:
+        raise ValueError(f"unknown synthetic formulation: {formulation}") from error
+    return f"seed_{seed}_K_{topics}_{label}"
 
 
 def _synthetic_stage(
@@ -135,24 +135,19 @@ def _synthetic_stage(
     *,
     seed: int,
     topics: int,
-    routing_variant: str,
-    theta_transform: str,
+    formulation: str,
 ) -> Stage:
-    name = _synthetic_output_name(seed, topics, routing_variant, theta_transform)
+    name = _synthetic_output_name(seed, topics, formulation)
     command = _module(
-        "scripts.run_routing_etm_campaign",
+        "scripts.run_contextual_sparse_etm_synthetic",
         "--output-root",
         str(paths.synthetic),
         "--seed",
         str(seed),
         "--fitted-topics",
         str(topics),
-        "--routing-variant",
-        routing_variant,
-        "--theta-transform",
-        theta_transform,
-        "--reconstruction-scaling",
-        "raw_counts",
+        "--formulation",
+        formulation,
         "--epochs",
         "120",
         "--batch-size",
@@ -204,7 +199,7 @@ def _contextual_training_outputs(run: Path) -> tuple[Path, ...]:
     return (
         *_etm_training_outputs(run, METHOD),
         model / "theta_support_summary.csv",
-        model / "routing_evidence_support_summary.csv",
+        model / "context_evidence_support_summary.csv",
         model / "provenance.json",
     )
 
@@ -239,8 +234,8 @@ def _validated_stage_plan(stages: list[Stage]) -> list[Stage]:
     return stages
 
 
-def stage_plan(paths: ReproductionPaths) -> list[Stage]:
-    """Return the dependency-ordered train/validation/test execution plan."""
+def _preparation_stages(paths: ReproductionPaths) -> list[Stage]:
+    """Return source checks plus real and synthetic input preparation."""
     stages = [
         Stage(
             "preflight_tests",
@@ -259,16 +254,16 @@ def stage_plan(paths: ReproductionPaths) -> list[Stage]:
         Stage(
             "prepare_data_and_sgns",
             _module(
-                "scripts.run_msnlib_model_comparison",
-                "prepare",
+                "scripts.prepare_contextual_sparse_etm_data",
                 "--run",
                 str(paths.prepared),
                 "--data-root",
                 str(paths.assets),
             ),
             (
-                paths.prepared / "comparison_preparation.json",
+                paths.prepared / "preparation_summary.json",
                 paths.prepared / "protocol.json",
+                paths.prepared / "data_root.txt",
                 paths.prepared / "data/complete.json",
                 paths.prepared / "token_features/complete.json",
             ),
@@ -276,8 +271,7 @@ def stage_plan(paths: ReproductionPaths) -> list[Stage]:
         Stage(
             "build_leakage_filtered_mag_index",
             _module(
-                "benchmarks.neural_ms2lda.campaign",
-                "prepare-shared-index",
+                "benchmarks.neural_ms2lda.mag",
                 "--run",
                 str(paths.prepared),
                 "--data-root",
@@ -286,6 +280,36 @@ def stage_plan(paths: ReproductionPaths) -> list[Stage]:
             (paths.prepared / "mag/index/complete.json",),
         ),
     ]
+    for seed in SYNTHETIC_SEEDS:
+        seed_directory = paths.synthetic / "synthetic_artifacts" / f"seed_{seed}"
+        stages.append(
+            Stage(
+                f"prepare_synthetic_seed_{seed}",
+                _module(
+                    "scripts.prepare_contextual_sparse_etm_synthetic",
+                    "--output-root",
+                    str(paths.synthetic),
+                    "--seed",
+                    str(seed),
+                    "--threads",
+                    "6",
+                    "--training-documents",
+                    "800",
+                    "--validation-documents",
+                    "160",
+                ),
+                (
+                    seed_directory / "artifact_manifest.json",
+                    seed_directory / "token_features/complete.json",
+                ),
+            ),
+        )
+    return stages
+
+
+def _validation_view_stages(paths: ReproductionPaths) -> list[Stage]:
+    """Return stages that expose train/validation data to isolated run roots."""
+    stages = []
     for name, run in (
         ("controls", paths.controls),
         ("tomotopy", paths.tomotopy),
@@ -308,6 +332,12 @@ def stage_plan(paths: ReproductionPaths) -> list[Stage]:
                 (run / "validation_input_manifest.json",),
             ),
         )
+    return stages
+
+
+def _smoke_and_synthetic_stages(paths: ReproductionPaths) -> list[Stage]:
+    """Return the bounded CUDA smoke fit and truth-known ablation matrix."""
+    stages = []
     stages.append(
         Stage(
             "contextual_one_epoch_smoke",
@@ -336,33 +366,38 @@ def stage_plan(paths: ReproductionPaths) -> list[Stage]:
             36,
             SYNTHETIC_SEEDS,
             (
-                ("etm", "softmax"),
-                ("etm", "entmax15"),
-                ("top2_context", "softmax"),
-                ("top2_context", "entmax15"),
+                "balanced_softmax",
+                "balanced_entmax",
+                "contextual_softmax",
+                "contextual_entmax",
             ),
         ),
         (
             128,
             (11,),
             (
-                ("etm", "softmax"),
-                ("etm", "entmax15"),
-                ("top2_context", "entmax15"),
+                "balanced_softmax",
+                "balanced_entmax",
+                "contextual_entmax",
             ),
         ),
     ):
         for seed in seeds:
-            for routing_variant, theta_transform in formulations:
+            for formulation in formulations:
                 stages.append(
                     _synthetic_stage(
                         paths,
                         seed=seed,
                         topics=topics,
-                        routing_variant=routing_variant,
-                        theta_transform=theta_transform,
+                        formulation=formulation,
                     ),
                 )
+    return stages
+
+
+def _validation_fit_stages(paths: ReproductionPaths) -> list[Stage]:
+    """Return all frozen fits and validation-only evaluations."""
+    stages = []
     stages.extend(
         (
             Stage(
@@ -400,7 +435,7 @@ def stage_plan(paths: ReproductionPaths) -> list[Stage]:
             Stage(
                 "canonical_etm_train",
                 _module(
-                    "scripts.run_msnlib_model_comparison",
+                    "scripts.run_etm_controls",
                     "train",
                     "--run",
                     str(paths.controls),
@@ -408,9 +443,9 @@ def stage_plan(paths: ReproductionPaths) -> list[Stage]:
                     "etm",
                     "--device",
                     NEURAL_DEVICE,
-                    "--etm-epochs",
+                    "--epochs",
                     "120",
-                    "--etm-batch-size",
+                    "--batch-size",
                     "256",
                 ),
                 _etm_training_outputs(paths.controls, "etm"),
@@ -419,7 +454,7 @@ def stage_plan(paths: ReproductionPaths) -> list[Stage]:
             Stage(
                 "canonical_etm_chemistry",
                 _module(
-                    "scripts.run_msnlib_model_comparison",
+                    "scripts.run_etm_controls",
                     "chemical",
                     "--run",
                     str(paths.controls),
@@ -436,7 +471,7 @@ def stage_plan(paths: ReproductionPaths) -> list[Stage]:
             Stage(
                 "balanced_etm_train",
                 _module(
-                    "scripts.run_msnlib_model_comparison",
+                    "scripts.run_etm_controls",
                     "train",
                     "--run",
                     str(paths.controls),
@@ -444,9 +479,9 @@ def stage_plan(paths: ReproductionPaths) -> list[Stage]:
                     "etm_balanced",
                     "--device",
                     NEURAL_DEVICE,
-                    "--etm-epochs",
+                    "--epochs",
                     "120",
-                    "--etm-batch-size",
+                    "--batch-size",
                     "256",
                 ),
                 _etm_training_outputs(paths.controls, "etm_balanced"),
@@ -455,7 +490,7 @@ def stage_plan(paths: ReproductionPaths) -> list[Stage]:
             Stage(
                 "balanced_etm_chemistry",
                 _module(
-                    "scripts.run_msnlib_model_comparison",
+                    "scripts.run_etm_controls",
                     "chemical",
                     "--run",
                     str(paths.controls),
@@ -513,6 +548,12 @@ def stage_plan(paths: ReproductionPaths) -> list[Stage]:
                 ),
             ),
         )
+    return stages
+
+
+def _test_release_stages(paths: ReproductionPaths) -> list[Stage]:
+    """Expose the held-out test split only after validation is frozen."""
+    stages = []
 
     # Only now, after every model and validation result is frozen, expose the
     # fixed test split.  The exposure manifests hash both the fitted weights and
@@ -565,6 +606,12 @@ def stage_plan(paths: ReproductionPaths) -> list[Stage]:
         )
         for seed in TRAINING_SEEDS
     )
+    return stages
+
+
+def _test_evaluation_stages(paths: ReproductionPaths) -> list[Stage]:
+    """Return frozen-model test inference and chemistry evaluation stages."""
+    stages = []
 
     for method in ("etm", "etm_balanced"):
         stages.extend(
@@ -662,4 +709,17 @@ def stage_plan(paths: ReproductionPaths) -> list[Stage]:
                 ),
             ),
         )
+    return stages
+
+
+def stage_plan(paths: ReproductionPaths) -> list[Stage]:
+    """Return the dependency-ordered train/validation/test execution plan."""
+    stages = [
+        *_preparation_stages(paths),
+        *_validation_view_stages(paths),
+        *_smoke_and_synthetic_stages(paths),
+        *_validation_fit_stages(paths),
+        *_test_release_stages(paths),
+        *_test_evaluation_stages(paths),
+    ]
     return _validated_stage_plan(stages)

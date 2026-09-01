@@ -192,6 +192,7 @@ def _mag_matches(
 ) -> tuple[Any, list[Any]]:
     """Embed motif spectra and retrieve leakage-filtered library neighbours."""
     import faiss
+
     from MS2LDA.Add_On.Spec2Vec.annotation import calc_embeddings, load_s2v_model
 
     spec2vec = load_s2v_model(str(inputs["spec2vec_model"]))
@@ -365,21 +366,12 @@ def run_chemical_scoring(
 ) -> dict[str, Any]:
     """Annotate one registered topic model and score held-out compounds."""
     allowed = {
-        "ecrtm",
-        "ecrtm_canonical",
-        "ecrtm_canonical_tau030",
         "etm",
         "etm_balanced",
-        "etm_balanced_entmax15_distinct_words",
-        "etm_balanced_routing_top2_entmax15_raw_counts",
         "contextual_sparse_etm",
-        "neural",
-        "pooled_likelihood",
-        "pooled_mi005",
         "tomotopy",
     }
-    gated_etm = method.startswith("etm_balanced_gated_")
-    if method not in allowed and not gated_etm:
+    if method not in allowed:
         raise ValueError(f"chemical method must be one of {sorted(allowed)}")
     if split not in {"validation", "test"}:
         raise ValueError("chemical split must be validation or test")

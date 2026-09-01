@@ -1,3 +1,0 @@
-model,seed,fitted_topics,heldout_nll,true_beta_cosine,true_theta_cosine,planted_recovered_ge_0_50,active_topics_gt_0_005,unique_top1_topics,median_effective_topics,median_exact_support,mean_nearest_beta_cosine,train_graph_loss,finite_stable,catastrophic_duplicate_component,promoted
-routing_etm,11,36,6.278416276690836,0.4984537661075592,0.7648745037831431,10,14,14,1.9714861487063993,4.0,0.740197479724884,5.526061534881592,true,false,false
-routing_etm_positive_npmi,11,36,6.287552101610467,0.49157607555389404,0.7652185663095523,10,14,14,1.9548454591701332,4.0,0.7473042607307434,5.499502182006836,true,false,false

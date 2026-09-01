@@ -1,4 +1,0 @@
-training_seed,optimized_motifs,evaluable_motifs,useful_motifs,mean_sos,median_sos,completion_nll,median_effective_topics,median_exact_support,unique_top1_topics,corpus_effective_topics,learned_context_scale,training_wall_seconds,finite_stable,catastrophic_duplicate_component,mag_clustering_failures,mag_optimization_failures,heldout_compounds_excluded_from_mag,sos_band_accounting_valid
-7043,799,572,343,0.6377024576923669,0.6395003162555345,9.535539900160135,3.6800412751216887,6.0,917,549.2670513845072,0.20891593396663666,820.3130254261196,True,False,0,0,True,True
-23,798,582,353,0.6310714906445796,0.6333333333333333,9.526086151548832,3.714082708226903,6.0,922,544.908329773493,0.19826266169548035,818.448894900037,True,False,0,0,True,True
-37,805,557,327,0.6280217295006615,0.6333333333333333,9.516053890088319,3.743870932357813,6.0,914,541.9000133497261,0.20165331661701202,814.3060511760559,True,False,0,0,True,True

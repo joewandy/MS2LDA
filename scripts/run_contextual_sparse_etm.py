@@ -1,6 +1,6 @@
 """Train and evaluate the canonical Contextual Sparse ETM.
 
-The numerical path follows ``docs/research/neural_ms2lda_report.tex`` directly:
+The numerical path follows ``docs/research/contextual_sparse_etm_report.tex`` directly:
 normalized spectral-word counts are encoded, contextual top-2 evidence shifts
 the Gaussian posterior mean, 1.5-entmax produces ``theta``, and the
 channel-balanced ETM decoder produces ``beta``.  Training minimizes the raw
@@ -25,17 +25,16 @@ from benchmarks.neural_ms2lda.data import (
     load_vocabulary,
 )
 from benchmarks.neural_ms2lda.diagnostics import model_selection_diagnostics
-from benchmarks.neural_ms2lda.followup import theta_distribution
 from benchmarks.neural_ms2lda.model_evaluation import (
     MODEL_SELECTION_EVALUATION_PROTOCOL,
-    TRAINING_ACCESS_AUDIT_FILENAME,
+    completion_metrics,
     entropy_diagnostics,
+    mixture_distribution_summary,
     save_validation,
     score_chemical_validation,
     theta_support_diagnostics,
     topic_word_diagnostics,
 )
-from benchmarks.neural_ms2lda.objectives import completion_metrics
 from benchmarks.neural_ms2lda.reproducibility import (
     MemoryState,
     configure_deterministic_execution,
@@ -49,12 +48,16 @@ from benchmarks.neural_ms2lda.reproducibility import (
     validate_probability_matrix,
     write_csv_rows,
 )
+from benchmarks.neural_ms2lda.study_protocol import (
+    METHOD,
+    MODEL_DISPLAY_NAME,
+    TRAINING_ACCESS_AUDIT_FILENAME,
+)
 from benchmarks.neural_ms2lda.topic_model_training import (
     dense_normalized,
     raw_count_reconstruction_loss,
 )
 from benchmarks.neural_ms2lda.utils import (
-    atomic_save_numpy,
     atomic_torch_save,
     write_json,
 )
@@ -64,12 +67,8 @@ if TYPE_CHECKING:
 
     import scipy.sparse as sp
 
-MODEL_NAME = "Contextual Sparse ETM"
-REAL_METHOD = "contextual_sparse_etm"
-REAL_TOPICS = 1000
 LEARNING_RATE = 0.005
 WEIGHT_DECAY = 1.2e-6
-CHECKPOINT_INTERVAL_EPOCHS = 5
 EPSILON = 1e-12
 
 
@@ -111,7 +110,6 @@ class ExecutionState(NamedTuple):
 
     training_seed: int
     device: torch.device
-    resumed_from_epoch: int
 
 
 def resolve_training_seed(data_seed: int, requested_seed: int | None) -> int:
@@ -204,33 +202,6 @@ def _load_validation_data(
     )
 
 
-def _training_contract(
-    data: ValidationData,
-    settings: TrainingSettings,
-    training_seed: int,
-) -> dict[str, Any]:
-    """Return the exact contract used to accept or reject a saved checkpoint."""
-    input_hashes = {
-        Path(row["path"]).name: row["sha256"]
-        for row in data.input_manifest["linked_inputs"]
-    }
-    return {
-        "method": REAL_METHOD,
-        "topics": data.topics,
-        "context_top_k": 2,
-        "context_temperature": 1.0,
-        "entmax_alpha": 1.5,
-        "reconstruction": "raw_counts",
-        "epochs": settings.epochs,
-        "batch_size": settings.batch_size,
-        "seed": training_seed,
-        "optimizer": "Adam",
-        "learning_rate": LEARNING_RATE,
-        "weight_decay": WEIGHT_DECAY,
-        "input_sha256": input_hashes,
-    }
-
-
 def _run_configuration(
     data: ValidationData,
     settings: TrainingSettings,
@@ -238,8 +209,8 @@ def _run_configuration(
 ) -> dict[str, Any]:
     """Return a plain-language, machine-readable specification of this run."""
     return {
-        "model_name": MODEL_NAME,
-        "artifact_method_id": REAL_METHOD,
+        "model_name": MODEL_DISPLAY_NAME,
+        "artifact_method_id": METHOD,
         "evidence": "frozen MSnLib training plus validation only",
         "prepared_run": data.input_manifest["prepared_run"],
         "published_base": "Embedded Topic Model",
@@ -269,38 +240,9 @@ def _run_configuration(
         "training_seed": execution.training_seed,
         "device": str(execution.device),
         "threads": settings.threads,
-        "checkpoint_interval_epochs": CHECKPOINT_INTERVAL_EPOCHS,
-        "resumed_from_epoch": execution.resumed_from_epoch,
         "stopping_rule": "fixed epochs or immediate non-finite loss/gradient",
         "candidate_test_artifacts_accessed": False,
     }
-
-
-def _restore_checkpoint(
-    checkpoint_path: Path,
-    model: ContextualSparseETM,
-    optimizer: torch.optim.Optimizer,
-    random_generator: np.random.Generator,
-    training_contract: dict[str, Any],
-) -> tuple[int, list[dict[str, Any]]]:
-    """Restore model, optimizer, random states, and history from one checkpoint."""
-    if not checkpoint_path.is_file():
-        return 0, []
-    checkpoint = torch.load(
-        checkpoint_path,
-        map_location="cpu",
-        weights_only=False,
-    )
-    if checkpoint["training_contract"] != training_contract:
-        message = "Contextual Sparse ETM checkpoint contract does not match"
-        raise ValueError(message)
-    model.load_state_dict(checkpoint["model_state"], strict=True)
-    optimizer.load_state_dict(checkpoint["optimizer_state"])
-    random_generator.bit_generator.state = checkpoint["numpy_rng_state"]
-    torch.set_rng_state(checkpoint["torch_rng_state"])
-    if model.rho.device.type == "cuda" and checkpoint["cuda_rng_states"] is not None:
-        torch.cuda.set_rng_state_all(checkpoint["cuda_rng_states"])
-    return int(checkpoint["epoch"]), list(checkpoint["history"])
 
 
 def _train_one_epoch(
@@ -418,10 +360,10 @@ def infer_contextual_evidence(
     return np.concatenate(batches)
 
 
-def _artifact_record(path: Path) -> dict[str, object]:
+def _artifact_record(path: Path, *, relative_to: Path) -> dict[str, object]:
     """Return path, byte count, and digest for one locally retained artifact."""
     return {
-        "path": str(path),
+        "path": path.relative_to(relative_to).as_posix(),
         "bytes": path.stat().st_size,
         "sha256": sha256_file(path),
     }
@@ -477,8 +419,8 @@ def _evaluate_and_persist(
         ),
         **diagnostics,
         "theta_support": support,
-        "routing_evidence_support": evidence_support,
-        "theta_distribution": theta_distribution(theta_full),
+        "context_evidence_support": evidence_support,
+        "theta_distribution": mixture_distribution_summary(theta_full),
         "theta_information": entropy_diagnostics(theta_full),
         "finite_stable": bool(
             np.all(np.isfinite(beta))
@@ -502,26 +444,17 @@ def _evaluate_and_persist(
     }
 
     weights_path = output / "weights.pt"
-    beta_path = output / "beta.npy"
-    observed_path = output / "validation_observed_theta.npy"
-    full_path = output / "validation_full_theta.npy"
-    evidence_path = output / "validation_routing_evidence.npy"
-    checkpoint_path = output / "checkpoint.pt"
     atomic_torch_save(
         weights_path,
         {key: value.detach().cpu() for key, value in model.state_dict().items()},
     )
-    atomic_save_numpy(beta_path, beta)
-    atomic_save_numpy(observed_path, theta_observed)
-    atomic_save_numpy(full_path, theta_full)
-    atomic_save_numpy(evidence_path, evidence)
     write_csv_rows(output / "top_words.csv", top_words)
     write_csv_rows(
         output / "theta_support_summary.csv",
         [flatten_support_summary(support)],
     )
     write_csv_rows(
-        output / "routing_evidence_support_summary.csv",
+        output / "context_evidence_support_summary.csv",
         [flatten_support_summary(evidence_support)],
     )
     write_json(
@@ -542,22 +475,20 @@ def _evaluate_and_persist(
         output / "fragment_mass_summary.json",
         diagnostics["fragment_probability_mass"],
     )
-    write_json(output / "metrics.json", metrics)
-    save_validation(data.run_directory, REAL_METHOD, beta, theta_full, metrics)
+    save_validation(data.run_directory, METHOD, beta, theta_full, metrics)
+    validation_output = data.run_directory / "validation_evaluation" / METHOD
 
     provenance = {
         "validation_inputs": data.input_manifest,
         "candidate_test_artifacts_accessed": False,
         "candidate_test_metrics_inspected": False,
         "local_artifacts": [
-            _artifact_record(path)
+            _artifact_record(path, relative_to=data.run_directory)
             for path in (
                 weights_path,
-                beta_path,
-                observed_path,
-                full_path,
-                evidence_path,
-                checkpoint_path,
+                validation_output / "beta.npy",
+                validation_output / "validation_full_theta.npy",
+                validation_output / "complete.json",
             )
         ],
     }
@@ -574,7 +505,7 @@ def train_real_validation(
     """Train the model on frozen training data and evaluate validation only."""
     _validate_settings(settings)
     run_directory = real_run.expanduser().resolve(strict=True)
-    output = run_directory / "models" / REAL_METHOD
+    output = run_directory / "models" / METHOD
     result_path = output / "result.json"
     if result_path.is_file():
         return read_json_object(result_path)
@@ -595,15 +526,6 @@ def train_real_validation(
     )
     random_generator = np.random.default_rng(training_seed + 18)
     output.mkdir(parents=True, exist_ok=True)
-    checkpoint_path = output / "checkpoint.pt"
-    contract = _training_contract(data, settings, training_seed)
-    start_epoch, history = _restore_checkpoint(
-        checkpoint_path,
-        model,
-        optimizer,
-        random_generator,
-        contract,
-    )
     write_json(
         output / "config.json",
         _run_configuration(
@@ -612,7 +534,6 @@ def train_real_validation(
             ExecutionState(
                 training_seed=training_seed,
                 device=device,
-                resumed_from_epoch=start_epoch,
             ),
         ),
     )
@@ -621,7 +542,8 @@ def train_real_validation(
     if device.type == "cuda":
         torch.cuda.reset_peak_memory_stats(device)
     memory_state = sample_runtime_memory()
-    for epoch_index in range(start_epoch, settings.epochs):
+    history: list[dict[str, Any]] = []
+    for epoch_index in range(settings.epochs):
         epoch_metrics = _train_one_epoch(
             model,
             optimizer,
@@ -633,28 +555,6 @@ def train_real_validation(
         history.append(row)
         memory_state = sample_runtime_memory(memory_state)
         write_csv_rows(output / "training_history.csv", history)
-        if (
-            epoch_index + 1
-        ) % CHECKPOINT_INTERVAL_EPOCHS == 0 or epoch_index + 1 == settings.epochs:
-            # Store every mutable state needed to continue the exact random and
-            # optimizer trajectory after interruption.
-            atomic_torch_save(
-                checkpoint_path,
-                {
-                    "epoch": epoch_index + 1,
-                    "model_state": model.state_dict(),
-                    "optimizer_state": optimizer.state_dict(),
-                    "numpy_rng_state": random_generator.bit_generator.state,
-                    "torch_rng_state": torch.get_rng_state(),
-                    "cuda_rng_states": (
-                        torch.cuda.get_rng_state_all()
-                        if device.type == "cuda"
-                        else None
-                    ),
-                    "history": history,
-                    "training_contract": contract,
-                },
-            )
         print(  # noqa: T201
             "CONTEXTUAL_SPARSE_ETM_EPOCH",
             json.dumps(row, sort_keys=True),
@@ -670,8 +570,8 @@ def train_real_validation(
         TrainingOutcome(history=history, memory_state=memory_state),
     )
     result = {
-        "model": MODEL_NAME,
-        "method": REAL_METHOD,
+        "model": MODEL_DISPLAY_NAME,
+        "method": METHOD,
         "parameters": metrics["parameters"],
         "config": read_json_object(output / "config.json"),
         "metrics": metrics,
@@ -686,7 +586,7 @@ def score_real_validation(real_run: Path, data_root: Path) -> dict[str, Any]:
     return score_chemical_validation(
         real_run.expanduser().resolve(),
         data_root.expanduser().resolve(),
-        REAL_METHOD,
+        METHOD,
     )
 
 
@@ -698,7 +598,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     train.add_argument("--real-run", required=True, type=Path)
     train.add_argument("--epochs", type=int, default=120)
     train.add_argument("--batch-size", type=int, default=256)
-    train.add_argument("--device", choices=("auto", "cpu", "cuda"), default="auto")
+    train.add_argument("--device", choices=("auto", "cpu", "cuda"), default="cuda")
     train.add_argument("--threads", type=int, default=6)
     train.add_argument(
         "--training-seed",

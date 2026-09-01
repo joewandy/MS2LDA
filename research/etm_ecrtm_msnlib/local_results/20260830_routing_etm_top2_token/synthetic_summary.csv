@@ -1,4 +1,0 @@
-model,seed,fitted_topics,heldout_nll,true_beta_cosine,true_theta_cosine,planted_recovered_ge_0_50,active_topics_gt_0_005,unique_top1_topics,median_effective_topics,median_exact_support,mean_nearest_beta_cosine,parameters,learned_context_scale,finite_stable,catastrophic_duplicate_component,triage_status
-entmax_etm,11,36,6.616673438290829,0.2503172755241394,0.4030552752849328,2,5,4,1.816062952780301,3.0,0.9301214218139648,2167400,,true,false,reference
-top2_token_entmax,11,36,6.343999825860643,0.41035377979278564,0.6614250649456055,6,11,10,2.005119164831524,4.0,0.8074929714202881,2167400,,true,false,failed
-top2_context_entmax,11,36,6.278416276690836,0.4984537661075592,0.7648745037831431,10,14,14,1.9714861487063993,4.0,0.740197479724884,2167401,1.1110539436340332,true,false,selected_reference

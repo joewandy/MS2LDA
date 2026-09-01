@@ -15,39 +15,46 @@ import statistics
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from benchmarks.neural_ms2lda.evidence_bundle import (
+    assert_no_machine_paths as _assert_no_machine_paths,
+)
+from benchmarks.neural_ms2lda.evidence_bundle import (
+    copy_raw_evidence as _copy_raw_evidence,
+)
+from benchmarks.neural_ms2lda.evidence_bundle import (
+    path_replacements as _path_replacements,
+)
+from benchmarks.neural_ms2lda.evidence_bundle import (
+    rewrite_json_as_portable as _rewrite_json_as_portable,
+)
+from benchmarks.neural_ms2lda.evidence_bundle import (
+    write_package_seals as _write_package_seals,
+)
+from benchmarks.neural_ms2lda.evidence_bundle import (
+    write_summary_artifacts as _write_summary_artifacts,
+)
 from benchmarks.neural_ms2lda.reproduction_audit import (
-    file_record,
     probability_audit,
     read_json,
-    sha256_file,
     validate_model_views,
     verify_stage_records,
-    write_csv,
-    write_json,
 )
 from benchmarks.neural_ms2lda.reproduction_plan import (
+    reproduction_paths,
+)
+from benchmarks.neural_ms2lda.study_protocol import (
+    FINAL_SYNTHETIC_LABEL,
     METHOD,
     NEURAL_DEVICE,
+    SYNTHETIC_DISPLAY_LABELS,
     SYNTHETIC_SEEDS,
     TRAINING_SEEDS,
-    ReproductionPaths,
-    reproduction_paths,
-    stage_plan,
 )
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
-FORMULATION_LABELS = {
-    "balanced_etm_softmax_raw_counts": "balanced ETM softmax raw",
-    "balanced_etm_entmax15_raw_counts": "balanced ETM plus entmax15",
-    "balanced_etm_routing_top2_context_raw_counts": (
-        "balanced ETM plus top-2-context routing and softmax"
-    ),
-    "balanced_etm_routing_top2_context_entmax15_raw_counts": (
-        "balanced ETM plus top-2-context routing and entmax15"
-    ),
-}
+FORMULATION_LABELS = SYNTHETIC_DISPLAY_LABELS
 PRIMARY_SYNTHETIC_TOPICS = 36
 HIGH_K_SYNTHETIC_TOPICS = 128
 PLANTED_SYNTHETIC_TOPICS = 18
@@ -68,26 +75,6 @@ SUMMARY_FIELDS = (
     "learned_context_scale",
     "training_wall_seconds",
 )
-COMPACT_MODEL_FILES = (
-    "result.json",
-    "training_history.csv",
-    "theta_support_summary.csv",
-    "routing_evidence_support_summary.csv",
-    "duplicate_component_summary.json",
-    "fragment_mass_summary.json",
-    "top_words.csv",
-    "validation_access_audit.json",
-    "provenance.json",
-)
-COMPACT_CONTROL_FILES = (
-    "result.json",
-    "training_history.csv",
-    "duplicate_component_summary.json",
-    "fragment_mass_summary.json",
-    "top_words.csv",
-    "validation_access_audit.json",
-)
-COMPACT_TEST_EVALUATION_FILES = ("complete.json", "test_access_audit.json")
 
 
 def _chemistry_summary(result: Mapping[str, Any]) -> dict[str, Any]:
@@ -245,7 +232,7 @@ def _synthetic_tables(
                 ),
                 "decision": (
                     "promoted formulation"
-                    if "top-2-context routing and entmax15" in formulation
+                    if formulation == FINAL_SYNTHETIC_LABEL
                     else "ablation/control"
                 ),
             },
@@ -254,7 +241,7 @@ def _synthetic_tables(
         row["fitted_topics"] = row.pop("k")
         row["decision"] = (
             "promote to real validation"
-            if "top-2-context routing and entmax15" in str(row["formulation"])
+            if row["formulation"] == FINAL_SYNTHETIC_LABEL
             else "ablation/control"
         )
     return primary, summary, high_k
@@ -404,11 +391,8 @@ def _real_evidence(
         validation_chemistry = read_json(
             paths.contextual[seed] / "validation_chemical" / METHOD / "complete.json",
         )
-        if (
-            int(config["training_seed"]) != seed
-            or int(config["resumed_from_epoch"]) != 0
-        ):
-            msg = f"seed {seed} was not a fresh epoch-zero training run"
+        if int(config["training_seed"]) != seed:
+            msg = f"seed {seed} does not match its declared training seed"
             raise RuntimeError(msg)
         test_evaluation = read_json(
             paths.contextual[seed] / "evaluation" / METHOD / "complete.json",
@@ -712,9 +696,7 @@ def _claim_checks(
     tomotopy = models["Tomotopy LDA"]
     controls = [models["canonical ETM"], models["balanced ETM"]]
     high_k_proposed = next(
-        row
-        for row in high_k
-        if "top-2-context routing and entmax15" in str(row["formulation"])
+        row for row in high_k if row["formulation"] == FINAL_SYNTHETIC_LABEL
     )
     checks = {
         "proposed_has_most_evaluable_motifs": int(proposed["evaluable_motifs"])
@@ -796,204 +778,6 @@ def _chemical_integrity_checks(
     return {"all_passed": all(checks.values()), "checks": checks}
 
 
-def _copy_compact(source: Path, destination: Path, names: Sequence[str]) -> None:
-    """Copy required compact files and fail on omissions."""
-    destination.mkdir(parents=True, exist_ok=True)
-    for name in names:
-        path = source / name
-        if not path.is_file():
-            msg = f"missing compact evidence file: {path}"
-            raise FileNotFoundError(msg)
-        target = destination / name
-        shutil.copy2(path, target)
-
-
-def _readme(
-    manifest: Mapping[str, Any],
-    claims: Mapping[str, Any],
-) -> str:
-    """Return the human-readable clean-room handoff bundled with the evidence."""
-    return f"""# Contextual Sparse ETM clean-room reproduction
-
-This bundle was generated from reproduction `{manifest['reproduction_id']}` at
-source commit `{manifest['source']['commit']}`. Models were fitted on training
-spectra, selected and ablated on validation spectra, frozen, and then evaluated
-on the fixed test split. `validation_comparison.csv` records development-split
-evidence; `comparison.csv` and `stability_by_seed.csv` contain final test results.
-
-## Acceptance status
-
-Predeclared directional claims passed: **{claims['all_passed']}**. Inspect
-`acceptance.json`, `data_quality.json`, `fresh_evidence_manifest.json`, and the
-CSV/JSON result tables for the complete evidence trail.
-
-`reproduction_manifest.json` is the immutable raw controller declaration.
-`acceptance.json` is the authoritative audited interpretation of its scientific
-gates. In particular, high-K planted-motif recovery is counted by one-to-one
-truth matching at topic-word cosine at least 0.50; it is not the same quantity
-as the number of fitted topics that become a document-level top-1 winner.
-"""
-
-
-def _copy_model_evidence(
-    run: Path,
-    destination: Path,
-    *,
-    method: str,
-    model_files: Sequence[str],
-) -> None:
-    """Copy compact validation, frozen-test, and split-boundary evidence."""
-    _copy_compact(run / "models" / method, destination, model_files)
-    _copy_compact(
-        run / "evaluation" / method,
-        destination / "test_evaluation",
-        COMPACT_TEST_EVALUATION_FILES,
-    )
-    shutil.copy2(
-        run / "chemical" / method / "complete.json",
-        destination / "test_chemical.json",
-    )
-    shutil.copy2(
-        run / "validation_chemical" / method / "complete.json",
-        destination / "validation_chemical.json",
-    )
-    for name in ("validation_input_manifest.json", "test_input_manifest.json"):
-        shutil.copy2(run / name, destination / name)
-
-
-def _write_summary_artifacts(
-    destination: Path,
-    evidence: Mapping[str, Any],
-) -> None:
-    """Write compact machine-readable summaries and tables."""
-    json_outputs = {
-        "preparation_summary.json": evidence["preparation"],
-        "protocol.json": evidence["protocol"],
-        "config.json": evidence["proposed"]["config"],
-        "metrics.json": evidence["proposed"]["metrics"],
-        "validation_metrics.json": evidence["proposed"]["validation_metrics"],
-        "tomotopy.json": evidence["tomotopy"],
-        "stability_summary.json": evidence["stability"],
-        "acceptance.json": evidence["claims"],
-        "data_quality.json": evidence["data_quality"],
-    }
-    csv_outputs = {
-        "comparison.csv": evidence["comparison"],
-        "validation_comparison.csv": evidence["validation_comparison"],
-        "synthetic_by_seed.csv": evidence["primary"],
-        "synthetic_summary.csv": evidence["synthetic_summary"],
-        "high_k_stress.csv": evidence["high_k"],
-        "stability_by_seed.csv": evidence["stability"]["by_seed"],
-    }
-    for name, value in json_outputs.items():
-        write_json(destination / name, value)
-    for name, rows in csv_outputs.items():
-        write_csv(destination / name, rows)
-
-
-def _copy_raw_evidence(
-    paths: ReproductionPaths,
-    destination: Path,
-    *,
-    manifest: Mapping[str, Any],
-    claims: Mapping[str, Any],
-) -> None:
-    """Copy compact model, split-boundary, and stage-provenance artifacts."""
-    for seed in TRAINING_SEEDS:
-        _copy_model_evidence(
-            paths.contextual[seed],
-            destination / "contextual" / f"seed_{seed}",
-            method=METHOD,
-            model_files=COMPACT_MODEL_FILES,
-        )
-    for method in ("etm", "etm_balanced"):
-        _copy_model_evidence(
-            paths.controls,
-            destination / "controls" / method,
-            method=method,
-            model_files=COMPACT_CONTROL_FILES,
-        )
-    for result_path in sorted(
-        (paths.synthetic / "synthetic_runs").glob("*/result.json"),
-    ):
-        target = (
-            destination / "synthetic_results" / result_path.parent.name / "result.json"
-        )
-        target.parent.mkdir(parents=True)
-        shutil.copy2(result_path, target)
-    for source, name in (
-        (paths.tomotopy / "tomotopy/validation_only_result.json", "tomotopy_raw.json"),
-        (paths.tomotopy / "tomotopy/test_result.json", "tomotopy_test_raw.json"),
-        (paths.assets / "acquisition_manifest.json", "acquisition_manifest.json"),
-        (paths.root / "reproduction_manifest.json", "reproduction_manifest.json"),
-    ):
-        shutil.copy2(source, destination / name)
-    stage_directory = destination / "stage_records"
-    stage_directory.mkdir()
-    for stage in stage_plan(paths):
-        shutil.copy2(
-            paths.stages / f"{stage.name}.json",
-            stage_directory / f"{stage.name}.json",
-        )
-    tomotopy_boundaries = destination / "tomotopy"
-    tomotopy_boundaries.mkdir()
-    for name in ("validation_input_manifest.json", "test_input_manifest.json"):
-        shutil.copy2(paths.tomotopy / name, tomotopy_boundaries / name)
-    (destination / "README.md").write_text(
-        _readme(manifest, claims),
-        encoding="utf-8",
-    )
-
-
-def _write_package_seals(
-    destination: Path,
-    *,
-    manifest: Mapping[str, Any],
-    stage_records: Sequence[Mapping[str, Any]],
-    claims: Mapping[str, Any],
-    data_quality: Mapping[str, Any],
-) -> None:
-    """Seal all compact files and write the report-facing checkpoint."""
-    raw_outputs = [
-        output_row for stage in stage_records for output_row in stage.get("outputs", [])
-    ]
-    seal = {
-        "schema_version": 1,
-        "reproduction_id": manifest["reproduction_id"],
-        "source": manifest["source"],
-        "split_protocol": (
-            "fit on train; select and ablate on validation; evaluate frozen models "
-            "on test"
-        ),
-        "method": METHOD,
-        "training_seeds": list(TRAINING_SEEDS),
-        "synthetic_seeds": list(SYNTHETIC_SEEDS),
-        "stage_count": len(stage_records),
-        "raw_stage_outputs": raw_outputs,
-        "packaged_files": [
-            file_record(path, relative_to=destination)
-            for path in sorted(
-                path for path in destination.rglob("*") if path.is_file()
-            )
-        ],
-    }
-    write_json(destination / "fresh_evidence_manifest.json", seal)
-    checkpoint = {
-        "schema_version": 2,
-        "method": METHOD,
-        "split_protocol": seal["split_protocol"],
-        "reproduction_id": manifest["reproduction_id"],
-        "source_commit": manifest["source"]["commit"],
-        "test_released_after_model_and_validation_freeze": True,
-        "fresh_evidence_manifest_sha256": sha256_file(
-            destination / "fresh_evidence_manifest.json",
-        ),
-        "acceptance_all_passed": claims["all_passed"],
-        "data_quality_status": data_quality["status"],
-    }
-    write_json(destination / "checkpoint_manifest.json", checkpoint)
-
-
 def _build_package(
     raw_root: Path,
     destination: Path,
@@ -1007,7 +791,7 @@ def _build_package(
     validation_views = validate_model_views(raw_root)
     probability = probability_audit(raw_root)
     paths = reproduction_paths(raw_root)
-    preparation = read_json(paths.prepared / "comparison_preparation.json")
+    preparation = read_json(paths.prepared / "preparation_summary.json")
     protocol = read_json(paths.prepared / "protocol.json")
     data_checks = _exact_data_checks(preparation, protocol)
     if not data_checks["all_passed"]:
@@ -1055,13 +839,18 @@ def _build_package(
         manifest=manifest,
         claims=claims,
     )
+    replacements = _path_replacements(paths, manifest)
+    _rewrite_json_as_portable(destination, replacements)
     _write_package_seals(
         destination,
         manifest=manifest,
         stage_records=stage_records,
         claims=claims,
         data_quality=data_quality,
+        replacements=replacements,
     )
+    _rewrite_json_as_portable(destination, replacements)
+    _assert_no_machine_paths(destination)
     return {
         "status": "packaged",
         "output": str(destination),

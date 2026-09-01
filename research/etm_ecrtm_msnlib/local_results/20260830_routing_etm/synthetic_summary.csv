@@ -1,5 +1,0 @@
-formulation,seeds,k,mean_nll,mean_true_beta_cosine,mean_true_theta_cosine,mean_median_effective_topics,mean_active_topics_gt_0_005,mean_unique_top1_topics,decision
-balanced ETM softmax raw,3,36,6.4710,0.3052,0.4868,3.59,8.00,6.67,control
-balanced ETM plus entmax15,3,36,6.5977,0.2566,0.3973,1.88,5.00,4.67,reject topic starvation
-balanced ETM plus top-2-context routing and softmax,3,36,6.2438,0.4423,0.7066,3.22,13.33,11.67,reject insufficient diffuse-stress sparsity
-balanced ETM plus top-2-context routing and entmax15,3,36,6.2892,0.4648,0.7513,2.00,14.00,13.00,promote to high-K

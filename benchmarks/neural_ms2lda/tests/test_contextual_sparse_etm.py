@@ -8,18 +8,12 @@ import numpy as np
 import pytest
 import scipy.sparse as sp
 import torch
-from scripts.run_contextual_sparse_etm import (
-    _load_validation_data,
-    infer_document_topic_mixtures,
-)
-from scripts.run_msnlib_model_comparison import FragmentLossBalancedETM
-from scripts.run_routing_etm_campaign import build_synthetic_model
 from torch.nn import functional as nnf
 
 from benchmarks.neural_ms2lda.contextual_sparse_etm import (
+    CONTEXT_TEMPERATURE,
     EPSILON,
     FRAGMENT_CHANNEL_MASS,
-    ROUTING_TEMPERATURE,
     TOPICS_PER_TOKEN,
     ContextualSparseETM,
     centered_log_evidence_offset,
@@ -28,11 +22,20 @@ from benchmarks.neural_ms2lda.contextual_sparse_etm import (
     diagonal_gaussian_kl,
     entmax15_document_mixture,
 )
+from benchmarks.neural_ms2lda.etm_baselines import ChannelBalancedETM
 from benchmarks.neural_ms2lda.topic_model_training import (
     dense_normalized,
     raw_count_reconstruction_loss,
 )
 from benchmarks.neural_ms2lda.utils import write_json
+from scripts.run_contextual_sparse_etm import (
+    _load_validation_data,
+    infer_document_topic_mixtures,
+)
+from scripts.run_contextual_sparse_etm_synthetic import (
+    build_synthetic_model,
+    document_topic_mixture,
+)
 
 
 def _scientific_inputs() -> tuple[np.ndarray, np.ndarray, sp.csr_matrix]:
@@ -83,19 +86,19 @@ def _closed_form_entmax15(logits: torch.Tensor) -> torch.Tensor:
     return (theta / theta.sum(dim=1, keepdim=True)).to(logits.dtype)
 
 
-def test_fragment_loss_balanced_etm_changes_only_decoder_normalization() -> None:
+def test_channel_balanced_etm_changes_only_decoder_normalization() -> None:
     embeddings = np.asarray(
         [[1.0, 0.0], [0.8, 0.2], [0.0, 1.0], [0.2, 0.8]],
         dtype=np.float32,
     )
-    model = FragmentLossBalancedETM(
+    model = ChannelBalancedETM(
         embeddings,
         topics=3,
         fragment_mask=np.asarray([True, True, False, False]),
         hidden=4,
     )
 
-    beta = model.beta()
+    beta = model.topic_word_distribution()
 
     assert beta.shape == (3, 4)
     assert torch.allclose(beta.sum(dim=1), torch.ones(3))
@@ -103,9 +106,9 @@ def test_fragment_loss_balanced_etm_changes_only_decoder_normalization() -> None
     assert torch.allclose(beta[:, 2:].sum(dim=1), torch.full((3,), 0.5))
 
 
-def test_fragment_loss_balanced_etm_rejects_one_channel_vocabulary() -> None:
+def test_channel_balanced_etm_rejects_one_channel_vocabulary() -> None:
     with pytest.raises(ValueError, match="fragments and losses"):
-        FragmentLossBalancedETM(
+        ChannelBalancedETM(
             np.eye(3, dtype=np.float32),
             topics=2,
             fragment_mask=np.ones(3, dtype=bool),
@@ -114,17 +117,16 @@ def test_fragment_loss_balanced_etm_rejects_one_channel_vocabulary() -> None:
 
 
 @pytest.mark.parametrize(
-    ("routing_variant", "theta_transform", "is_complete_model"),
+    ("formulation", "is_complete_model"),
     [
-        ("etm", "softmax", False),
-        ("etm", "entmax15", False),
-        ("top2_context", "softmax", False),
-        ("top2_context", "entmax15", True),
+        ("balanced_softmax", False),
+        ("balanced_entmax", False),
+        ("contextual_softmax", True),
+        ("contextual_entmax", True),
     ],
 )
 def test_published_synthetic_formulations_are_finite_and_deterministic(
-    routing_variant: str,
-    theta_transform: str,
+    formulation: str,
     is_complete_model: bool,
 ) -> None:
     """Exercise every component comparison reported in the manuscript."""
@@ -133,21 +135,24 @@ def test_published_synthetic_formulations_are_finite_and_deterministic(
         embeddings,
         5,
         fragment_mask,
-        routing_variant=routing_variant,
-        theta_transform=theta_transform,
-        reconstruction_scaling="raw_counts",
+        formulation=formulation,
         hidden=7,
     ).eval()
     x = dense_normalized(counts, np.arange(counts.shape[0]), torch.device("cpu"))
 
-    if isinstance(model, ContextualSparseETM):
-        beta = model.topic_word_distribution()
-        first_theta, first_kl = model.document_topic_mixture(x, sample=False)
-        second_theta, second_kl = model.document_topic_mixture(x, sample=False)
-    else:
-        beta = model.beta()
-        first_theta, first_kl = model.theta(x, sample=False)
-        second_theta, second_kl = model.theta(x, sample=False)
+    beta = model.topic_word_distribution()
+    first_theta, first_kl = document_topic_mixture(
+        model,
+        x,
+        formulation=formulation,
+        sample=False,
+    )
+    second_theta, second_kl = document_topic_mixture(
+        model,
+        x,
+        formulation=formulation,
+        sample=False,
+    )
 
     assert isinstance(model, ContextualSparseETM) is is_complete_model
     assert torch.all(torch.isfinite(beta))
@@ -220,7 +225,7 @@ def test_contextual_top2_evidence_matches_equations() -> None:
                 (rho_hat[word_index] + context_scale * rho_bar).unsqueeze(0),
                 dim=1,
             ).squeeze(0)
-            scores = (h_dw @ alpha_hat.T) / ROUTING_TEMPERATURE
+            scores = (h_dw @ alpha_hat.T) / CONTEXT_TEMPERATURE
             top_topics = torch.topk(scores, k=TOPICS_PER_TOKEN).indices
             q_dwk = torch.softmax(scores[top_topics], dim=0)
             expected_r[document_index, top_topics] += x_dw * q_dwk
@@ -330,6 +335,28 @@ def test_model_objective_matches_report_end_to_end() -> None:
         sum(parameter.numel() for parameter in model.parameters())
         == expected_parameters
     )
+
+
+def test_serialized_state_reproduces_deterministic_model_outputs() -> None:
+    """The saved parameter state must reproduce report-facing beta and theta."""
+    embeddings, fragment_mask, counts = _scientific_inputs()
+    torch.manual_seed(31)
+    fitted = ContextualSparseETM(embeddings, 5, fragment_mask, hidden=7).eval()
+    restored = ContextualSparseETM(embeddings, 5, fragment_mask, hidden=7).eval()
+    restored.load_state_dict(fitted.state_dict(), strict=True)
+    normalized = dense_normalized(
+        counts,
+        np.arange(counts.shape[0]),
+        torch.device("cpu"),
+    )
+
+    fitted_theta, _ = fitted.document_topic_mixture(normalized, sample=False)
+    restored_theta, _ = restored.document_topic_mixture(normalized, sample=False)
+
+    assert torch.equal(
+        fitted.topic_word_distribution(), restored.topic_word_distribution()
+    )
+    assert torch.equal(fitted_theta, restored_theta)
 
 
 def test_model_rejects_embeddings_that_violate_the_report_contract() -> None:

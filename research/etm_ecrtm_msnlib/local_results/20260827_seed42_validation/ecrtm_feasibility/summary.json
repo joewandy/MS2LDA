@@ -1,8 +1,0 @@
-{
-  "batches_per_epoch": 137,
-  "bounded_50_projected_40_epoch_seconds": 7369.946055111941,
-  "bounded_50_projected_epoch_seconds": 184.24865137779852,
-  "canonical_projected_40_epoch_seconds": 25529.73856513854,
-  "canonical_projected_epoch_seconds": 638.2434641284635,
-  "decision": "Full ECRTM not run: ETM did not show catastrophic inventory collapse; its decisive failure was chemical breadth. Canonical ECRTM would add about seven hours locally, while the 50-step approximation was not numerically converged at real K/V."
-}

@@ -32,40 +32,7 @@
     "learning_rate": 0.01
   },
   "model": {
-    "num_topics": 1000,
-    "projection_dimensions": 128,
-    "beta_temperature": 0.18
-  },
-  "optimization": {
-    "batch_size": 128,
-    "topic_update_batch_size": 512,
-    "topic_updates_per_epoch": 4,
-    "learning_rate": 0.001,
-    "weight_decay": 0.0001,
-    "gradient_clip_norm": 5.0,
-    "maximum_epochs": 40
-  },
-  "anti_collapse": {
-    "routing_temperature_start": 0.5,
-    "routing_temperature_end": 0.1,
-    "routing_temperature_anneal_epochs": 30,
-    "sinkhorn_weight_start": 0.25,
-    "sinkhorn_weight_hold_epochs": 10,
-    "sinkhorn_weight_end": 0.05,
-    "sinkhorn_epsilon": 0.05,
-    "sinkhorn_iterations": 5
-  },
-  "cooccurrence_regularization": {
-    "minimum_document_frequency": 10,
-    "minimum_pair_frequency": 3,
-    "maximum_neighbors": 16,
-    "minimum_npmi": 0.0,
-    "weight": 1.0
-  },
-  "topic_separation": {
-    "neighbors": 8,
-    "margin": 0.3,
-    "weight": 5.0
+    "num_topics": 1000
   },
   "evaluation": {
     "latency_subset_size": 128,

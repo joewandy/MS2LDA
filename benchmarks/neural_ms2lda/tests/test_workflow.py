@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import subprocess
 import sys
 import zipfile
 from pathlib import Path
@@ -12,8 +13,38 @@ from typing import Any
 
 import numpy as np
 import pytest
+import scipy.sparse as sp
 import torch
-from scripts import run_msnlib_model_comparison as comparison
+
+from benchmarks.neural_ms2lda import chemical
+from benchmarks.neural_ms2lda.data import (
+    load_csr,
+    load_heldout_records,
+    load_vocabulary,
+    prepare_data,
+    train_token_features,
+)
+from benchmarks.neural_ms2lda.mag import _connectivity_key, build_filtered_mag_index
+from benchmarks.neural_ms2lda.reproducibility import resolve_torch_device
+from benchmarks.neural_ms2lda.reproduction_plan import (
+    Stage,
+    probability_artifact_paths,
+    reproduction_paths,
+    stage_plan,
+)
+from benchmarks.neural_ms2lda.study_protocol import (
+    TRAINING_ACCESS_AUDIT_FILENAME,
+    VALIDATION_ACCESS_AUDIT_FILENAME,
+    initialize_run,
+    load_protocol,
+)
+from benchmarks.neural_ms2lda.tomotopy import (
+    _converged,
+    _infer_theta,
+    _validate_alpha,
+)
+from benchmarks.neural_ms2lda.utils import read_json, write_json, write_jsonl
+from scripts import run_etm_controls as controls
 from scripts.download_msnlib_validation_assets import safe_zip_members
 from scripts.evaluate_frozen_etm_test import evaluate_test
 from scripts.prepare_msnlib_test_view import expose_test_view
@@ -25,37 +56,7 @@ from scripts.run_contextual_sparse_etm_reproduction import (
 from scripts.run_contextual_sparse_etm_reproduction import (
     sha256_file as reproduction_sha256_file,
 )
-from scripts.run_msnlib_model_comparison import resolve_device, train_etm
-
-from benchmarks.neural_ms2lda import chemical
-from benchmarks.neural_ms2lda.artifacts import (
-    initialize_run,
-    load_protocol,
-)
-from benchmarks.neural_ms2lda.data import (
-    load_csr,
-    load_heldout_records,
-    load_vocabulary,
-    prepare_data,
-    train_token_features,
-)
-from benchmarks.neural_ms2lda.mag import _connectivity_key, build_filtered_mag_index
-from benchmarks.neural_ms2lda.model_evaluation import (
-    TRAINING_ACCESS_AUDIT_FILENAME,
-    VALIDATION_ACCESS_AUDIT_FILENAME,
-)
-from benchmarks.neural_ms2lda.reproduction_plan import (
-    Stage,
-    probability_artifact_paths,
-    reproduction_paths,
-    stage_plan,
-)
-from benchmarks.neural_ms2lda.tomotopy import (
-    _converged,
-    _infer_theta,
-    _validate_alpha,
-)
-from benchmarks.neural_ms2lda.utils import read_json, write_json, write_jsonl
+from scripts.run_etm_controls import train_control
 
 from ._support import chemistry_result, mini_protocol, write_mini_mgf
 
@@ -142,7 +143,7 @@ def test_cuda_device_request_fails_when_cuda_is_unavailable(
     monkeypatch.setattr(torch.cuda, "is_available", lambda: False)
 
     with pytest.raises(RuntimeError, match="CUDA was requested"):
-        resolve_device("cuda")
+        resolve_torch_device("cuda")
 
 
 def test_etm_control_loader_opens_validation_data_only(
@@ -151,20 +152,36 @@ def test_etm_control_loader_opens_validation_data_only(
 ) -> None:
     opened: list[str] = []
 
-    def fake_load(path: object) -> object:
+    def fake_load(path: object) -> sp.csr_matrix:
         opened.append(Path(str(path)).name)
-        return object()
+        return sp.csr_matrix(np.ones((2, 4), dtype=np.float32))
 
     def fake_records(path: object, split: str) -> list[dict[str, str]]:
         opened.append(f"records:{split}")
-        return [{"split": split}]
+        return [{"split": split}, {"split": split}]
 
-    monkeypatch.setattr(comparison, "load_csr", fake_load)
-    monkeypatch.setattr(comparison, "load_heldout_records", fake_records)
+    (tmp_path / "data").mkdir()
+    monkeypatch.setattr(controls, "load_csr", fake_load)
+    monkeypatch.setattr(controls, "load_heldout_records", fake_records)
+    monkeypatch.setattr(controls, "load_vocabulary", lambda _: ["a", "b", "c", "d"])
+    monkeypatch.setattr(
+        controls,
+        "load_sgns_embeddings",
+        lambda _: np.ones((4, 2), dtype=np.float32),
+    )
+    monkeypatch.setattr(
+        controls,
+        "read_json_object",
+        lambda path: (
+            {"model": {"num_topics": 4}}
+            if Path(path).name == "protocol.json"
+            else {"candidate_test_artifacts_accessed": False}
+        ),
+    )
 
-    loaded = comparison.load_etm_campaign_data(tmp_path)
+    loaded = controls.load_control_data(tmp_path)
 
-    assert set(loaded) == {"train", "observed", "completion", "full", "records"}
+    assert loaded.train.shape == (2, 4)
     assert opened
     assert all("test" not in path for path in opened)
     assert "records:validation" in opened
@@ -353,7 +370,7 @@ def test_selected_etm_is_evaluated_only_after_validation(tmp_path: Path) -> None
     run = tmp_path / "selected-etm"
     manifest = create_validation_view(run, prepared, expected_topics=4)
     assert manifest["test_spectra_exposed_to_model_run"] is False
-    train_etm(
+    train_control(
         run,
         device=torch.device("cpu"),
         epochs=1,
@@ -395,7 +412,7 @@ def test_training_audits_do_not_preempt_chemistry_stage_outputs(
     prepared, _ = _prepare_mini_prepared_source(tmp_path)
 
     create_validation_view(paths.controls, prepared, expected_topics=4)
-    train_etm(
+    train_control(
         paths.controls,
         device=torch.device("cpu"),
         epochs=1,
@@ -479,7 +496,7 @@ def test_clean_reproduction_plan_has_unique_stage_ownership(tmp_path: Path) -> N
     stages = stage_plan(paths)
     names = [stage.name for stage in stages]
     outputs = [str(path) for stage in stages for path in stage.outputs]
-    assert len(stages) == 54
+    assert len(stages) == 57
     assert len(names) == len(set(names))
     assert len(outputs) == len(set(outputs))
     assert {
@@ -530,6 +547,46 @@ def test_completed_stage_rejects_changed_sealed_output(tmp_path: Path) -> None:
     output.write_text("changed\n", encoding="utf-8")
     with pytest.raises(RuntimeError, match="sealed stage output changed"):
         run_stage(paths, stage)
+
+
+def test_failed_stage_is_auditable_and_can_retry_cleanly(tmp_path: Path) -> None:
+    paths = reproduction_paths(tmp_path / "reproduction")
+    paths.logs.mkdir(parents=True)
+    paths.stages.mkdir(parents=True)
+    marker = paths.root / "first-attempt.marker"
+    output = paths.root / "owned.txt"
+    program = "\n".join(
+        (
+            "import sys",
+            "from pathlib import Path",
+            "marker, output = map(Path, sys.argv[1:])",
+            "if not marker.exists():",
+            "    marker.write_text('failed\\n', encoding='utf-8')",
+            "    output.write_text('partial\\n', encoding='utf-8')",
+            "    raise SystemExit(3)",
+            "output.write_text('complete\\n', encoding='utf-8')",
+        )
+    )
+    stage = Stage(
+        "retryable_stage",
+        (sys.executable, "-c", program, str(marker), str(output)),
+        (output,),
+    )
+
+    with pytest.raises(subprocess.CalledProcessError):
+        run_stage(paths, stage)
+    failed = paths.stages / "retryable_stage.attempt-1.failed.json"
+    assert failed.is_file()
+    assert read_json(failed)["discarded_partial_outputs"] == [str(output)]
+    assert not output.exists()
+    assert not (paths.stages / "retryable_stage.json").exists()
+
+    record = run_stage(paths, stage)
+    assert record["status"] == "complete"
+    assert record["attempt"] == 2
+    assert output.read_text(encoding="utf-8") == "complete\n"
+    assert (paths.logs / "retryable_stage.attempt-1.log").is_file()
+    assert (paths.logs / "retryable_stage.attempt-2.log").is_file()
 
 
 def test_zip_extraction_rejects_path_traversal(tmp_path: Path) -> None:

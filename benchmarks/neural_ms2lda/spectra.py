@@ -442,7 +442,7 @@ def build_training_vocabulary(
             )[:rm_top]
         }
         eligible -= removed
-    # Preserve MS2LDA's historical first-seen column order while deriving the
+    # Preserve MS2LDA's established first-seen column order while deriving the
     # eligible set exclusively from training spectra.
     vocabulary_list: list[str] = []
     seen: set[str] = set()

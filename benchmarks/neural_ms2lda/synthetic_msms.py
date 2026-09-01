@@ -2,12 +2,36 @@
 
 from __future__ import annotations
 
+import json
 from collections import Counter
 from dataclasses import dataclass
-from typing import TypeAlias
+from pathlib import Path
+from typing import Any, TypeAlias
 
 import numpy as np
 import scipy.sparse as sp
+from scipy.optimize import linear_sum_assignment
+
+from .data import train_token_features
+from .reproducibility import (
+    configure_deterministic_execution,
+    read_json_object,
+    sha256_file,
+)
+from .utils import atomic_save_numpy, read_json, write_json
+
+LOOSE_RECOVERY_COSINE = 0.20
+PRIMARY_RECOVERY_COSINE = 0.50
+ACTIVE_TOPIC_USAGE_THRESHOLD = 0.005
+EVALUATION_PROTOCOL = {
+    "active_topic_usage_threshold": 0.0005,
+    "duplicate_cosine_thresholds": (0.95, 0.99, 0.999),
+    "catastrophic_duplicate_component_fraction": 0.5,
+    "top_word_count": 20,
+    "channel_extreme_lower": 0.1,
+    "channel_extreme_upper": 0.9,
+}
+PROTOCOL_PATH = Path(__file__).with_name("protocol.json")
 
 
 @dataclass(frozen=True)
@@ -410,3 +434,202 @@ def generate_synthetic_msms(
         validation_records=records,
         summary=summary,
     )
+
+
+def _save_dataset_artifacts(
+    directory: Path,
+    dataset: SyntheticMsmsDataset,
+) -> dict[str, dict[str, Any]]:
+    """Persist one truth-known dataset and hash every scientific input."""
+    directory.mkdir(parents=True, exist_ok=True)
+    for name, matrix in {
+        "train": dataset.train,
+        "validation_observed": dataset.validation_observed,
+        "validation_completion": dataset.validation_completion,
+        "validation_full": dataset.validation_full,
+    }.items():
+        path = directory / f"{name}.npz"
+        if not path.is_file():
+            sp.save_npz(path, matrix, compressed=False)
+    for name, array in {
+        "true_beta": dataset.true_beta,
+        "train_true_theta": dataset.train_true_theta,
+        "validation_true_theta": dataset.validation_true_theta,
+    }.items():
+        path = directory / f"{name}.npy"
+        if not path.is_file():
+            atomic_save_numpy(path, array.astype(np.float32, copy=False))
+    vocabulary_path = directory / "vocabulary.json"
+    if not vocabulary_path.is_file():
+        write_json(vocabulary_path, {"vocabulary": list(dataset.vocabulary)})
+    records_path = directory / "validation_records.jsonl"
+    if not records_path.is_file():
+        with records_path.open("w", encoding="utf-8") as handle:
+            for record in dataset.validation_records:
+                handle.write(json.dumps(record, sort_keys=True) + "\n")
+    write_json(directory / "summary.json", dataset.summary)
+    files = sorted(
+        path
+        for path in directory.iterdir()
+        if path.is_file() and path.name != "artifact_manifest.json"
+    )
+    manifest = {
+        path.name: {
+            "path": str(path),
+            "bytes": path.stat().st_size,
+            "sha256": sha256_file(path),
+        }
+        for path in files
+    }
+    write_json(directory / "artifact_manifest.json", manifest)
+    return manifest
+
+
+def prepare_synthetic_seed(
+    output_root: Path,
+    *,
+    seed: int,
+    threads: int,
+    training_documents: int,
+    validation_documents: int,
+) -> tuple[SyntheticMsmsDataset, np.ndarray, Path]:
+    """Generate one seed and train or reuse its single train-only SGNS table."""
+    dataset = generate_synthetic_msms(
+        seed=seed,
+        training_documents=training_documents,
+        validation_documents=validation_documents,
+    )
+    seed_directory = output_root / "synthetic_artifacts" / f"seed_{seed}"
+    _save_dataset_artifacts(seed_directory, dataset)
+    protocol = read_json_object(PROTOCOL_PATH)
+    configure_deterministic_execution(seed, threads)
+    train_token_features(
+        seed_directory / "token_features",
+        dataset.train,
+        list(dataset.vocabulary),
+        protocol,
+        seed=seed,
+    )
+    return load_prepared_synthetic_seed(output_root, seed=seed)
+
+
+def load_prepared_synthetic_seed(
+    output_root: Path,
+    *,
+    seed: int,
+) -> tuple[SyntheticMsmsDataset, np.ndarray, Path]:
+    """Verify and load one explicitly prepared synthetic dataset and SGNS table."""
+    seed_directory = output_root / "synthetic_artifacts" / f"seed_{seed}"
+    manifest_path = seed_directory / "artifact_manifest.json"
+    feature_complete = seed_directory / "token_features/complete.json"
+    if not manifest_path.is_file() or not feature_complete.is_file():
+        raise FileNotFoundError(
+            f"synthetic seed {seed} must be prepared before model training",
+        )
+    manifest = read_json(manifest_path)
+    for name, record in manifest.items():
+        path = seed_directory / name
+        if not path.is_file():
+            raise FileNotFoundError(f"missing synthetic input: {path}")
+        if path.stat().st_size != int(record["bytes"]):
+            raise ValueError(f"synthetic input size changed: {path}")
+        if sha256_file(path) != str(record["sha256"]):
+            raise ValueError(f"synthetic input hash changed: {path}")
+
+    vocabulary = tuple(
+        map(str, read_json(seed_directory / "vocabulary.json")["vocabulary"])
+    )
+    with (seed_directory / "validation_records.jsonl").open(encoding="utf-8") as handle:
+        records = tuple(json.loads(line) for line in handle if line.strip())
+    dataset = SyntheticMsmsDataset(
+        train=sp.load_npz(seed_directory / "train.npz").tocsr(),
+        validation_observed=sp.load_npz(
+            seed_directory / "validation_observed.npz",
+        ).tocsr(),
+        validation_completion=sp.load_npz(
+            seed_directory / "validation_completion.npz",
+        ).tocsr(),
+        validation_full=sp.load_npz(
+            seed_directory / "validation_full.npz",
+        ).tocsr(),
+        vocabulary=vocabulary,
+        true_beta=np.load(seed_directory / "true_beta.npy"),
+        train_true_theta=np.load(seed_directory / "train_true_theta.npy"),
+        validation_true_theta=np.load(seed_directory / "validation_true_theta.npy"),
+        validation_records=records,
+        summary=read_json(seed_directory / "summary.json"),
+    )
+    if int(dataset.summary["seed"]) != int(seed):
+        raise ValueError("prepared synthetic seed does not match the requested seed")
+    features_path = seed_directory / "token_features/features.npy"
+    features = np.load(features_path).astype(np.float32, copy=False)
+    embeddings = np.array(features[:, :-2], dtype=np.float32, copy=True)
+    embeddings /= np.maximum(
+        np.linalg.norm(embeddings, axis=1, keepdims=True),
+        1e-8,
+    )
+    if embeddings.shape[0] != len(vocabulary):
+        raise ValueError("synthetic SGNS rows do not match the vocabulary")
+    return dataset, embeddings, seed_directory
+
+
+def matched_truth_metrics(
+    learned_beta: np.ndarray,
+    learned_theta: np.ndarray,
+    true_beta: np.ndarray,
+    true_theta: np.ndarray,
+) -> dict[str, Any]:
+    """Align planted motifs one-to-one and report beta and theta recovery."""
+    epsilon = 1e-12
+    learned_norm = learned_beta / np.maximum(
+        np.linalg.norm(learned_beta, axis=1, keepdims=True),
+        epsilon,
+    )
+    true_norm = true_beta / np.maximum(
+        np.linalg.norm(true_beta, axis=1, keepdims=True),
+        epsilon,
+    )
+    similarity = true_norm @ learned_norm.T
+    true_rows, learned_rows = linear_sum_assignment(-similarity)
+    matched = similarity[true_rows, learned_rows]
+    aligned = np.zeros_like(true_theta, dtype=np.float64)
+    aligned[:, true_rows] = learned_theta[:, learned_rows]
+    numerator = np.sum(true_theta * aligned, axis=1)
+    denominator = np.linalg.norm(true_theta, axis=1) * np.linalg.norm(aligned, axis=1)
+    theta_cosine = np.divide(
+        numerator,
+        denominator,
+        out=np.zeros_like(numerator),
+        where=denominator > epsilon,
+    )
+    top_n = min(20, learned_beta.shape[1])
+    jaccards = []
+    for truth, learned in zip(true_rows, learned_rows, strict=True):
+        truth_top = set(np.argsort(-true_beta[truth], kind="stable")[:top_n])
+        learned_top = set(np.argsort(-learned_beta[learned], kind="stable")[:top_n])
+        jaccards.append(len(truth_top & learned_top) / len(truth_top | learned_top))
+    return {
+        "true_beta_matched_cosine_mean": float(matched.mean()),
+        "true_beta_matched_cosine_median": float(np.median(matched)),
+        "true_beta_matched_cosine_minimum": float(matched.min()),
+        "true_beta_top20_jaccard_mean": float(np.mean(jaccards)),
+        "true_theta_cosine_mean": float(theta_cosine.mean()),
+        "true_theta_cosine_median": float(np.median(theta_cosine)),
+        "top_planted_motif_accuracy": float(
+            np.mean(np.argmax(true_theta, axis=1) == np.argmax(aligned, axis=1)),
+        ),
+        "planted_motifs_recovered_cosine_gt_0_20": int(
+            np.sum(matched > LOOSE_RECOVERY_COSINE),
+        ),
+        "planted_motifs_recovered_cosine_ge_0_50": int(
+            np.sum(matched >= PRIMARY_RECOVERY_COSINE),
+        ),
+        "matching": [
+            {
+                "true_topic": int(truth),
+                "learned_topic": int(learned),
+                "beta_cosine": float(similarity[truth, learned]),
+            }
+            for truth, learned in zip(true_rows, learned_rows, strict=True)
+        ],
+    }
