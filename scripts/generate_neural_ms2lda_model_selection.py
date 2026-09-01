@@ -1,4 +1,9 @@
-"""Generate the validation-only model-selection tables used by the report."""
+"""Regenerate archived validation-only model-selection tables.
+
+The current paper uses ``generate_routing_etm_report.py`` and the sealed
+train/validation/test reproduction package. This script is retained only to
+reconstruct the earlier development audit.
+"""
 
 from __future__ import annotations
 
@@ -8,8 +13,7 @@ from typing import Any
 
 REPO = Path(__file__).resolve().parents[1]
 SOURCE = (
-    REPO
-    / "research/etm_ecrtm_msnlib/local_results/20260827_followup/comparison.csv"
+    REPO / "research/etm_ecrtm_msnlib/local_results/20260827_followup/comparison.csv"
 )
 GENERATED = REPO / "docs/research/generated"
 

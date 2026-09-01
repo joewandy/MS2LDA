@@ -15,6 +15,18 @@ from typing import Any
 import numpy as np
 import pytest
 import torch
+from scripts.download_msnlib_validation_assets import safe_zip_members
+from scripts.evaluate_frozen_etm_test import evaluate_test
+from scripts.prepare_msnlib_test_view import expose_test_view
+from scripts.prepare_msnlib_validation_view import create_validation_view
+from scripts.run_contextual_sparse_etm import TrainingSettings, train_real_validation
+from scripts.run_contextual_sparse_etm_reproduction import (
+    run_stage,
+)
+from scripts.run_contextual_sparse_etm_reproduction import (
+    sha256_file as reproduction_sha256_file,
+)
+from scripts.run_msnlib_model_comparison import train_etm
 
 from benchmarks.neural_ms2lda import __main__ as module_entry
 from benchmarks.neural_ms2lda import chemical, pipeline
@@ -33,14 +45,23 @@ from benchmarks.neural_ms2lda.data import (
 )
 from benchmarks.neural_ms2lda.evaluation import evaluate_neural
 from benchmarks.neural_ms2lda.mag import _connectivity_key, build_filtered_mag_index
+from benchmarks.neural_ms2lda.model_evaluation import (
+    TRAINING_ACCESS_AUDIT_FILENAME,
+    VALIDATION_ACCESS_AUDIT_FILENAME,
+)
+from benchmarks.neural_ms2lda.reproduction_plan import (
+    Stage,
+    probability_artifact_paths,
+    reproduction_paths,
+    stage_plan,
+)
 from benchmarks.neural_ms2lda.tomotopy import (
     _converged,
     _infer_theta,
     _validate_alpha,
 )
 from benchmarks.neural_ms2lda.training import train_model
-from benchmarks.neural_ms2lda.utils import write_json, write_jsonl
-from scripts.download_msnlib_validation_assets import safe_zip_members
+from benchmarks.neural_ms2lda.utils import read_json, write_json, write_jsonl
 
 from ._support import chemistry_result, mini_protocol, write_mini_mgf
 
@@ -106,6 +127,26 @@ def _mini_training_arguments(run: Path) -> dict[str, Any]:
     return {"train": load_csr(data / "train.npz")}
 
 
+def _prepare_mini_frozen_source(root: Path) -> tuple[Path, dict[str, Any]]:
+    """Create one tiny prepared run reusable by validation-only model views."""
+    mgf = root / "mini.mgf"
+    write_mini_mgf(mgf)
+    protocol = mini_protocol(mgf)
+    prepared = root / "prepared"
+    write_json(prepared / "protocol.json", protocol)
+    _prepare_mini_training_scaffold(
+        prepared,
+        data_root=root,
+        protocol=protocol,
+    )
+    write_json(prepared / "mag/index/complete.json", {"retained_leak_rows": 0})
+    write_json(prepared / "mag/index/excluded_connectivity_keys.json", [])
+    (prepared / "mag/index").mkdir(parents=True, exist_ok=True)
+    np.save(prepared / "mag/index/kept_original_ids.npy", np.asarray([], dtype=int))
+    (prepared / "mag/index/spec2vec_filtered.faiss").write_bytes(b"mini-index")
+    return prepared, protocol
+
+
 def test_training_interface_exposes_no_test_inputs() -> None:
     assert not any("test" in name for name in inspect.signature(train_model).parameters)
 
@@ -151,6 +192,34 @@ def test_pipeline_finishes_validation_before_test(
         max(i for i, event in enumerate(events) if event.startswith("validation"))
         < first_test
     )
+
+
+def test_chemical_subprocess_uses_active_unified_interpreter(
+    monkeypatch: Any, tmp_path: Path
+) -> None:
+    captured: dict[str, Any] = {}
+
+    def run(command: list[str], **kwargs: Any) -> None:
+        captured["command"] = command
+        captured["kwargs"] = kwargs
+
+    interpreter = "/opt/ms2lda-neural/bin/python"
+    monkeypatch.setattr(pipeline.sys, "executable", interpreter)
+    monkeypatch.setattr(pipeline.subprocess, "run", run)
+    pipeline._chemical_subprocess(
+        tmp_path / "run",
+        method="neural",
+        data_root=tmp_path / "inputs",
+        cpu_threads=6,
+        split="validation",
+    )
+    assert captured["command"][:3] == [
+        interpreter,
+        "-m",
+        "benchmarks.neural_ms2lda.chemical",
+    ]
+    assert "ms2lda-msnlib-mag" not in captured["command"]
+    assert captured["kwargs"]["check"] is True
 
 
 def test_mag_index_excludes_validation_and_test_compounds(
@@ -249,11 +318,45 @@ def test_mag_annotations_are_generated_once_per_model(
     first, _ = chemical._shared_annotations(
         run, method="neural", data_root=tmp_path, protocol=protocol
     )
-    second, _ = chemical._shared_annotations(
+    second, summary = chemical._shared_annotations(
         run, method="neural", data_root=tmp_path, protocol=protocol
     )
     assert first == second
     assert calls == 1
+    assert summary["mag_failures"] == {
+        "clustering_count": 0,
+        "clustering_topic_ids": [],
+        "optimization_count": 0,
+        "optimization_topic_ids": [],
+    }
+
+
+def test_mag_annotation_failures_are_recorded(monkeypatch: Any) -> None:
+    class BrokenClustering:
+        @staticmethod
+        def __call__(**kwargs: Any) -> None:
+            raise RuntimeError("cluster failure")
+
+    annotation_module = SimpleNamespace(
+        hit_clustering=BrokenClustering(),
+        motif_optimization=lambda *args, **kwargs: [],
+    )
+    monkeypatch.setitem(
+        sys.modules,
+        "MS2LDA.Add_On.Spec2Vec.annotation_refined",
+        annotation_module,
+    )
+    rows = chemical._annotate_topics(
+        [object()],
+        [object()],
+        object(),
+        {"chemistry": {"mag_cluster_cosine": 0.5}},
+    )
+    assert rows[0]["clustering_failure"] == {
+        "exception_type": "RuntimeError",
+        "message": "cluster failure",
+    }
+    assert rows[0]["optimization_failure"] is None
 
 
 def test_test_evaluation_requires_completed_validation(tmp_path: Path) -> None:
@@ -344,6 +447,191 @@ def test_miniature_mgf_through_results_and_model(tmp_path: Path) -> None:
     assert model.num_topics == 4
     assert len(vocabulary) == load_csr(run / "data/train.npz").shape[1]
     assert temperature == pytest.approx(0.1)
+
+
+def test_frozen_etm_is_evaluated_only_after_validation(tmp_path: Path) -> None:
+    prepared, _ = _prepare_mini_frozen_source(tmp_path)
+
+    run = tmp_path / "frozen-etm"
+    manifest = create_validation_view(run, prepared, expected_topics=4)
+    assert manifest["test_spectra_exposed_to_model_run"] is False
+    train_etm(
+        run,
+        device=torch.device("cpu"),
+        epochs=1,
+        batch_size=4,
+        method="etm",
+    )
+    write_json(run / "validation_chemical/etm/complete.json", chemistry_result())
+    release = expose_test_view(run, prepared, methods=["etm"])
+    result = evaluate_test(
+        run,
+        method="etm",
+        device=torch.device("cpu"),
+        batch_size=4,
+        threads=1,
+    )
+    assert release["split"] == "test"
+    assert result["split"] == "test"
+    assert result["weights_unchanged_after_evaluation"] is True
+    assert result["metrics"]["document_completion"]["eligible_documents"] > 0
+    weights = run / "models/etm/weights.pt"
+    weights.write_bytes(weights.read_bytes() + b"changed-after-release")
+    with pytest.raises(RuntimeError, match="frozen model changed after test release"):
+        evaluate_test(
+            run,
+            method="etm",
+            device=torch.device("cpu"),
+            batch_size=4,
+            threads=1,
+        )
+
+
+def test_training_audits_do_not_preempt_chemistry_stage_outputs(
+    tmp_path: Path,
+) -> None:
+    """Exercise the runner boundary that separates training and chemistry."""
+    paths = reproduction_paths(tmp_path / "reproduction")
+    paths.logs.mkdir(parents=True)
+    paths.stages.mkdir(parents=True)
+    prepared, _ = _prepare_mini_frozen_source(tmp_path)
+
+    create_validation_view(paths.controls, prepared, expected_topics=4)
+    train_etm(
+        paths.controls,
+        device=torch.device("cpu"),
+        epochs=1,
+        batch_size=4,
+        method="etm",
+    )
+    contextual_run = paths.contextual[7043]
+    create_validation_view(contextual_run, prepared, expected_topics=4)
+    train_real_validation(
+        contextual_run,
+        device=torch.device("cpu"),
+        settings=TrainingSettings(
+            epochs=1,
+            batch_size=4,
+            threads=1,
+            requested_seed=7043,
+        ),
+    )
+
+    stages = {stage.name: stage for stage in stage_plan(paths)}
+    cases = (
+        (
+            paths.controls,
+            "etm",
+            stages["canonical_etm_train"],
+            stages["canonical_etm_chemistry"],
+        ),
+        (
+            contextual_run,
+            "contextual_sparse_etm",
+            stages["contextual_seed_7043_train"],
+            stages["contextual_seed_7043_chemistry"],
+        ),
+    )
+    finalizer = "\n".join(
+        (
+            "import sys",
+            "from pathlib import Path",
+            (
+                "from benchmarks.neural_ms2lda.model_evaluation import "
+                "finalize_validation_access_audit"
+            ),
+            "from benchmarks.neural_ms2lda.utils import write_json",
+            "run = Path(sys.argv[1])",
+            "method = sys.argv[2]",
+            "complete = Path(sys.argv[3])",
+            "write_json(complete, {'split': 'validation'})",
+            "finalize_validation_access_audit(run, method)",
+        )
+    )
+    for run, method, training_stage, chemistry_stage in cases:
+        training_audit = run / "models" / method / TRAINING_ACCESS_AUDIT_FILENAME
+        final_audit = run / "models" / method / VALIDATION_ACCESS_AUDIT_FILENAME
+        assert training_audit in training_stage.outputs
+        assert final_audit in chemistry_stage.outputs
+        assert training_audit.is_file()
+        assert not final_audit.exists()
+        assert all(not output.exists() for output in chemistry_stage.outputs)
+
+        command = (
+            sys.executable,
+            "-c",
+            finalizer,
+            str(run),
+            method,
+            str(chemistry_stage.outputs[0]),
+        )
+        runnable_stage = Stage(
+            chemistry_stage.name,
+            command,
+            chemistry_stage.outputs,
+            chemistry_stage.requires_idle_system,
+        )
+        record = run_stage(paths, runnable_stage)
+        assert record["status"] == "complete"
+        assert read_json(final_audit)["chemical_split"] == "validation"
+
+
+def test_clean_reproduction_plan_has_unique_stage_ownership(tmp_path: Path) -> None:
+    paths = reproduction_paths(tmp_path / "reproduction")
+    stages = stage_plan(paths)
+    names = [stage.name for stage in stages]
+    outputs = [str(path) for stage in stages for path in stage.outputs]
+    assert len(stages) == 54
+    assert len(names) == len(set(names))
+    assert len(outputs) == len(set(outputs))
+    assert {
+        name
+        for name in names
+        if name.startswith("seal_validation_view_contextual_seed")
+    } == {
+        "seal_validation_view_contextual_seed_7043",
+        "seal_validation_view_contextual_seed_23",
+        "seal_validation_view_contextual_seed_37",
+    }
+    owned = {path for stage in stages for path in stage.outputs}
+    method_runs = (
+        (paths.controls, "etm"),
+        (paths.controls, "etm_balanced"),
+        (paths.tomotopy, "tomotopy"),
+        *((paths.contextual[seed], "contextual_sparse_etm") for seed in (7043, 23, 37)),
+    )
+    for run, method in method_runs:
+        assert set(probability_artifact_paths(run, method)) <= owned
+
+    device_commands = [stage.command for stage in stages if "--device" in stage.command]
+    assert device_commands
+    assert all(
+        command[command.index("--device") + 1] == "cuda" for command in device_commands
+    )
+
+
+def test_completed_stage_rejects_changed_sealed_output(tmp_path: Path) -> None:
+    paths = reproduction_paths(tmp_path / "reproduction")
+    paths.stages.mkdir(parents=True)
+    output = paths.root / "owned.txt"
+    output.write_text("sealed\n", encoding="utf-8")
+    stage = Stage("sealed_stage", (sys.executable, "-c", "pass"), (output,))
+    record = {
+        "name": stage.name,
+        "status": "complete",
+        "outputs": [
+            {
+                "path": str(output),
+                "bytes": output.stat().st_size,
+                "sha256": reproduction_sha256_file(output),
+            },
+        ],
+    }
+    write_json(paths.stages / f"{stage.name}.json", record)
+    assert run_stage(paths, stage) == record
+    output.write_text("changed\n", encoding="utf-8")
+    with pytest.raises(RuntimeError, match="sealed stage output changed"):
+        run_stage(paths, stage)
 
 
 def test_zip_extraction_rejects_path_traversal(tmp_path: Path) -> None:

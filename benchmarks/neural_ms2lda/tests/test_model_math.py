@@ -12,6 +12,13 @@ import torch
 
 from benchmarks.neural_ms2lda.artifacts import load_protocol, load_trained_model
 from benchmarks.neural_ms2lda.chemical import _sos_bands
+from benchmarks.neural_ms2lda.contextual_sparse_etm import (
+    FRAGMENT_CHANNEL_MASS,
+    ROUTING_TEMPERATURE,
+)
+from benchmarks.neural_ms2lda.contextual_sparse_etm import (
+    TOPICS_PER_TOKEN as CONTEXTUAL_TOPICS_PER_TOKEN,
+)
 from benchmarks.neural_ms2lda.data import (
     build_token_features,
     sparse_batch,
@@ -23,6 +30,7 @@ from benchmarks.neural_ms2lda.model import (
 )
 from benchmarks.neural_ms2lda.objectives import (
     balanced_sinkhorn_targets,
+    beta_cooccurrence_topic_loss,
     cooccurrence_topic_loss,
     positive_npmi_graph,
     router_block_loss,
@@ -279,6 +287,8 @@ def test_train_only_regularizers_supply_finite_topic_gradients() -> None:
     )
     beta = model.topic_word_distribution()
     cooccurrence = cooccurrence_topic_loss(model, torch_sparse_graph(graph), beta=beta)
+    generic = beta_cooccurrence_topic_loss(torch_sparse_graph(graph), beta=beta)
+    assert torch.allclose(cooccurrence, generic)
     separation = topic_separation_loss(model, neighbors=2, margin=0.3)
     (cooccurrence + separation).backward()
     assert torch.isfinite(cooccurrence)
@@ -337,16 +347,30 @@ def test_protocol_and_model_artifact_expose_only_the_current_architecture() -> N
     assert len(vocabulary) == trained_model.vocabulary_size
 
 
-def test_report_constants_match_the_executable_model() -> None:
-    """Prevent the paper's displayed model from drifting from the implementation."""
-    report = (
-        Path(__file__).parents[3] / "docs/research/neural_ms2lda_report.tex"
-    ).read_text(encoding="utf-8")
-    assert r"\tau_\beta" in report
+def test_report_constants_match_the_executable_contextual_sparse_etm() -> None:
+    """Prevent the report from drifting from the canonical implementation."""
+    research_directory = Path(__file__).parents[3] / "docs/research"
+    report = (research_directory / "neural_ms2lda_report.tex").read_text(
+        encoding="utf-8",
+    )
+    code_map = (research_directory / "generated/routing_etm_code_table.tex").read_text(
+        encoding="utf-8"
+    )
+    assert FRAGMENT_CHANNEL_MASS == 0.5
+    assert ROUTING_TEMPERATURE == 1.0
+    assert CONTEXTUAL_TOPICS_PER_TOKEN == 2
     assert r"\tfrac12" in report
-    assert rf"^{{{DOCUMENT_MIXTURE_EXPONENT}}}" in report
-    assert TOPICS_PER_TOKEN == 2
-    assert "followed by top-2 routing" in report
+    assert r"\tau_r=1.0" in report
+    assert r"\tfrac1K" in report
+    assert r"\centerop" in report
+    assert r"\entmax" in report
+    assert r"\label{eq:reconstruction}" in report
+    assert r"\label{eq:kl}" in report
+    assert "two largest scores" in report
+    assert r"contextual\_sparse\_etm.py" in code_map
+    assert r"topic\_model\_training.py" in code_map
+    assert r"Reconstruction loss (Eq.~\ref{eq:reconstruction})" in code_map
+    assert r"Gaussian posterior and KL (Eqs.~\ref{eq:encoder}, \ref{eq:kl})" in code_map
 
 
 def test_sos_bands_include_boundaries_exactly_once() -> None:

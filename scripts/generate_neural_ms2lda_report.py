@@ -1,4 +1,8 @@
-"""Generate all numerical LaTeX fragments from ``results.json``."""
+"""Regenerate archived numerical fragments from the earlier ``results.json``.
+
+The current paper is generated from the sealed Contextual Sparse ETM evidence
+package by ``generate_routing_etm_report.py``.
+"""
 
 from __future__ import annotations
 

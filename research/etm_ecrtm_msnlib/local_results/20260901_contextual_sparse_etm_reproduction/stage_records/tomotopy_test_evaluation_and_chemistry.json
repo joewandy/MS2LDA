@@ -1,0 +1,49 @@
+{
+  "command": [
+    "/home/joewandy/miniforge3/envs/ms2lda-repro-ba9443b/bin/python",
+    "-m",
+    "scripts.evaluate_frozen_tomotopy_test",
+    "--run",
+    "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/tomotopy",
+    "--data-root",
+    "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/assets"
+  ],
+  "finished_utc": "2026-09-01T01:53:26.578343+00:00",
+  "log": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/logs/tomotopy_test_evaluation_and_chemistry.log",
+  "name": "tomotopy_test_evaluation_and_chemistry",
+  "outputs": [
+    {
+      "bytes": 175710,
+      "modified_ns": 1788227606303346577,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/tomotopy/tomotopy/test_result.json",
+      "sha256": "347602e19892f1cf036353c3acac7446ef26617703b45317af418926d939f7e8"
+    },
+    {
+      "bytes": 459,
+      "modified_ns": 1788227602438694097,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/tomotopy/evaluation/tomotopy/complete.json",
+      "sha256": "d2bc180bc64464ce0f1a2108e9dda39b01b6a3dc767639f76d8b55f91d67090f"
+    },
+    {
+      "bytes": 31108128,
+      "modified_ns": 1788227602412684988,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/tomotopy/evaluation/tomotopy/test_full_theta.npy",
+      "sha256": "07c46566f8e91f19e8dd5d98892b80ffe2e15168c5978896af5f554b58fd5288"
+    },
+    {
+      "bytes": 160903,
+      "modified_ns": 1788227606194086371,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/tomotopy/chemical/tomotopy/complete.json",
+      "sha256": "78350d0bbfa9b0a04791f9e5ebf24364bbb103943c461ea803a8934357eb65b8"
+    }
+  ],
+  "pre_stage_load": {
+    "available_memory_bytes": 13734473728,
+    "gpu_compute_processes": [],
+    "one_minute_load_average": 1.56494140625,
+    "utc": "2026-09-01T01:46:56.616333+00:00"
+  },
+  "return_code": 0,
+  "started_utc": "2026-09-01T01:46:56.616351+00:00",
+  "status": "complete"
+}

@@ -1,0 +1,168 @@
+{
+  "device": "cuda",
+  "evaluated_utc_unix": 1788227697.8903222,
+  "method": "contextual_sparse_etm",
+  "metrics": {
+    "document_completion": {
+      "eligible_documents": 7776,
+      "in_vocabulary_tokens": 2534703,
+      "nll_per_token": 9.516053890088319,
+      "oov_fraction": 0.026880442765611186,
+      "out_of_vocabulary_tokens": 70016,
+      "total_documents": 7777
+    },
+    "finite_stable": true,
+    "fragment_probability_mass": {
+      "extreme_definition": "fragment mass <0.1 or >0.9",
+      "fraction_extreme_skew": 0.0,
+      "maximum": 0.5000000785363881,
+      "median": 0.5000000012020784,
+      "minimum": 0.4999999209232824,
+      "percentiles": {
+        "1": 0.49999994784124957,
+        "25": 0.49999998522240513,
+        "5": 0.4999999632542087,
+        "50": 0.5000000012020784,
+        "75": 0.5000000153188675,
+        "95": 0.5000000389664463,
+        "99": 0.500000054226817
+      }
+    },
+    "runtime": {
+      "test_full_spectra_per_second": 23239.27819410542,
+      "test_observed_spectra_per_second": 8252.982907514328
+    },
+    "theta_distribution": {
+      "fraction_max_theta_ge_0_2": 0.9859843127169859,
+      "fraction_max_theta_ge_0_3": 0.8521280699498521,
+      "fraction_max_theta_ge_0_5": 0.3350906519223351,
+      "max_theta_p10": 0.2755846698016339,
+      "max_theta_p25": 0.34515852594705043,
+      "max_theta_p50": 0.43616308000394366,
+      "max_theta_p75": 0.5384272531846722,
+      "max_theta_p90": 0.6494396424609978,
+      "max_theta_p95": 0.732560344649243,
+      "mean_effective_topics_per_spectrum": 4.1189648933392435,
+      "median_effective_topics_per_spectrum": 3.743870932357813,
+      "median_max_theta": 0.43616308000394366,
+      "unique_top1_topics": 914
+    },
+    "theta_information": {
+      "marginal_theta_entropy": 6.2950815072071045,
+      "mean_conditional_theta_entropy": 1.3280732264784831,
+      "mutual_information": 4.9670082807286215
+    },
+    "theta_support": {
+      "fraction_max_theta_ge_0_2": 0.9859843127169859,
+      "fraction_max_theta_ge_0_3": 0.8521280699498521,
+      "fraction_max_theta_ge_0_5": 0.3350906519223351,
+      "fraction_support_le_3": 0.13694226565513695,
+      "maximum_exact_support": 27,
+      "mean_effective_topics_per_spectrum": 4.1189648933392435,
+      "mean_exact_support": 6.871415712999871,
+      "median_effective_topics_per_spectrum": 3.743870932357813,
+      "median_exact_support": 6.0,
+      "median_maximum_theta": 0.43616308000394366,
+      "minimum_exact_support": 1,
+      "support_size_percentiles": {
+        "1": 2.0,
+        "25": 4.0,
+        "5": 3.0,
+        "50": 6.0,
+        "75": 9.0,
+        "95": 13.0,
+        "99": 17.0
+      }
+    },
+    "topic_inventory": {
+      "active_topic_usage_threshold": 0.0005,
+      "active_topics_above_usage_threshold": 527,
+      "active_topics_mean_usage_ge_1_over_k": 266,
+      "catastrophic_duplicate_component": false,
+      "catastrophic_duplicate_component_fraction": 0.5,
+      "corpus_effective_topic_count": 541.9000133497261,
+      "documents": 7777,
+      "duplicate_components": [
+        {
+          "duplicate_component_count": 5,
+          "largest_component_size": 2,
+          "pair_count": 5,
+          "threshold": 0.95,
+          "topics_in_duplicate_components": 10
+        },
+        {
+          "duplicate_component_count": 2,
+          "largest_component_size": 2,
+          "pair_count": 2,
+          "threshold": 0.99,
+          "topics_in_duplicate_components": 4
+        },
+        {
+          "duplicate_component_count": 0,
+          "largest_component_size": 1,
+          "pair_count": 0,
+          "threshold": 0.999,
+          "topics_in_duplicate_components": 0
+        }
+      ],
+      "largest_strict_duplicate_component": 1,
+      "maximum_mean_topic_usage": 0.01989004624657316,
+      "maximum_pairwise_beta_cosine": 0.998955488204956,
+      "mean_effective_topics_per_spectrum": 4.1189648933392435,
+      "mean_nearest_topic_beta_cosine": 0.17349492013454437,
+      "median_beta_effective_words": 378.1631164550781,
+      "median_beta_max_probability": 0.1873585283756256,
+      "median_beta_top_n_mass": 0.4386805295944214,
+      "median_effective_topics_per_spectrum": 3.743870932357813,
+      "median_nearest_topic_beta_cosine": 0.1030803918838501,
+      "strictest_duplicate_cosine_threshold": 0.999,
+      "top_word_count": 20,
+      "top_word_uniqueness": 0.30925,
+      "topics": 1000,
+      "topics_never_top1": 86,
+      "unique_top1_topics": 914
+    }
+  },
+  "model_config": {
+    "artifact_method_id": "contextual_sparse_etm",
+    "batch_size": 256,
+    "candidate_test_artifacts_accessed": false,
+    "checkpoint_interval_epochs": 5,
+    "context_parameters": 1,
+    "context_temperature": 1.0,
+    "context_top_k": 2,
+    "contextual_evidence": "count-weighted top-2 assignments from leave-one-out token context",
+    "data_split_seed": 42,
+    "device": "cuda",
+    "document_topic_transform": "1.5-entmax",
+    "entmax_alpha": 1.5,
+    "epochs": 120,
+    "evidence": "frozen MSnLib training plus validation only",
+    "evidence_pseudocount": "1/K",
+    "fixed_train_only_sgns_dimensions": 48,
+    "fragment_loss_beta_mass": [
+      0.5,
+      0.5
+    ],
+    "hidden_dimensions": 800,
+    "learning_rate": 0.005,
+    "model_name": "Contextual Sparse ETM",
+    "numerical_probability_floor": 1e-12,
+    "optimizer": "Adam",
+    "posterior_offset": "centered log of evidence plus a fixed 1/K pseudocount",
+    "prepared_run": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/prepared",
+    "published_base": "Embedded Topic Model",
+    "reconstruction": "raw pseudo-count multinomial negative log-likelihood",
+    "resumed_from_epoch": 0,
+    "stopping_rule": "fixed epochs or immediate non-finite loss/gradient",
+    "threads": 6,
+    "topics": 1000,
+    "training_seed": 37,
+    "variational_posterior": "diagonal Gaussian with analytic standard-normal KL",
+    "weight_decay": 1.2e-06
+  },
+  "parameters": 19278001,
+  "split": "test",
+  "weights_sha256": "9613491a4e604c123a8fe1cd797877b9847ad7201a30eebcf0a14d4094bc5833",
+  "weights_unchanged_after_evaluation": true
+}

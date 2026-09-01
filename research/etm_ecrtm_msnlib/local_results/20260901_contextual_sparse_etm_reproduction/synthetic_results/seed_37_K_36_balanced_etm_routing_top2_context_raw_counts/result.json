@@ -1,0 +1,312 @@
+{
+  "config": {
+    "batch_size": 200,
+    "candidate_test_artifacts_accessed": false,
+    "device": "cuda",
+    "epochs": 120,
+    "evidence": "truth-known synthetic training and validation only",
+    "excluded_m1_components": [
+      "nonlinear context router",
+      "document gate",
+      "Sinkhorn balancing",
+      "positive-NPMI regularization",
+      "prototype separation",
+      "alternating optimization"
+    ],
+    "fitted_topics": 36,
+    "hidden_dimensions": 800,
+    "implementation_class": "RoutingInformedETM",
+    "learning_rate": 0.005,
+    "optimizer": "Adam",
+    "positive_npmi": null,
+    "posterior_change": "centered log token evidence added to the Gaussian posterior mean",
+    "published_base": "Embedded Topic Model",
+    "reconstruction_scaling": "raw_counts",
+    "routing_temperature": 1.0,
+    "routing_variant": "top2_context",
+    "seed": 37,
+    "stopping_rule": "fixed epochs or immediate non-finite loss/gradient",
+    "theta_transform": "softmax",
+    "threads": 6,
+    "training_documents": 800,
+    "true_topics": 18,
+    "unchanged_components": [
+      "fixed train-only 48D SGNS word embeddings",
+      "50/50 fragment-loss ETM decoder",
+      "Gaussian variational latent family",
+      "standard-normal analytic KL",
+      "raw_counts multinomial reconstruction weighting"
+    ],
+    "validation_documents": 160,
+    "weight_decay": 1.2e-06
+  },
+  "method": "balanced_etm_routing_top2_context_raw_counts",
+  "metrics": {
+    "active_topics_mean_usage_gt_0_005": 13,
+    "dataset": {
+      "mean_train_pseudocount_mass": 1420.61376953125,
+      "median_train_nonzero_words": 25.0,
+      "median_train_physical_peaks": 29.0,
+      "median_train_pseudocount_mass": 1337.0,
+      "seed": 37,
+      "training_documents": 800,
+      "true_beta_mean_fragment_mass": 0.49818331003189087,
+      "true_topics": 18,
+      "validation_completion_oov_fraction": 0.35423006327585377,
+      "validation_documents": 160,
+      "vocabulary_size": 1832
+    },
+    "finite_stable": true,
+    "fragment_probability_mass": {
+      "extreme_definition": "fragment mass <0.1 or >0.9",
+      "fraction_extreme_skew": 0.0,
+      "maximum": 0.5000000315194484,
+      "median": 0.5000000070715487,
+      "minimum": 0.49999997166651156,
+      "percentiles": {
+        "1": 0.49999997279242053,
+        "25": 0.4999999932042556,
+        "5": 0.49999997770132154,
+        "50": 0.5000000070715487,
+        "75": 0.5000000162544893,
+        "95": 0.5000000272120815,
+        "99": 0.500000030072988
+      }
+    },
+    "heldout_completion": {
+      "eligible_documents": 160,
+      "in_vocabulary_tokens": 106955,
+      "nll_per_token": 6.280540442269456,
+      "oov_fraction": 0.35423006327585377,
+      "out_of_vocabulary_tokens": 58669,
+      "total_documents": 160
+    },
+    "learned_context_scale": 1.4860048294067383,
+    "parameters": 2166601,
+    "positive_npmi": {
+      "enabled": false,
+      "final_loss": null,
+      "graph_max_weight": null,
+      "graph_mean_weight": null,
+      "graph_nonzero_entries": null,
+      "weight": null
+    },
+    "routing_evidence_support": {
+      "fraction_max_theta_ge_0_2": 0.95625,
+      "fraction_max_theta_ge_0_3": 0.76875,
+      "fraction_max_theta_ge_0_5": 0.24375,
+      "fraction_support_le_3": 0.0,
+      "maximum_exact_support": 22,
+      "mean_effective_topics_per_spectrum": 6.281842468690495,
+      "mean_exact_support": 12.04375,
+      "median_effective_topics_per_spectrum": 5.836414924407954,
+      "median_exact_support": 12.0,
+      "median_maximum_theta": 0.39773188780572244,
+      "minimum_exact_support": 4,
+      "support_size_percentiles": {
+        "1": 5.0,
+        "25": 10.0,
+        "5": 7.0,
+        "50": 12.0,
+        "75": 14.25,
+        "95": 18.0,
+        "99": 20.409999999999997
+      }
+    },
+    "runtime": {
+      "peak_cuda_allocated_bytes": 114114048,
+      "peak_cuda_reserved_bytes": 144703488,
+      "training_wall_seconds": 6.634625238002627,
+      "validation_full_spectra_per_second": 38476.26300649283,
+      "validation_observed_spectra_per_second": 16047.701814989747
+    },
+    "theta_support": {
+      "fraction_max_theta_ge_0_2": 0.9875,
+      "fraction_max_theta_ge_0_3": 0.9625,
+      "fraction_max_theta_ge_0_5": 0.73125,
+      "fraction_support_le_3": 0.0,
+      "maximum_exact_support": 36,
+      "mean_effective_topics_per_spectrum": 4.299647707884377,
+      "mean_exact_support": 36.0,
+      "median_effective_topics_per_spectrum": 3.26863676102597,
+      "median_exact_support": 36.0,
+      "median_maximum_theta": 0.6539034005979703,
+      "minimum_exact_support": 36,
+      "support_size_percentiles": {
+        "1": 36.0,
+        "25": 36.0,
+        "5": 36.0,
+        "50": 36.0,
+        "75": 36.0,
+        "95": 36.0,
+        "99": 36.0
+      }
+    },
+    "topic_inventory": {
+      "active_topic_usage_threshold": 0.0005,
+      "active_topics_above_usage_threshold": 36,
+      "active_topics_mean_usage_ge_1_over_k": 11,
+      "catastrophic_duplicate_component": false,
+      "catastrophic_duplicate_component_fraction": 0.5,
+      "corpus_effective_topic_count": 14.544816535903625,
+      "documents": 160,
+      "duplicate_components": [
+        {
+          "duplicate_component_count": 1,
+          "largest_component_size": 24,
+          "pair_count": 236,
+          "threshold": 0.95,
+          "topics_in_duplicate_components": 24
+        },
+        {
+          "duplicate_component_count": 2,
+          "largest_component_size": 8,
+          "pair_count": 8,
+          "threshold": 0.99,
+          "topics_in_duplicate_components": 10
+        },
+        {
+          "duplicate_component_count": 0,
+          "largest_component_size": 1,
+          "pair_count": 0,
+          "threshold": 0.999,
+          "topics_in_duplicate_components": 0
+        }
+      ],
+      "largest_strict_duplicate_component": 1,
+      "maximum_mean_topic_usage": 0.14776953546746288,
+      "maximum_pairwise_beta_cosine": 0.9933524131774902,
+      "mean_effective_topics_per_spectrum": 4.299647707884377,
+      "mean_nearest_topic_beta_cosine": 0.7852746248245239,
+      "median_beta_effective_words": 1730.82080078125,
+      "median_beta_max_probability": 0.0015394357033073902,
+      "median_beta_top_n_mass": 0.025263510644435883,
+      "median_effective_topics_per_spectrum": 3.26863676102597,
+      "median_nearest_topic_beta_cosine": 0.9828228950500488,
+      "strictest_duplicate_cosine_threshold": 0.999,
+      "top_word_count": 20,
+      "top_word_uniqueness": 0.4083333333333333,
+      "topics": 36,
+      "topics_never_top1": 24,
+      "unique_top1_topics": 12
+    },
+    "truth_recovery": {
+      "matching": [
+        {
+          "beta_cosine": 0.6388341784477234,
+          "learned_topic": 34,
+          "true_topic": 0
+        },
+        {
+          "beta_cosine": 0.770752489566803,
+          "learned_topic": 7,
+          "true_topic": 1
+        },
+        {
+          "beta_cosine": 0.7352627515792847,
+          "learned_topic": 1,
+          "true_topic": 2
+        },
+        {
+          "beta_cosine": 0.6127643585205078,
+          "learned_topic": 20,
+          "true_topic": 3
+        },
+        {
+          "beta_cosine": 0.5406156778335571,
+          "learned_topic": 2,
+          "true_topic": 4
+        },
+        {
+          "beta_cosine": 0.43230339884757996,
+          "learned_topic": 24,
+          "true_topic": 5
+        },
+        {
+          "beta_cosine": 0.17476296424865723,
+          "learned_topic": 30,
+          "true_topic": 6
+        },
+        {
+          "beta_cosine": 0.818950355052948,
+          "learned_topic": 29,
+          "true_topic": 7
+        },
+        {
+          "beta_cosine": 0.6351553797721863,
+          "learned_topic": 0,
+          "true_topic": 8
+        },
+        {
+          "beta_cosine": 0.19412101805210114,
+          "learned_topic": 14,
+          "true_topic": 9
+        },
+        {
+          "beta_cosine": 0.5163713097572327,
+          "learned_topic": 31,
+          "true_topic": 10
+        },
+        {
+          "beta_cosine": 0.1556260883808136,
+          "learned_topic": 17,
+          "true_topic": 11
+        },
+        {
+          "beta_cosine": 0.4550118148326874,
+          "learned_topic": 15,
+          "true_topic": 12
+        },
+        {
+          "beta_cosine": 0.16303019225597382,
+          "learned_topic": 21,
+          "true_topic": 13
+        },
+        {
+          "beta_cosine": 0.15294910967350006,
+          "learned_topic": 35,
+          "true_topic": 14
+        },
+        {
+          "beta_cosine": 0.21236565709114075,
+          "learned_topic": 33,
+          "true_topic": 15
+        },
+        {
+          "beta_cosine": 0.191393181681633,
+          "learned_topic": 5,
+          "true_topic": 16
+        },
+        {
+          "beta_cosine": 0.17388008534908295,
+          "learned_topic": 3,
+          "true_topic": 17
+        }
+      ],
+      "planted_motifs_recovered_cosine_ge_0_50": 8,
+      "planted_motifs_recovered_cosine_gt_0_20": 11,
+      "top_planted_motif_accuracy": 0.65625,
+      "true_beta_matched_cosine_mean": 0.4207861125469208,
+      "true_beta_matched_cosine_median": 0.44365760684013367,
+      "true_beta_matched_cosine_minimum": 0.15294910967350006,
+      "true_beta_top20_jaccard_mean": 0.2605029792182183,
+      "true_theta_cosine_mean": 0.7042671141406753,
+      "true_theta_cosine_median": 0.9533436765780188
+    }
+  },
+  "provenance": {
+    "candidate_test_artifacts_accessed": false,
+    "positive_npmi_graph": null,
+    "synthetic_artifact_manifest": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/synthetic/synthetic_artifacts/seed_37/artifact_manifest.json",
+    "token_features": {
+      "bytes": 366528,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/synthetic/synthetic_artifacts/seed_37/token_features/features.npy",
+      "sha256": "e11e95036e8d94131e1755ee9f7018229d93bb3defc70e9ef184970e0a849db6"
+    },
+    "weights": {
+      "bytes": 9022542,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/synthetic/synthetic_runs/seed_37_K_36_balanced_etm_routing_top2_context_raw_counts/weights.pt",
+      "sha256": "b00a14eef0b9e87ee291b84050dcc731ec944bcc68b4f0e5661c8f0768beba33"
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "candidate_test_artifacts_accessed": false,
+  "candidate_test_metrics_inspected": false,
+  "predeclaration_commit": "18290f2614c928240b5aeccd33e101bba604e81b",
+  "candidate_run": "/home/joewandy/Work/data/MS2LDA-msnlib-validation/runs/routing-etm-top2-token-final-20260830/synthetic_runs/seed_11_K_36_balanced_etm_routing_top2_token_entmax15_raw_counts",
+  "context_control_run": "/home/joewandy/Work/data/MS2LDA-msnlib-validation/runs/sparse-etm-campaign-20260830/synthetic_runs/seed_11_K_36_balanced_etm_routing_top2_context_entmax15_raw_counts",
+  "entmax_control_run": "/home/joewandy/Work/data/MS2LDA-msnlib-validation/runs/sparse-etm-campaign-20260830/synthetic_runs/seed_11_K_36_balanced_etm_entmax15_raw_counts",
+  "candidate_artifacts": [
+    {"path": "result.json", "bytes": 10209, "sha256": "4af0bfe708bf5a016aa968287e0b4d7928cc072db5c77d3bbb3492ef7b864cde"},
+    {"path": "beta.npy", "bytes": 264080, "sha256": "af807aad2ea3e5de192dbbc888fafe179f039f042c8eb0bbf335c5885e50e1a9"},
+    {"path": "weights.pt", "bytes": 9025669, "sha256": "f8ca8a6e41c16c16775a0c9a200074688eaeeaa9116c2b44db2decce020663c5"},
+    {"path": "training_history.csv", "bytes": 11901, "sha256": "f931d56f02264b2d71449dc4b14210fb303f3d26c537619f26b72d9f89e55a8b"},
+    {"path": "validation_routing_evidence.npy", "bytes": 23168, "sha256": "b9667a490c67393bca01eaa92a7662f70fb05f295bcd82e3a9b4a6950fedcc92"}
+  ],
+  "context_control_artifacts": [
+    {"path": "result.json", "bytes": 9938, "sha256": "4de2407a8ded53df2d1d4ff41ab67f2715c7de6dd73d6d443f538f601d9437ff"},
+    {"path": "beta.npy", "bytes": 264080, "sha256": "3d3531e47e274480848ea3408e02db7a492022c1530574d6d6f62e20ba1c3eb1"}
+  ],
+  "entmax_control_artifacts": [
+    {"path": "result.json", "bytes": 8453, "sha256": "116b9e6986f7c8e3694a5bd4be99b04453e3c612f3e1062bca04e161446f6f68"},
+    {"path": "beta.npy", "bytes": 264080, "sha256": "fb9c0db5ff629b043c6429e9aeff0a4518aa17b3e4c3ec4b780c9eea09287c67"}
+  ]
+}

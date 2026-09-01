@@ -73,11 +73,11 @@ This maps almost perfectly to our observed learned-ETM failure. In the synthetic
 
 There are two caveats. First, raw ECRTM `theta` was badly over-dispersed on the sparse spectra. Second, ECR uses a full topic-word transport geometry, which may be computationally expensive at real MSnLib scale (`K=1000`, `V~21k`). These are real-data feasibility questions, not reasons to redesign ECRTM before testing it.
 
-### 6.2 Neural Sinkhorn Topic Model: elegant but a larger model-family change
+### 6.2 Neural Sinkhorn Topic Model: tested and rejected in published form
 
-NSTM also uses optimal transport and embedding geometry, but OT is more central to its document/topic inference objective than ECR is in ECRTM [Zhao et al., 2021]. Its explicit attention to short documents makes it scientifically relevant, and it should remain a serious fallback comparator if ETM/ECRTM fail. However, moving directly to NSTM would change more of the core likelihood/inference story than starting from ETM and then testing ECRTM.
+NSTM also uses optimal transport and embedding geometry, but OT is more central to its document/topic inference objective than ECR is in ECRTM [Zhao et al., 2021]. Its explicit attention to short documents made it a scientifically relevant fallback after the ETM campaigns failed.
 
-For a paper whose main biological contribution is Mass2Motif discovery rather than a new generic topic model, ETM -> ECRTM is therefore the simpler lineage to test first.
+That fallback has now been tested using a PyTorch port pinned to the authors' reference implementation and numerically cross-checked against TopMost. The paper-normalized form was diffuse and weak at planted beta recovery. The exact released-code count handling improved planted theta and top-word overlap, but intensity pseudo-count reconstruction outweighed its Sinkhorn term by about 885 times at K=36. At K=128, median effective topics rose to 63.8, all topics entered one beta duplicate component at cosine 0.99, and completion remained worse than ETM. The model therefore did not advance to real K=1000 validation; full evidence is in `local_results/20260830_nstm/README.md`.
 
 ### 6.3 Direct Dirichlet/sparse-prior VAEs
 
@@ -130,7 +130,7 @@ It is **not** the easiest primary model for a computational-biology paper, becau
 | TopMost-style ECRTM | ECRTM | Topic collapse / duplicate-topic inventory | 36/36 topics active and best planted beta recovery, but diffuse theta | **Run as published anti-collapse candidate** |
 | ECRTM alpha=0.1 | Dirichlet/sparse-prior literature | Sparse document mixtures | Little effect because reconstruction scale dominates KL | Negative diagnostic |
 | ECRTM inference temperature tau=0.30 | Calibration/sharpening; analogous to short-text quantization intuition | Diffuse per-spectrum theta | Strong improvement in theta sparsity/recovery without changing beta | Predeclared validation-only calibration candidate |
-| Neural Sinkhorn Topic Model | NSTM | Short-document representation + coherent/diverse topics | Not yet run in our benchmark | Fallback published family if ETM/ECRTM fail |
+| Neural Sinkhorn Topic Model | NSTM | Short-document representation + coherent/diverse topics | Strong theta/top-word signal, but diffuse theta, nearly uniform/duplicate beta and worse completion; failed K=128 gate | Negative published-family result; do not advance unchanged to real K=1000 |
 | Contextualized topic model + DreaMS | CTM + DreaMS | Missing document-level structural context | Not yet run | Bounded future work after simple models |
 | FASTopic | DSR/ETP with pretrained Transformer embeddings | Stability/efficiency/topic discovery | Not yet run | Later comparator, larger departure |
 
@@ -158,11 +158,14 @@ Report raw and frozen-temperature results. If a real method change is needed bey
 
 ### If both published models fit likelihood but lose MAG/SOS chemistry
 
-Test one chemistry/co-occurrence mechanism at a time. Positive-NPMI/co-occurrence structure is the most defensible first add-back because M1's real ablations suggest it has a direct motif-quality role.
+This conditional has now been tested once. The fixed weight-1 positive-NPMI
+add-back improved its own train-graph objective but reduced planted beta
+recovery, so it failed the first predeclared synthetic gate. Do not tune the
+coefficient or add another M1 donor component on the same evidence.
 
 ### If short-spectrum inference remains the limiting issue
 
-NSTM or a recent short-text model is a more established next family than creating another custom router. If the missing information is instead whole-spectrum structural context, a frozen DreaMS embedding through a conventional contextualized topic-model encoder is the cleaner next experiment.
+Do not repeat unchanged NSTM: its reference implementation has now failed the synthetic promotion gate. A different recent short-text model would still be more established than creating another custom router, but it requires a new bounded hypothesis. If the missing information is instead whole-spectrum structural context, a frozen DreaMS embedding through a conventional contextualized topic-model encoder is the cleaner next experiment.
 
 ## 12. Reviewer-facing position
 
@@ -193,3 +196,89 @@ This makes the novelty primarily **domain adaptation, validation, and biological
 17. Burkhardt S, Kramer S. Decoupling Sparsity and Smoothness in the Dirichlet Variational Autoencoder Topic Model. *JMLR*. 2019;20(131):1-27.
 18. Lau JH, Newman D, Baldwin T. Machine Reading Tea Leaves: Automatically Evaluating Topic Coherence and Topic Model Quality. *EACL*. 2014:530-539. doi:10.3115/v1/E14-1056.
 19. Nguyen T, Ngo Van L, Nguyen Duc A, Dinh Viet S. Global and local context in short text neural topic model. *Artificial Intelligence*. 2026;353:104502. doi:10.1016/j.artint.2026.104502.
+20. Martins AFT, Astudillo RF. From Softmax to Sparsemax: A Sparse Model of Attention and Multi-Label Classification. *ICML / PMLR*. 2016;48:1614-1623. https://proceedings.mlr.press/v48/martins16.html
+21. Lin T, Hu Z, Guo X. Sparsemax and Relaxed Wasserstein for Topic Sparsity. *WSDM*. 2019:141-149. doi:10.1145/3289600.3290957.
+22. Peters B, Niculae V, Martins AFT. Sparse Sequence-to-Sequence Models. *ACL*. 2019:1504-1519. doi:10.18653/v1/P19-1146.
+
+## 13. Literature decision for the principled sparse-ETM campaign
+
+The measured failure after the detached-gate campaign is unusually specific:
+the global topic-word inventory is broad and non-duplicated, but each short
+spectrum receives probability from many topics. This makes a sparse
+document-topic transformation the smallest published intervention that targets
+the failure directly.
+
+Sparsemax is the Euclidean projection of a real-valued score vector onto the
+probability simplex and therefore produces exact zeros with a tractable
+Jacobian [Martins and Astudillo, 2016]. Lin, Hu and Guo applied the corresponding
+Gaussian-sparsemax construction directly to neural topic models for short text,
+where exact document-topic support was the stated target [Lin et al., 2019].
+Their full NSMDM/NSMTM models also replace the usual KL regularizer with a
+relaxed-Wasserstein objective. That is a larger formulation change and should
+not be confounded with the first mechanism screen.
+
+Alpha-entmax provides a principled continuum from softmax (`alpha=1`) to
+sparsemax (`alpha=2`). The closed-form 1.5-entmax transform retains exact zeros
+but is less sparse and smoother than sparsemax, making it a useful paired
+comparator rather than an arbitrary sharpening constant [Peters et al., 2019].
+The campaign will use the authors' tested `entmax` implementation.
+
+The first synthetic intervention is therefore limited to replacing
+`theta=softmax(z)` with either `theta=entmax15(z)` or
+`theta=sparsemax(z)`. The Gaussian encoder, latent-space Gaussian KL, fixed
+train-only SGNS embedding decoder, channel balancing, optimizer and raw-count
+reconstruction remain unchanged. This is a Gaussian-sparse-transform ETM
+ablation, not a claim to reproduce Lin et al.'s relaxed-Wasserstein model.
+
+Pseudo-count scaling is a separate hypothesis. The fragment/loss intensities
+are relative measurements that are discretized as `round(100 I)`; they are not
+100 independent word draws. A reconstruction whose per-spectrum total mass is
+the number of distinct observed words preserves the within-spectrum intensity
+proportions while assigning one data-derived unit of effective evidence per
+observed feature. This directly tests whether arbitrary pseudo-count magnitude
+suppresses the KL/prior signal. It will first be paired with ordinary softmax,
+and only combined with a sparse transform if both interventions help
+independently.
+
+## 14. Updated decision after routing-informed ETM validation
+
+The sparse-transform campaign established that entmax alone solves exact support
+but starves the topic inventory. A bounded donor-transplant campaign then tested
+whether short-spectrum token evidence could repair the ETM posterior without
+changing its generator or likelihood. Top-2 contextual token evidence plus
+entmax passed K=36 multi-seed and K=128 recovery stress and was promoted to
+K=1000 MSnLib validation.
+
+The real result changes the literature decision. Median effective topics fell to
+3.70 with exact support 6, while 828 topics remained unique spectrum winners and
+538 were corpus-effective. Chemistry reached 445 evaluable and 289 useful
+motifs. The model therefore repairs the central short-document inference and
+inventory failures while remaining an ETM generator [Dieng et al., 2020] with a
+published sparse simplex transform [Peters et al., 2019]. It misses optimized
+coverage, mean SOS and completion NLL gates, so it is not authorized for test.
+It nevertheless exceeds M1 and Tomotopy on evaluable/useful discovery breadth
+and is now frozen as the paper-facing validation baseline.
+
+The private M1 architecture is not the publication target. Its ablations may
+nominate small independently defensible mechanisms. Real same-split
+training-seed stability has now been measured for the unchanged Routing ETM:
+all three runs preserve higher evaluable/useful breadth than M1 and Tomotopy,
+sparse per-spectrum mixtures and a broad global inventory. All three also
+reproduce the optimized-coverage, mean-SOS and completion-NLL trade-off relative
+to M1.
+
+Positive-NPMI topic-coherence regularization was therefore tested as the one
+optional next mechanism grounded in the established coherence literature [Lau
+et al., 2014]. The isolated weight-1 term improved its own train-graph loss on
+seed-11 K=36 but slightly reduced true-beta recovery (0.498454 to 0.491576),
+missing the predeclared promotion gate. No multi-seed, high-K or real run was
+authorized. This negative result argues against coefficient tuning or rebuilding
+the private architecture piece by piece.
+
+The remaining structural simplification was then tested separately. Direct
+top-2 token evidence plus entmax removed leave-one-out context and all added
+parameters. It improved over entmax-only ETM but lost 0.0881 beta recovery,
+0.1034 theta recovery and four recovered planted motifs relative to contextual
+Routing ETM. The first predeclared gate therefore stopped the campaign. This
+isolates the single context scalar as a necessary domain adaptation rather than
+unexplained excess architecture.

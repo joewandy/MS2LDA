@@ -201,21 +201,37 @@ class TopicLossTerms:
     beta: torch.Tensor
 
 
+def beta_cooccurrence_topic_loss(
+    graph: torch.Tensor,
+    *,
+    beta: torch.Tensor,
+) -> torch.Tensor:
+    """Penalize topic-word rows assigning little mass to NPMI neighbours."""
+    if beta.ndim != MATRIX_DIMENSIONS:
+        raise ValueError("beta must be a topic-by-word matrix")
+    vocabulary_size = int(beta.shape[1])
+    if graph.layout != torch.sparse_coo or graph.shape != (
+        vocabulary_size,
+        vocabulary_size,
+    ):
+        raise ValueError("co-occurrence graph does not match beta vocabulary")
+    if graph.device != beta.device:
+        raise ValueError("co-occurrence graph and beta must share a device")
+    propagated = torch.sparse.mm(graph, beta.T)
+    affinity = torch.sum(beta.T * propagated, dim=0)
+    return -torch.mean(torch.log(affinity.clamp_min(1e-12)))
+
+
 def cooccurrence_topic_loss(
     model: NeuralMS2LDA,
     graph: torch.Tensor,
     *,
     beta: torch.Tensor,
 ) -> torch.Tensor:
-    """Penalize topics that assign little mass to positive-NPMI neighbours."""
-    if graph.layout != torch.sparse_coo or graph.shape != (
-        model.vocabulary_size,
-        model.vocabulary_size,
-    ):
-        raise ValueError("co-occurrence graph does not match the model vocabulary")
-    propagated = torch.sparse.mm(graph, beta.T)
-    affinity = torch.sum(beta.T * propagated, dim=0)
-    return -torch.mean(torch.log(affinity.clamp_min(1e-12)))
+    """Backward-compatible M1 wrapper around the generic beta loss."""
+    if beta.shape[1] != model.vocabulary_size:
+        raise ValueError("beta does not match the model vocabulary")
+    return beta_cooccurrence_topic_loss(graph, beta=beta)
 
 
 def topic_separation_loss(

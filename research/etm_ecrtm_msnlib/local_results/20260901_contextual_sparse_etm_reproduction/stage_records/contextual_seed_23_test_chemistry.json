@@ -1,0 +1,30 @@
+{
+  "command": [
+    "/home/joewandy/miniforge3/envs/ms2lda-repro-ba9443b/bin/python",
+    "-m",
+    "benchmarks.neural_ms2lda.chemical",
+    "--run",
+    "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/contextual_seed_23",
+    "--data-root",
+    "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/assets",
+    "--method",
+    "contextual_sparse_etm",
+    "--split",
+    "test"
+  ],
+  "finished_utc": "2026-09-01T01:54:53.500856+00:00",
+  "log": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/logs/contextual_seed_23_test_chemistry.log",
+  "name": "contextual_seed_23_test_chemistry",
+  "outputs": [
+    {
+      "bytes": 164294,
+      "modified_ns": 1788227693258897417,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/contextual_seed_23/chemical/contextual_sparse_etm/complete.json",
+      "sha256": "ec8d5ea5e9ba3ecf34a23e8e1390d80378cbc61376b413729eadcda771bfd301"
+    }
+  ],
+  "pre_stage_load": null,
+  "return_code": 0,
+  "started_utc": "2026-09-01T01:54:48.743152+00:00",
+  "status": "complete"
+}

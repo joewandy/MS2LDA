@@ -1,0 +1,30 @@
+{
+  "command": [
+    "/home/joewandy/miniforge3/envs/ms2lda-repro-ba9443b/bin/python",
+    "-m",
+    "scripts.prepare_msnlib_test_view",
+    "--run",
+    "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/controls",
+    "--prepared-run",
+    "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/prepared",
+    "--method",
+    "etm",
+    "--method",
+    "etm_balanced"
+  ],
+  "finished_utc": "2026-09-01T01:46:34.046222+00:00",
+  "log": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/logs/release_test_view_controls.log",
+  "name": "release_test_view_controls",
+  "outputs": [
+    {
+      "bytes": 4427,
+      "modified_ns": 1788227193827831521,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/controls/test_input_manifest.json",
+      "sha256": "a16a110df06856505a809ccad4f89a05717f77b1c64ef573c9c75f3ca1d62e81"
+    }
+  ],
+  "pre_stage_load": null,
+  "return_code": 0,
+  "started_utc": "2026-09-01T01:46:32.999531+00:00",
+  "status": "complete"
+}

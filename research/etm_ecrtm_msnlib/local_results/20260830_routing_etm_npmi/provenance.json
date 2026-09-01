@@ -1,0 +1,45 @@
+{
+  "candidate_test_artifacts_accessed": false,
+  "candidate_test_metrics_inspected": false,
+  "candidate_run": "/home/joewandy/Work/data/MS2LDA-msnlib-validation/runs/routing-etm-npmi-campaign-20260830/synthetic_runs/seed_11_K_36_balanced_etm_routing_top2_context_entmax15_raw_counts_positive_npmi",
+  "control_run": "/home/joewandy/Work/data/MS2LDA-msnlib-validation/runs/sparse-etm-campaign-20260830/synthetic_runs/seed_11_K_36_balanced_etm_routing_top2_context_entmax15_raw_counts",
+  "candidate_artifacts": [
+    {
+      "path": "result.json",
+      "bytes": 10867,
+      "sha256": "adc4abcc6158b3e35c4d55c7716c561210536bfe428e8d7e5d2ade473845aae3"
+    },
+    {
+      "path": "beta.npy",
+      "bytes": 264080,
+      "sha256": "68b431fef001dc7ed30d59d99de51d29e72a87196af2d1e2a308b8194b6d7e1a"
+    },
+    {
+      "path": "weights.pt",
+      "bytes": 9025934,
+      "sha256": "30c0cccea103eb153976e446a2680448e1a4ab095d4f7516b79f62ee6fac967a"
+    },
+    {
+      "path": "cooccurrence_graph/positive_npmi_graph.npz",
+      "bytes": 15341,
+      "sha256": "6abe9ac2d429109db3cad0004bc9a9e839ce8db7375ab20240f383342cffab3d"
+    },
+    {
+      "path": "training_history.csv",
+      "bytes": 16085,
+      "sha256": "177712a3d6d1d6a06828e56af273cfe308e612a7af52d97a469f8e86986e0cf8"
+    }
+  ],
+  "control_artifacts": [
+    {
+      "path": "result.json",
+      "bytes": 9938,
+      "sha256": "4de2407a8ded53df2d1d4ff41ab67f2715c7de6dd73d6d443f538f601d9437ff"
+    },
+    {
+      "path": "beta.npy",
+      "bytes": 264080,
+      "sha256": "3d3531e47e274480848ea3408e02db7a492022c1530574d6d6f62e20ba1c3eb1"
+    }
+  ]
+}

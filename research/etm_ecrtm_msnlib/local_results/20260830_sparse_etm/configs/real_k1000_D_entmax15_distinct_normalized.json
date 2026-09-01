@@ -1,0 +1,26 @@
+{
+  "batch_size": 256,
+  "checkpoint_interval_epochs": 5,
+  "device": "cuda",
+  "epochs": 120,
+  "evidence": "frozen MSnLib training plus validation only",
+  "fixed_train_only_sgns_dimensions": 48,
+  "fragment_loss_beta_mass": [
+    0.5,
+    0.5
+  ],
+  "hidden_dimensions": 800,
+  "learning_rate": 0.005,
+  "method": "etm_balanced_entmax15_distinct_words",
+  "optimizer": "Adam",
+  "prepared_run": "/home/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42",
+  "reconstruction_scaling": "distinct_words",
+  "resumed_from_epoch": 0,
+  "seed": 7043,
+  "stopping_rule": "fixed epochs or immediate non-finite loss/gradient",
+  "theta_transform": "entmax15",
+  "threads": 6,
+  "topics": 1000,
+  "variational_posterior": "Gaussian with standard-normal latent KL",
+  "weight_decay": 1.2e-06
+}

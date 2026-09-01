@@ -1,182 +1,98 @@
-# Neural MS2LDA handover
+# Contextual Sparse ETM handover
 
 ## Current state
 
-The repository supports one locked seed-42, K=1000, 40-epoch Neural MS2LDA
-architecture under a six-CPU-thread allowance. Its deterministic validation
-result is 884 optimized motifs, 408 high-confidence evaluable motifs, 265 useful
-motifs, mean SOS 0.6580793714, median SOS 0.6488636364, and completion NLL
-8.9741399256.
+The model and evaluation protocol are frozen. A complete clean-room run has
+finished from public asset acquisition through train/validation/test splitting,
+train-only vocabulary and SGNS construction, Tomotopy, two ETM controls,
+synthetic component studies, three Contextual Sparse ETM training seeds, frozen
+test evaluation, MAG/SOS scoring, evidence packaging and report generation.
 
-M1 first survived a bounded within-family simplification campaign. A later
-validation-only external campaign compared it with canonical fixed-SGNS ETM,
-a deterministic pooled projected model, fragment/loss-balanced ETM, and
-canonical ECRTM. No completed alternative preserved the full chemistry,
-completion, and inventory contract; ECRTM failed its maintained Sinkhorn
-convergence path at real K/V before evaluation.
+- Reproduction ID: `c8e26d27-861e-42ed-a04f-ca5a9ecfedae`
+- Raw-run source commit: `379ab80ab6f0916e0c31a036bab229dda1d4727a`
+- Raw result root:
+  `/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean`
+- Committed compact evidence:
+  `research/etm_ecrtm_msnlib/local_results/20260901_contextual_sparse_etm_reproduction`
+- Report source and PDF: `docs/research/neural_ms2lda_report.tex` and
+  `docs/research/neural_ms2lda_report.pdf`
 
-The correct conclusion is therefore that M1 is the **least-complex model
-demonstrated to satisfy the complete real-data scientific contract**. It is not
-the simplest conceivable architecture, and the study does not establish a
-production-backend replacement. Alternative candidate test data remain locked.
-See `FINAL_MODEL_SELECTION.md` for the complete decision.
+The raw source worktree was clean. All 54 planned stages completed in order and
+their owned outputs still match their recorded SHA-256 hashes. The compact
+packager independently rechecks those hashes, model-view identities, release
+chronology, probability matrices, chemical-accounting invariants and scientific
+claim gates before producing report inputs.
 
-## Implemented model
+## Data and evaluation boundary
 
-1. Train 48-dimensional SGNS token coordinates on training spectra only. Append
-   two fragment/loss indicators and normalize the resulting 50-dimensional
-   token features.
-2. Apply a bias-free 50-to-128 projection. Select 1,000 distinct prototype
-   starting tokens with the seed-42 uniform permutation and initialize learned
-   128-dimensional prototypes from those projected tokens.
-3. Concatenate each projected token with its count-weighted leave-one-out
-   spectrum context. Apply one bias-free `Linear(256, 128)` followed by GELU,
-   add the nonlinear correction to the token vector, and normalize.
-4. Add whole-spectrum prototype evidence, retain and renormalize the top two
-   token assignments, and aggregate their count-weighted mass.
-5. Multiply routed topic mass by detached whole-spectrum evidence raised to
-   0.75. Exact zero support is preserved and empty spectra receive a uniform
-   mixture.
-6. Decode with cosine logits and separate fragment/loss softmaxes. Each channel
-   receives exactly half of the topic probability mass.
-7. Train on full spectra with alternating router and topic blocks. Retain
-   Sinkhorn balancing, positive-NPMI regularization, prototype separation,
-   routing-temperature annealing, deterministic execution, finite checks, and
-   gradient clipping.
+The public source contains 41,568 spectra; 38,888 pass preprocessing. A
+deterministic group-disjoint 70/10/20 split with seed 42 gives:
 
-The model has 167,168 learned parameters: 6,400 in the token projection, 32,768
-in the nonlinear context router, and 128,000 in the topic prototypes. The
-production-facing M1 implementation remains unconditional: there are no
-architecture flags or loader compatibility branches.
+| Split | Spectra |
+| --- | ---: |
+| Train | 27,222 |
+| Validation | 3,889 |
+| Test | 7,777 |
 
-## Why the retained mechanisms are functional
+The 21,233-word vocabulary and 48-dimensional SGNS coordinates use training
+spectra only. There are zero leaked connectivity keys or split groups. The MAG
+reference index removes every molecule whose connectivity key occurs in the
+held-out split being scored.
 
-Internal M1 ablations showed substantial motif losses when the document gate,
-Sinkhorn, NPMI, or prototype separation was removed. The external comparison
-then reproduced the corresponding failure modes in simpler model families:
+Models are fitted on train and developed on validation. Each model checkpoint
+and every required validation output is hashed before the test view is exposed.
+Test evaluation performs no fitting, selection or spectrum-specific
+optimization.
 
-- pooled projected MS2LDA formed a 614-topic near-exact duplicate component;
-- ETM and balanced ETM produced diffuse/weak spectrum-topic assignments;
-- balancing ETM's channels improved optimized coverage but not chemical breadth
-  or SOS;
-- ECRTM targeted collapse but its maintained ordinary-domain Sinkhorn path
-  became numerically and operationally unsuitable at K=1000, V=21,233.
+## Final model
 
-These results do not prove that every future alternative must fail. They show
-that the present M1 mechanisms address observed real-data defects rather than
-adding complexity without evidence.
+Contextual Sparse ETM is a published ETM backbone with:
 
-## Removed mechanisms
+- fixed train-only SGNS word coordinates;
+- a channel-balanced ETM decoder with 50/50 fragment/loss probability mass;
+- a two-layer 800-unit ETM encoder and diagonal-Gaussian posterior;
+- leave-one-out contextual top-2 evidence, added as a centred log offset to the
+  posterior mean through one learned scalar;
+- 1.5-entmax document-topic mixtures; and
+- raw pseudo-count multinomial reconstruction plus analytic Gaussian KL.
 
-The final M1 implementation contains no Fourier mass coordinates, paired
-partial views, Jensen--Shannon view consistency, local reconstruction,
-dead-topic recycling, weighted k-means++ initialization, or adaptive
-fragment/loss channel mass. Their exact ablation measurements remain in the
-single ledger; their code paths and protocol fields do not.
+At deterministic inference, the latent vector equals the shifted posterior
+mean and is mapped through the same 1.5-entmax equation used during training.
+The implementation has no architecture switch or spectrum-level optimizer.
 
-Shallow U7 and S-series endpoints are excluded because they remove the
-nonlinear learned representation block. A future DreaMS embedding may augment
-or replace pooled context, but it is not part of this model-selection claim.
+## Evidence summary
 
-## Expanded diagnostic contract
+The primary held-out test run has 572 evaluable and 343 useful motifs, median
+3.680 effective topics, median exact support 6, 917 unique top-1 topics and
+completion NLL 9.535540. Its mean/median SOS are 0.637702/0.639500. Across the
+three initialization seeds, evaluable motifs range from 557 to 582 and useful
+motifs from 327 to 353.
 
-Likelihood and optimized motif count are not sufficient. Every new neural
-model result must report the contract implemented in `diagnostics.py`:
+The truth-known K=128 stress experiment recovers all 18 planted motifs at
+matched topic-word cosine at least 0.50. This recovery count is distinct from
+the 19 fitted topics that become a top-1 winner for at least one spectrum.
 
-- median/mean effective topics per spectrum and corpus effective topics;
-- active topics, maximum mean usage, unique top-1 topics, and never-top-1 topics;
-- mean/median nearest beta cosine and maximum pairwise cosine;
-- duplicate connected components at cosine 0.95, 0.99, and 0.999;
-- median beta effective words, maximum probability, and top-20 mass;
-- top-word uniqueness;
-- per-topic fragment probability mass and extreme-skew fraction.
+## Reproduce or verify
 
-The default catastrophic-component flag is a connected component containing at
-least half the topics at the strictest 0.999 cosine threshold. Chemistry gates
-remain separate and primary.
-
-## Authoritative evidence
-
-| Purpose | Location |
-| --- | --- |
-| Canonical combined report | `docs/research/neural_ms2lda_report.tex` |
-| Archived pre-selection methods report | `docs/research/archive/neural_ms2lda_report_pre_model_selection.tex` |
-| Final external selection decision | `benchmarks/neural_ms2lda/FINAL_MODEL_SELECTION.md` |
-| Fixed study constants and diagnostic settings | `benchmarks/neural_ms2lda/protocol.json` |
-| Model and one-pass inference | `benchmarks/neural_ms2lda/model.py` |
-| Training objectives | `benchmarks/neural_ms2lda/objectives.py` |
-| Alternating updates | `benchmarks/neural_ms2lda/training.py`, `optimization.py` |
-| Data and train-only token features | `benchmarks/neural_ms2lda/data.py`, `spectra.py` |
-| Inventory diagnostics | `benchmarks/neural_ms2lda/diagnostics.py` |
-| Canonical model | `benchmarks/neural_ms2lda/results/seed42/trained_model/` |
-| Locked M1/Tomotopy evidence | `benchmarks/neural_ms2lda/results/seed42/results.json` |
-| Ablation ledger | `benchmarks/neural_ms2lda/results/seed42/ablation_results.json` |
-| External validation comparison | `research/etm_ecrtm_msnlib/local_results/20260827_followup/comparison.csv` |
-| External experiment log | `research/etm_ecrtm_msnlib/local_results/20260827_followup/EXPERIMENT_LOG.md` |
-| Next M1 stability campaign | `research/etm_ecrtm_msnlib/M1_MULTISEED_HANDOFF.md` |
-
-`results.json` remains the sole numerical source for the locked M1/Tomotopy
-paper comparison. The separate committed `comparison.csv` is the numerical
-source for the later validation-only external model-selection section.
-
-## Reproduction
+For a new clean run, choose new `RUN` and `EVIDENCE` directories:
 
 ```bash
-conda env create -f environment-neural-ms2lda.yml
-conda env create -f environment-msnlib-mag.yml
-
-conda run -n ms2lda-neural python \
-  scripts/download_msnlib_validation_assets.py \
-  --data-root /path/to/MSnLib-assets
-
-conda run -n ms2lda-neural python -m benchmarks.neural_ms2lda run \
-  --data-root /path/to/MSnLib-assets \
-  --run /path/to/new-run
-```
-
-Backfill the expanded diagnostics for a completed validation run without
-opening test:
-
-```bash
-python scripts/backfill_neural_ms2lda_diagnostics.py --run /path/to/run
-```
-
-Regenerate report inputs:
-
-```bash
-python scripts/generate_neural_ms2lda_report.py
-python scripts/generate_neural_ms2lda_model_selection.py
-```
-
-## Verification
-
-```bash
-black --check benchmarks/neural_ms2lda \
-  scripts/download_msnlib_validation_assets.py \
-  scripts/generate_neural_ms2lda_report.py \
-  scripts/generate_neural_ms2lda_model_selection.py \
-  scripts/backfill_neural_ms2lda_diagnostics.py
-
-ruff check --select E,F,I benchmarks/neural_ms2lda \
-  scripts/download_msnlib_validation_assets.py \
-  scripts/generate_neural_ms2lda_report.py \
-  scripts/generate_neural_ms2lda_model_selection.py \
-  scripts/backfill_neural_ms2lda_diagnostics.py
-
+python -m scripts.run_contextual_sparse_etm_reproduction initialize --root RUN
+python -m scripts.run_contextual_sparse_etm_reproduction run --root RUN
+python -m scripts.package_contextual_sparse_etm_reproduction \
+  --root RUN --output EVIDENCE
+python -m scripts.generate_routing_etm_report \
+  --evidence-root EVIDENCE --output docs/research/generated
 pytest -q benchmarks/neural_ms2lda/tests
-python scripts/generate_neural_ms2lda_report.py
-python scripts/generate_neural_ms2lda_model_selection.py
 ```
 
-Also run the production regression suite with the documented frozen-upstream
-exclusions, inspect the built wheel to confirm research code is excluded, import
-the installed wheel outside the checkout, compile the LaTeX report
-deterministically, and visually inspect every rendered PDF page.
+The packager refuses an existing output directory. Never edit a sealed raw run
+or committed evidence package in place; create a new run and retain its new
+reproduction ID.
 
-## Next compute
+## What remains
 
-Architecture search is paused. The next campaign varies only M1 optimization
-seed while keeping the seed-42 data split, vocabulary, SGNS features,
-co-occurrence graph, MAG index, and validation contract fixed. New seeds 11, 23,
-and 37 are predeclared. The exact workflow and stopping rules are in
-`research/etm_ecrtm_msnlib/M1_MULTISEED_HANDOFF.md`. Test remains locked.
+No model change is required for the current paper. Productive next evidence
+would be an independently sourced dataset or a predeclared split-repetition
+study. Editorial work may improve exposition, but quantitative claims must
+remain generated from the sealed evidence package.

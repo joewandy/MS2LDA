@@ -1,95 +1,98 @@
-# Neural MS2LDA study
+# Contextual Sparse ETM study
 
-This directory contains the locked seed-42, K=1000 Neural MS2LDA M1 model with
-one-pass document inference. Each token has 48 train-only SGNS coordinates and
-two fragment/loss indicators. A bias-free projection maps those 50 features to
-128 dimensions, and a nonlinear context router combines each token with the
-leave-one-out context of its spectrum:
+This directory contains the scientific implementation and tests for
+**Contextual Sparse ETM**, an Embedded Topic Model (ETM) adapted to short
+tandem-mass-spectrometry documents.
 
-`Linear(256, 128, bias=False) -> GELU`.
+The model retains the published ETM generator, embedding-space topic--word
+decoder, Gaussian variational posterior, multinomial reconstruction term and
+analytic Gaussian KL divergence. It makes three explicit adaptations:
 
-The routed tokens interact with 1,000 learned motif prototypes. Sparse top-2
-assignments, additive whole-spectrum evidence, and a detached document gate
-produce the document mixture. The decoder gives fragment and neutral-loss
-channels equal probability mass.
+1. fragment and neutral-loss decoder channels each receive half of every
+   topic's probability mass;
+2. leave-one-out token context contributes top-2 evidence to the ETM posterior
+   mean through one learned scalar; and
+3. published 1.5-entmax replaces posterior softmax to produce exact zeros in
+   each spectrum's topic mixture.
 
-Training uses full spectra and alternates router and topic updates. Sinkhorn
-targets, positive-NPMI structure, prototype separation, routing-temperature
-annealing, finite checks, and gradient clipping protect the topic inventory.
-The model has 167,168 learned parameters.
+The only learned parameter added to the channel-balanced ETM is the context
+scalar. The model-specific mathematics is implemented as named tensor
+functions in `contextual_sparse_etm.py`; the sole `nn.Module` is a thin
+parameter and checkpoint shell. Normalized count input and the raw pseudo-count
+reconstruction equation live in `topic_model_training.py`.
 
-## Why this model
+## Final held-out test comparison
 
-The internal simplification campaign selected M1 over larger and lower-dimensional
-router variants. Its deterministic lock produced 884 optimized, 408 evaluable,
-and 265 useful validation motifs with mean SOS 0.6580793714 and validation NLL
-8.9741399256. Exact internal ablations remain in
-`results/seed42/ablation_results.json` and `SIMPLIFICATION.md`.
+All neural rows use the same train-only vocabulary and SGNS coordinates,
+K=1,000, training seed 7043, 120 epochs and CUDA execution. Models were fitted
+on train, developed on validation, frozen, and evaluated once on the fixed test
+split.
 
-A later validation-only external comparison tested canonical fixed-SGNS ETM, a
-deterministic pooled projected model, fragment/loss-balanced ETM, and canonical
-ECRTM. None preserved the complete M1 chemistry, completion, and topic-inventory
-contract. The most revealing failure was a 614-topic near-exact duplicate
-component in the pooled model. Channel balancing repaired ETM annotation
-coverage but not evaluable/useful breadth or SOS. The maintained ECRTM Sinkhorn
-path failed its convergence contract at real K/V after 21 completed epochs.
+| Model | Optimized | Evaluable | Useful | Mean SOS | Median SOS | Completion NLL |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Canonical ETM | 601 | 171 | 101 | 0.631759 | 0.633333 | **8.686003** |
+| Balanced ETM | **887** | 207 | 130 | 0.644232 | 0.640351 | 8.779686 |
+| **Contextual Sparse ETM** | 799 | **572** | **343** | 0.637702 | 0.639500 | 9.535540 |
+| Tomotopy LDA | 609 | 319 | 188 | **0.652752** | **0.651515** | 9.739090 |
 
-M1 is therefore the **least-complex model demonstrated to satisfy the complete
-real-data scientific contract**. It is not claimed to be the simplest
-conceivable model or a universally superior topic model. See
-[FINAL_MODEL_SELECTION.md](FINAL_MODEL_SELECTION.md) for the locked decision.
-No alternative candidate is authorized for test.
+The result is a breadth--quality trade-off, not uniform dominance. Contextual
+Sparse ETM has the broadest evaluable and useful motif inventory and sparse
+per-spectrum mixtures. Dense ETM controls retain better completion NLL, while
+Tomotopy retains the highest conditional SOS over a smaller evaluable set.
 
-Tomotopy is an independently trained comparator, not a teacher. This remains a
-single-dataset, single-data-split research result and does not change the
-production MS2LDA backend.
+Across training seeds 7043, 23 and 37, Contextual Sparse ETM yields 557--582
+evaluable and 327--353 useful test motifs, median 3.68--3.74 effective topics
+per spectrum and 914--922 unique top-1 topics. Every run is finite, has zero MAG
+clustering or optimization exceptions, and avoids a catastrophic duplicate
+component.
 
-## Required diagnostics
+## Canonical files
 
-Neural evaluation now reports more than likelihood and MAG coverage. The frozen
-contract in `diagnostics.py` includes mixture sparsity, active and unique top-1
-topics, duplicate beta components at cosine 0.95/0.99/0.999, beta concentration,
-top-word uniqueness, and fragment/loss probability mass. A large optimized
-motif count alone is not evidence of a usable topic inventory.
+- `contextual_sparse_etm.py` -- decoder, contextual evidence, posterior, KL and
+  entmax equations.
+- `topic_model_training.py` -- normalized count input and sparse raw-count
+  reconstruction.
+- `reproduction_plan.py` -- ordered 54-stage clean-room protocol.
+- `reproduction_audit.py` -- chronology, split-boundary, hash and probability
+  checks.
+- `tests/test_contextual_sparse_etm.py` -- equation-level and deterministic
+  inference correspondence.
+- `tests/test_reproduction_evidence.py` -- evidence and manuscript-claim gates.
+- `FINAL_MODEL_SELECTION.md` -- final scientific decision and interpretation.
+- `HANDOVER.md` -- exact evidence locations and continuation rules.
 
-For an existing validation run, backfill the new diagnostics without opening
-test data:
+The complete scientific report is
+`docs/research/neural_ms2lda_report.tex`, with its reviewed PDF beside it.
 
-```bash
-python scripts/backfill_neural_ms2lda_diagnostics.py --run /path/to/run
-```
+## Verification
 
-## Reproduction
-
-Create the two environments and acquire the public inputs:
-
-```bash
-conda env create -f environment-neural-ms2lda.yml
-conda env create -f environment-msnlib-mag.yml
-conda run -n ms2lda-neural python scripts/download_msnlib_validation_assets.py \
-  --data-root /path/to/MSnLib-assets
-```
-
-Run the complete locked M1/Tomotopy workflow:
+From the repository root, in the recorded reproduction environment:
 
 ```bash
-conda run -n ms2lda-neural python -m benchmarks.neural_ms2lda run \
-  --data-root /path/to/MSnLib-assets \
-  --run /path/to/run
+pytest -q benchmarks/neural_ms2lda/tests
+black --check \
+  benchmarks/neural_ms2lda/contextual_sparse_etm.py \
+  benchmarks/neural_ms2lda/model_evaluation.py \
+  benchmarks/neural_ms2lda/reproducibility.py \
+  benchmarks/neural_ms2lda/reproduction_audit.py \
+  benchmarks/neural_ms2lda/reproduction_plan.py \
+  benchmarks/neural_ms2lda/topic_model_training.py \
+  scripts/run_contextual_sparse_etm.py \
+  scripts/run_contextual_sparse_etm_reproduction.py \
+  scripts/package_contextual_sparse_etm_reproduction.py \
+  scripts/generate_routing_etm_report.py
+ruff check \
+  benchmarks/neural_ms2lda/contextual_sparse_etm.py \
+  benchmarks/neural_ms2lda/model_evaluation.py \
+  benchmarks/neural_ms2lda/reproducibility.py \
+  benchmarks/neural_ms2lda/reproduction_audit.py \
+  benchmarks/neural_ms2lda/reproduction_plan.py \
+  benchmarks/neural_ms2lda/topic_model_training.py \
+  scripts/run_contextual_sparse_etm.py \
+  scripts/run_contextual_sparse_etm_reproduction.py \
+  scripts/package_contextual_sparse_etm_reproduction.py \
+  scripts/generate_routing_etm_report.py
 ```
 
-`status --run /path/to/run` prints progress. The published model artifact
-contains only `weights.pt`, `model.json`, and `vocabulary.json`.
-
-Regenerate the original numerical fragments and the external model-selection
-tables with:
-
-```bash
-python scripts/generate_neural_ms2lda_report.py
-python scripts/generate_neural_ms2lda_model_selection.py
-```
-
-See [HANDOVER.md](HANDOVER.md) for the exact architecture, evidence contract,
-and verification commands. The next compute campaign is the validation-only M1
-optimization-seed study specified in
-`research/etm_ecrtm_msnlib/M1_MULTISEED_HANDOFF.md`.
+The packaged evidence and its machine-verifiable acceptance status are under
+`research/etm_ecrtm_msnlib/local_results/20260901_contextual_sparse_etm_reproduction/`.

@@ -1,0 +1,104 @@
+{
+  "candidate_test_artifacts_accessed": false,
+  "candidate_test_metrics_inspected": false,
+  "local_artifacts": [
+    {
+      "bytes": 81193102,
+      "path": "/home/joewandy/Work/data/MS2LDA-msnlib-validation/runs/routing-etm-stability-seed37/models/etm_balanced_routing_top2_entmax15_raw_counts/weights.pt",
+      "sha256": "dd093c1f0feebc11cf88c17470b6cdf545813ca3e1c3caaa9b9d67811471d7a3"
+    },
+    {
+      "bytes": 84932128,
+      "path": "/home/joewandy/Work/data/MS2LDA-msnlib-validation/runs/routing-etm-stability-seed37/models/etm_balanced_routing_top2_entmax15_raw_counts/beta.npy",
+      "sha256": "9930a08eccecc0370a2b9abf5830942bf50cc43db52a3ba9280f7713648c9c70"
+    },
+    {
+      "bytes": 15556128,
+      "path": "/home/joewandy/Work/data/MS2LDA-msnlib-validation/runs/routing-etm-stability-seed37/models/etm_balanced_routing_top2_entmax15_raw_counts/validation_observed_theta.npy",
+      "sha256": "600b7d2ebc0ee8b70c420ef68b879847c3b3a116a62ad7e22491a914fc27a302"
+    },
+    {
+      "bytes": 15556128,
+      "path": "/home/joewandy/Work/data/MS2LDA-msnlib-validation/runs/routing-etm-stability-seed37/models/etm_balanced_routing_top2_entmax15_raw_counts/validation_full_theta.npy",
+      "sha256": "2d6c0434ea50ab2a4cd41478f8d606adf199d65dc5146632d8a0e7d6eb50fc7c"
+    },
+    {
+      "bytes": 15556128,
+      "path": "/home/joewandy/Work/data/MS2LDA-msnlib-validation/runs/routing-etm-stability-seed37/models/etm_balanced_routing_top2_entmax15_raw_counts/validation_routing_evidence.npy",
+      "sha256": "9b9887b9548618b0e684a341b44b3e32935f0bda9917992c80074581ff100cb4"
+    },
+    {
+      "bytes": 235446721,
+      "path": "/home/joewandy/Work/data/MS2LDA-msnlib-validation/runs/routing-etm-stability-seed37/models/etm_balanced_routing_top2_entmax15_raw_counts/checkpoint.pt",
+      "sha256": "822edcb89ff9ec4705a2d99dc44e8c06ad11578048deec541d0537fb3f4a599e"
+    }
+  ],
+  "validation_inputs": {
+    "candidate_test_artifacts_accessed": false,
+    "candidate_test_metrics_inspected": false,
+    "evidence_boundary": "training plus validation only",
+    "linked_inputs": [
+      {
+        "bytes": 2517,
+        "path": "/home/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42/protocol.json",
+        "sha256": "0102834def3009e142fe719b12129d7e59cb5dc158cb9cb16b19894acc249bf7"
+      },
+      {
+        "bytes": 10657989,
+        "path": "/home/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42/data/train.npz",
+        "sha256": "b4808f341864ba1df246a5093992f52397c2f96e0b48b23245b9b17e30aa5b52"
+      },
+      {
+        "bytes": 775961,
+        "path": "/home/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42/data/validation_observed.npz",
+        "sha256": "76afa43a3540d91edd4dd7e851afe10c65e3d67bcf06007c83eac1d9b6e15bff"
+      },
+      {
+        "bytes": 778241,
+        "path": "/home/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42/data/validation_completion.npz",
+        "sha256": "f75245b599bc3c087aad97ff7247112d422ec0ab87418c5f96b0a889b2f661f0"
+      },
+      {
+        "bytes": 1528665,
+        "path": "/home/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42/data/validation_full.npz",
+        "sha256": "51888951815f448d0527a6a876be345cfe76ab346d9e97bada9a186e8857fab2"
+      },
+      {
+        "bytes": 1285639,
+        "path": "/home/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42/data/validation_records.jsonl",
+        "sha256": "0e85218489af6a07413474bb2db6ce74da537f6fd3c8ee77d5286f5775ba068c"
+      },
+      {
+        "bytes": 399495,
+        "path": "/home/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42/data/vocabulary.json",
+        "sha256": "9ed46f54a4e4917560f764d4ac662bae7036c1b98733d6b25a62a869799bd90e"
+      },
+      {
+        "bytes": 4246728,
+        "path": "/home/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42/token_features/features.npy",
+        "sha256": "74fcfff0ee9bc776a372225023ab7070dc0cae11582191a3a4891a19560c84e5"
+      },
+      {
+        "bytes": 169,
+        "path": "/home/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42/mag/index/complete.json",
+        "sha256": "6157d53dc131841a8e02e9f6047efbb7e18163a003ff2e70ff5ae3950f3bb25b"
+      },
+      {
+        "bytes": 254110,
+        "path": "/home/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42/mag/index/excluded_connectivity_keys.json",
+        "sha256": "36ad6649271965ddc88e8c5c7484362e121887f204bbf8c5bf3fd27f6c624a70"
+      },
+      {
+        "bytes": 2982960,
+        "path": "/home/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42/mag/index/kept_original_ids.npy",
+        "sha256": "97c63d3da5e77877a7786993a0b5bc123f3e37161febf8b006628194c9f3485b"
+      },
+      {
+        "bytes": 447424845,
+        "path": "/home/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42/mag/index/spec2vec_filtered.faiss",
+        "sha256": "845408fe7338135cb23cbe9023f5805c11dafcb8d028ca631fb1968292aef300"
+      }
+    ],
+    "prepared_run": "/home/joewandy/Work/data/MS2LDA-msnlib-validation/runs/etm-pooled-validation-20260827-seed42"
+  }
+}

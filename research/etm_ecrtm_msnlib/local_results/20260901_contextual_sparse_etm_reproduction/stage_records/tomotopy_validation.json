@@ -1,0 +1,65 @@
+{
+  "command": [
+    "/home/joewandy/miniforge3/envs/ms2lda-repro-ba9443b/bin/python",
+    "-m",
+    "scripts.run_tomotopy_validation",
+    "--run",
+    "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/tomotopy"
+  ],
+  "finished_utc": "2026-09-01T00:38:21.888549+00:00",
+  "log": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/logs/tomotopy_validation.log",
+  "name": "tomotopy_validation",
+  "outputs": [
+    {
+      "bytes": 873,
+      "modified_ns": 1788223101374893927,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/tomotopy/tomotopy/validation_only_result.json",
+      "sha256": "745f1e1f01f34fef50dbda2fa6b8aabb4bc09af41f2567b59f87bf1b455bc28a"
+    },
+    {
+      "bytes": 274547245,
+      "modified_ns": 1788222926149700098,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/tomotopy/tomotopy/model.bin",
+      "sha256": "8932dcb6956af2dbfcbf13167edd78ed24b2f8a020accdc3df536c6539d41df1"
+    },
+    {
+      "bytes": 102,
+      "modified_ns": 1788222926152707636,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/tomotopy/tomotopy/complete.json",
+      "sha256": "18b78270c9ccf61e5c8e573fc928a58451b1d35d031a07347e1b47f802a3bc32"
+    },
+    {
+      "bytes": 286,
+      "modified_ns": 1788223101373563544,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/tomotopy/tomotopy/validation_access_audit.json",
+      "sha256": "4e37b3bfb8b90ddf5d7739740fca26b8675e65c2fdd929c924efcb698f49ab04"
+    },
+    {
+      "bytes": 348,
+      "modified_ns": 1788223101339073540,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/tomotopy/validation_evaluation/tomotopy/complete.json",
+      "sha256": "aee163b3993c66c98bdbc7f89b15edf1446525f572170450222dbdc30ca0b783"
+    },
+    {
+      "bytes": 84932128,
+      "modified_ns": 1788223101312852924,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/tomotopy/validation_evaluation/tomotopy/beta.npy",
+      "sha256": "a374215be88da07bb57b49ffa6c87895fc578edba30859dc7e76f2dfb0aba685"
+    },
+    {
+      "bytes": 15556128,
+      "modified_ns": 1788223101272850971,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/tomotopy/validation_evaluation/tomotopy/validation_full_theta.npy",
+      "sha256": "d5b402d1960444b5b412394c9ef83cfbf65d67cd3786cf0243d078d7a22d60aa"
+    }
+  ],
+  "pre_stage_load": {
+    "available_memory_bytes": 13726064640,
+    "gpu_compute_processes": [],
+    "one_minute_load_average": 1.0,
+    "utc": "2026-09-01T00:18:06.255138+00:00"
+  },
+  "return_code": 0,
+  "started_utc": "2026-09-01T00:18:06.255156+00:00",
+  "status": "complete"
+}

@@ -1,4 +1,9 @@
-# M1 multi-seed stability handoff
+# M1 multi-seed stability fallback handoff
+
+> **Fallback only.** Do not start this campaign unless the current principled
+> sparse-ETM campaign (sparsemax/entmax, sparse prior, and/or pseudo-count
+> objective scaling) fails its synthetic and validation decision process. The
+> active handoff is `research/etm_ecrtm_msnlib/NEXT_AGENT.md`.
 
 ## Objective
 

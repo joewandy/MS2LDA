@@ -1,0 +1,94 @@
+{
+  "completed_validation_outputs": [
+    {
+      "bytes": 3877,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/controls/validation_evaluation/etm/complete.json",
+      "sha256": "f7df4a5453a7ae2437df01a166d49721f2fbee628ce3e5dd2f31d1a4beb7bed3"
+    },
+    {
+      "bytes": 159171,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/controls/validation_chemical/etm/complete.json",
+      "sha256": "bfe961d8b5e25ba9f3fe8aa13ccd7cd2e7253dcfaa57077ee521e639ac36dbfa"
+    },
+    {
+      "bytes": 3885,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/controls/validation_evaluation/etm_balanced/complete.json",
+      "sha256": "aa4f5f0c029611a8f90838411fe6c621e12a51f06ca83e7a2ee1c16df76324cf"
+    },
+    {
+      "bytes": 159559,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/controls/validation_chemical/etm_balanced/complete.json",
+      "sha256": "cd79cf1af4285898008c37b75ed22b2dcd0436aeb3a36e764f381cee558c0e31"
+    }
+  ],
+  "exposed_after_validation": true,
+  "frozen_models": [
+    {
+      "bytes": 81192837,
+      "method": "etm",
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/controls/models/etm/weights.pt",
+      "sha256": "f765b7057d3d7484051a5061ab23ca56bb2398923b9e642699903e613ee39d77"
+    },
+    {
+      "bytes": 609,
+      "method": "etm",
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/controls/models/etm/config.json",
+      "sha256": "c5761e2d1cd4ccdad73bedd39234cdd1b0a0452ed210fc08487d49e5b78f63fb"
+    },
+    {
+      "bytes": 4574,
+      "method": "etm",
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/controls/models/etm/result.json",
+      "sha256": "8efddf51fe901cab12ec07fca7fab1e420126c8a971bcd0ecfa45edb2dca1d74"
+    },
+    {
+      "bytes": 81192837,
+      "method": "etm_balanced",
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/controls/models/etm_balanced/weights.pt",
+      "sha256": "4bb2c23f08957ef965b7eef8be5f1e6a61468b06da26c4481cf6c67e6dfcbba2"
+    },
+    {
+      "bytes": 723,
+      "method": "etm_balanced",
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/controls/models/etm_balanced/config.json",
+      "sha256": "b24605d1a4f763ce2ffb4b4176136394660bbaa2cec90f7d915b7feb1c7ab75b"
+    },
+    {
+      "bytes": 4705,
+      "method": "etm_balanced",
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/controls/models/etm_balanced/result.json",
+      "sha256": "6c2a9726832c8d20794e63e908fe9175b625ad5d1102c03c4ee0153afc7f3acf"
+    }
+  ],
+  "linked_test_inputs": [
+    {
+      "bytes": 1482593,
+      "linked_path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/controls/data/test_observed.npz",
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/prepared/data/test_observed.npz",
+      "sha256": "855154fb1ee2c72f8dc56bef5258de997e951075042b458cbafe7877ab355f33"
+    },
+    {
+      "bytes": 1484769,
+      "linked_path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/controls/data/test_completion.npz",
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/prepared/data/test_completion.npz",
+      "sha256": "328f5970632ee03877c0151846db6034d98d0041f4012f9603d6519552553c45"
+    },
+    {
+      "bytes": 2917737,
+      "linked_path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/controls/data/test_full.npz",
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/prepared/data/test_full.npz",
+      "sha256": "45b931c5c5a56d8a4f86ca0d19942d09089056c815a41210aae55c12e692cd01"
+    },
+    {
+      "bytes": 2481149,
+      "linked_path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/controls/data/test_records.jsonl",
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/prepared/data/test_records.jsonl",
+      "sha256": "94647034814f2d040e2912e76ff5d919d414613429bd6809cdbf0ce87b436ac5"
+    }
+  ],
+  "methods": [
+    "etm",
+    "etm_balanced"
+  ],
+  "split": "test"
+}

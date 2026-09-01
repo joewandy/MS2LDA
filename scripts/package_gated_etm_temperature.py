@@ -514,9 +514,11 @@ def package(  # noqa: PLR0913
         "best_nll_preserving_row": best_row,
         "comparison_to_m1": comparison_to_m1,
         "decision": (
-            "Stop the ETM architecture path; balanced ETM plus detached geometry "
-            "gate and bounded inference calibration remain insufficient. M1 "
-            "multiseed stability is the next campaign."
+            "Stop the gated dense-ETM path; balanced ETM plus detached geometry "
+            "gate and bounded inference calibration remain insufficient. Next run "
+            "principled sparse-ETM research (sparsemax/entmax, sparse prior, and/or "
+            "pseudo-count objective scaling), screened synthetically before any "
+            "warranted real validation. M1 multiseed stability is fallback-only."
         ),
     }
     write_json(output / "gated_etm_gamma2_temperature_summary.json", summary)

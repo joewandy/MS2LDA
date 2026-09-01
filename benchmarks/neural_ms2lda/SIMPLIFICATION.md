@@ -1,5 +1,9 @@
 # Neural MS2LDA simplification rationale
 
+> Historical experiment record. This file is not the current model decision or
+> a source for the paper's final results. See `FINAL_MODEL_SELECTION.md` for the
+> frozen Contextual Sparse ETM model and held-out test evidence.
+
 ## Decision rule
 
 Prefer simpler code when results are practically tied, while retaining every

@@ -113,9 +113,7 @@ def topic_inventory_diagnostics(
     document_entropy = -np.sum(
         mixtures * np.log(np.clip(mixtures, PROBABILITY_FLOOR, None)), axis=1
     )
-    corpus_entropy = -np.sum(
-        usage * np.log(np.clip(usage, PROBABILITY_FLOOR, None))
-    )
+    corpus_entropy = -np.sum(usage * np.log(np.clip(usage, PROBABILITY_FLOOR, None)))
 
     norms = np.linalg.norm(topics, axis=1, keepdims=True)
     normalized_topics = np.divide(
@@ -159,7 +157,9 @@ def topic_inventory_diagnostics(
             np.sum(usage >= 1.0 / topics.shape[0])
         ),
         "maximum_mean_topic_usage": float(usage.max()),
-        "median_effective_topics_per_spectrum": float(np.median(np.exp(document_entropy))),
+        "median_effective_topics_per_spectrum": float(
+            np.median(np.exp(document_entropy))
+        ),
         "mean_effective_topics_per_spectrum": float(np.mean(np.exp(document_entropy))),
         "corpus_effective_topic_count": float(np.exp(corpus_entropy)),
         "unique_top1_topics": unique_top1,
@@ -169,9 +169,7 @@ def topic_inventory_diagnostics(
         "maximum_pairwise_beta_cosine": float(similarity.max()),
         "duplicate_components": components,
         "strictest_duplicate_cosine_threshold": float(thresholds[-1]),
-        "largest_strict_duplicate_component": int(
-            strictest["largest_component_size"]
-        ),
+        "largest_strict_duplicate_component": int(strictest["largest_component_size"]),
         "catastrophic_duplicate_component_fraction": float(
             catastrophic_duplicate_component_fraction
         ),

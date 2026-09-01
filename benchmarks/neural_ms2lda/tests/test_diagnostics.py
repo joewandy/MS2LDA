@@ -69,9 +69,7 @@ def test_fragment_loss_mass_diagnostics_reports_extreme_topics() -> None:
 
 def test_model_selection_diagnostics_uses_protocol_thresholds() -> None:
     theta = np.asarray([[0.8, 0.2], [0.3, 0.7]], dtype=np.float32)
-    beta = np.asarray(
-        [[0.4, 0.1, 0.4, 0.1], [0.1, 0.4, 0.1, 0.4]], dtype=np.float32
-    )
+    beta = np.asarray([[0.4, 0.1, 0.4, 0.1], [0.1, 0.4, 0.1, 0.4]], dtype=np.float32)
     vocabulary = ["frag@1.00", "loss@1.00", "frag@2.00", "loss@2.00"]
     protocol = {
         "active_topic_usage_threshold": 0.0005,

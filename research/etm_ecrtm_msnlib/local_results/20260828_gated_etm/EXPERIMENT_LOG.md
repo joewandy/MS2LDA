@@ -146,10 +146,13 @@ or summarized during this campaign.
 - **Intermediate rule:** no value was added. No fixed-grid row reaches either
   the useful-motif gate or the mean-SOS gate, so adjacent points cannot bracket
   an all-gate-passing region.
-- **Decision:** no temperature passes all frozen gates. Stop the ETM
-  architecture path. Balanced ETM plus detached geometry gate plus inference
-  calibration remains insufficient; M1 multiseed stability is the next
-  campaign. Candidate test data remain locked.
+- **Decision:** no temperature passes all frozen gates. Stop the gated
+  dense-ETM path. Balanced ETM plus detached geometry gate plus inference
+  calibration remains insufficient. The next campaign is principled
+  sparse-ETM research (sparsemax/entmax, sparse prior, and/or pseudo-count
+  objective scaling), screened synthetically before any warranted real
+  validation. M1 multiseed stability is fallback-only. Candidate test data
+  remain locked.
 
 ## Final follow-up rule
 

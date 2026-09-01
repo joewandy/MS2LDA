@@ -1,0 +1,61 @@
+{
+  "command": [
+    "/home/joewandy/miniforge3/envs/ms2lda-repro-ba9443b/bin/python",
+    "-m",
+    "scripts.evaluate_frozen_etm_test",
+    "--run",
+    "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/contextual_seed_23",
+    "--method",
+    "contextual_sparse_etm",
+    "--device",
+    "cuda",
+    "--batch-size",
+    "256",
+    "--threads",
+    "6"
+  ],
+  "finished_utc": "2026-09-01T01:54:48.742814+00:00",
+  "log": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/logs/contextual_seed_23_test_evaluation.log",
+  "name": "contextual_seed_23_test_evaluation",
+  "outputs": [
+    {
+      "bytes": 6117,
+      "modified_ns": 1788227688236708290,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/contextual_seed_23/evaluation/contextual_sparse_etm/complete.json",
+      "sha256": "a822504bd907aa41c32e47b26fbff187e92bd41ee452d2658ada0012a046b334"
+    },
+    {
+      "bytes": 334,
+      "modified_ns": 1788227688236812138,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/contextual_seed_23/evaluation/contextual_sparse_etm/test_access_audit.json",
+      "sha256": "891974ca36fd42f3090d717932efb0989c735a4d2e6c22aa645c94afac048aba"
+    },
+    {
+      "bytes": 84932128,
+      "modified_ns": 1788227688149741298,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/contextual_seed_23/evaluation/contextual_sparse_etm/beta.npy",
+      "sha256": "36a93c3fccb24d73c15af216c5d29fca116fc8f6e9b3fae48c327f6c58cd98a9"
+    },
+    {
+      "bytes": 31108128,
+      "modified_ns": 1788227688177742735,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/contextual_seed_23/evaluation/contextual_sparse_etm/test_observed_theta.npy",
+      "sha256": "830582091f65de0d11d981a5ba0316bec35ff786588734c70d9d1257ecada3cd"
+    },
+    {
+      "bytes": 31108128,
+      "modified_ns": 1788227688197743762,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/real/contextual_seed_23/evaluation/contextual_sparse_etm/test_full_theta.npy",
+      "sha256": "638b18acb52fef64d31a74b0a08afe793b5e3fde7e3fac20a1e678aa3d7def85"
+    }
+  ],
+  "pre_stage_load": {
+    "available_memory_bytes": 13735911424,
+    "gpu_compute_processes": [],
+    "one_minute_load_average": 1.7890625,
+    "utc": "2026-09-01T01:54:43.775607+00:00"
+  },
+  "return_code": 0,
+  "started_utc": "2026-09-01T01:54:43.775626+00:00",
+  "status": "complete"
+}

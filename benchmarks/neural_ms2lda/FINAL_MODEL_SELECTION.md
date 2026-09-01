@@ -1,84 +1,120 @@
-# Final neural-model selection conclusion
+# Final model selection: Contextual Sparse ETM
 
-Status: validation-only architecture selection is closed. Candidate test data remain locked.
-
-Evidence commits:
-
-- research handoff: `9baec8aa62f684480eba35d4fc7f626c46f7b804`
-- first real comparison: `ecb09251de94093e345584ed53f87ed799e88dc4`
-- follow-up diagnosis: `c2c78cfb9cc7f35a1715312b9f7d4130ec60d4ba`
+Status: **model frozen; clean held-out test reproduction complete**.
 
 ## Decision
 
-M1 is the **least-complex model demonstrated to satisfy the complete real-data scientific contract**. This is more precise than calling it the mathematically simplest model. Simpler published or deterministic alternatives fitted the spectra, but none preserved the required combination of topic diversity, confident spectrum association, chemical breadth, SOS quality, and completion likelihood.
+The selected model is Contextual Sparse ETM. It is the published Embedded Topic
+Model (ETM) with a channel-balanced decoder, one-scalar contextual top-2
+posterior evidence and a published 1.5-entmax simplex mapping.
 
-No alternative candidate is authorized for test.
+This is the simplest tested formulation that jointly preserves three required
+properties on short mass-spectral documents:
 
-## Locked validation result
+- sparse per-spectrum topic mixtures;
+- broad use of the global topic inventory; and
+- a large chemically evaluable and useful Mass2Motif inventory.
 
-| Model | Optimized | Evaluable | Useful | Mean SOS | Completion NLL | Outcome |
-|---|---:|---:|---:|---:|---:|---|
-| M1 | 884 | 408 | 265 | 0.658079 | 8.974140 | Pass |
-| Canonical fixed-SGNS ETM | 609 | 130 | 79 | 0.638796 | 8.690730 | Fail chemistry |
-| Pooled projected | 967 | 14 | 11 | 0.751621 | 8.385787 | Fail breadth/collapse |
-| Pooled projected, theta tau 0.11 | 967 | 293 | 194 | 0.665436 | 8.994812 | Fail breadth/collapse |
-| Pooled projected + MI 0.05 | 799 | 14 | 11 | 0.696540 | 8.393690 | Fail breadth/collapse |
-| Fragment/loss-balanced ETM | 911 | 166 | 104 | 0.629819 | 8.766069 | Fail breadth/SOS |
-| Canonical ECRTM | -- | -- | -- | -- | -- | Sinkhorn failed in epoch 22 |
+The complete model has 19,278,001 learned parameters. Channel balancing and
+entmax add no learned parameters; contextual evidence adds exactly one scalar
+relative to balanced ETM.
 
-The frozen candidate gates were optimized >=840, evaluable >=388, useful >=252, mean SOS >=0.651498, completion NLL <=9.422847, finite execution, and no catastrophic inventory collapse.
+## Held-out test results
 
-## What the alternatives established
+Every neural model uses the same split, 21,233-word train-only vocabulary,
+48-dimensional train-only SGNS coordinates, K=1,000, encoder width 800, raw
+pseudo-count objective, Adam settings, 120 epochs and primary training seed
+7043. Test matrices were released only after model and validation artifacts
+were frozen.
 
-### Canonical ETM
+| Model | Optimized | Evaluable | Useful | Mean SOS | Median SOS | NLL lower is better |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Canonical ETM | 601 | 171 | 101 | 0.631759 | 0.633333 | **8.686003** |
+| Balanced ETM | **887** | 207 | 130 | 0.644232 | 0.640351 | 8.779686 |
+| **Contextual Sparse ETM** | 799 | **572** | **343** | 0.637702 | 0.639500 | 9.535540 |
+| Tomotopy LDA | 609 | 319 | 188 | **0.652752** | **0.651515** | 9.739090 |
 
-Fixed train-only SGNS made canonical ETM much healthier than a learned-embedding ETM in simulation, and its real completion NLL was good. It nevertheless learned only 609 MAG-optimizable motifs and produced diffuse spectrum mixtures. Post-hoc sharpening could not repair the topic-word deficit.
+Contextual Sparse ETM more than doubles the useful inventory relative to either
+ETM control and produces 155 more useful motifs than Tomotopy. Its conditional
+mean SOS lies between canonical and balanced ETM and below Tomotopy. Dense ETM
+controls retain better completion NLL. The supported conclusion is therefore a
+large discovery-breadth gain with explicit conditional-quality and predictive
+fit trade-offs.
 
-### Pooled projected model
+## Why each added component remains
 
-The raw pooled model contained a useful specialized sub-inventory, but 614 of 1,000 topic-word distributions formed one near-exact cosine component. Those topics were nearly uniform over the vocabulary and never won a validation spectrum. Temperature calibration corrected probability scale and raised evaluable/useful counts to 293/194, but rank-preserving calibration could not manufacture missing topic identities.
+Truth-known synthetic experiments separate the components. At K=36, contextual
+evidence improves planted topic and document recovery and broadens topic use;
+entmax then converts that evidence into exact sparse mixtures. Entmax without
+context makes mixtures sparse by starving much of the fitted inventory.
 
-This result also changes the benchmark contract: MAG optimization coverage must be interpreted together with topic use, beta concentration, unique top-1 topics, and duplicate-component size.
+The overcomplete K=128 seed-11 experiment is the strongest isolation check:
 
-### Fragment/loss-balanced ETM
+| Formulation | Planted motifs recovered at beta cosine >= 0.50 | Median exact support | Unique fitted top-1 topics |
+| --- | ---: | ---: | ---: |
+| Balanced ETM plus softmax | 6 / 18 | 128 | 7 |
+| Balanced ETM plus 1.5-entmax | 2 / 18 | 2 | 3 |
+| **Contextual Sparse ETM** | **18 / 18** | **2** | **19** |
 
-Channel balancing removed ETM's observed fragment/loss skew and increased optimized motifs from 609 to 911. It did not improve the full scientific outcome: evaluable/useful counts remained 166/104 and mean SOS fell. Channel imbalance was therefore a real symptom and contributor, but not the principal failure.
+The 18 recovered planted motifs and 19 fitted winner topics answer different
+questions and must not be conflated. Recovery uses optimal truth matching;
+winner count measures how many fitted topics are largest for at least one
+spectrum.
 
-### ECRTM
+Removing the learned context scalar and using direct token-only top-2 evidence
+was also tested under the same synthetic protocol. It did not preserve recovery
+or inventory breadth, so the one-scalar contextual formulation is retained.
 
-ECRTM was a scientifically justified published anti-collapse comparator after the 614-topic pooled component was identified. The maintained ordinary-domain Sinkhorn formulation became progressively more expensive and failed the residual contract in epoch 22, including after an exact checkpoint resume. No partial or unconverged model was scored.
+## Initialization robustness
 
-The appropriate conclusion is operational: this maintained ECRTM numerical path is unsuitable at K=1000 and V=21,233 on the tested hardware. It does not disprove every possible stabilized or GPU implementation of the mathematical model.
+Only initialization and minibatch order change across the three final model
+runs.
 
-## Why M1's complexity is functional
+| Seed | Optimized | Evaluable | Useful | Mean SOS | NLL | Median effective topics | Unique top-1 |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 7043 | 799 | 572 | 343 | 0.637702 | 9.535540 | 3.680 | 917 |
+| 23 | 798 | 582 | 353 | 0.631071 | 9.526086 | 3.714 | 922 |
+| 37 | 805 | 557 | 327 | 0.628022 | 9.516054 | 3.744 | 914 |
 
-The external model comparison exposes the same failure modes targeted by M1's internal mechanisms:
+Every seed is finite, records zero MAG clustering and optimization failures,
+avoids a catastrophic duplicate component, and preserves sparse local mixtures
+alongside broad global topic use. These are descriptive repeats on one fixed
+split, not evidence of independent-dataset generalization.
 
-- token-level contextual routing and the document gate produce confident spectrum-topic assignments;
-- Sinkhorn targets resist topic starvation;
-- prototype separation resists duplicate components;
-- positive-NPMI regularization supports coherent topic words;
-- the fixed channel split avoids vocabulary-size-driven fragment/loss mass;
-- shared prototypes couple the assignment and decoder geometries.
+## Executable model form
 
-Existing within-M1 ablations show that removing the gate, Sinkhorn, NPMI, or separation substantially reduces useful motif inventory. The external comparisons now show that changing to a simpler model family does not make those problems disappear.
+For normalized raw-count vector x_d, fixed word coordinates rho, learned ETM
+topic coordinates alpha and K topics:
 
-## Required diagnostics from now on
+```text
+beta       = channel_balanced_softmax(alpha @ rho.T)
+r_d        = count_weighted_top2_contextual_evidence(x_d, rho, alpha, c)
+offset_d   = center(log(r_d + 1/K))
+mu_tilde_d = ETM_mu(x_d) + offset_d
+z_d        = mu_tilde_d + exp(0.5 * logvar_d) * epsilon
+theta_d    = entmax_1.5(z_d)
+p(words|d) = theta_d @ beta
+loss       = raw_count_multinomial_NLL + Gaussian_KL
+```
 
-Every neural topic-model result must report, in addition to completion and MAG/SOS:
+Deterministic inference sets `z_d = mu_tilde_d`. The source functions and
+report equations are mapped explicitly in Appendix B of the paper and checked
+end to end by `tests/test_contextual_sparse_etm.py`.
 
-- median and mean effective topics per spectrum;
-- corpus effective topic count;
-- active topics above 0.0005 mean usage and at least 1/K usage;
-- unique top-1 topics and topics never top-1;
-- mean/median nearest-topic beta cosine and maximum pairwise cosine;
-- connected duplicate-component summaries at beta cosine 0.95, 0.99, and 0.999;
-- median beta effective-word count, maximum word probability, and top-20 mass;
-- top-word uniqueness;
-- per-topic fragment probability mass and extreme-skew fraction.
+## Evidence and integrity
 
-A large MAG-optimized count alone is not evidence of a usable topic inventory.
+The compact evidence package is
+`research/etm_ecrtm_msnlib/local_results/20260901_contextual_sparse_etm_reproduction/`.
+Its `acceptance.json` reports every predeclared scientific claim gate true;
+`data_quality.json` reports pass; and `checkpoint_manifest.json` records the
+reproduction ID, raw source commit and test-release boundary.
 
-## Next compute
+The canonical manuscript is `docs/research/neural_ms2lda_report.tex`, generated
+from that package, with the reviewed PDF beside it.
 
-Architecture search is paused. The next campaign is M1 optimization-seed stability on the fixed seed-42 data split, vocabulary, token features, and evaluation contract. Test remains locked. The predeclared workflow is in `research/etm_ecrtm_msnlib/M1_MULTISEED_HANDOFF.md`.
+## Final scope
+
+The result supports Contextual Sparse ETM as a broad Mass2Motif discovery model
+on one group-disjoint MSnLib split. It does not claim uniform metric dominance,
+external-dataset generalization, expert-confirmed structural annotation or a
+production-backend replacement. Those limits are explicit in the manuscript.

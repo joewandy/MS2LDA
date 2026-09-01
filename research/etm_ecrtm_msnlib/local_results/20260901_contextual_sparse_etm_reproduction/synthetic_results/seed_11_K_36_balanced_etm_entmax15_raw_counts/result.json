@@ -1,0 +1,291 @@
+{
+  "config": {
+    "batch_size": 200,
+    "candidate_test_artifacts_accessed": false,
+    "device": "cuda",
+    "epochs": 120,
+    "evidence": "truth-known synthetic training and validation only",
+    "excluded_m1_components": [
+      "nonlinear context router",
+      "document gate",
+      "Sinkhorn balancing",
+      "positive-NPMI regularization",
+      "prototype separation",
+      "alternating optimization"
+    ],
+    "fitted_topics": 36,
+    "hidden_dimensions": 800,
+    "implementation_class": "RoutingInformedETM",
+    "learning_rate": 0.005,
+    "optimizer": "Adam",
+    "positive_npmi": null,
+    "posterior_change": "none",
+    "published_base": "Embedded Topic Model",
+    "reconstruction_scaling": "raw_counts",
+    "routing_temperature": 1.0,
+    "routing_variant": "etm",
+    "seed": 11,
+    "stopping_rule": "fixed epochs or immediate non-finite loss/gradient",
+    "theta_transform": "entmax15",
+    "threads": 6,
+    "training_documents": 800,
+    "true_topics": 18,
+    "unchanged_components": [
+      "fixed train-only 48D SGNS word embeddings",
+      "50/50 fragment-loss ETM decoder",
+      "Gaussian variational latent family",
+      "standard-normal analytic KL",
+      "raw_counts multinomial reconstruction weighting"
+    ],
+    "validation_documents": 160,
+    "weight_decay": 1.2e-06
+  },
+  "method": "balanced_etm_entmax15_raw_counts",
+  "metrics": {
+    "active_topics_mean_usage_gt_0_005": 6,
+    "dataset": {
+      "mean_train_pseudocount_mass": 1430.6500244140625,
+      "median_train_nonzero_words": 26.0,
+      "median_train_physical_peaks": 30.0,
+      "median_train_pseudocount_mass": 1369.5,
+      "seed": 11,
+      "training_documents": 800,
+      "true_beta_mean_fragment_mass": 0.5013536214828491,
+      "true_topics": 18,
+      "validation_completion_oov_fraction": 0.3544163093798478,
+      "validation_documents": 160,
+      "vocabulary_size": 1833
+    },
+    "finite_stable": true,
+    "fragment_probability_mass": {
+      "extreme_definition": "fragment mass <0.1 or >0.9",
+      "fraction_extreme_skew": 0.0,
+      "maximum": 0.5000000251748133,
+      "median": 0.5000000041545718,
+      "minimum": 0.4999999635037966,
+      "percentiles": {
+        "1": 0.49999996401311364,
+        "25": 0.49999999129067874,
+        "5": 0.4999999779629434,
+        "50": 0.5000000041545718,
+        "75": 0.5000000132422429,
+        "95": 0.5000000230793376,
+        "99": 0.5000000246247509
+      }
+    },
+    "heldout_completion": {
+      "eligible_documents": 160,
+      "in_vocabulary_tokens": 105704,
+      "nll_per_token": 6.61825454239588,
+      "oov_fraction": 0.3544163093798478,
+      "out_of_vocabulary_tokens": 58030,
+      "total_documents": 160
+    },
+    "learned_context_scale": null,
+    "parameters": 2167400,
+    "positive_npmi": {
+      "enabled": false,
+      "final_loss": null,
+      "graph_max_weight": null,
+      "graph_mean_weight": null,
+      "graph_nonzero_entries": null,
+      "weight": null
+    },
+    "routing_evidence_support": null,
+    "runtime": {
+      "peak_cuda_allocated_bytes": 114135552,
+      "peak_cuda_reserved_bytes": 140509184,
+      "training_wall_seconds": 5.429694328006008,
+      "validation_full_spectra_per_second": 55770.076601913584,
+      "validation_observed_spectra_per_second": 20550.987392746476
+    },
+    "theta_support": {
+      "fraction_max_theta_ge_0_2": 1.0,
+      "fraction_max_theta_ge_0_3": 0.99375,
+      "fraction_max_theta_ge_0_5": 0.86875,
+      "fraction_support_le_3": 0.68125,
+      "maximum_exact_support": 6,
+      "mean_effective_topics_per_spectrum": 2.0347849907393867,
+      "mean_exact_support": 2.9875,
+      "median_effective_topics_per_spectrum": 1.9362463774246264,
+      "median_exact_support": 3.0,
+      "median_maximum_theta": 0.7198139519314709,
+      "minimum_exact_support": 1,
+      "support_size_percentiles": {
+        "1": 1.0,
+        "25": 2.0,
+        "5": 1.0,
+        "50": 3.0,
+        "75": 4.0,
+        "95": 5.0,
+        "99": 6.0
+      }
+    },
+    "topic_inventory": {
+      "active_topic_usage_threshold": 0.0005,
+      "active_topics_above_usage_threshold": 6,
+      "active_topics_mean_usage_ge_1_over_k": 5,
+      "catastrophic_duplicate_component": false,
+      "catastrophic_duplicate_component_fraction": 0.5,
+      "corpus_effective_topic_count": 4.447131339782548,
+      "documents": 160,
+      "duplicate_components": [
+        {
+          "duplicate_component_count": 1,
+          "largest_component_size": 30,
+          "pair_count": 409,
+          "threshold": 0.95,
+          "topics_in_duplicate_components": 30
+        },
+        {
+          "duplicate_component_count": 2,
+          "largest_component_size": 27,
+          "pair_count": 100,
+          "threshold": 0.99,
+          "topics_in_duplicate_components": 29
+        },
+        {
+          "duplicate_component_count": 0,
+          "largest_component_size": 1,
+          "pair_count": 0,
+          "threshold": 0.999,
+          "topics_in_duplicate_components": 0
+        }
+      ],
+      "largest_strict_duplicate_component": 1,
+      "maximum_mean_topic_usage": 0.3684539459506969,
+      "maximum_pairwise_beta_cosine": 0.9950918555259705,
+      "mean_effective_topics_per_spectrum": 2.0347849907393867,
+      "mean_nearest_topic_beta_cosine": 0.9237328767776489,
+      "median_beta_effective_words": 1791.344970703125,
+      "median_beta_max_probability": 0.0010574397165328264,
+      "median_beta_top_n_mass": 0.018236946314573288,
+      "median_effective_topics_per_spectrum": 1.9362463774246264,
+      "median_nearest_topic_beta_cosine": 0.9930352568626404,
+      "strictest_duplicate_cosine_threshold": 0.999,
+      "top_word_count": 20,
+      "top_word_uniqueness": 0.32083333333333336,
+      "topics": 36,
+      "topics_never_top1": 31,
+      "unique_top1_topics": 5
+    },
+    "truth_recovery": {
+      "matching": [
+        {
+          "beta_cosine": 0.7315149903297424,
+          "learned_topic": 30,
+          "true_topic": 0
+        },
+        {
+          "beta_cosine": 0.684232771396637,
+          "learned_topic": 28,
+          "true_topic": 1
+        },
+        {
+          "beta_cosine": 0.36728498339653015,
+          "learned_topic": 16,
+          "true_topic": 2
+        },
+        {
+          "beta_cosine": 0.18497547507286072,
+          "learned_topic": 17,
+          "true_topic": 3
+        },
+        {
+          "beta_cosine": 0.15788017213344574,
+          "learned_topic": 24,
+          "true_topic": 4
+        },
+        {
+          "beta_cosine": 0.1582542508840561,
+          "learned_topic": 20,
+          "true_topic": 5
+        },
+        {
+          "beta_cosine": 0.1580394059419632,
+          "learned_topic": 13,
+          "true_topic": 6
+        },
+        {
+          "beta_cosine": 0.1573699414730072,
+          "learned_topic": 2,
+          "true_topic": 7
+        },
+        {
+          "beta_cosine": 0.14631663262844086,
+          "learned_topic": 12,
+          "true_topic": 8
+        },
+        {
+          "beta_cosine": 0.44068795442581177,
+          "learned_topic": 8,
+          "true_topic": 9
+        },
+        {
+          "beta_cosine": 0.14184243977069855,
+          "learned_topic": 31,
+          "true_topic": 10
+        },
+        {
+          "beta_cosine": 0.14317527413368225,
+          "learned_topic": 11,
+          "true_topic": 11
+        },
+        {
+          "beta_cosine": 0.1528540998697281,
+          "learned_topic": 0,
+          "true_topic": 12
+        },
+        {
+          "beta_cosine": 0.3148316442966461,
+          "learned_topic": 21,
+          "true_topic": 13
+        },
+        {
+          "beta_cosine": 0.16453808546066284,
+          "learned_topic": 19,
+          "true_topic": 14
+        },
+        {
+          "beta_cosine": 0.19952082633972168,
+          "learned_topic": 3,
+          "true_topic": 15
+        },
+        {
+          "beta_cosine": 0.1428118646144867,
+          "learned_topic": 10,
+          "true_topic": 16
+        },
+        {
+          "beta_cosine": 0.16188694536685944,
+          "learned_topic": 33,
+          "true_topic": 17
+        }
+      ],
+      "planted_motifs_recovered_cosine_ge_0_50": 2,
+      "planted_motifs_recovered_cosine_gt_0_20": 5,
+      "top_planted_motif_accuracy": 0.375,
+      "true_beta_matched_cosine_mean": 0.25600099563598633,
+      "true_beta_matched_cosine_median": 0.16007059812545776,
+      "true_beta_matched_cosine_minimum": 0.14184243977069855,
+      "true_beta_top20_jaccard_mean": 0.09409966156612183,
+      "true_theta_cosine_mean": 0.4126360996077132,
+      "true_theta_cosine_median": 0.08168865194726473
+    }
+  },
+  "provenance": {
+    "candidate_test_artifacts_accessed": false,
+    "positive_npmi_graph": null,
+    "synthetic_artifact_manifest": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/synthetic/synthetic_artifacts/seed_11/artifact_manifest.json",
+    "token_features": {
+      "bytes": 366728,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/synthetic/synthetic_artifacts/seed_11/token_features/features.npy",
+      "sha256": "a09a20a70eb1de6e5a4d2bfeeb4f411db7807aa2aff66e4cfc002e2bb668e0c5"
+    },
+    "weights": {
+      "bytes": 9025669,
+      "path": "/home/joewandy/Work/data/MS2LDA-reproductions/20260901-379ab80-gpu-clean/synthetic/synthetic_runs/seed_11_K_36_balanced_etm_entmax15_raw_counts/weights.pt",
+      "sha256": "687ac716464b5e0ebbce0384f4ace62fc35d2a935bc7819cab79f74347b8e6a3"
+    }
+  }
+}

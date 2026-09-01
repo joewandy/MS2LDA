@@ -1,30 +1,65 @@
-# Neural MS2LDA research reports
+# Contextual Sparse ETM paper
 
-`neural_ms2lda_report.tex` is the canonical report. It now combines:
+neural_ms2lda_report.tex is the canonical scientific report and
+neural_ms2lda_report.pdf is its reviewed rendering.
 
-- the locked M1 architecture and Tomotopy comparison;
-- the validation-only ETM, pooled, balanced-ETM, and ECRTM model-selection campaign;
-- the expanded collapse-diagnostic contract;
-- the decision to pause architecture search and run M1 optimization-seed stability next.
+The paper is self-contained. It starts from the published ETM, identifies each
+domain-specific extension and its rationale, then reports the complete MSnLib
+preparation pipeline, component ablations, held-out chemical evaluation,
+training-seed robustness, system load, limitations and reproducibility.
+The final layout uses a data-flow figure, an equation-matched model diagram,
+chemical-filter inventory bars and a breadth--quality plot where each visual
+answers a distinct scientific question.
 
-The pre-model-selection detailed methods report is preserved verbatim at:
+The maintained implementation is intentionally direct:
 
-`archive/neural_ms2lda_report_pre_model_selection.tex`
+- `benchmarks/neural_ms2lda/contextual_sparse_etm.py` exposes the decoder,
+  contextual evidence, posterior offset, Gaussian KL and 1.5-entmax equations
+  as named tensor functions;
+- `benchmarks/neural_ms2lda/topic_model_training.py` exposes the normalized
+  encoder input and raw pseudo-count reconstruction equation as plain
+  functions;
+- `ContextualSparseETM` is the only stateful shell and exists solely to register
+  PyTorch parameters and preserve checkpoint compatibility; and
+- `scripts/run_contextual_sparse_etm.py` performs training and deterministic
+  inference without importing any experimental-ablation model or campaign
+  runner.
 
-Generate committed numerical fragments with:
+## Evidence boundary
 
-```bash
-python scripts/generate_neural_ms2lda_report.py
-python scripts/generate_neural_ms2lda_model_selection.py
-```
+Models are fitted on the training split and developed on validation. Their
+weights and validation outputs are frozen before the test matrices are exposed.
+The final comparison and three-seed robustness results report that held-out test
+evaluation; test evaluation performs no fitting or model selection.
 
-Then compile `neural_ms2lda_report.tex` and visually review every page. The old
-tracked PDF was intentionally removed because it represented the pre-selection
-source and would otherwise be misleading. Commit a replacement PDF only after a
-local deterministic build and visual review.
+The single committed evidence package is:
 
-The external model-selection source is:
+- research/etm_ecrtm_msnlib/local_results/20260901_contextual_sparse_etm_reproduction/
 
-`research/etm_ecrtm_msnlib/local_results/20260827_followup/comparison.csv`
+The source inventory and figure/table design map are recorded in
+routing_etm_report_sources.md.
 
-No alternative candidate test result was used in the model-selection section.
+## Regeneration and verification
+
+From the repository root:
+
+    python -m scripts.run_contextual_sparse_etm_reproduction initialize --root RUN
+    python -m scripts.run_contextual_sparse_etm_reproduction run --root RUN
+    python -m scripts.package_contextual_sparse_etm_reproduction --root RUN --output EVIDENCE
+    python -m scripts.generate_routing_etm_report --evidence-root EVIDENCE
+    pytest -q benchmarks/neural_ms2lda/tests
+
+The generator validates cross-file identities before writing:
+
+- generated/routing_etm_macros.tex
+- generated/routing_etm_synthetic_table.tex
+- generated/routing_etm_high_k_table.tex
+- generated/routing_etm_test_table.tex
+- generated/routing_etm_stability_table.tex
+- generated/routing_etm_diagnostics_table.tex
+- generated/routing_etm_hyperparameters_table.tex
+- generated/routing_etm_code_table.tex
+
+Compile from docs/research with a current Tectonic or TeX Live installation,
+then render every PDF page to images and inspect the final layout before
+committing the PDF.
