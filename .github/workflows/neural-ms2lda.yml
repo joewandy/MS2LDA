@@ -116,7 +116,7 @@ jobs:
           python-version: "3.11"
       - name: Regenerate report inputs
         run: |
-          python -m scripts.generate_contextual_sparse_etm_report
+          python -S -m scripts.generate_contextual_sparse_etm_report
           report_drift="$(git status --porcelain --untracked-files=all -- docs/research/generated)"
           if [ -n "$report_drift" ]; then
             echo "$report_drift"

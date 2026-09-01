@@ -6,10 +6,10 @@ import json
 import os
 from collections.abc import Iterable
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-import numpy as np
-import torch
+if TYPE_CHECKING:
+    import numpy as np
 
 
 def read_json(path: str | Path) -> Any:
@@ -57,6 +57,8 @@ def write_jsonl(path: str | Path, rows: Iterable[Any]) -> None:
 
 def atomic_save_numpy(path: str | Path, value: np.ndarray) -> None:
     """Atomically save an uncompressed NumPy array."""
+    import numpy as np
+
     destination = Path(path)
     destination.parent.mkdir(parents=True, exist_ok=True)
     temporary = destination.with_name(f".{destination.name}.{os.getpid()}.tmp")
@@ -72,6 +74,8 @@ def atomic_save_numpy(path: str | Path, value: np.ndarray) -> None:
 
 def atomic_torch_save(path: str | Path, value: Any) -> None:
     """Atomically save a PyTorch state object."""
+    import torch
+
     destination = Path(path)
     destination.parent.mkdir(parents=True, exist_ok=True)
     temporary = destination.with_name(f".{destination.name}.{os.getpid()}.tmp")
