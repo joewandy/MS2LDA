@@ -244,7 +244,7 @@ def _generate_macros(evidence: dict[str, Any]) -> tuple[str, str]:
         "TomotopyMaximumIterations": tomotopy_config["maximum_iterations"],
         "TomotopyInferenceIterations": tomotopy_config["inference_iterations"],
         "TomotopyParallelScheme": tomotopy_config["parallel"],
-        "TomotopyWorkers": evidence["protocol"]["cpu_threads"],
+        "TomotopyWorkers": tomotopy_config["workers"],
         "SyntheticContextualMedianEffective": (
             f"{_float(synthetic_complete, 'mean_median_effective_topics'):.2f}"
         ),

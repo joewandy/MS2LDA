@@ -47,12 +47,13 @@
   "tomotopy": {
     "alpha": 0.6,
     "eta": 0.1,
+    "workers": 1,
     "maximum_iterations": 5000,
     "step_size": 50,
     "convergence_window": 10,
     "convergence_threshold": 0.005,
     "inference_iterations": 100,
-    "parallel": 3
+    "parallel": 1
   },
   "chemistry": {
     "mag_search_k": 1000,

@@ -364,6 +364,13 @@ def test_tomotopy_alpha_and_convergence() -> None:
         _validate_alpha(FakeModel())
 
 
+def test_study_protocol_requires_deterministic_tomotopy_execution() -> None:
+    config = load_protocol()["tomotopy"]
+
+    assert config["workers"] == 1
+    assert config["parallel"] == 1
+
+
 def test_selected_etm_is_evaluated_only_after_validation(tmp_path: Path) -> None:
     prepared, _ = _prepare_mini_prepared_source(tmp_path)
 

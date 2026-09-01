@@ -177,7 +177,13 @@ def train_tomotopy(  # noqa: PLR0915
     train_words = _documents(load_csr(data / "train.npz"), vocabulary)
     config = protocol["tomotopy"]
     topics = int(protocol["model"]["num_topics"])
-    workers = int(protocol["cpu_threads"])
+    workers = int(config["workers"])
+    parallel = int(config["parallel"])
+    if workers != 1 or parallel != 1:
+        raise ValueError(
+            "the reproducible Tomotopy comparator requires one worker and "
+            "ParallelScheme.NONE (parallel=1)"
+        )
     model = tp.LDAModel(
         k=topics,
         # The shared vocabulary has already applied the paper's min_df=3;
@@ -199,7 +205,7 @@ def train_tomotopy(  # noqa: PLR0915
     maximum = int(config["maximum_iterations"])
     while trained < maximum:
         step = min(int(config["step_size"]), maximum - trained)
-        model.train(step, workers=workers, parallel=int(config["parallel"]))
+        model.train(step, workers=workers, parallel=parallel)
         trained += step
         elapsed = time.perf_counter() - started
         history.append(
@@ -266,7 +272,11 @@ def evaluate_tomotopy(  # noqa: PLR0915
     if not np.isclose(float(model.eta), float(config["eta"])):
         raise ValueError("loaded Tomotopy eta differs")
     _validate_alpha(model)
-    workers = int(protocol["cpu_threads"])
+    workers = int(config["workers"])
+    if workers != 1:
+        raise ValueError(
+            "the reproducible Tomotopy comparator requires one inference worker"
+        )
     iterations = int(config["inference_iterations"])
     data = directory / "data"
     vocabulary = load_vocabulary(data)
