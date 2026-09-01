@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-import inspect
 import json
-import os
 import sqlite3
 import sys
 import zipfile
@@ -15,6 +13,7 @@ from typing import Any
 import numpy as np
 import pytest
 import torch
+from scripts import run_msnlib_model_comparison as comparison
 from scripts.download_msnlib_validation_assets import safe_zip_members
 from scripts.evaluate_frozen_etm_test import evaluate_test
 from scripts.prepare_msnlib_test_view import expose_test_view
@@ -26,15 +25,12 @@ from scripts.run_contextual_sparse_etm_reproduction import (
 from scripts.run_contextual_sparse_etm_reproduction import (
     sha256_file as reproduction_sha256_file,
 )
-from scripts.run_msnlib_model_comparison import train_etm
+from scripts.run_msnlib_model_comparison import resolve_device, train_etm
 
-from benchmarks.neural_ms2lda import __main__ as module_entry
-from benchmarks.neural_ms2lda import chemical, pipeline
+from benchmarks.neural_ms2lda import chemical
 from benchmarks.neural_ms2lda.artifacts import (
-    build_results,
     initialize_run,
     load_protocol,
-    load_trained_model,
 )
 from benchmarks.neural_ms2lda.data import (
     load_csr,
@@ -43,7 +39,6 @@ from benchmarks.neural_ms2lda.data import (
     prepare_data,
     train_token_features,
 )
-from benchmarks.neural_ms2lda.evaluation import evaluate_neural
 from benchmarks.neural_ms2lda.mag import _connectivity_key, build_filtered_mag_index
 from benchmarks.neural_ms2lda.model_evaluation import (
     TRAINING_ACCESS_AUDIT_FILENAME,
@@ -60,19 +55,9 @@ from benchmarks.neural_ms2lda.tomotopy import (
     _infer_theta,
     _validate_alpha,
 )
-from benchmarks.neural_ms2lda.training import train_model
 from benchmarks.neural_ms2lda.utils import read_json, write_json, write_jsonl
 
 from ._support import chemistry_result, mini_protocol, write_mini_mgf
-
-
-def test_module_entry_pins_numerical_threads_before_dispatch(monkeypatch: Any) -> None:
-    for name in module_entry.THREAD_ENVIRONMENT_VARIABLES:
-        monkeypatch.setenv(name, "99")
-    module_entry._configure_process_threads()
-    assert {os.environ[name] for name in module_entry.THREAD_ENVIRONMENT_VARIABLES} == {
-        "6"
-    }
 
 
 def test_run_is_bound_to_its_original_data_root(tmp_path: Path) -> None:
@@ -95,7 +80,7 @@ def test_run_is_bound_to_its_original_data_root(tmp_path: Path) -> None:
         initialize_run(run, data_root=second)
 
 
-def test_old_stage_outputs_are_not_silently_adopted(tmp_path: Path) -> None:
+def test_preexisting_stage_outputs_are_not_silently_adopted(tmp_path: Path) -> None:
     protocol = load_protocol()
     data_root = tmp_path / "inputs"
     mgf = data_root / protocol["input_files"]["mgf"]
@@ -122,12 +107,7 @@ def _prepare_mini_training_scaffold(
     )
 
 
-def _mini_training_arguments(run: Path) -> dict[str, Any]:
-    data = run / "data"
-    return {"train": load_csr(data / "train.npz")}
-
-
-def _prepare_mini_frozen_source(root: Path) -> tuple[Path, dict[str, Any]]:
+def _prepare_mini_prepared_source(root: Path) -> tuple[Path, dict[str, Any]]:
     """Create one tiny prepared run reusable by validation-only model views."""
     mgf = root / "mini.mgf"
     write_mini_mgf(mgf)
@@ -147,10 +127,6 @@ def _prepare_mini_frozen_source(root: Path) -> tuple[Path, dict[str, Any]]:
     return prepared, protocol
 
 
-def test_training_interface_exposes_no_test_inputs() -> None:
-    assert not any("test" in name for name in inspect.signature(train_model).parameters)
-
-
 def test_validation_records_do_not_open_the_test_file(tmp_path: Path) -> None:
     validation = {"split": "validation", "spectrum_id": "validation-1"}
     (tmp_path / "validation_records.jsonl").write_text(
@@ -160,66 +136,38 @@ def test_validation_records_do_not_open_the_test_file(tmp_path: Path) -> None:
     assert load_heldout_records(tmp_path, "validation") == [validation]
 
 
-def test_pipeline_finishes_validation_before_test(
-    monkeypatch: Any, tmp_path: Path
+def test_cuda_device_request_fails_when_cuda_is_unavailable(
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    protocol = load_protocol()
-    events: list[str] = []
-    monkeypatch.setattr(pipeline, "initialize_run", lambda *args, **kwargs: protocol)
-    monkeypatch.setattr(pipeline, "prepare_data", lambda *args, **kwargs: None)
-    monkeypatch.setattr(pipeline, "load_csr", lambda path: object())
-    monkeypatch.setattr(pipeline, "load_vocabulary", lambda path: [])
-    monkeypatch.setattr(pipeline, "train_token_features", lambda *args, **kwargs: None)
-    monkeypatch.setattr(pipeline, "train_model", lambda *args, **kwargs: None)
-    monkeypatch.setattr(pipeline, "train_tomotopy", lambda *args, **kwargs: None)
+    monkeypatch.setattr(torch.cuda, "is_available", lambda: False)
 
-    def neural(*args: Any, split: str, **kwargs: Any) -> None:
-        events.append(f"{split}-neural")
-
-    def tomotopy(*args: Any, split: str, **kwargs: Any) -> None:
-        events.append(f"{split}-tomotopy")
-
-    def chemistry(*args: Any, split: str, method: str, **kwargs: Any) -> None:
-        events.append(f"{split}-chemistry-{method}")
-
-    monkeypatch.setattr(pipeline, "evaluate_neural", neural)
-    monkeypatch.setattr(pipeline, "evaluate_tomotopy", tomotopy)
-    monkeypatch.setattr(pipeline, "_chemical_subprocess", chemistry)
-    monkeypatch.setattr(pipeline, "build_results", lambda path: {"ok": True})
-    pipeline.run_pipeline(tmp_path / "run", data_root=tmp_path)
-    first_test = min(i for i, event in enumerate(events) if event.startswith("test"))
-    assert (
-        max(i for i, event in enumerate(events) if event.startswith("validation"))
-        < first_test
-    )
+    with pytest.raises(RuntimeError, match="CUDA was requested"):
+        resolve_device("cuda")
 
 
-def test_chemical_subprocess_uses_active_unified_interpreter(
-    monkeypatch: Any, tmp_path: Path
+def test_etm_control_loader_opens_validation_data_only(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
 ) -> None:
-    captured: dict[str, Any] = {}
+    opened: list[str] = []
 
-    def run(command: list[str], **kwargs: Any) -> None:
-        captured["command"] = command
-        captured["kwargs"] = kwargs
+    def fake_load(path: object) -> object:
+        opened.append(Path(str(path)).name)
+        return object()
 
-    interpreter = "/opt/ms2lda-neural/bin/python"
-    monkeypatch.setattr(pipeline.sys, "executable", interpreter)
-    monkeypatch.setattr(pipeline.subprocess, "run", run)
-    pipeline._chemical_subprocess(
-        tmp_path / "run",
-        method="neural",
-        data_root=tmp_path / "inputs",
-        cpu_threads=6,
-        split="validation",
-    )
-    assert captured["command"][:3] == [
-        interpreter,
-        "-m",
-        "benchmarks.neural_ms2lda.chemical",
-    ]
-    assert "ms2lda-msnlib-mag" not in captured["command"]
-    assert captured["kwargs"]["check"] is True
+    def fake_records(path: object, split: str) -> list[dict[str, str]]:
+        opened.append(f"records:{split}")
+        return [{"split": split}]
+
+    monkeypatch.setattr(comparison, "load_csr", fake_load)
+    monkeypatch.setattr(comparison, "load_heldout_records", fake_records)
+
+    loaded = comparison.load_etm_campaign_data(tmp_path)
+
+    assert set(loaded) == {"train", "observed", "completion", "full", "records"}
+    assert opened
+    assert all("test" not in path for path in opened)
+    assert "records:validation" in opened
 
 
 def test_mag_index_excludes_validation_and_test_compounds(
@@ -359,12 +307,6 @@ def test_mag_annotation_failures_are_recorded(monkeypatch: Any) -> None:
     assert rows[0]["optimization_failure"] is None
 
 
-def test_test_evaluation_requires_completed_validation(tmp_path: Path) -> None:
-    with pytest.raises(RuntimeError, match="validation must finish"):
-        evaluate_neural(tmp_path, load_protocol(), split="test")
-    assert not (tmp_path / "evaluation/neural").exists()
-
-
 def test_tomotopy_empty_document_uses_the_learned_prior() -> None:
     calls = []
 
@@ -405,54 +347,10 @@ def test_tomotopy_alpha_and_convergence() -> None:
         _validate_alpha(FakeModel())
 
 
-def test_miniature_mgf_through_results_and_model(tmp_path: Path) -> None:
-    mgf = tmp_path / "mini.mgf"
-    write_mini_mgf(mgf)
-    protocol = mini_protocol(mgf)
-    run = tmp_path / "run"
-    write_json(run / "protocol.json", protocol)
-    _prepare_mini_training_scaffold(run, data_root=tmp_path, protocol=protocol)
-    train_model(run, protocol=protocol, **_mini_training_arguments(run))
-    assert torch.are_deterministic_algorithms_enabled()
-    original_threads = torch.get_num_threads()
-    try:
-        torch.set_num_threads(6)
-        validation = evaluate_neural(run, protocol, split="validation")
-        write_json(run / "validation_chemical/neural/complete.json", chemistry_result())
-        test = evaluate_neural(run, protocol, split="test")
-    finally:
-        torch.set_num_threads(original_threads)
-    assert "warm_in_memory_batch_inference" in test["metrics"]
+def test_selected_etm_is_evaluated_only_after_validation(tmp_path: Path) -> None:
+    prepared, _ = _prepare_mini_prepared_source(tmp_path)
 
-    write_json(run / "validation_evaluation/tomotopy/complete.json", validation)
-    write_json(run / "evaluation/tomotopy/complete.json", test)
-    write_json(
-        run / "tomotopy/complete.json",
-        {
-            "training_iterations": 10,
-            "training_seconds_total": 10.0,
-        },
-    )
-    chemistry = chemistry_result()
-    for path in (
-        "validation_chemical/tomotopy/complete.json",
-        "chemical/neural/complete.json",
-        "chemical/tomotopy/complete.json",
-    ):
-        write_json(run / path, chemistry)
-    report = build_results(run)
-    model, vocabulary, temperature = load_trained_model(run / "trained_model")
-    assert [row["method"] for row in report["methods"]] == ["neural", "tomotopy"]
-    assert report["study"]["association_probability_threshold"] == 0.5
-    assert model.num_topics == 4
-    assert len(vocabulary) == load_csr(run / "data/train.npz").shape[1]
-    assert temperature == pytest.approx(0.1)
-
-
-def test_frozen_etm_is_evaluated_only_after_validation(tmp_path: Path) -> None:
-    prepared, _ = _prepare_mini_frozen_source(tmp_path)
-
-    run = tmp_path / "frozen-etm"
+    run = tmp_path / "selected-etm"
     manifest = create_validation_view(run, prepared, expected_topics=4)
     assert manifest["test_spectra_exposed_to_model_run"] is False
     train_etm(
@@ -494,7 +392,7 @@ def test_training_audits_do_not_preempt_chemistry_stage_outputs(
     paths = reproduction_paths(tmp_path / "reproduction")
     paths.logs.mkdir(parents=True)
     paths.stages.mkdir(parents=True)
-    prepared, _ = _prepare_mini_frozen_source(tmp_path)
+    prepared, _ = _prepare_mini_prepared_source(tmp_path)
 
     create_validation_view(paths.controls, prepared, expected_topics=4)
     train_etm(

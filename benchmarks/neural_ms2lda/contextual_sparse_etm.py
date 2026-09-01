@@ -320,8 +320,8 @@ class ContextualSparseETM(nn.Module):
     encoder, Gaussian posterior heads, and scalar context weight.  All decoder
     and posterior mathematics is delegated to the pure tensor functions above.
 
-    The parameter and buffer names intentionally match the frozen experimental
-    checkpoint, allowing those weights to be loaded without conversion.
+    The parameter and buffer names directly describe the tensors in the model
+    equations and form the complete checkpoint state.
     """
 
     def __init__(

@@ -12,6 +12,7 @@ from scripts.run_contextual_sparse_etm import (
     _load_validation_data,
     infer_document_topic_mixtures,
 )
+from scripts.run_msnlib_model_comparison import FragmentLossBalancedETM
 from scripts.run_routing_etm_campaign import build_synthetic_model
 from torch.nn import functional as nnf
 
@@ -27,7 +28,6 @@ from benchmarks.neural_ms2lda.contextual_sparse_etm import (
     diagonal_gaussian_kl,
     entmax15_document_mixture,
 )
-from benchmarks.neural_ms2lda.routing_etm import RoutingInformedETM
 from benchmarks.neural_ms2lda.topic_model_training import (
     dense_normalized,
     raw_count_reconstruction_loss,
@@ -83,31 +83,78 @@ def _closed_form_entmax15(logits: torch.Tensor) -> torch.Tensor:
     return (theta / theta.sum(dim=1, keepdim=True)).to(logits.dtype)
 
 
-def test_synthetic_treatment_uses_the_canonical_model_class() -> None:
-    """The proposed synthetic row must execute the maintained implementation."""
-    embeddings, fragment_mask, _ = _scientific_inputs()
+def test_fragment_loss_balanced_etm_changes_only_decoder_normalization() -> None:
+    embeddings = np.asarray(
+        [[1.0, 0.0], [0.8, 0.2], [0.0, 1.0], [0.2, 0.8]],
+        dtype=np.float32,
+    )
+    model = FragmentLossBalancedETM(
+        embeddings,
+        topics=3,
+        fragment_mask=np.asarray([True, True, False, False]),
+        hidden=4,
+    )
 
-    treatment = build_synthetic_model(
+    beta = model.beta()
+
+    assert beta.shape == (3, 4)
+    assert torch.allclose(beta.sum(dim=1), torch.ones(3))
+    assert torch.allclose(beta[:, :2].sum(dim=1), torch.full((3,), 0.5))
+    assert torch.allclose(beta[:, 2:].sum(dim=1), torch.full((3,), 0.5))
+
+
+def test_fragment_loss_balanced_etm_rejects_one_channel_vocabulary() -> None:
+    with pytest.raises(ValueError, match="fragments and losses"):
+        FragmentLossBalancedETM(
+            np.eye(3, dtype=np.float32),
+            topics=2,
+            fragment_mask=np.ones(3, dtype=bool),
+            hidden=4,
+        )
+
+
+@pytest.mark.parametrize(
+    ("routing_variant", "theta_transform", "is_complete_model"),
+    [
+        ("etm", "softmax", False),
+        ("etm", "entmax15", False),
+        ("top2_context", "softmax", False),
+        ("top2_context", "entmax15", True),
+    ],
+)
+def test_published_synthetic_formulations_are_finite_and_deterministic(
+    routing_variant: str,
+    theta_transform: str,
+    is_complete_model: bool,
+) -> None:
+    """Exercise every component comparison reported in the manuscript."""
+    embeddings, fragment_mask, counts = _scientific_inputs()
+    model = build_synthetic_model(
         embeddings,
         5,
         fragment_mask,
-        routing_variant="top2_context",
-        theta_transform="entmax15",
+        routing_variant=routing_variant,
+        theta_transform=theta_transform,
         reconstruction_scaling="raw_counts",
         hidden=7,
-    )
-    softmax_ablation = build_synthetic_model(
-        embeddings,
-        5,
-        fragment_mask,
-        routing_variant="top2_context",
-        theta_transform="softmax",
-        reconstruction_scaling="raw_counts",
-        hidden=7,
-    )
+    ).eval()
+    x = dense_normalized(counts, np.arange(counts.shape[0]), torch.device("cpu"))
 
-    assert isinstance(treatment, ContextualSparseETM)
-    assert isinstance(softmax_ablation, RoutingInformedETM)
+    if isinstance(model, ContextualSparseETM):
+        beta = model.topic_word_distribution()
+        first_theta, first_kl = model.document_topic_mixture(x, sample=False)
+        second_theta, second_kl = model.document_topic_mixture(x, sample=False)
+    else:
+        beta = model.beta()
+        first_theta, first_kl = model.theta(x, sample=False)
+        second_theta, second_kl = model.theta(x, sample=False)
+
+    assert isinstance(model, ContextualSparseETM) is is_complete_model
+    assert torch.all(torch.isfinite(beta))
+    assert torch.allclose(beta.sum(dim=1), torch.ones(5), atol=1e-7)
+    assert torch.allclose(first_theta.sum(dim=1), torch.ones(2), atol=1e-7)
+    assert torch.equal(first_theta, second_theta)
+    assert torch.equal(first_kl, second_kl)
 
 
 def test_channel_balanced_decoder_matches_equation_beta() -> None:
@@ -283,48 +330,6 @@ def test_model_objective_matches_report_end_to_end() -> None:
         sum(parameter.numel() for parameter in model.parameters())
         == expected_parameters
     )
-
-
-def test_frozen_routing_checkpoint_loads_without_conversion() -> None:
-    """The cleaned model must preserve the frozen checkpoint tensor contract."""
-    embeddings, fragment_mask, counts = _scientific_inputs()
-    topics = 5
-    hidden_width = 7
-    torch.manual_seed(41)
-    frozen_model = RoutingInformedETM(
-        embeddings,
-        topics,
-        fragment_mask,
-        routing_variant="top2_context",
-        theta_transform="entmax15",
-        routing_temperature=ROUTING_TEMPERATURE,
-        hidden=hidden_width,
-    )
-    cleaned_model = ContextualSparseETM(
-        embeddings,
-        topics,
-        fragment_mask,
-        hidden=hidden_width,
-    )
-    cleaned_model.load_state_dict(frozen_model.state_dict(), strict=True)
-    x = dense_normalized(counts, np.arange(counts.shape[0]), torch.device("cpu"))
-
-    frozen_theta, frozen_kl = frozen_model.theta(x, sample=False)
-    cleaned_theta, cleaned_kl = cleaned_model.document_topic_mixture(x, sample=False)
-
-    assert frozen_model.state_dict().keys() == cleaned_model.state_dict().keys()
-    assert torch.allclose(
-        frozen_model.beta(),
-        cleaned_model.topic_word_distribution(),
-        atol=1e-7,
-    )
-    assert torch.allclose(
-        frozen_model.routing_evidence(x),
-        cleaned_model.contextual_evidence(x),
-        atol=2e-7,
-    )
-    assert torch.allclose(frozen_theta, cleaned_theta, atol=2e-7)
-    assert torch.allclose(frozen_kl, cleaned_kl, atol=2e-6)
 
 
 def test_model_rejects_embeddings_that_violate_the_report_contract() -> None:

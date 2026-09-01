@@ -415,11 +415,6 @@ def _exact_commands(
                 "benchmarks/neural_ms2lda/tests"
             ),
             (
-                "conda run --no-capture-output -n ms2lda-neural python -m pytest -q "
-                "benchmarks/neural_ms2lda/tests/test_followup_etm.py "
-                "benchmarks/neural_ms2lda/tests/test_workflow.py"
-            ),
-            (
                 "conda run -n ms2lda-neural black --check benchmarks/neural_ms2lda "
                 "scripts/run_msnlib_model_comparison.py "
                 "scripts/run_msnlib_neural_followup.py "

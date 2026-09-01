@@ -94,8 +94,9 @@ def build_synthetic_model(  # noqa: PLR0913
 
     The paper-facing treatment is instantiated from :class:`ContextualSparseETM`,
     the maintained implementation used for real-data training and inference.
-    Historical configurable classes remain only for the controlled softmax and
-    entmax ablations that are not themselves the proposed model.
+    Configurable classes are used only for the controlled softmax and entmax
+    component comparisons; the complete formulation always uses the canonical
+    model class.
     """
     is_contextual_sparse_etm = (
         routing_variant == "top2_context"
