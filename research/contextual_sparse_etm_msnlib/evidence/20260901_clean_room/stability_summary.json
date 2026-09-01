@@ -1,0 +1,160 @@
+{
+  "aggregate": {
+    "completion_nll": {
+      "maximum": 9.535539900160135,
+      "mean": 9.525893313932428,
+      "minimum": 9.516053890088319,
+      "sample_standard_deviation": 0.00974443620172317
+    },
+    "corpus_effective_topics": {
+      "maximum": 549.2670513845072,
+      "mean": 545.3584648359088,
+      "minimum": 541.9000133497261,
+      "sample_standard_deviation": 3.704089433624663
+    },
+    "evaluable_motifs": {
+      "maximum": 740.0,
+      "mean": 737.0,
+      "minimum": 731.0,
+      "sample_standard_deviation": 5.196152422706632
+    },
+    "learned_context_scale": {
+      "maximum": 0.20891593396663666,
+      "mean": 0.20294397075970969,
+      "minimum": 0.19826266169548035,
+      "sample_standard_deviation": 0.005442645827894182
+    },
+    "mean_sos": {
+      "maximum": 0.6244410632308578,
+      "mean": 0.6212902213221035,
+      "minimum": 0.6181684257877627,
+      "sample_standard_deviation": 0.0031364195975713623
+    },
+    "median_effective_topics": {
+      "maximum": 3.743870932357813,
+      "mean": 3.712664971902135,
+      "minimum": 3.6800412751216887,
+      "sample_standard_deviation": 0.03193843715549032
+    },
+    "median_exact_support": {
+      "maximum": 6.0,
+      "mean": 6.0,
+      "minimum": 6.0,
+      "sample_standard_deviation": 0.0
+    },
+    "median_sos": {
+      "maximum": 0.6228442256668063,
+      "mean": 0.6216221558963494,
+      "minimum": 0.6198000198000198,
+      "sample_standard_deviation": 0.0016083709262571493
+    },
+    "optimized_motifs": {
+      "maximum": 805.0,
+      "mean": 800.6666666666666,
+      "minimum": 798.0,
+      "sample_standard_deviation": 3.7859388972001824
+    },
+    "training_wall_seconds": {
+      "maximum": 820.4722309460021,
+      "mean": 815.0269779970007,
+      "minimum": 811.2372344979976,
+      "sample_standard_deviation": 4.834958479960248
+    },
+    "unique_top1_topics": {
+      "maximum": 922.0,
+      "mean": 917.6666666666666,
+      "minimum": 914.0,
+      "sample_standard_deviation": 4.041451884327381
+    },
+    "useful_motifs": {
+      "maximum": 432.0,
+      "mean": 423.6666666666667,
+      "minimum": 415.0,
+      "sample_standard_deviation": 8.504900548115382
+    }
+  },
+  "by_seed": [
+    {
+      "catastrophic_duplicate_component": false,
+      "completion_nll": 9.535539900160135,
+      "corpus_effective_topics": 549.2670513845072,
+      "evaluable_motifs": 731,
+      "finite_stable": true,
+      "heldout_compounds_excluded_from_mag": true,
+      "learned_context_scale": 0.20891593396663666,
+      "mag_clustering_failures": 0,
+      "mag_optimization_failures": 0,
+      "mean_sos": 0.6244410632308578,
+      "median_effective_topics": 3.6800412751216887,
+      "median_exact_support": 6.0,
+      "median_sos": 0.6222222222222222,
+      "optimized_motifs": 799,
+      "sos_band_accounting_valid": true,
+      "training_seed": 7043,
+      "training_wall_seconds": 811.2372344979976,
+      "unique_top1_topics": 917,
+      "useful_motifs": 424
+    },
+    {
+      "catastrophic_duplicate_component": false,
+      "completion_nll": 9.526086151548832,
+      "corpus_effective_topics": 544.908329773493,
+      "evaluable_motifs": 740,
+      "finite_stable": true,
+      "heldout_compounds_excluded_from_mag": true,
+      "learned_context_scale": 0.19826266169548035,
+      "mag_clustering_failures": 0,
+      "mag_optimization_failures": 0,
+      "mean_sos": 0.6212611749476903,
+      "median_effective_topics": 3.714082708226903,
+      "median_exact_support": 6.0,
+      "median_sos": 0.6228442256668063,
+      "optimized_motifs": 798,
+      "sos_band_accounting_valid": true,
+      "training_seed": 23,
+      "training_wall_seconds": 820.4722309460021,
+      "unique_top1_topics": 922,
+      "useful_motifs": 432
+    },
+    {
+      "catastrophic_duplicate_component": false,
+      "completion_nll": 9.516053890088319,
+      "corpus_effective_topics": 541.9000133497261,
+      "evaluable_motifs": 740,
+      "finite_stable": true,
+      "heldout_compounds_excluded_from_mag": true,
+      "learned_context_scale": 0.20165331661701202,
+      "mag_clustering_failures": 0,
+      "mag_optimization_failures": 0,
+      "mean_sos": 0.6181684257877627,
+      "median_effective_topics": 3.743870932357813,
+      "median_exact_support": 6.0,
+      "median_sos": 0.6198000198000198,
+      "optimized_motifs": 805,
+      "sos_band_accounting_valid": true,
+      "training_seed": 37,
+      "training_wall_seconds": 813.3714685470022,
+      "unique_top1_topics": 914,
+      "useful_motifs": 415
+    }
+  ],
+  "direction_checks": {
+    "all_finite_stable": true,
+    "heldout_compounds_excluded_from_mag_on_all_seeds": true,
+    "no_catastrophic_duplicate_component_on_any_seed": true,
+    "primary_seed_exceeds_every_comparator_evaluable": true,
+    "primary_seed_exceeds_every_comparator_useful": true,
+    "sos_bands_account_for_evaluable_motifs_on_all_seeds": true,
+    "test_released_only_after_model_freeze": true,
+    "zero_mag_exceptions_on_all_seeds": true
+  },
+  "method": "contextual_sparse_etm",
+  "reported_split": "test",
+  "runs": 3,
+  "schema_version": 2,
+  "training_seeds": [
+    7043,
+    23,
+    37
+  ]
+}

@@ -155,6 +155,8 @@ build
 deepmol.egg-info
 
 *.png
+!docs/research/figures/*.png
+!docs/research/contextual_sparse_etm_report.pdf
 *.tsv
 *.mgf
 *.npy

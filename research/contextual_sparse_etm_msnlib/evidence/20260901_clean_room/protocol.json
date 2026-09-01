@@ -1,0 +1,74 @@
+{
+  "chemistry": {
+    "mag_cluster_cosine": 0.9,
+    "mag_fingerprint_threshold": 0.8,
+    "mag_search_k": 1000,
+    "mag_unique_molecules": 10,
+    "motif_spectrum_top_n": 20,
+    "spectrum_topic_assignment": "dominant_topic"
+  },
+  "cpu_threads": 6,
+  "evaluation": {
+    "active_topic_usage_threshold": 0.0005,
+    "catastrophic_duplicate_component_fraction": 0.5,
+    "channel_extreme_lower": 0.1,
+    "channel_extreme_upper": 0.9,
+    "duplicate_cosine_thresholds": [
+      0.95,
+      0.99,
+      0.999
+    ],
+    "latency_repeats": 5,
+    "latency_subset_size": 128,
+    "top_word_count": 20
+  },
+  "input_files": {
+    "mgf": "extracted/Data/Benchmark_MSn_Lib/Corinna_Library_filtered_positive.mgf",
+    "spec2vec_db": "extracted/model_positive_mode/positive_train_data/150225_CombLibraries_spectra.db",
+    "spec2vec_embeddings": "extracted/model_positive_mode/positive_train_data/150225_CleanedLibraries_Spec2Vec_pos_embeddings.npy",
+    "spec2vec_model": "extracted/model_positive_mode/positive_train_data/150225_Spec2Vec_pos_CleanedLibraries.model"
+  },
+  "model": {
+    "num_topics": 1000
+  },
+  "preprocessing": {
+    "completion_observed_fraction": 0.5,
+    "expected_spectra": 41568,
+    "max_fragments": 1000,
+    "max_intensity": 1.0,
+    "max_mz": 2000.0,
+    "min_cf": 0,
+    "min_df": 3,
+    "min_fragments": 5,
+    "min_intensity": 0.01,
+    "min_mz": 0.0,
+    "rm_top": 0,
+    "significant_digits": 2,
+    "split_fractions": [
+      0.7,
+      0.1,
+      0.2
+    ]
+  },
+  "seed": 42,
+  "sgns": {
+    "batch_size": 8192,
+    "dimensions": 48,
+    "epochs": 5,
+    "learning_rate": 0.01,
+    "negative_power": 0.75,
+    "negative_samples": 5,
+    "positive_pairs_per_document": 8
+  },
+  "tomotopy": {
+    "alpha": 0.6,
+    "convergence_threshold": 0.005,
+    "convergence_window": 10,
+    "eta": 0.1,
+    "inference_iterations": 100,
+    "maximum_iterations": 5000,
+    "parallel": 1,
+    "step_size": 50,
+    "workers": 1
+  }
+}

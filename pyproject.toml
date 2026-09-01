@@ -53,7 +53,23 @@ exclude = [
   "MS2LDA/Add_On/Fingerprints/FP_calculation/*.ipynb",
 
     # MotifDB entire folder (now fetched at runtime)
-  "MS2LDA/MotifDB/**"
+  "MS2LDA/MotifDB/**",
+
+  # Research tooling remains clone-runnable, not part of the public API.
+  "scripts/download_msnlib_validation_assets.py",
+  "scripts/evaluate_frozen_etm_test.py",
+  "scripts/evaluate_frozen_tomotopy_test.py",
+  "scripts/generate_contextual_sparse_etm_report.py",
+  "scripts/package_contextual_sparse_etm_reproduction.py",
+  "scripts/prepare_contextual_sparse_etm_data.py",
+  "scripts/prepare_contextual_sparse_etm_synthetic.py",
+  "scripts/prepare_msnlib_test_view.py",
+  "scripts/prepare_msnlib_validation_view.py",
+  "scripts/run_contextual_sparse_etm.py",
+  "scripts/run_contextual_sparse_etm_reproduction.py",
+  "scripts/run_contextual_sparse_etm_synthetic.py",
+  "scripts/run_etm_controls.py",
+  "scripts/run_tomotopy_validation.py"
 ]
 
 [tool.poetry.dependencies]
@@ -83,7 +99,8 @@ dash-bootstrap-components = "^1.6.0"
 
 # modelling / embeddings
 tomotopy   = ">=0.12.7"
-spec2vec   = "^0.8.0"
+# 0.8.1 imports MatchMS APIs removed by the validated 0.29 release.
+spec2vec   = "^0.9.1"
 PyQt6      = "^6.7.1"
 faiss-cpu  = "1.10.0"
 
@@ -137,6 +154,8 @@ exclude = [
   "MS2LDA/Add_On/Fingerprints/FP_calculation/*"
 ]
 unsafe-fixes = true
+
+[tool.ruff.lint]
 select = ["ALL"]
 ignore = ["D", "ANN"]
 
