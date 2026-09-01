@@ -1,0 +1,31 @@
+{
+  "attempt": 1,
+  "command": [
+    "<python-prefix>/bin/python",
+    "-m",
+    "benchmarks.neural_ms2lda.chemical",
+    "--run",
+    "<reproduction-root>/real/controls",
+    "--data-root",
+    "<reproduction-root>/assets",
+    "--method",
+    "etm_balanced",
+    "--split",
+    "test"
+  ],
+  "finished_utc": "2026-09-01T21:54:59.856134+00:00",
+  "log": "<reproduction-root>/logs/etm_balanced_test_chemistry.attempt-1.log",
+  "name": "etm_balanced_test_chemistry",
+  "outputs": [
+    {
+      "bytes": 160178,
+      "modified_ns": 1788299699633127813,
+      "path": "<reproduction-root>/real/controls/chemical/etm_balanced/complete.json",
+      "sha256": "0d9535871b8508c66f5b0006d1846b1e4af4959f7533ede2d2fe4ee8f2770c5e"
+    }
+  ],
+  "pre_stage_load": null,
+  "return_code": 0,
+  "started_utc": "2026-09-01T21:54:55.060840+00:00",
+  "status": "complete"
+}

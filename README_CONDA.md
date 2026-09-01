@@ -20,8 +20,8 @@ cd MS2LDA
 Use Conda to create and activate the required environment from the provided configuration file:
 
 ```bash
-conda env create -f MS2LDA_environment.yml
-conda activate MS2LDA_v2
+conda env create -f environment.yml
+conda activate ms2lda-neural
 ```
 
 **Step 4: Download Required Data and Models**
@@ -44,7 +44,7 @@ MS2LDA includes a powerful CLI enabling batch analysis and scripting. Before run
 Run basic analysis:
 
 ```bash
-conda activate MS2LDA_v2
+conda activate ms2lda-neural
 ./run_analysis.sh --dataset datasets/mushroom_spectra.mgf --n-motifs 200 --n-iterations 5000 --output-folder cli_results
 ```
 
@@ -59,13 +59,13 @@ Use a configuration file for advanced settings:
 The Dash application provides a comprehensive, user-friendly graphical interface for exploring mass spectrometry datasets, viewing motifs, screening substructures, and visualizing results interactively.
 
 ```bash
-conda activate MS2LDA_v2
+conda activate ms2lda-neural
 ./run_ms2ldaviz.sh
 ```
 
 For Windows users:
 ```bash
-conda activate MS2LDA_v2
+conda activate ms2lda-neural
 run_ms2ldaviz.bat
 ```
 
@@ -82,7 +82,7 @@ Included in the repository are several Jupyter notebooks organized in the `noteb
 
 To start Jupyter:
 ```bash
-conda activate MS2LDA_v2
+conda activate ms2lda-neural
 jupyter lab
 ```
 

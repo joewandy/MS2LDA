@@ -1,0 +1,27 @@
+{
+  "attempt": 1,
+  "command": [
+    "<python-prefix>/bin/python",
+    "-m",
+    "scripts.prepare_msnlib_validation_view",
+    "--run",
+    "<reproduction-root>/real/tomotopy",
+    "--prepared-run",
+    "<reproduction-root>/prepared"
+  ],
+  "finished_utc": "2026-09-01T16:15:38.706843+00:00",
+  "log": "<reproduction-root>/logs/seal_validation_view_tomotopy.attempt-1.log",
+  "name": "seal_validation_view_tomotopy",
+  "outputs": [
+    {
+      "bytes": 5131,
+      "modified_ns": 1788279338499002961,
+      "path": "<reproduction-root>/real/tomotopy/validation_input_manifest.json",
+      "sha256": "dcf31578eeec8a616dfc7ca85976ba205bd67e341af73ce396fc5768eb8c2a35"
+    }
+  ],
+  "pre_stage_load": null,
+  "return_code": 0,
+  "started_utc": "2026-09-01T16:15:37.684293+00:00",
+  "status": "complete"
+}

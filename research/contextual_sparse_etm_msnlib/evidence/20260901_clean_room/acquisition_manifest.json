@@ -1,0 +1,35 @@
+{
+  "archives": {
+    "Data.zip": {
+      "bytes": 1641318401,
+      "md5": "4ae210759ced93a2e673f0e5daf17d3e",
+      "zip_test": "ok"
+    },
+    "model_positive_mode.zip": {
+      "bytes": 1991689484,
+      "md5": "83d7ac4ff546653a03c3132be69d3d0f",
+      "zip_test": "ok"
+    }
+  },
+  "construction_command": "python scripts/download_msnlib_validation_assets.py --data-root <DATA_ROOT>",
+  "created_utc": "2026-09-01T16:13:12.985530+00:00",
+  "extracted_inputs": {
+    "Data/Benchmark_MSn_Lib/CaseStudy_Corinna_Library_filtered_1000motifs_output_100625/motifset.json": {
+      "bytes": 1537391
+    },
+    "Data/Benchmark_MSn_Lib/Corinna_Library_filtered_positive.mgf": {
+      "bytes": 88159030
+    },
+    "model_positive_mode/positive_train_data/150225_CleanedLibraries_Spec2Vec_pos_embeddings.npy": {
+      "bytes": 1023072128
+    },
+    "model_positive_mode/positive_train_data/150225_CombLibraries_spectra.db": {
+      "bytes": 4372279296
+    },
+    "model_positive_mode/positive_train_data/150225_Spec2Vec_pos_CleanedLibraries.model": {
+      "bytes": 9943191
+    }
+  },
+  "zenodo_api": "https://zenodo.org/api/records/20179680",
+  "zenodo_record": 20179680
+}

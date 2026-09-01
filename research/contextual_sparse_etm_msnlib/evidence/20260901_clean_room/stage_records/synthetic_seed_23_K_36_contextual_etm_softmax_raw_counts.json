@@ -1,0 +1,43 @@
+{
+  "attempt": 1,
+  "command": [
+    "<python-prefix>/bin/python",
+    "-m",
+    "scripts.run_contextual_sparse_etm_synthetic",
+    "--output-root",
+    "<reproduction-root>/synthetic",
+    "--seed",
+    "23",
+    "--fitted-topics",
+    "36",
+    "--formulation",
+    "contextual_softmax",
+    "--epochs",
+    "120",
+    "--batch-size",
+    "200",
+    "--device",
+    "cuda",
+    "--threads",
+    "6",
+    "--training-documents",
+    "800",
+    "--validation-documents",
+    "160"
+  ],
+  "finished_utc": "2026-09-01T16:16:43.566331+00:00",
+  "log": "<reproduction-root>/logs/synthetic_seed_23_K_36_contextual_etm_softmax_raw_counts.attempt-1.log",
+  "name": "synthetic_seed_23_K_36_contextual_etm_softmax_raw_counts",
+  "outputs": [
+    {
+      "bytes": 43510,
+      "modified_ns": 1788279403175028372,
+      "path": "<reproduction-root>/synthetic/synthetic_runs/seed_23_K_36_contextual_etm_softmax_raw_counts/result.json",
+      "sha256": "08107e2966ac2467edc5f16560f052fa5f3c4d30266d070bb3b7ccde04d00754"
+    }
+  ],
+  "pre_stage_load": null,
+  "return_code": 0,
+  "started_utc": "2026-09-01T16:16:35.886885+00:00",
+  "status": "complete"
+}
