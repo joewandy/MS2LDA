@@ -342,8 +342,8 @@ completion result contains \CompletionDocuments{} eligible spectra and
 \CompletionTokens{} in-vocabulary withheld token copies; the withheld
 out-of-vocabulary fraction is \CompletionOOV{}.
 
-Finally, each vocabulary token has a fixed 48-dimensional skip-gram
-negative-sampling (SGNS) coordinate trained only on the training documents
+Finally, each vocabulary token has a fixed 48-dimensional skip-gram with
+negative sampling (SGNS) coordinate trained only on the training documents
 \cite{mikolov2013}. For five epochs, eight count-weighted positive pairs are
 sampled per document. Every positive pair uses five negative words drawn with
 probability proportional to corpus frequency raised to $0.75$. Source
@@ -682,11 +682,12 @@ the channel-balanced decoder and then the complete contextual sparse posterior.
 The two ETM baselines use the same 48-dimensional embeddings, two-layer
 800-unit encoder, $K=1000$, raw pseudo-count objective, Adam settings, batch
 size, 120 epochs and training seed 7043. Tomotopy uses $K=1000$,
-$\alpha=0.6$, $\eta=0.1$, \TomotopyWorkers{} workers and parallel scheme
-\TomotopyParallelScheme{}. It trains until convergence or
+$\alpha=0.6$, $\eta=0.1$ and one worker in its deterministic no-parallel
+mode (\texttt{ParallelScheme.NONE}). It trains until convergence or
 \TomotopyMaximumIterations{} iterations, ending at
 \TomotopyTrainingIterations{} iterations in this run; validation and test
-inference use \TomotopyInferenceIterations{} iterations and parallel scheme 1.
+inference use \TomotopyInferenceIterations{} iterations under the same
+deterministic no-parallel setting.
 
 Initialization robustness is assessed by repeating the proposed model with
 training seeds 7043, 23 and 37. The data split, vocabulary, SGNS embeddings,
@@ -725,9 +726,9 @@ cosine-similarity graph at threshold $0.999$.
 Chemical utility is evaluated with the MS2LDA 2.0 Mass2Motif Annotation
 Guidance (MAG) and substructure overlap score (SOS) framework
 \cite{torresortega2026}. Every Spec2Vec-library row sharing a validation or test
-connectivity InChIKey is removed before constructing the FAISS
-vector-similarity search index. The evaluated molecule therefore cannot be
-retrieved as its own annotation evidence.
+connectivity InChIKey is removed before constructing an exact inner-product
+vector-similarity index implemented with FAISS. The evaluated molecule
+therefore cannot be retrieved as its own annotation evidence.
 
 For each topic, the 20 highest-probability fragment or neutral-loss words form a
 Mass2Motif pseudo-spectrum: a spectrum-like list synthesized from the learned

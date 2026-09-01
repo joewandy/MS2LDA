@@ -1,0 +1,34 @@
+{
+  "attempt": 1,
+  "command": [
+    "<python-prefix>/bin/python",
+    "-m",
+    "scripts.run_contextual_sparse_etm",
+    "chemical",
+    "--real-run",
+    "<reproduction-root>/real/contextual_seed_23",
+    "--data-root",
+    "<reproduction-root>/assets"
+  ],
+  "finished_utc": "2026-09-01T21:40:26.002828+00:00",
+  "log": "<reproduction-root>/logs/contextual_seed_23_chemistry.attempt-1.log",
+  "name": "contextual_seed_23_chemistry",
+  "outputs": [
+    {
+      "bytes": 162672,
+      "modified_ns": 1788298824905761650,
+      "path": "<reproduction-root>/real/contextual_seed_23/validation_chemical/contextual_sparse_etm/complete.json",
+      "sha256": "1c29b0a63e0a1bf0b7cc4e0e2e12b82db9711d4cd93925078296509a86de450e"
+    },
+    {
+      "bytes": 5556,
+      "modified_ns": 1788298824906125927,
+      "path": "<reproduction-root>/real/contextual_seed_23/models/contextual_sparse_etm/validation_access_audit.json",
+      "sha256": "5af05c79d8c1d67de30aa283b5126f5fd499022331ed191e912181a1cc5fe0a4"
+    }
+  ],
+  "pre_stage_load": null,
+  "return_code": 0,
+  "started_utc": "2026-09-01T21:39:50.677205+00:00",
+  "status": "complete"
+}

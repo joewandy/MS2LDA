@@ -1,0 +1,16 @@
+Channel-balanced $\beta$ (Eq.~\ref{eq:beta}) & \texttt{contextual\_sparse\_etm.py: channel\_balanced\_topic\_word\_distribution} \\
+Leave-one-out context (Eq.~\ref{eq:loo-context}) & \texttt{contextual\_sparse\_etm.py: leave\_one\_out\_context} \\
+Contextual top-2 evidence (Eqs.~\ref{eq:contextual-word}--\ref{eq:document-evidence}) & \texttt{contextual\_sparse\_etm.py: contextual\_top2\_evidence} \\
+Posterior offset (Eq.~\ref{eq:posterior-offset}) & \texttt{contextual\_sparse\_etm.py: centered\_log\_evidence\_offset} \\
+Gaussian posterior and KL (Eqs.~\ref{eq:encoder}, \ref{eq:kl}) & \texttt{contextual\_sparse\_etm.py: posterior; diagonal\_gaussian\_kl} \\
+$1.5$-entmax $\theta$ (Eqs.~\ref{eq:theta}, \ref{eq:entmax-closed-form}) & \texttt{contextual\_sparse\_etm.py: entmax15\_document\_mixture} \\
+Reconstruction loss (Eq.~\ref{eq:reconstruction}) & \texttt{topic\_model\_training.py: raw\_count\_reconstruction\_loss} \\
+Real training and deterministic inference & \texttt{scripts/run\_contextual\_sparse\_etm.py} \\
+Synthetic preparation and ablations & \texttt{prepare\_contextual\_sparse\_etm\_synthetic.py}; \texttt{run\_contextual\_sparse\_etm\_synthetic.py} \\
+Published ETM controls & \texttt{etm\_baselines.py}; \texttt{run\_etm\_controls.py} \\
+Document completion & \texttt{model\_evaluation.py: completion\_metrics} \\
+MAG and SOS & \texttt{mag.py; chemical.py} \\
+Equation--code correspondence test & \texttt{tests/test\_contextual\_sparse\_etm.py} \\
+Clean-room orchestration & \texttt{study\_protocol.py}; \texttt{reproduction\_plan.py}; \texttt{run\_contextual\_sparse\_etm\_reproduction.py} \\
+Evidence verification and packaging & \texttt{reproduction\_audit.py}; \texttt{evidence\_bundle.py}; \texttt{report\_evidence.py} \\
+\bottomrule

@@ -1,0 +1,11 @@
+{
+  "acceptance_all_passed": true,
+  "data_quality_status": "pass",
+  "fresh_evidence_manifest_sha256": "ee5659fce54a179a39f166c13f6277d5a179211031d70481c54b7a21206e1e2b",
+  "method": "contextual_sparse_etm",
+  "reproduction_id": "f141cfa6-ce05-4cc6-bbad-424ae4afd52b",
+  "schema_version": 2,
+  "source_commit": "102d59c07e2e6bd0a3cfc17ccfe153cbb34afec2",
+  "split_protocol": "fit on train; select and ablate on validation; evaluate frozen models on test",
+  "test_released_after_model_and_validation_freeze": true
+}

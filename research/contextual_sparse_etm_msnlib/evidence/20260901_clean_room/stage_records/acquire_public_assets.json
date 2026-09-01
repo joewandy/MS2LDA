@@ -1,0 +1,25 @@
+{
+  "attempt": 1,
+  "command": [
+    "<python-prefix>/bin/python",
+    "-m",
+    "scripts.download_msnlib_validation_assets",
+    "--data-root",
+    "<reproduction-root>/assets"
+  ],
+  "finished_utc": "2026-09-01T16:13:12.992949+00:00",
+  "log": "<reproduction-root>/logs/acquire_public_assets.attempt-1.log",
+  "name": "acquire_public_assets",
+  "outputs": [
+    {
+      "bytes": 1167,
+      "modified_ns": 1788279192985623589,
+      "path": "<reproduction-root>/assets/acquisition_manifest.json",
+      "sha256": "1bd4d57f4b1d28cb0e3eb4ae9edc95eb06626d2e0149b6400768fc473e9f2063"
+    }
+  ],
+  "pre_stage_load": null,
+  "return_code": 0,
+  "started_utc": "2026-09-01T16:11:57.646494+00:00",
+  "status": "complete"
+}

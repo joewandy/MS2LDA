@@ -1,0 +1,29 @@
+{
+  "attempt": 1,
+  "command": [
+    "<python-prefix>/bin/python",
+    "-m",
+    "scripts.prepare_msnlib_test_view",
+    "--run",
+    "<reproduction-root>/real/contextual_seed_7043",
+    "--prepared-run",
+    "<reproduction-root>/prepared",
+    "--method",
+    "contextual_sparse_etm"
+  ],
+  "finished_utc": "2026-09-01T21:54:39.647172+00:00",
+  "log": "<reproduction-root>/logs/release_test_view_contextual_seed_7043.attempt-1.log",
+  "name": "release_test_view_contextual_seed_7043",
+  "outputs": [
+    {
+      "bytes": 3373,
+      "modified_ns": 1788299679450039165,
+      "path": "<reproduction-root>/real/contextual_seed_7043/test_input_manifest.json",
+      "sha256": "908a23bc17e0e9123d3a90659b392c2fd49f77e52ed1fc9fb5e9ffd8a31b0d4a"
+    }
+  ],
+  "pre_stage_load": null,
+  "return_code": 0,
+  "started_utc": "2026-09-01T21:54:38.621683+00:00",
+  "status": "complete"
+}

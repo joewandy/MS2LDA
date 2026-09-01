@@ -143,6 +143,10 @@ def test_packaged_json_paths_are_made_host_independent(tmp_path: Path) -> None:
         {
             "command": [f"{machine_home}/env/bin/python", f"{raw_run}/model.py"],
             "output": f"{raw_run}/result.json",
+            "pip_packages": (
+                "package-a @ file:///home/conda/feedstock_root/build/work\n"
+                "package-b @ file:///tmp/temporary-build/src"
+            ),
         },
     )
     replacements = (
@@ -156,6 +160,9 @@ def test_packaged_json_paths_are_made_host_independent(tmp_path: Path) -> None:
     text = (package / "record.json").read_text(encoding="utf-8")
     assert machine_home not in text
     assert raw_run not in text
+    assert "file:///home/conda" not in text
+    assert "file:///tmp" not in text
+    assert text.count("file://<local-build-path>") == 2
 
 
 def test_chemical_integrity_gate_includes_every_contextual_seed() -> None:

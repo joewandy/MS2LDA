@@ -1,0 +1,16 @@
+{
+  "all_passed": true,
+  "checks": {
+    "all_three_seeds_avoid_catastrophic_duplicates": true,
+    "all_three_seeds_have_zero_mag_exceptions": true,
+    "dense_etm_controls_have_lower_completion_nll": true,
+    "high_k_median_support_at_most_three": true,
+    "high_k_recovers_all_18_planted_motifs": true,
+    "proposed_has_most_evaluable_motifs": true,
+    "proposed_has_most_useful_motifs": true,
+    "proposed_median_effective_topics_at_most_five": true,
+    "proposed_unique_winners_at_least_800": true,
+    "tomotopy_has_higher_conditional_mean_sos": true,
+    "tomotopy_has_higher_conditional_median_sos": true
+  }
+}

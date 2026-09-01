@@ -1,0 +1,119 @@
+{
+  "attempt": 1,
+  "command": [
+    "<python-prefix>/bin/python",
+    "-m",
+    "scripts.run_contextual_sparse_etm",
+    "train",
+    "--real-run",
+    "<reproduction-root>/real/contextual_seed_7043",
+    "--epochs",
+    "120",
+    "--batch-size",
+    "256",
+    "--device",
+    "cuda",
+    "--threads",
+    "6",
+    "--training-seed",
+    "7043"
+  ],
+  "finished_utc": "2026-09-01T21:25:30.271212+00:00",
+  "log": "<reproduction-root>/logs/contextual_seed_7043_train.attempt-1.log",
+  "name": "contextual_seed_7043_train",
+  "outputs": [
+    {
+      "bytes": 13729,
+      "modified_ns": 1788297929731110184,
+      "path": "<reproduction-root>/real/contextual_seed_7043/models/contextual_sparse_etm/result.json",
+      "sha256": "818498e6f5bb10e4d2837e011cc536bbe683dbabe5d170b0f9487e82ad0f9c9f"
+    },
+    {
+      "bytes": 81193085,
+      "modified_ns": 1788297929613272366,
+      "path": "<reproduction-root>/real/contextual_seed_7043/models/contextual_sparse_etm/weights.pt",
+      "sha256": "823dea5b2cab036557f191043cde818d9d583edf378e6b8c3ac2319bd5c3641d"
+    },
+    {
+      "bytes": 1317,
+      "modified_ns": 1788297116589503482,
+      "path": "<reproduction-root>/real/contextual_seed_7043/models/contextual_sparse_etm/config.json",
+      "sha256": "9e9039c8d82ff27456c32daefa728c06cd77757092974d3a67bd7194186174c8"
+    },
+    {
+      "bytes": 16085,
+      "modified_ns": 1788297927854385892,
+      "path": "<reproduction-root>/real/contextual_seed_7043/models/contextual_sparse_etm/training_history.csv",
+      "sha256": "242256ad39acb6df9cc84c478d409427fd9203f9f37e25f61abccf94194419aa"
+    },
+    {
+      "bytes": 531583,
+      "modified_ns": 1788297929617272603,
+      "path": "<reproduction-root>/real/contextual_seed_7043/models/contextual_sparse_etm/top_words.csv",
+      "sha256": "fc21d2bd9aae75ce26814d7329d3339de5fbee9bd0ae2072617ae240d072ddf1"
+    },
+    {
+      "bytes": 418,
+      "modified_ns": 1788297929620144658,
+      "path": "<reproduction-root>/real/contextual_seed_7043/models/contextual_sparse_etm/fragment_mass_summary.json",
+      "sha256": "e816118056a2928a1f719b40f2a96d171efb255af1d77656232194c68c7e3a31"
+    },
+    {
+      "bytes": 653,
+      "modified_ns": 1788297929620081332,
+      "path": "<reproduction-root>/real/contextual_seed_7043/models/contextual_sparse_etm/duplicate_component_summary.json",
+      "sha256": "d783013697ad7606835626196324f9f49aca2866111cd2c0b25238af82d06e1b"
+    },
+    {
+      "bytes": 5275,
+      "modified_ns": 1788297116589643107,
+      "path": "<reproduction-root>/real/contextual_seed_7043/models/contextual_sparse_etm/training_access_audit.json",
+      "sha256": "eb43b69e4a5e8d005a66580e3b04e77c91192754fba197b8311021bae5edaa67"
+    },
+    {
+      "bytes": 5710,
+      "modified_ns": 1788297929670387525,
+      "path": "<reproduction-root>/real/contextual_seed_7043/validation_evaluation/contextual_sparse_etm/complete.json",
+      "sha256": "bd235789df132036d19fbb18af1cc88c278b6a05aa029101e8b4ab87b739ca28"
+    },
+    {
+      "bytes": 84932128,
+      "modified_ns": 1788297929633273552,
+      "path": "<reproduction-root>/real/contextual_seed_7043/validation_evaluation/contextual_sparse_etm/beta.npy",
+      "sha256": "6a92e3db42cca54d83a37b204af07801f813f602410fbd73486be8b26821064f"
+    },
+    {
+      "bytes": 15556128,
+      "modified_ns": 1788297929661275209,
+      "path": "<reproduction-root>/real/contextual_seed_7043/validation_evaluation/contextual_sparse_etm/validation_full_theta.npy",
+      "sha256": "0ac05e4dce032442c2cc5bc552ffc72d76535b86362682c8945dec4f16ee8cf2"
+    },
+    {
+      "bytes": 550,
+      "modified_ns": 1788297929619943125,
+      "path": "<reproduction-root>/real/contextual_seed_7043/models/contextual_sparse_etm/theta_support_summary.csv",
+      "sha256": "91894e30f53f114b278b4c5baa4540ab283ee07f4dfca2c77acde63703c80a29"
+    },
+    {
+      "bytes": 573,
+      "modified_ns": 1788297929619990311,
+      "path": "<reproduction-root>/real/contextual_seed_7043/models/contextual_sparse_etm/context_evidence_support_summary.csv",
+      "sha256": "97d07a140e4d67c746c53cfc9a743a62433feebb01d96414ad94423849d7b717"
+    },
+    {
+      "bytes": 6351,
+      "modified_ns": 1788297929728724027,
+      "path": "<reproduction-root>/real/contextual_seed_7043/models/contextual_sparse_etm/provenance.json",
+      "sha256": "a300c9ea9bc850fac33016dd18a3c84db925dbda979094fd3e9f275c690d3dc2"
+    }
+  ],
+  "pre_stage_load": {
+    "available_memory_bytes": 13771681792,
+    "gpu_compute_processes": [],
+    "one_minute_load_average": 1.701171875,
+    "utc": "2026-09-01T21:11:54.986676+00:00"
+  },
+  "return_code": 0,
+  "started_utc": "2026-09-01T21:11:54.986694+00:00",
+  "status": "complete"
+}

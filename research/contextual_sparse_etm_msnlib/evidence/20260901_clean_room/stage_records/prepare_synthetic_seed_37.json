@@ -1,0 +1,39 @@
+{
+  "attempt": 1,
+  "command": [
+    "<python-prefix>/bin/python",
+    "-m",
+    "scripts.prepare_contextual_sparse_etm_synthetic",
+    "--output-root",
+    "<reproduction-root>/synthetic",
+    "--seed",
+    "37",
+    "--threads",
+    "6",
+    "--training-documents",
+    "800",
+    "--validation-documents",
+    "160"
+  ],
+  "finished_utc": "2026-09-01T16:15:36.674032+00:00",
+  "log": "<reproduction-root>/logs/prepare_synthetic_seed_37.attempt-1.log",
+  "name": "prepare_synthetic_seed_37",
+  "outputs": [
+    {
+      "bytes": 2852,
+      "modified_ns": 1788279335666787350,
+      "path": "<reproduction-root>/synthetic/synthetic_artifacts/seed_37/artifact_manifest.json",
+      "sha256": "c35fc923aa21da925cccf5364e550b350181375cc43478af34be38e00ef7419c"
+    },
+    {
+      "bytes": 31,
+      "modified_ns": 1788279336324534272,
+      "path": "<reproduction-root>/synthetic/synthetic_artifacts/seed_37/token_features/complete.json",
+      "sha256": "3e815c89c48f018ca71e0f14a171a1e74eefdff866a29fbe26c8bb6e0c92f4f2"
+    }
+  ],
+  "pre_stage_load": null,
+  "return_code": 0,
+  "started_utc": "2026-09-01T16:15:34.423704+00:00",
+  "status": "complete"
+}

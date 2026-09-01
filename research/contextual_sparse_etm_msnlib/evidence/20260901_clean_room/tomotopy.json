@@ -1,0 +1,95 @@
+{
+  "method": "tomotopy",
+  "test": {
+    "annotation_coverage": 0.607,
+    "associated_molecules": 949,
+    "associated_spectra": 958,
+    "completion_nll": 9.73480175782113,
+    "document_completion": {
+      "eligible_documents": 7776,
+      "in_vocabulary_tokens": 2534703,
+      "nll_per_token": 9.73480175782113,
+      "oov_fraction": 0.026880442765611186,
+      "out_of_vocabulary_tokens": 70016,
+      "total_documents": 7777
+    },
+    "eligible_topics": 337,
+    "heldout_compounds_excluded_from_mag": true,
+    "high_confidence_evaluable_motifs": 337,
+    "mag_failures": {
+      "clustering_count": 0,
+      "clustering_topic_ids": [],
+      "optimization_count": 0,
+      "optimization_topic_ids": []
+    },
+    "mean_sos": 0.6608597234948101,
+    "median_sos": 0.6551724137931034,
+    "membership_threshold": 0.5,
+    "optimized_motifs": 607,
+    "sos_band_accounting_valid": true,
+    "sos_bands": {
+      "high_gt_0_8": 78,
+      "intermediate_0_6_to_0_8": 137,
+      "low_lt_0_6": 122
+    },
+    "split": "test",
+    "total_topics": 1000,
+    "useful_high_confidence_motifs": 215,
+    "useful_motifs": 215
+  },
+  "test_access_audit": {
+    "model_sha256": "67b51cb661b61a950f04efa244b9fc8168b963fa20b6b3e5272f64f55e79226a",
+    "model_unchanged_after_evaluation": true,
+    "training_or_optimization_performed": false
+  },
+  "training": {
+    "converged": true,
+    "training_iterations": 750,
+    "training_seconds_total": 5356.048931229
+  },
+  "validation": {
+    "annotation_coverage": 0.607,
+    "associated_molecules": 459,
+    "associated_spectra": 461,
+    "completion_nll": 9.688764501508032,
+    "document_completion": {
+      "eligible_documents": 3888,
+      "in_vocabulary_tokens": 1277983,
+      "nll_per_token": 9.688764501508032,
+      "oov_fraction": 0.031355544236867795,
+      "out_of_vocabulary_tokens": 41369,
+      "total_documents": 3889
+    },
+    "eligible_topics": 203,
+    "heldout_compounds_excluded_from_mag": true,
+    "high_confidence_evaluable_motifs": 203,
+    "mag_failures": {
+      "clustering_count": 0,
+      "clustering_topic_ids": [],
+      "optimization_count": 0,
+      "optimization_topic_ids": []
+    },
+    "mean_sos": 0.6743209581608834,
+    "median_sos": 0.6792452830188679,
+    "membership_threshold": 0.5,
+    "optimized_motifs": 607,
+    "sos_band_accounting_valid": true,
+    "sos_bands": {
+      "high_gt_0_8": 49,
+      "intermediate_0_6_to_0_8": 88,
+      "low_lt_0_6": 66
+    },
+    "split": "validation",
+    "total_topics": 1000,
+    "useful_high_confidence_motifs": 137,
+    "useful_motifs": 137
+  },
+  "validation_access_audit": {
+    "evidence_boundary": "training and validation spectra only",
+    "test_chemistry_computed": false,
+    "test_metrics_computed": false,
+    "test_spectra_exposed_to_model_run": false,
+    "validation_chemistry_computed_in_training_process": false,
+    "validation_completion_computed": true
+  }
+}

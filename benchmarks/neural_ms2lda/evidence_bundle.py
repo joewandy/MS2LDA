@@ -44,6 +44,9 @@ COMPACT_TEST_EVALUATION_FILES = ("complete.json", "test_access_audit.json")
 MACHINE_PATH_PATTERN = re.compile(
     r"(?:[A-Za-z]:\\\\|\\\\wsl(?:\.localhost)?\\|/(?:home|Users|tmp|mnt)/)",
 )
+LOCAL_FILE_URL_PATTERN = re.compile(
+    r"file:///(?:home|Users|tmp|mnt)/[^\s]+",
+)
 
 
 def portable_value(value: Any, replacements: Sequence[tuple[str, str]]) -> Any:
@@ -56,7 +59,11 @@ def portable_value(value: Any, replacements: Sequence[tuple[str, str]]) -> Any:
         portable = value
         for source, label in replacements:
             portable = portable.replace(source, label)
-        return portable
+        # ``pip freeze`` can retain ephemeral conda/feedstock build locations
+        # that are unrelated to the current user's home or reproduction root.
+        # Keep the dependency declaration while removing the non-portable local
+        # build URL (for example ``file:///home/conda/...``).
+        return LOCAL_FILE_URL_PATTERN.sub("file://<local-build-path>", portable)
     return value
 
 

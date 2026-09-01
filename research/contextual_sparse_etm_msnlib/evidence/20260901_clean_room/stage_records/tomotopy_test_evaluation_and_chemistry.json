@@ -1,0 +1,50 @@
+{
+  "attempt": 1,
+  "command": [
+    "<python-prefix>/bin/python",
+    "-m",
+    "scripts.evaluate_frozen_tomotopy_test",
+    "--run",
+    "<reproduction-root>/real/tomotopy",
+    "--data-root",
+    "<reproduction-root>/assets"
+  ],
+  "finished_utc": "2026-09-01T22:35:15.805698+00:00",
+  "log": "<reproduction-root>/logs/tomotopy_test_evaluation_and_chemistry.attempt-1.log",
+  "name": "tomotopy_test_evaluation_and_chemistry",
+  "outputs": [
+    {
+      "bytes": 175877,
+      "modified_ns": 1788302115547768815,
+      "path": "<reproduction-root>/real/tomotopy/tomotopy/test_result.json",
+      "sha256": "27227766ee744d829cfd6a7b6758920fb3f6de69a90479caaf093ecd85dce9b6"
+    },
+    {
+      "bytes": 459,
+      "modified_ns": 1788302111809909816,
+      "path": "<reproduction-root>/real/tomotopy/evaluation/tomotopy/complete.json",
+      "sha256": "5583b56ecabbaf2efa5f6516b9d9fd7c82911c9ac8bc38b05733625a63392340"
+    },
+    {
+      "bytes": 31108128,
+      "modified_ns": 1788302111786785472,
+      "path": "<reproduction-root>/real/tomotopy/evaluation/tomotopy/test_full_theta.npy",
+      "sha256": "7fa1e11b5bc89f8ea2078293d833cc268f33148f62991970b8eb80f90695cc5d"
+    },
+    {
+      "bytes": 161070,
+      "modified_ns": 1788302115454807674,
+      "path": "<reproduction-root>/real/tomotopy/chemical/tomotopy/complete.json",
+      "sha256": "a401a62c01a50b0682b62c31fd10b65bafbcff9519a9d95896ef9c7e0a6f39c0"
+    }
+  ],
+  "pre_stage_load": {
+    "available_memory_bytes": 13667614720,
+    "gpu_compute_processes": [],
+    "one_minute_load_average": 1.74853515625,
+    "utc": "2026-09-01T21:54:59.934289+00:00"
+  },
+  "return_code": 0,
+  "started_utc": "2026-09-01T21:54:59.934308+00:00",
+  "status": "complete"
+}

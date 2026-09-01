@@ -243,8 +243,6 @@ def _generate_macros(evidence: dict[str, Any]) -> tuple[str, str]:
         "TomotopyTrainingIterations": tomotopy_training["training_iterations"],
         "TomotopyMaximumIterations": tomotopy_config["maximum_iterations"],
         "TomotopyInferenceIterations": tomotopy_config["inference_iterations"],
-        "TomotopyParallelScheme": tomotopy_config["parallel"],
-        "TomotopyWorkers": tomotopy_config["workers"],
         "SyntheticContextualMedianEffective": (
             f"{_float(synthetic_complete, 'mean_median_effective_topics'):.2f}"
         ),
@@ -500,8 +498,8 @@ def _generate_hyperparameters(evidence: dict[str, Any]) -> tuple[str, str]:
         ("Vocabulary", f"{vocabulary_size:,} train-only fragment/loss tokens"),
         (
             "Token coordinates",
-            f"{embedding_dimensions}-dimensional train-only skip-gram "
-            "negative-sampling (SGNS); fixed",
+            f"{embedding_dimensions}-dimensional train-only skip-gram with "
+            "negative sampling (SGNS); fixed",
         ),
         (
             "Encoder",

@@ -1,0 +1,53 @@
+{
+  "completed_validation_outputs": [
+    {
+      "bytes": 348,
+      "path": "<reproduction-root>/real/tomotopy/validation_evaluation/tomotopy/complete.json",
+      "sha256": "04ff946d0cd8eac5a798661c2cda84b4b148883e21fc7f74575ac501c4199a05"
+    },
+    {
+      "bytes": 159767,
+      "path": "<reproduction-root>/real/tomotopy/validation_chemical/tomotopy/complete.json",
+      "sha256": "32c22e0ac0a33bba5179a2cf222806eaa4973dd4c5c563282259cc1a3697b6ea"
+    }
+  ],
+  "exposed_after_validation": true,
+  "frozen_models": [
+    {
+      "bytes": 274547245,
+      "method": "tomotopy",
+      "path": "<reproduction-root>/real/tomotopy/tomotopy/model.bin",
+      "sha256": "67b51cb661b61a950f04efa244b9fc8168b963fa20b6b3e5272f64f55e79226a"
+    }
+  ],
+  "linked_test_inputs": [
+    {
+      "bytes": 1482593,
+      "linked_path": "<reproduction-root>/real/tomotopy/data/test_observed.npz",
+      "path": "<reproduction-root>/prepared/data/test_observed.npz",
+      "sha256": "855154fb1ee2c72f8dc56bef5258de997e951075042b458cbafe7877ab355f33"
+    },
+    {
+      "bytes": 1484769,
+      "linked_path": "<reproduction-root>/real/tomotopy/data/test_completion.npz",
+      "path": "<reproduction-root>/prepared/data/test_completion.npz",
+      "sha256": "328f5970632ee03877c0151846db6034d98d0041f4012f9603d6519552553c45"
+    },
+    {
+      "bytes": 2917737,
+      "linked_path": "<reproduction-root>/real/tomotopy/data/test_full.npz",
+      "path": "<reproduction-root>/prepared/data/test_full.npz",
+      "sha256": "45b931c5c5a56d8a4f86ca0d19942d09089056c815a41210aae55c12e692cd01"
+    },
+    {
+      "bytes": 2481149,
+      "linked_path": "<reproduction-root>/real/tomotopy/data/test_records.jsonl",
+      "path": "<reproduction-root>/prepared/data/test_records.jsonl",
+      "sha256": "94647034814f2d040e2912e76ff5d919d414613429bd6809cdbf0ce87b436ac5"
+    }
+  ],
+  "methods": [
+    "tomotopy"
+  ],
+  "split": "test"
+}

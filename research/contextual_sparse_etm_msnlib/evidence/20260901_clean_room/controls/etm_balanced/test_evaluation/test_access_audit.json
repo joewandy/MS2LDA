@@ -1,0 +1,7 @@
+{
+  "device": "cuda",
+  "frozen_weights_sha256": "5bfe0d80646c6d4a6f77687886c60e600f0146c94c0ca915e743965bdf632841",
+  "split": "test",
+  "test_input_manifest": "<reproduction-root>/real/controls/test_input_manifest.json",
+  "training_or_optimization_performed": false
+}

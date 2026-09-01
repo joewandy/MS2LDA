@@ -1,0 +1,51 @@
+{
+  "attempt": 1,
+  "command": [
+    "<python-prefix>/bin/python",
+    "-m",
+    "scripts.prepare_contextual_sparse_etm_data",
+    "--run",
+    "<reproduction-root>/prepared",
+    "--data-root",
+    "<reproduction-root>/assets"
+  ],
+  "finished_utc": "2026-09-01T16:13:54.679276+00:00",
+  "log": "<reproduction-root>/logs/prepare_data_and_sgns.attempt-1.log",
+  "name": "prepare_data_and_sgns",
+  "outputs": [
+    {
+      "bytes": 1804,
+      "modified_ns": 1788279234330205676,
+      "path": "<reproduction-root>/prepared/preparation_summary.json",
+      "sha256": "9e5f0e0d520da40133e09902ab01efa3f58cae2fa04cc822b144ccf73da3db31"
+    },
+    {
+      "bytes": 1933,
+      "modified_ns": 1788279198987131377,
+      "path": "<reproduction-root>/prepared/protocol.json",
+      "sha256": "006a14e8112d86be34b461bcef32feef06224f95fe20bfaf816387e69e610955"
+    },
+    {
+      "bytes": 87,
+      "modified_ns": 1788279198987225519,
+      "path": "<reproduction-root>/prepared/data_root.txt",
+      "sha256": "08fd7e9e219cec1a98ec608373b40a2abe96d834bc5da148467ec12787d782f4"
+    },
+    {
+      "bytes": 1489,
+      "modified_ns": 1788279228376493742,
+      "path": "<reproduction-root>/prepared/data/complete.json",
+      "sha256": "99625e08617061c8196854750625d048b135f60135fc824f65cd7cef5d3ea7d4"
+    },
+    {
+      "bytes": 31,
+      "modified_ns": 1788279234329844896,
+      "path": "<reproduction-root>/prepared/token_features/complete.json",
+      "sha256": "3e815c89c48f018ca71e0f14a171a1e74eefdff866a29fbe26c8bb6e0c92f4f2"
+    }
+  ],
+  "pre_stage_load": null,
+  "return_code": 0,
+  "started_utc": "2026-09-01T16:13:12.993375+00:00",
+  "status": "complete"
+}
