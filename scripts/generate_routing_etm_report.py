@@ -542,12 +542,20 @@ def _generate_macros(evidence: dict[str, Any]) -> tuple[str, str]:
             f"{_float(high_k_sparse, 'median_exact_support'):.0f}"
         ),
         "HighKEntmaxUniqueTopOne": _integer(high_k_sparse, "unique_top1_topics"),
+        "HighKEntmaxRecoveredMotifs": _integer(
+            high_k_sparse,
+            "planted_motifs_recovered_cosine_ge_0_50",
+        ),
         "HighKContextualMedianSupport": (
             f"{_float(high_k_complete, 'median_exact_support'):.0f}"
         ),
         "HighKContextualUniqueTopOne": _integer(
             high_k_complete,
             "unique_top1_topics",
+        ),
+        "HighKContextualRecoveredMotifs": _integer(
+            high_k_complete,
+            "planted_motifs_recovered_cosine_ge_0_50",
         ),
         "HighKContextualBetaRecovery": (
             f"{_float(high_k_complete, 'true_beta_cosine'):.4f}"
@@ -616,6 +624,12 @@ def _generate_high_k_table(evidence: dict[str, Any]) -> tuple[str, str]:
                     f"{_float(row, 'true_beta_cosine'):.4f}",
                     f"{_float(row, 'true_theta_cosine'):.4f}",
                     f"{_float(row, 'top_motif_accuracy'):.4f}",
+                    str(
+                        _integer(
+                            row,
+                            "planted_motifs_recovered_cosine_ge_0_50",
+                        ),
+                    ),
                     f"{_float(row, 'median_effective_topics'):.2f}",
                     support,
                     str(_integer(row, "unique_top1_topics")),

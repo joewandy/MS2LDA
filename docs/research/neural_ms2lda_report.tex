@@ -797,10 +797,13 @@ Formulation & NLL & Beta & Theta & Median eff. & Active & Unique top-1 \\
 
 The high-overcompleteness experiment strengthens this interpretation. At
 $K=128$, entmax without context has median exact support
-\HighKEntmaxMedianSupport{} but uses only \HighKEntmaxUniqueTopOne{} of the 18
-planted motifs as winners. Contextual Sparse ETM keeps median exact support
-\HighKContextualMedianSupport{}, recovers \HighKContextualUniqueTopOne{} planted
-motifs as distinct winners, achieves beta/theta recovery
+\HighKEntmaxMedianSupport{}, recovers \HighKEntmaxRecoveredMotifs{} of the 18
+planted motifs at matched beta cosine at least 0.50, and uses only
+\HighKEntmaxUniqueTopOne{} learned topics as document winners. Contextual Sparse
+ETM keeps median exact support \HighKContextualMedianSupport{}, recovers
+\HighKContextualRecoveredMotifs{} of 18 planted motifs at the same threshold,
+uses \HighKContextualUniqueTopOne{} learned topics as document winners, and
+achieves beta/theta recovery
 \HighKContextualBetaRecovery{}/\HighKContextualThetaRecovery{} and dominant-motif
 accuracy \HighKContextualDominantAccuracy{}, and gives the lowest completion NLL
 of the three high-$K$ formulations.
@@ -811,12 +814,13 @@ of the three high-$K$ formulations.
 \caption{Seed-11 synthetic stress with 18 planted motifs and 128 fitted topics.
 NLL is completion negative log-likelihood; beta and theta are planted-matrix
 recovery; accuracy compares the dominant fitted and planted motif. Eff. is the
-entropy-effective topic count, support counts exactly non-zero document-topic
-weights, and unique counts distinct document winners.}
+entropy-effective topic count, recovered is the number of planted motifs whose
+truth-matched beta cosine is at least 0.50, support counts exactly non-zero
+document-topic weights, and unique counts distinct learned document winners.}
 \label{tab:high-k}
-\begin{tabular}{@{}lrrrrrrr@{}}
+\begin{tabular}{@{}lrrrrrrrr@{}}
 \toprule
-Formulation & NLL & Beta & Theta & Accuracy & Eff. & Support & Unique \\
+Formulation & NLL & Beta & Theta & Accuracy & Recovered & Eff. & Support & Unique \\
 \midrule
 \input{generated/routing_etm_high_k_table.tex}
 \end{tabular}

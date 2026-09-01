@@ -163,6 +163,9 @@ def _synthetic_row(result: Mapping[str, Any], *, stage: str) -> dict[str, object
         "true_beta_cosine": float(recovery["true_beta_matched_cosine_mean"]),
         "true_theta_cosine": float(recovery["true_theta_cosine_mean"]),
         "top_motif_accuracy": float(recovery["top_planted_motif_accuracy"]),
+        "planted_motifs_recovered_cosine_ge_0_50": int(
+            recovery["planted_motifs_recovered_cosine_ge_0_50"],
+        ),
         "median_effective_topics": float(
             support["median_effective_topics_per_spectrum"],
         ),
@@ -746,9 +749,10 @@ def _claim_checks(
         "all_three_seeds_have_zero_mag_exceptions": stability["direction_checks"][
             "zero_mag_exceptions_on_all_seeds"
         ],
-        "high_k_recovers_all_18_planted_winners": int(
-            high_k_proposed["unique_top1_topics"],
+        "high_k_recovers_all_18_planted_motifs": int(
+            high_k_proposed["planted_motifs_recovered_cosine_ge_0_50"],
         )
+        == int(high_k_proposed["true_topics"])
         == PLANTED_SYNTHETIC_TOPICS,
         "high_k_median_support_at_most_three": float(
             high_k_proposed["median_exact_support"],

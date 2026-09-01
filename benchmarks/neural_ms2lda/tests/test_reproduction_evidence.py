@@ -163,6 +163,80 @@ def test_report_rejects_failed_directional_claims() -> None:
         _require_reportable_claims(acceptance)
 
 
+def _claim_check_fixture(
+    recovered_planted_motifs: int,
+) -> tuple[list[dict[str, object]], dict[str, object], list[dict[str, object]]]:
+    """Return minimal evidence for the directional-claim gate."""
+    comparison = [
+        {
+            "model": "canonical ETM",
+            "evaluable_motifs": 10,
+            "useful_motifs": 5,
+            "mean_sos": 0.60,
+            "median_sos": 0.60,
+            "completion_nll": 1.0,
+        },
+        {
+            "model": "balanced ETM",
+            "evaluable_motifs": 12,
+            "useful_motifs": 6,
+            "mean_sos": 0.61,
+            "median_sos": 0.61,
+            "completion_nll": 1.1,
+        },
+        {
+            "model": "Contextual Sparse ETM",
+            "evaluable_motifs": 30,
+            "useful_motifs": 20,
+            "mean_sos": 0.62,
+            "median_sos": 0.62,
+            "completion_nll": 1.2,
+            "median_effective_topics": 3.0,
+            "unique_top1_topics": 900,
+        },
+        {
+            "model": "Tomotopy LDA",
+            "evaluable_motifs": 15,
+            "useful_motifs": 8,
+            "mean_sos": 0.70,
+            "median_sos": 0.70,
+            "completion_nll": 1.3,
+        },
+    ]
+    stability = {
+        "direction_checks": {
+            "no_catastrophic_duplicate_component_on_any_seed": True,
+            "zero_mag_exceptions_on_all_seeds": True,
+        },
+    }
+    high_k = [
+        {
+            "formulation": ("balanced ETM plus top-2-context routing and entmax15"),
+            "true_topics": 18,
+            "planted_motifs_recovered_cosine_ge_0_50": recovered_planted_motifs,
+            "unique_top1_topics": 19,
+            "median_exact_support": 2.0,
+        },
+    ]
+    return comparison, stability, high_k
+
+
+def test_high_k_claim_uses_truth_matched_recovery_not_winner_count() -> None:
+    """An extra learned winner does not negate recovery of every planted motif."""
+    evidence = _claim_check_fixture(recovered_planted_motifs=18)
+    result = packager._claim_checks(*evidence)
+    assert result["checks"]["high_k_recovers_all_18_planted_motifs"] is True
+    assert result["all_passed"] is True
+
+
+def test_high_k_claim_rejects_incomplete_truth_matched_recovery() -> None:
+    """The gate still fails if even one planted motif lacks the fixed match."""
+    evidence = _claim_check_fixture(recovered_planted_motifs=17)
+    result = packager._claim_checks(*evidence)
+    assert result["checks"]["high_k_recovers_all_18_planted_motifs"] is False
+    assert result["all_passed"] is False
+
+
 def test_report_rejects_an_unsupported_sentence_level_comparison() -> None:
     comparison = {
         "canonical ETM": {

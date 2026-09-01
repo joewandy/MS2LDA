@@ -101,8 +101,8 @@ def acceptance_policy() -> dict[str, object]:
             ),
             "all three Contextual seeds avoid catastrophic duplicate components",
             (
-                "the high-K treatment recovers all 18 planted motifs as winners with "
-                "median support at most three"
+                "the high-K treatment truth-matches all 18 planted motifs at beta "
+                "cosine at least 0.50 with median support at most three"
             ),
         ],
         "interpretation": (
