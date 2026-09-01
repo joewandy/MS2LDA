@@ -120,17 +120,21 @@ spectra, \ValidationSpectra{} validation spectra for development and
 \ContextualEvaluable{} with an evaluable substructure overlap score (SOS), and
 \ContextualUseful{} useful motifs with SOS at least 0.6. The corresponding
 Tomotopy latent Dirichlet allocation (LDA) counts were \TomotopyOptimized{},
-\TomotopyEvaluable{} and \TomotopyUseful{}. Held-out half-spectrum completion
-negative log-likelihood (NLL) was \ContextualNLL{} versus \TomotopyNLL{}, whereas
-Tomotopy had higher conditional mean SOS averaged over evaluable motifs
-(\TomotopyMeanSOS{} versus \ContextualMeanSOS{}). Across three training seeds on
-the same frozen split, evaluable and useful motif counts remained within
+\TomotopyEvaluable{} and \TomotopyUseful{}. Thus Contextual Sparse ETM produced
+\ContextualEvaluableGainVsTomotopy{} more evaluable and
+\ContextualUsefulGainVsTomotopy{} more useful motifs. This breadth gain was
+accompanied by lower conditional mean SOS (\ContextualMeanSOS{} versus
+\TomotopyMeanSOS{}) and a lower useful fraction of the evaluable inventory
+(\ContextualUsefulRate{} versus \TomotopyUsefulRate{}). Held-out half-spectrum
+completion negative log-likelihood (NLL) was \ContextualNLL{} versus
+\TomotopyNLL{}. Across three training seeds on the same split, evaluable and
+useful motif counts remained within
 \StabilityEvaluableRange{} and \StabilityUsefulRange{}, median effective topics
 remained within \StabilityMedianEffectiveRange{}, and \StabilityUniqueRange{}
-topics became the largest component for at least one test spectrum. These results support
-a reproducible breadth--quality trade-off: the method discovers a substantially
-larger usable motif inventory while preserving sparse spectrum assignments on
-the held-out test split.
+topics became the largest component for at least one test spectrum. These results
+support a reproducible discovery-breadth gain with a quantified conditional-quality
+trade-off relative to LDA, while preserving sparse spectrum assignments on the
+held-out test split.
 \end{abstract}
 
 \section{Introduction}
@@ -740,10 +744,21 @@ threshold 0.9, and optimizes the motif against the selected cluster. A topic is
 Clustered MAG molecules are converted to binary MACCS structural-key
 fingerprints, whose bits indicate predefined molecular features
 \cite{durant2002}. A bit is retained in consensus fingerprint $A_k$ when it
-appears in at least 80\% of the cluster. An evaluation molecule $i$ is associated
-with topic $k$ when its full-spectrum topic weight satisfies
-$\theta_{ik}\geq0.5$. Repeated spectra with the same connectivity InChIKey are
-collapsed. With $B_i$ the associated molecule fingerprint,
+appears in at least 80\% of the cluster. MS2LDA 2.0 associated an evaluation
+molecule with an LDA topic when its posterior probability exceeded 0.5
+\cite{torresortega2026}. For comparison across inference families, this study
+instead assigns every held-out spectrum $i$ to its dominant full-spectrum topic,
+\begin{equation}
+  k_i^*=\underset{k}{\arg\max}\;\theta_{ik}.
+  \label{eq:dominant-assignment}
+\end{equation}
+Absolute posterior weights need not have the same calibration across variational
+neural models and LDA, whereas Equation~\ref{eq:dominant-assignment} gives every
+model exactly one association per spectrum. Exact ties are resolved by the
+lowest topic index. This evaluation rule does not alter the fitted topic mixture.
+Within each topic, repeated spectra with the same connectivity InChIKey are
+collapsed. Let $C_k$ be the resulting set of unique associated molecules and
+$B_i$ the fingerprint of molecule $i$; then
 \begin{equation}
   s_{ki}=\frac{|A_k\cap B_i|}{|A_k|},\qquad
   \mathrm{SOS}_k=\frac1{|C_k|}\sum_{i\in C_k}s_{ki}.
@@ -835,7 +850,10 @@ corresponding counts are \CanonicalEvaluable{}/\CanonicalUseful{} for canonical
 ETM, \BalancedEvaluable{}/\BalancedUseful{} for fragment/loss-balanced ETM and
 \TomotopyEvaluable{}/\TomotopyUseful{} for Tomotopy. Figure~\ref{fig:inventory}
 shows that the gain occurs after chemical evaluation rather than merely through
-creating a large unfiltered topic inventory.
+creating a large unfiltered topic inventory. Before collapsing repeated
+connectivity keys within topics, every method contributes exactly
+\TestSpectra{} dominant-topic spectrum associations. The comparison therefore
+does not give one model more opportunities through an absolute posterior cutoff.
 
 The canonical-versus-balanced ETM rows provide the real-data controlled
 comparison of the
@@ -911,21 +929,25 @@ at least one fragment or loss;
 SOS-evaluable means that the substructure overlap score can be computed from at
 least one associated molecule; useful means SOS at least 0.6. All four models
 use $K=1000$, the same training split, the same held-out test split and the same
-chemical-evaluation protocol.}
+chemical-evaluation protocol. Each test spectrum is associated with its single
+dominant full-spectrum topic, giving every model exactly \TestSpectra{}
+spectrum--topic associations before connectivity-key deduplication.}
 \label{fig:inventory}
 \end{figure}
 
 \begin{table}[H]
 \centering
 \small
-\caption{Final held-out test comparison. SOS is the substructure overlap score and NLL
-is held-out completion negative log-likelihood, for which lower is better. Bold
-values are the numerically strongest entry in each metric; no single metric
-defines overall model quality.}
+\caption{Final held-out test comparison under one dominant-topic association per
+spectrum. SOS is the substructure overlap score, useful/evaluable is the
+fraction of evaluable motifs with SOS at least 0.6, and NLL is held-out
+completion negative log-likelihood, for which lower is better. Bold values are
+the numerically strongest entry in each metric; no single metric defines
+overall model quality.}
 \label{tab:test-comparison}
 \begin{tabular}{@{}lrrrrrr@{}}
 \toprule
-Model & Optimized & Evaluable & Useful & Mean SOS & Median SOS & NLL $\downarrow$ \\
+Model & Optimized & Evaluable & Useful & Useful/evaluable & Mean SOS & NLL $\downarrow$ \\
 \midrule
 \input{generated/contextual_sparse_etm_test_table.tex}
 \end{tabular}
@@ -934,8 +956,8 @@ Model & Optimized & Evaluable & Useful & Mean SOS & Median SOS & NLL $\downarrow
 Figure~\ref{fig:breadth-quality} places conditional chemical quality against
 the size of the evaluable inventory. It makes the central comparison visible:
 Contextual Sparse ETM moves far to the right of all three comparators while
-placing between the two ETM baselines in mean SOS; Tomotopy occupies the
-higher-quality but lower-breadth corner.
+Tomotopy remains higher on conditional mean SOS. The dense ETM controls also
+have higher conditional mean SOS but expose much smaller evaluable inventories.
 
 \begin{figure}[H]
 \centering
@@ -946,6 +968,10 @@ higher-quality but lower-breadth corner.
   xlabel={SOS-evaluable motifs},
   ylabel={Conditional mean SOS},
   tick label style={font=\small},
+  yticklabel style={
+    /pgf/number format/fixed,
+    /pgf/number format/precision=3
+  },
   label style={font=\small},
   axis line style={black!55},
   grid=both,
@@ -966,13 +992,13 @@ higher-quality but lower-breadth corner.
     {Balanced ETM};
   \addplot[only marks,mark=star,mark size=4.5pt,draw=accent,fill=accent]
     coordinates {(\ContextualEvaluable,\ContextualMeanSOS)};
-  \node[font=\scriptsize,anchor=east] at
+  \node[font=\scriptsize,anchor=south east] at
     (axis cs:\ContextualEvaluable,\ContextualMeanSOS)
     {Contextual Sparse ETM};
   \addplot[only marks,mark=square*,mark size=3.2pt,
     draw=tomotopycolor,fill=tomotopycolor]
     coordinates {(\TomotopyEvaluable,\TomotopyMeanSOS)};
-  \node[font=\scriptsize,anchor=south west] at
+  \node[font=\scriptsize,anchor=north west] at
     (axis cs:\TomotopyEvaluable,\TomotopyMeanSOS)
     {Tomotopy};
 \end{axis}
@@ -991,16 +1017,21 @@ The proposed model converts \ContextualEvaluableConversion{} of optimized motifs
 into evaluable motifs and \ContextualUsefulConversion{} into useful motifs. Its
 \ContextualOptimized{} optimized motifs are fewer than the balanced ETM's
 \BalancedOptimized{}, but more survive spectrum association and SOS evaluation.
-Relative to Tomotopy, the proposed model yields more evaluable and useful motifs
-and lowers completion NLL from \TomotopyNLL{} to \ContextualNLL{}.
+Relative to Tomotopy, the proposed model yields
+\ContextualEvaluableGainVsTomotopy{} more evaluable motifs and
+\ContextualUsefulGainVsTomotopy{} more useful motifs, while lowering completion
+NLL from \TomotopyNLL{} to \ContextualNLL{}.
 
-The result is not uniform dominance. Tomotopy's smaller evaluable set has higher
-mean and median SOS (\TomotopyMeanSOS{}/\TomotopyMedianSOS{}) than the proposed
-model (\ContextualMeanSOS{}/\ContextualMedianSOS{}). Canonical and balanced ETM have
-lower completion NLL but produce substantially fewer evaluable and useful
-motifs. The proposed model's mean SOS is higher than canonical ETM's but lower
-than balanced ETM's. The primary result is therefore increased discovery
-breadth with an explicit conditional-quality and predictive-fit trade-off.
+The result is not uniform dominance. Useful motifs constitute
+\ContextualUsefulRate{} of the proposed model's evaluable inventory and
+\TomotopyUsefulRate{} of Tomotopy's, a difference of
+\ContextualUsefulRateDifferenceVsTomotopy{} percentage points. Tomotopy's
+conditional mean SOS is higher by \ContextualMeanSOSDifferenceVsTomotopy{}
+(\TomotopyMeanSOS{} versus \ContextualMeanSOS{}). Canonical and balanced ETM also
+have higher conditional mean SOS and lower completion NLL but produce
+substantially fewer evaluable and useful motifs. The primary result is therefore
+increased discovery breadth with an explicit conditional-quality trade-off
+relative to Tomotopy and a predictive-fit trade-off relative to dense ETM.
 
 Changing only initialization and minibatch order tests whether this discovery
 gain depends on one fitted checkpoint. The three runs give
@@ -1132,12 +1163,14 @@ Optimized, evaluable and useful motif counts measure how much of the learned
 inventory becomes available for chemical interpretation. Mean and median SOS
 measure chemical containment conditional on passing the evaluability filter.
 A model can therefore expose more useful motifs in absolute terms while having
-a lower average over that larger set. Contextual Sparse ETM exhibits exactly
-this pattern relative to Tomotopy: it increases evaluable and useful counts,
-whereas Tomotopy retains higher conditional SOS. The breadth--quality
-plot makes this conditional denominator explicit and avoids treating an average
-over one model-specific motif set as though it summarized the same set for every
-model.
+a lower average over that larger set. Contextual Sparse ETM exhibits this
+trade-off relative to Tomotopy: it increases evaluable and useful counts, while
+Tomotopy has conditional mean SOS higher by
+\ContextualMeanSOSDifferenceVsTomotopy{} and a useful/evaluable fraction higher
+by \ContextualUsefulRateDifferenceVsTomotopy{} percentage points. The
+breadth--quality plot makes this conditional denominator explicit and avoids
+treating an average over one model-specific motif set as though it summarized
+the same set for every model.
 
 Completion NLL provides a third axis. The proposed model predicts withheld
 evidence better than Tomotopy but not as well as the dense ETM baselines. This
@@ -1171,7 +1204,7 @@ three training seeds change initialization and minibatch order but not the
 data split, vocabulary, topic count or hyperparameters. Their sample standard
 deviations are descriptive and should not be interpreted as confidence
 intervals over future datasets or alternative splits. The held-out test results
-are confirmatory for this fixed benchmark, not evidence of performance under
+measure final performance on this fixed benchmark, not performance under an
 external library or instrument shift.
 
 The synthetic simulator supplies known truth but cannot represent the complete
@@ -1187,7 +1220,9 @@ vocabulary-size bias but may not be optimal for every acquisition regime.
 
 MAG and SOS depend on the Spec2Vec reference library, leakage filter, retrieval
 and clustering settings, MACCS fingerprint bits, 80\% consensus threshold and
-$\theta\geq0.5$ molecule-association threshold. SOS is an asymmetric
+dominant-topic molecule-association rule. The rule gives every model the same
+number of spectrum associations but represents only the strongest topic for a
+spectrum; it does not score secondary mixture memberships. SOS is an asymmetric
 containment measure and does not establish an exact substructure. Reference
 library coverage can also influence which topics become evaluable.
 
@@ -1238,14 +1273,17 @@ geometry supplies contextual top-2 evidence; and $1.5$-entmax produces exact
 document-topic support. The complete adaptation adds only one learned scalar.
 
 On the scaffold- and compound-disjoint MS$^{n}$Lib test split, the model produces
-substantially more motifs eligible for SOS and more useful motifs than canonical ETM,
-fragment- and loss-balanced ETM and Tomotopy, while retaining
+more motifs eligible for SOS and more useful motifs than canonical ETM,
+fragment- and loss-balanced ETM and Tomotopy, including
+\ContextualEvaluableGainVsTomotopy{} and \ContextualUsefulGainVsTomotopy{} gains,
+respectively, over Tomotopy, while retaining
 \MedianEffectiveTopics{} effective topics per spectrum and
 \UniqueTopOneTopics{} unique test winners.
 The result is stable across three initializations. Tomotopy retains higher
-conditional SOS, and dense ETM retains better completion likelihood, so the
-scientific conclusion is a reproducible discovery-breadth advantage on this
-held-out split with quantified quality and predictive trade-offs. External data
+conditional mean SOS and useful/evaluable rate, while dense ETM retains better
+completion likelihood. The scientific
+conclusion is a reproducible discovery-breadth advantage on this held-out split
+with quantified conditional-quality and predictive trade-offs. External data
 are required to assess broader generalization.
 
 \clearpage
@@ -1312,8 +1350,8 @@ Topics for which Mass2Motif Annotation Guidance (MAG) retains at least one
 fragment or neutral loss. &
 Breadth of annotatable topic spectra. \\
 Substructure-overlap-score (SOS)-evaluable motifs &
-Optimized topics with at least one unique associated test molecule and a
-valid fingerprint. &
+Optimized topics with at least one valid unique test molecule whose spectrum has
+that topic as its largest full-spectrum mixture component. &
 Inventory eligible for chemical scoring. \\
 Mean/median SOS &
 Containment of the MAG consensus fingerprint in associated molecules, averaged

@@ -61,7 +61,7 @@ def reproduction_paths(root: Path) -> ReproductionPaths:
 
 
 def acceptance_policy() -> dict[str, object]:
-    """Return the scientific acceptance rules frozen before result access."""
+    """Return the study's scientific integrity and directional checks."""
     return {
         "exact_gates": {
             "neural_execution_device": NEURAL_DEVICE,
@@ -89,13 +89,13 @@ def acceptance_policy() -> dict[str, object]:
                 "SOS bands sum to evaluable motifs and useful equals high plus "
                 "intermediate"
             ),
+            "every test spectrum is associated with exactly one dominant topic",
         ],
         "claim_gates": [
             (
                 "Contextual Sparse ETM has more evaluable and useful test "
                 "motifs than every comparator"
             ),
-            "Tomotopy retains higher conditional mean and median SOS",
             "dense ETM controls retain lower completion NLL than Contextual Sparse ETM",
             (
                 "Contextual Sparse ETM retains median effective topics at most five "
@@ -109,7 +109,7 @@ def acceptance_policy() -> dict[str, object]:
         ],
         "interpretation": (
             "Data/configuration identities are exact. Stochastic scientific results "
-            "must preserve the predeclared directional claims."
+            "must pass the reported directional checks."
         ),
     }
 

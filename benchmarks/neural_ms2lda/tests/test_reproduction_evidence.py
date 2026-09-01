@@ -7,6 +7,12 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from scripts import generate_contextual_sparse_etm_report as report_generator
+from scripts import package_contextual_sparse_etm_reproduction as packager
+from scripts.generate_contextual_sparse_etm_report import (
+    _require_reportable_claims,
+    _validate_package_integrity,
+)
 
 from benchmarks.neural_ms2lda.reproduction_audit import (
     file_record,
@@ -16,12 +22,6 @@ from benchmarks.neural_ms2lda.reproduction_audit import (
     write_json,
 )
 from benchmarks.neural_ms2lda.study_protocol import FINAL_SYNTHETIC_LABEL
-from scripts import generate_contextual_sparse_etm_report as report_generator
-from scripts import package_contextual_sparse_etm_reproduction as packager
-from scripts.generate_contextual_sparse_etm_report import (
-    _require_reportable_claims,
-    _validate_package_integrity,
-)
 
 
 def test_report_rejects_changed_packaged_evidence(tmp_path: Path) -> None:
@@ -42,7 +42,7 @@ def test_report_rejects_changed_packaged_evidence(tmp_path: Path) -> None:
 
 def test_fresh_chemistry_requires_explicit_mag_exception_counts() -> None:
     result: dict[str, Any] = {
-        "high_confidence_chemistry": {},
+        "chemical_evaluation": {},
         "topics": 1,
         "annotation_coverage": 0.0,
         "heldout_compounds_excluded_from_mag": True,
@@ -71,7 +71,8 @@ def _valid_chemistry_result() -> dict[str, Any]:
             "optimization_count": 0,
             "optimization_topic_ids": [],
         },
-        "high_confidence_chemistry": {
+        "chemical_evaluation": {
+            "association_rule": "dominant_topic",
             "eligible_topics": 1,
             "mean_sos": 0.7,
             "median_sos": 0.7,
@@ -91,9 +92,16 @@ def test_fresh_chemistry_rejects_heldout_mag_leakage() -> None:
         packager._chemistry_summary(result)
 
 
+def test_fresh_chemistry_requires_dominant_topic_assignment() -> None:
+    result = _valid_chemistry_result()
+    result["chemical_evaluation"]["association_rule"] = "different_rule"
+    with pytest.raises(RuntimeError, match="dominant-topic assignment"):
+        packager._chemistry_summary(result)
+
+
 def test_fresh_chemistry_rejects_incomplete_sos_band_accounting() -> None:
     result = _valid_chemistry_result()
-    result["high_confidence_chemistry"]["eligible_topics"] = 2
+    result["chemical_evaluation"]["eligible_topics"] = 2
     with pytest.raises(RuntimeError, match="SOS bands account for 1 motifs but 2"):
         packager._chemistry_summary(result)
 
@@ -174,6 +182,8 @@ def test_chemical_integrity_gate_includes_every_contextual_seed() -> None:
             "sos_band_accounting_valid": True,
         },
     ]
+    for row in comparison:
+        row["spectrum_topic_associations"] = 7_777
     stability = {
         "direction_checks": {
             "zero_mag_exceptions_on_all_seeds": False,
@@ -198,7 +208,12 @@ def test_report_rejects_failed_directional_claims() -> None:
 
 def _claim_check_fixture(
     recovered_planted_motifs: int,
-) -> tuple[list[dict[str, object]], dict[str, object], list[dict[str, object]]]:
+) -> tuple[
+    list[dict[str, object]],
+    dict[str, object],
+    list[dict[str, object]],
+    int,
+]:
     """Return minimal evidence for the directional-claim gate."""
     comparison = [
         {
@@ -236,6 +251,9 @@ def _claim_check_fixture(
             "completion_nll": 1.3,
         },
     ]
+    expected_test_spectra = 100
+    for row in comparison:
+        row["spectrum_topic_associations"] = expected_test_spectra
     stability = {
         "direction_checks": {
             "no_catastrophic_duplicate_component_on_any_seed": True,
@@ -251,7 +269,7 @@ def _claim_check_fixture(
             "median_exact_support": 2.0,
         },
     ]
-    return comparison, stability, high_k
+    return comparison, stability, high_k, expected_test_spectra
 
 
 def test_high_k_claim_uses_truth_matched_recovery_not_winner_count() -> None:
@@ -267,6 +285,22 @@ def test_high_k_claim_rejects_incomplete_truth_matched_recovery() -> None:
     evidence = _claim_check_fixture(recovered_planted_motifs=17)
     result = packager._claim_checks(*evidence)
     assert result["checks"]["high_k_recovers_all_18_planted_motifs"] is False
+    assert result["all_passed"] is False
+
+
+def test_claim_checks_require_one_association_per_test_spectrum() -> None:
+    """A model cannot pass after dropping or duplicating test associations."""
+    comparison, stability, high_k, expected_test_spectra = _claim_check_fixture(
+        recovered_planted_motifs=18,
+    )
+    comparison[0]["spectrum_topic_associations"] = expected_test_spectra - 1
+    result = packager._claim_checks(
+        comparison,
+        stability,
+        high_k,
+        expected_test_spectra,
+    )
+    assert result["checks"]["all_models_assign_every_test_spectrum_once"] is False
     assert result["all_passed"] is False
 
 

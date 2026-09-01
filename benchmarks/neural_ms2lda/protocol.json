@@ -61,6 +61,6 @@
     "mag_cluster_cosine": 0.9,
     "mag_fingerprint_threshold": 0.8,
     "motif_spectrum_top_n": 20,
-    "membership_threshold": 0.5
+    "spectrum_topic_assignment": "dominant_topic"
   }
 }

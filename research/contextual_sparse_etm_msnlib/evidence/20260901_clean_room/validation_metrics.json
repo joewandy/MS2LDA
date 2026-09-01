@@ -152,9 +152,10 @@
   },
   "validation_chemistry": {
     "annotation_coverage": 0.799,
-    "associated_molecules": 1390,
-    "associated_spectra": 1398,
-    "eligible_topics": 469,
+    "associated_molecules": 3867,
+    "associated_spectra": 3889,
+    "association_rule": "dominant_topic",
+    "eligible_topics": 672,
     "heldout_compounds_excluded_from_mag": true,
     "mag_failures": {
       "clustering_count": 0,
@@ -162,18 +163,17 @@
       "optimization_count": 0,
       "optimization_topic_ids": []
     },
-    "mean_sos": 0.6442906478346072,
-    "median_sos": 0.6440677966101694,
-    "membership_threshold": 0.5,
+    "mean_sos": 0.6356956515036895,
+    "median_sos": 0.6396721311475411,
     "optimized_motifs": 799,
     "sos_band_accounting_valid": true,
     "sos_bands": {
-      "high_gt_0_8": 69,
-      "intermediate_0_6_to_0_8": 226,
-      "low_lt_0_6": 174
+      "high_gt_0_8": 77,
+      "intermediate_0_6_to_0_8": 323,
+      "low_lt_0_6": 272
     },
     "split": "validation",
     "total_topics": 1000,
-    "useful_motifs": 295
+    "useful_motifs": 400
   }
 }

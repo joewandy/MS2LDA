@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 import re
 import shutil
+import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -73,10 +74,14 @@ def path_replacements(
 ) -> tuple[tuple[str, str], ...]:
     """Return longest-first path substitutions for portable committed evidence."""
     environment = manifest.get("environment", {})
+    manifest_paths = manifest.get("paths", {})
+    current_python_prefix = Path(sys.executable).resolve().parent.parent
     candidates = (
         (str(paths.root), "<reproduction-root>"),
+        (str(manifest_paths.get("root", "")), "<reproduction-root>"),
         (str(manifest.get("source", {}).get("worktree", "")), "<source-checkout>"),
         (str(environment.get("prefix", "")), "<python-prefix>"),
+        (str(current_python_prefix), "<python-prefix>"),
         (str(Path.home()), "<home>"),
     )
     return tuple(
@@ -137,14 +142,16 @@ source commit `{manifest['source']['commit']}`. Models were fitted on training
 spectra, selected and ablated on validation spectra, frozen, and then evaluated
 on the fixed test split. `validation_comparison.csv` records development-split
 evidence; `comparison.csv` and `stability_by_seed.csv` contain final test results.
+Chemical scores are computed from the sealed full-spectrum topic mixtures and
+MAG annotations using one dominant-topic association per spectrum.
 
-## Acceptance status
+## Evidence checks
 
-Predeclared directional claims passed: **{claims['all_passed']}**. Inspect
+Scientific integrity and directional checks passed: **{claims['all_passed']}**. Inspect
 `acceptance.json`, `data_quality.json`, `fresh_evidence_manifest.json`, and the
 CSV/JSON result tables for the complete evidence trail.
 
-`reproduction_manifest.json` is the immutable raw controller declaration.
+`reproduction_manifest.json` records the frozen fit and inference provenance.
 `acceptance.json` is the authoritative audited interpretation of its scientific
 gates. In particular, high-K planted-motif recovery is counted by one-to-one
 truth matching at topic-word cosine at least 0.50; it is not the same quantity
@@ -158,6 +165,8 @@ def _copy_model_evidence(
     *,
     method: str,
     model_files: Sequence[str],
+    validation_chemistry: Mapping[str, Any],
+    test_chemistry: Mapping[str, Any],
 ) -> None:
     """Copy compact validation, frozen-test, and split-boundary evidence."""
     _copy_compact(run / "models" / method, destination, model_files)
@@ -166,14 +175,8 @@ def _copy_model_evidence(
         destination / "test_evaluation",
         COMPACT_TEST_EVALUATION_FILES,
     )
-    shutil.copy2(
-        run / "chemical" / method / "complete.json",
-        destination / "test_chemical.json",
-    )
-    shutil.copy2(
-        run / "validation_chemical" / method / "complete.json",
-        destination / "validation_chemical.json",
-    )
+    write_json(destination / "test_chemical.json", test_chemistry)
+    write_json(destination / "validation_chemical.json", validation_chemistry)
     for name in ("validation_input_manifest.json", "test_input_manifest.json"):
         shutil.copy2(run / name, destination / name)
 
@@ -214,6 +217,8 @@ def copy_raw_evidence(
     *,
     manifest: Mapping[str, Any],
     claims: Mapping[str, Any],
+    chemical_results: Mapping[str, Any],
+    tomotopy_test_raw: Mapping[str, Any],
 ) -> None:
     """Copy compact model, split-boundary, and stage-provenance artifacts."""
     for seed in TRAINING_SEEDS:
@@ -222,6 +227,8 @@ def copy_raw_evidence(
             destination / "contextual" / f"seed_{seed}",
             method=METHOD,
             model_files=COMPACT_MODEL_FILES,
+            validation_chemistry=chemical_results["contextual"][seed]["validation"],
+            test_chemistry=chemical_results["contextual"][seed]["test"],
         )
     for method in ("etm", "etm_balanced"):
         _copy_model_evidence(
@@ -229,6 +236,8 @@ def copy_raw_evidence(
             destination / "controls" / method,
             method=method,
             model_files=COMPACT_CONTROL_FILES,
+            validation_chemistry=chemical_results["controls"][method]["validation"],
+            test_chemistry=chemical_results["controls"][method]["test"],
         )
     for result_path in sorted(
         (paths.synthetic / "synthetic_runs").glob("*/result.json"),
@@ -240,11 +249,19 @@ def copy_raw_evidence(
         shutil.copy2(result_path, target)
     for source, name in (
         (paths.tomotopy / "tomotopy/validation_only_result.json", "tomotopy_raw.json"),
-        (paths.tomotopy / "tomotopy/test_result.json", "tomotopy_test_raw.json"),
         (paths.assets / "acquisition_manifest.json", "acquisition_manifest.json"),
-        (paths.root / "reproduction_manifest.json", "reproduction_manifest.json"),
     ):
         shutil.copy2(source, destination / name)
+    reproduction_manifest = {
+        key: value for key, value in manifest.items() if key != "acceptance_policy"
+    }
+    reproduction_manifest["chemical_evaluation"] = {
+        "association_rule": "dominant_topic",
+        "derived_from_frozen_full_spectrum_mixtures": True,
+        "derived_from_frozen_mag_annotations": True,
+    }
+    write_json(destination / "reproduction_manifest.json", reproduction_manifest)
+    write_json(destination / "tomotopy_test_raw.json", tomotopy_test_raw)
     stage_directory = destination / "stage_records"
     stage_directory.mkdir()
     for stage in stage_plan(paths):

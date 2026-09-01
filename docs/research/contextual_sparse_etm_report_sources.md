@@ -14,6 +14,8 @@
   data, frozen and then evaluated once on the held-out test split.
 - Primary interpretation: discovery breadth, predictive fit and conditional
   chemical quality are separate axes and are reported together.
+- Chemical comparison rule: every held-out spectrum is associated with its
+  single dominant full-spectrum topic for every model.
 
 ## Scientific-report structure map
 
@@ -32,8 +34,9 @@
 - Expand uncommon abbreviations at first use in the abstract or main text;
   repeat the expansion in a figure or table caption when the item should stand
   alone.
-- Figure 3 defines ETM, Balanced, Contextual and LDA in the caption rather than
-  relying on the experimental-design section.
+- Figure 3 defines ETM, Balanced, Contextual and LDA, and states the shared
+  dominant-topic association rule, in the caption rather than relying on the
+  experimental-design section.
 - Quantitative table captions define NLL, SOS, effective-topic counts, support
   and winner counts before the reader interprets their columns.
 - Describe implementation terms by function on first use: MGF as the spectrum
@@ -48,6 +51,7 @@
 | Executable model equations | benchmarks/neural_ms2lda/contextual_sparse_etm.py |
 | Normalized encoder input and reconstruction equation | benchmarks/neural_ms2lda/topic_model_training.py |
 | Deterministic real-data inference | scripts/run_contextual_sparse_etm.py |
+| Dominant-topic chemical association and SOS calculation | benchmarks/neural_ms2lda/chemical.py |
 | Equation-level correspondence and serialized-state parity | benchmarks/neural_ms2lda/tests/test_contextual_sparse_etm.py |
 | Data parsing, split, leakage and vocabulary counts | research/contextual_sparse_etm_msnlib/evidence/20260901_clean_room/preparation_summary.json |
 | Preprocessing, SGNS, Tomotopy and MAG settings | research/contextual_sparse_etm_msnlib/evidence/20260901_clean_room/protocol.json |
@@ -66,7 +70,7 @@
 | Figure 1 | How do public assets become model matrices? | Process flow | Acquisition, validation, splitting and sparse-matrix hand-off are explicit | Neutral grey; inspect arrows and box fit |
 | Figure 2 | Where does context modify ETM? | Computation flow | Contextual evidence adjusts the posterior while the ETM generator remains explicit | Blue for posterior, violet for shared geometry, green for outputs; inspect crossings |
 | Figure 3 | At which chemical filter does inventory breadth differ? | Three-panel categorical bar chart | The proposed model's advantage is evaluable/useful inventory, not merely optimized count | Proposed blue, Tomotopy orange, ETM baselines neutral; zero baselines and direct labels |
-| Figure 4 | How does evaluable breadth relate to conditional chemical quality? | Labelled scatter plot | Contextual Sparse ETM expands breadth while Tomotopy retains the highest conditional mean SOS | Shared axes, direct labels and no composite score |
+| Figure 4 | How does evaluable breadth relate to conditional chemical quality? | Labelled scatter plot | Contextual Sparse ETM expands breadth while Tomotopy retains higher conditional mean SOS | Shared axes, direct labels and no composite score |
 | Table 1 | Which parts are inherited from ETM and which are added? | Lineage table | The generator and variational backbone remain ETM; the adaptations have explicit purposes | Inspect provenance and parameter claims |
 | Tables 2--3 | Which posterior additions are necessary? | Exact ablation tables | Contextual evidence prevents the component loss caused by sparsity alone | No conditional colour; inspect width |
 | Table 4 | How do held-out test metrics compare? | Exact comparison table | Breadth, SOS and NLL point in different directions | Bold per-column extrema; inspect that caption explains this |

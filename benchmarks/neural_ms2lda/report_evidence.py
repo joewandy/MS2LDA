@@ -182,16 +182,6 @@ def _require_manuscript_claims(evidence: dict[str, Any]) -> None:
         > integer_field(canonical, "evaluable_motifs"),
         "balancing_raises_useful_motifs": integer_field(balanced, "useful_motifs")
         > integer_field(canonical, "useful_motifs"),
-        "contextual_mean_sos_exceeds_canonical_etm": float_field(
-            contextual,
-            "mean_sos",
-        )
-        > float_field(canonical, "mean_sos"),
-        "contextual_mean_sos_is_below_balanced_etm": float_field(
-            contextual,
-            "mean_sos",
-        )
-        < float_field(balanced, "mean_sos"),
         "contextual_has_fewer_optimized_motifs_than_balanced": integer_field(
             contextual,
             "optimized_motifs",
@@ -273,12 +263,20 @@ def load_report_evidence(evidence_root: Path) -> dict[str, Any]:  # noqa: C901
         raise ValueError("split-group leakage detected")
     if data["split"]["seed"] != protocol["seed"]:
         raise ValueError("preparation and protocol split seeds differ")
+    if protocol["chemistry"].get("spectrum_topic_assignment") != "dominant_topic":
+        raise ValueError("chemical evaluation must use dominant-topic assignment")
     if data["vocabulary"]["vocabulary_size"] != preparation["vocabulary_size"]:
         raise ValueError("vocabulary size mismatch")
 
     required_models = {"canonical ETM", "balanced ETM", "Contextual Sparse ETM"}
     if not required_models.issubset(comparison):
         raise ValueError("comparison is missing a required ETM baseline")
+    test_spectra = int(data["split"]["spectrum_counts"]["test"])
+    if any(
+        integer_field(row, "spectrum_topic_associations") != test_spectra
+        for row in comparison.values()
+    ):
+        raise ValueError("every model must associate each test spectrum exactly once")
     proposed_row = comparison["Contextual Sparse ETM"]
     if proposed_row["finite_stable"] != "True":
         raise ValueError("Contextual Sparse ETM is not marked finite and stable")

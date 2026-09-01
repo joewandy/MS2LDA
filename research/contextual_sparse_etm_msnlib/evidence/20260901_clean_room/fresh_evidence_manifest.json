@@ -2,14 +2,14 @@
   "method": "contextual_sparse_etm",
   "packaged_files": [
     {
-      "bytes": 1067,
+      "bytes": 1227,
       "path": "README.md",
-      "sha256": "ad5676a44e11b760be5b01f284d52612248d96c62b722f104fa6bf8a8ca8a515"
+      "sha256": "c5e69c3af2c3e4ff6b8a990ff1d69d0436d95cbba622323f9007ca68a67124d4"
     },
     {
-      "bytes": 626,
+      "bytes": 572,
       "path": "acceptance.json",
-      "sha256": "eb268c27c83088a936a0d593f21975333854b4f38ac16d388e843b4071fbfe36"
+      "sha256": "82a1b9ea88fa55423d96825050a498c7f972328a67d53647ee963d1d1209c300"
     },
     {
       "bytes": 1167,
@@ -17,9 +17,9 @@
       "sha256": "1bd4d57f4b1d28cb0e3eb4ae9edc95eb06626d2e0149b6400768fc473e9f2063"
     },
     {
-      "bytes": 1501,
+      "bytes": 1638,
       "path": "comparison.csv",
-      "sha256": "93f80e7ab008137591290d7bffcd26b5e0c114db7c037ae5ec5a922e77bd03d9"
+      "sha256": "a46054d4c0dccc248208629a4b4f1599d616f7ef0bfd5ed688c49487bc36ee0e"
     },
     {
       "bytes": 1257,
@@ -52,9 +52,9 @@
       "sha256": "e9092a95f19d8c76cd9e08fa049a6b9d770df19fdd7b58c0c865594bcf7bf186"
     },
     {
-      "bytes": 164294,
+      "bytes": 167197,
       "path": "contextual/seed_23/test_chemical.json",
-      "sha256": "ec8d5ea5e9ba3ecf34a23e8e1390d80378cbc61376b413729eadcda771bfd301"
+      "sha256": "b7ca459cbf7ccbe9ce11cb7e56cfc3c785f40ad5cb83670c67468294d70f2855"
     },
     {
       "bytes": 5999,
@@ -92,9 +92,9 @@
       "sha256": "7b013f6b8283fcf3470ee7f7aa87e49d82de709af73497d3864576f855b733be"
     },
     {
-      "bytes": 162672,
+      "bytes": 166022,
       "path": "contextual/seed_23/validation_chemical.json",
-      "sha256": "1c29b0a63e0a1bf0b7cc4e0e2e12b82db9711d4cd93925078296509a86de450e"
+      "sha256": "ceb4c795fa7dd6005ba82a62f14759f03cd8b25816d4108e3798f5041f2173cc"
     },
     {
       "bytes": 3751,
@@ -127,9 +127,9 @@
       "sha256": "02698b9fb43c299dcdf27066823a72bb01dc42d46c1ac84eb7e9eae89c5a097c"
     },
     {
-      "bytes": 164032,
+      "bytes": 167191,
       "path": "contextual/seed_37/test_chemical.json",
-      "sha256": "124145154d205b21b08f326db1930d935337d69732a92e4d6e8b8ae191c8d7b8"
+      "sha256": "8f3c52fd7196bc915c988c16a0c4c74e01983651c663ee6a71a166aff0c59be2"
     },
     {
       "bytes": 6008,
@@ -167,9 +167,9 @@
       "sha256": "d4dbce81fd1bbe2c39d3d24235b09c62146f44a3dfac8f8a7e070e6f55000968"
     },
     {
-      "bytes": 162361,
+      "bytes": 165770,
       "path": "contextual/seed_37/validation_chemical.json",
-      "sha256": "c6119652de3e7afdc28dea7a5bb700ca5300cc166137f75f62b57aa307078d1d"
+      "sha256": "248ece87bc0062ff980ac574f71fb1f4dd99f6a8d8a8302a83e6a78f9a3018f5"
     },
     {
       "bytes": 3751,
@@ -202,9 +202,9 @@
       "sha256": "ffb7303c8edf4872f46d547a65ad245e5856698662ae20b6ce46d35b2c27f6b9"
     },
     {
-      "bytes": 164243,
+      "bytes": 167048,
       "path": "contextual/seed_7043/test_chemical.json",
-      "sha256": "cd49149cf5466f97a4e55c2c5fff708833f360d144f26d4fb62e186a0577b37b"
+      "sha256": "8dc860f32225085e6653aeeeec998037b01eea0342cddccd490b8e7e0f97a239"
     },
     {
       "bytes": 6007,
@@ -242,9 +242,9 @@
       "sha256": "0f4b33a9afb566d147255e7eb0f6110a17862021163bffd6c8929808a26b6bee"
     },
     {
-      "bytes": 162718,
+      "bytes": 165883,
       "path": "contextual/seed_7043/validation_chemical.json",
-      "sha256": "c1c5cee34a3001812aca1bb043089b94ff3970eb4e28d00e364564805ec78313"
+      "sha256": "e309a6001e6e2a6171826305f20fd1970a5a3a71aaa002aebdd4437f8bc7ca02"
     },
     {
       "bytes": 3775,
@@ -267,9 +267,9 @@
       "sha256": "3bf57150d2604ea18ea185f62b471446c806663ed8f8d3c433c472c35d5f3f9d"
     },
     {
-      "bytes": 159646,
+      "bytes": 160843,
       "path": "controls/etm/test_chemical.json",
-      "sha256": "d5d6e3db4b678f8adaa310781c6b2527a8c8e96bb42c3913ee36b6748f70d8ae"
+      "sha256": "db482d2ed78b034654f971bfa68fdb0cf553c312d43be345ede8b2a628189af0"
     },
     {
       "bytes": 5127,
@@ -302,9 +302,9 @@
       "sha256": "c25d7887ba9d28e83a8598cd71d83e90e53540f784b9980c64264cdd6484ae9a"
     },
     {
-      "bytes": 159171,
+      "bytes": 160382,
       "path": "controls/etm/validation_chemical.json",
-      "sha256": "bfe961d8b5e25ba9f3fe8aa13ccd7cd2e7253dcfaa57077ee521e639ac36dbfa"
+      "sha256": "dd4300031ef2704104038cd3dba30736b326e04459c877ade56313909a096b0f"
     },
     {
       "bytes": 3631,
@@ -327,9 +327,9 @@
       "sha256": "ace7678ceb1a963401124a5797c13fbfecadf2960bf91d0a9c01fd0d4824f161"
     },
     {
-      "bytes": 160178,
+      "bytes": 161370,
       "path": "controls/etm_balanced/test_chemical.json",
-      "sha256": "0d9535871b8508c66f5b0006d1846b1e4af4959f7533ede2d2fe4ee8f2770c5e"
+      "sha256": "e19d3604ab4bb806040148f5b575533317d2a2245078e994f5d9412568107831"
     },
     {
       "bytes": 5254,
@@ -362,9 +362,9 @@
       "sha256": "c25d7887ba9d28e83a8598cd71d83e90e53540f784b9980c64264cdd6484ae9a"
     },
     {
-      "bytes": 159559,
+      "bytes": 160864,
       "path": "controls/etm_balanced/validation_chemical.json",
-      "sha256": "cd79cf1af4285898008c37b75ed22b2dcd0436aeb3a36e764f381cee558c0e31"
+      "sha256": "9d18cd226592efc3b4e191d18b3e48fef8b8403db28d21d3cebfdf0bf511fdd6"
     },
     {
       "bytes": 3631,
@@ -382,9 +382,9 @@
       "sha256": "c3d4823523025f3ac7a7d41765f5bad01e7a42bca348153bf18e54de3aa5b1bc"
     },
     {
-      "bytes": 5451,
+      "bytes": 5460,
       "path": "metrics.json",
-      "sha256": "e2f14a0cde8759d44fc261b8e47bac784740ec8c17a4881a56757e91fc318022"
+      "sha256": "a5d9d9510a60693d983b4d35b79af025fe1f510eef088c2ff975727ad89e203c"
     },
     {
       "bytes": 1804,
@@ -392,24 +392,24 @@
       "sha256": "9e5f0e0d520da40133e09902ab01efa3f58cae2fa04cc822b144ccf73da3db31"
     },
     {
-      "bytes": 1933,
+      "bytes": 1951,
       "path": "protocol.json",
-      "sha256": "006a14e8112d86be34b461bcef32feef06224f95fe20bfaf816387e69e610955"
+      "sha256": "8044718d019cac4f92524c7980bc5217d7db861d58c940b3f0a6ac8970d48021"
     },
     {
-      "bytes": 39622,
+      "bytes": 38028,
       "path": "reproduction_manifest.json",
-      "sha256": "2ea7471c7f19aee9395b60138696bf211856aa99868a34ced83f804866b49591"
+      "sha256": "2f91fd328e53478ea0fc1d42ba4c4abd1eaaa213e771fcc129cf5fc79009c74e"
     },
     {
       "bytes": 928,
       "path": "stability_by_seed.csv",
-      "sha256": "fbe1c8c5fb82303725dfc8dea8fa655cbbdab90c67a6287212a7b8462510ec19"
+      "sha256": "32b4acd2a5ad4e77304d144aae03088798a04f0636093af7060ff1e05dda8d39"
     },
     {
-      "bytes": 5130,
+      "bytes": 5133,
       "path": "stability_summary.json",
-      "sha256": "68a86be8572061344cf137c273640ae5791f3993350ba27a02fa03dc728afdad"
+      "sha256": "383f9edc1b16c74b2dc71c9c3d04999c22b6d6781a39bb28deabdd7cca8b046b"
     },
     {
       "bytes": 717,
@@ -792,9 +792,9 @@
       "sha256": "24a1edce643264c751204381caf27deafcac61bb8b87f7cc5be3654bf7215bff"
     },
     {
-      "bytes": 2906,
+      "bytes": 2755,
       "path": "tomotopy.json",
-      "sha256": "38343259c7b4177472a6ddafcd21b93ddd99390f644b1fe33fe3c1cd2fb25b7e"
+      "sha256": "a9d75cda820c4fab745d834b19d89eee9732463e39f994bae5f36aa4f111d0d2"
     },
     {
       "bytes": 869,
@@ -802,19 +802,19 @@
       "sha256": "27192c679c6baf4c3699c337d8b0de8aeafb8ee739d6bc23b0476243dca3589e"
     },
     {
-      "bytes": 175877,
+      "bytes": 180345,
       "path": "tomotopy_test_raw.json",
-      "sha256": "27227766ee744d829cfd6a7b6758920fb3f6de69a90479caaf093ecd85dce9b6"
+      "sha256": "b6b0e9079b8a5c7354746f6b632c5b3ed7c9d66b46f1d401f53059f2b28628d4"
     },
     {
-      "bytes": 627,
+      "bytes": 774,
       "path": "validation_comparison.csv",
-      "sha256": "637aab7bcd960a2680e07db5a18b1dbf68e00171bdeb7a091d9cf5afc6cc493e"
+      "sha256": "5fb5b6d90f470233a9ea35724c6eefebdf07a36dcef616d93d3c1b0302b0ebba"
     },
     {
-      "bytes": 6061,
+      "bytes": 6070,
       "path": "validation_metrics.json",
-      "sha256": "43360a700a86990fbfb19e763a61ad22264ede2ab185b5be623e60040685449b"
+      "sha256": "b02c9a4bc1ef1f25446db0d848500abd5e42144cf31a317e01230253aea62995"
     }
   ],
   "raw_stage_outputs": [

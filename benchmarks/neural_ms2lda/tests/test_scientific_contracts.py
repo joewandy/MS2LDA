@@ -6,8 +6,9 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+from scripts.generate_contextual_sparse_etm_report import _generate_code_map
 
-from benchmarks.neural_ms2lda.chemical import _sos_bands
+from benchmarks.neural_ms2lda.chemical import _associated_record_indices, _sos_bands
 from benchmarks.neural_ms2lda.contextual_sparse_etm import (
     CONTEXT_TEMPERATURE,
     FRAGMENT_CHANNEL_MASS,
@@ -19,7 +20,6 @@ from benchmarks.neural_ms2lda.spectra import (
     audit_split_disjointness,
     build_training_vocabulary,
 )
-from scripts.generate_contextual_sparse_etm_report import _generate_code_map
 
 from ._support import spectrum_record
 
@@ -101,3 +101,24 @@ def test_sos_bands_include_boundaries_exactly_once() -> None:
         "low_lt_0_6": 2,
     }
     assert sum(bands.values()) == 7
+
+
+def test_dominant_topic_assignment_is_one_per_spectrum_and_deterministic() -> None:
+    theta = np.asarray(
+        [
+            [0.8, 0.2, 0.0],
+            [2.0, 5.0, 1.0],
+            [0.4, 0.4, 0.2],
+        ],
+        dtype=np.float64,
+    )
+
+    associated = _associated_record_indices(theta)
+
+    assert associated == {0: [0, 2], 1: [1]}
+    assert sum(len(rows) for rows in associated.values()) == len(theta)
+
+
+def test_dominant_topic_assignment_rejects_zero_mass_rows() -> None:
+    with pytest.raises(ValueError, match="positive probability mass"):
+        _associated_record_indices(np.asarray([[0.0, 0.0]]))

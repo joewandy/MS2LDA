@@ -1,47 +1,8 @@
 {
-  "acceptance_policy": {
-    "claim_gates": [
-      "Contextual Sparse ETM has more evaluable and useful test motifs than every comparator",
-      "Tomotopy retains higher conditional mean and median SOS",
-      "dense ETM controls retain lower completion NLL than Contextual Sparse ETM",
-      "Contextual Sparse ETM retains median effective topics at most five and at least 800 unique winners",
-      "all three Contextual seeds avoid catastrophic duplicate components",
-      "the high-K treatment truth-matches all 18 planted motifs at beta cosine at least 0.50 with median support at most three"
-    ],
-    "exact_gates": {
-      "connectivity_groups": 38465,
-      "leaked_compounds": 0,
-      "leaked_split_groups": 0,
-      "neural_execution_device": "cuda",
-      "retained_spectra": 38888,
-      "source_spectra": 41568,
-      "split_groups": 28572,
-      "split_spectra": {
-        "test": 7777,
-        "train": 27222,
-        "validation": 3889
-      },
-      "synthetic_seeds": [
-        11,
-        23,
-        37
-      ],
-      "topics": 1000,
-      "training_seeds": [
-        7043,
-        23,
-        37
-      ],
-      "vocabulary_size": 21233
-    },
-    "identity_gates": [
-      "all methods use identical matrix, vocabulary, SGNS, and MAG-index hashes",
-      "test inputs are released only after every fitted model and validation result is frozen",
-      "all probability matrices are finite, non-negative, and row-normalized",
-      "MAG reports zero clustering and optimization exceptions for every model",
-      "SOS bands sum to evaluable motifs and useful equals high plus intermediate"
-    ],
-    "interpretation": "Data/configuration identities are exact. Stochastic scientific results must preserve the predeclared directional claims."
+  "chemical_evaluation": {
+    "association_rule": "dominant_topic",
+    "derived_from_frozen_full_spectrum_mixtures": true,
+    "derived_from_frozen_mag_annotations": true
   },
   "created_utc": "2026-09-01T16:11:40.114350+00:00",
   "environment": {

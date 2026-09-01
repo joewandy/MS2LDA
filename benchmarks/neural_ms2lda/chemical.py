@@ -35,27 +35,25 @@ SOS_HIGH_THRESHOLD = 0.8
 
 def _associated_record_indices(
     theta: np.ndarray,
-    *,
-    threshold: float,
 ) -> dict[int, list[int]]:
-    """Map each topic to spectra whose normalized probability reaches 0.5."""
+    """Assign every spectrum to its single dominant topic.
+
+    Topic-mixture values are comparable within a spectrum, so ``argmax`` does
+    not require row normalization.  NumPy resolves an exact tie in favour of
+    the lowest topic index, which makes the assignment deterministic.  The
+    resulting comparison gives every model exactly one topic association per
+    spectrum and therefore does not depend on cross-model probability
+    calibration.
+    """
     values = np.asarray(theta, dtype=np.float64)
     if values.ndim != 2 or not len(values) or not values.shape[1]:
         raise ValueError("theta must be a non-empty document-topic matrix")
     if not np.all(np.isfinite(values)) or np.any(values < 0):
         raise ValueError("theta must contain finite non-negative values")
-    if not 0 <= threshold <= 1:
-        raise ValueError("association threshold must lie in [0, 1]")
-    totals = values.sum(axis=1, keepdims=True)
-    values = np.divide(
-        values,
-        totals,
-        out=np.full_like(values, 1.0 / values.shape[1]),
-        where=totals > 0,
-    )
+    if np.any(values.sum(axis=1) <= 0):
+        raise ValueError("every theta row must have positive probability mass")
     associated: defaultdict[int, list[int]] = defaultdict(list)
-    rows, topics = np.nonzero(values >= float(threshold))
-    for row, topic in zip(rows, topics, strict=True):
+    for row, topic in enumerate(np.argmax(values, axis=1)):
         associated[int(topic)].append(int(row))
     return dict(associated)
 
@@ -83,16 +81,15 @@ def _sos_bands(values: Sequence[float]) -> dict[str, int]:
     }
 
 
-def _topic_scores(  # noqa: PLR0913
+def _topic_scores(
     *,
     theta: np.ndarray,
     records: list[dict[str, Any]],
     annotations: list[dict[str, Any]],
-    threshold: float,
     fingerprint_threshold: float,
 ) -> dict[str, Any]:
     """Apply the corrected compound-balanced SOS definition."""
-    associated = _associated_record_indices(theta, threshold=threshold)
+    associated = _associated_record_indices(theta)
     fingerprint_fn = cache(maccs_fingerprint)
 
     @cache
@@ -136,7 +133,7 @@ def _topic_scores(  # noqa: PLR0913
     eligible = [row for row in rows if row["eligible"]]
     values = [float(row["sos"]) for row in eligible]
     return {
-        "membership_threshold": threshold,
+        "association_rule": "dominant_topic",
         "eligible_topics": len(eligible),
         "total_topics": len(annotations),
         "associated_spectra": sum(row["associated_spectra"] for row in rows),
@@ -153,20 +150,18 @@ def score_precomputed_annotations(
     theta: np.ndarray,
     records: list[dict[str, Any]],
     annotations: list[dict[str, Any]],
-    membership_threshold: float,
     fingerprint_threshold: float,
 ) -> dict[str, Any]:
-    """Rescore fixed MAG annotations after a validation-only theta change.
+    """Score fixed MAG annotations using one dominant topic per spectrum.
 
-    This is the public, inexpensive path for inference-calibration studies.  It
-    deliberately reuses the locked association and compound-balanced SOS
-    implementation instead of rerunning beta-dependent MAG annotation.
+    This inexpensive path deliberately reuses the locked MAG annotations and
+    compound-balanced SOS implementation instead of rerunning beta-dependent
+    annotation.
     """
     return _topic_scores(
         theta=theta,
         records=records,
         annotations=annotations,
-        threshold=membership_threshold,
         fingerprint_threshold=fingerprint_threshold,
     )
 
@@ -192,7 +187,6 @@ def _mag_matches(
 ) -> tuple[Any, list[Any]]:
     """Embed motif spectra and retrieve leakage-filtered library neighbours."""
     import faiss
-
     from MS2LDA.Add_On.Spec2Vec.annotation import calc_embeddings, load_s2v_model
 
     spec2vec = load_s2v_model(str(inputs["spec2vec_model"]))
@@ -375,6 +369,8 @@ def run_chemical_scoring(
         raise ValueError(f"chemical method must be one of {sorted(allowed)}")
     if split not in {"validation", "test"}:
         raise ValueError("chemical split must be validation or test")
+    if protocol["chemistry"].get("spectrum_topic_assignment") != "dominant_topic":
+        raise ValueError("chemical protocol must use dominant-topic assignment")
     directory = Path(run_dir).expanduser().resolve()
     group = "chemical" if split == "test" else "validation_chemical"
     evaluation_group = "evaluation" if split == "test" else "validation_evaluation"
@@ -400,7 +396,6 @@ def run_chemical_scoring(
         theta=theta,
         records=records,
         annotations=annotations,
-        threshold=float(protocol["chemistry"]["membership_threshold"]),
         fingerprint_threshold=float(protocol["chemistry"]["mag_fingerprint_threshold"]),
     )
     output.mkdir(parents=True, exist_ok=True)
@@ -410,7 +405,7 @@ def run_chemical_scoring(
         "split": split,
         "topics": len(annotations),
         "annotation_coverage": annotation["annotation_coverage"],
-        "high_confidence_chemistry": summary,
+        "chemical_evaluation": summary,
         "heldout_compounds_excluded_from_mag": annotation[
             "heldout_compounds_excluded_from_mag"
         ],

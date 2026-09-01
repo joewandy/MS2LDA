@@ -134,7 +134,8 @@ def chemistry_result(topics: int = 4) -> dict[str, Any]:
             "optimization_count": 0,
             "optimization_topic_ids": [],
         },
-        "high_confidence_chemistry": {
+        "chemical_evaluation": {
+            "association_rule": "dominant_topic",
             "eligible_topics": 2,
             "associated_spectra": 2,
             "mean_sos": 0.7,

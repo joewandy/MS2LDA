@@ -2,7 +2,7 @@
 
 Only artifacts owned by the supplied reproduction UUID are accepted.  The
 packager verifies stage hashes, split-release ordering, probability matrices,
-MAG failure counts, and predeclared scientific claims before writing the
+MAG failure counts, and scientific integrity checks before writing the
 compact evidence bundle consumed by the LaTeX report.
 """
 
@@ -15,6 +15,10 @@ import statistics
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+import numpy as np
+
+from benchmarks.neural_ms2lda.chemical import score_precomputed_annotations
+from benchmarks.neural_ms2lda.data import load_heldout_records
 from benchmarks.neural_ms2lda.evidence_bundle import (
     assert_no_machine_paths as _assert_no_machine_paths,
 )
@@ -36,6 +40,7 @@ from benchmarks.neural_ms2lda.evidence_bundle import (
 from benchmarks.neural_ms2lda.reproduction_audit import (
     probability_audit,
     read_json,
+    sha256_file,
     validate_model_views,
     verify_stage_records,
 )
@@ -49,6 +54,7 @@ from benchmarks.neural_ms2lda.study_protocol import (
     SYNTHETIC_DISPLAY_LABELS,
     SYNTHETIC_SEEDS,
     TRAINING_SEEDS,
+    load_protocol,
 )
 
 if TYPE_CHECKING:
@@ -85,7 +91,10 @@ def _chemistry_summary(result: Mapping[str, Any]) -> dict[str, Any]:
     if result.get("heldout_compounds_excluded_from_mag") is not True:
         msg = "fresh chemical evidence does not exclude held-out compounds from MAG"
         raise RuntimeError(msg)
-    summary = dict(result["high_confidence_chemistry"])
+    summary = dict(result["chemical_evaluation"])
+    if summary.get("association_rule") != "dominant_topic":
+        msg = "chemical evidence must use dominant-topic assignment"
+        raise RuntimeError(msg)
     summary.pop("topic_scores", None)
     topics = int(result["topics"])
     bands = summary["sos_bands"]
@@ -129,6 +138,73 @@ def _chemistry_summary(result: Mapping[str, Any]) -> dict[str, Any]:
         },
     )
     return summary
+
+
+def _chemical_evaluation_result(
+    run: Path,
+    *,
+    method: str,
+    split: str,
+    protocol: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Recompute chemical scores from frozen mixtures and MAG annotations.
+
+    Model fitting, inference and beta-dependent MAG annotation remain frozen.
+    Recomputing this inexpensive final layer ensures that every packaged result
+    uses the model-neutral dominant-topic association rule.
+    """
+    if split not in {"validation", "test"}:
+        msg = "chemical split must be validation or test"
+        raise ValueError(msg)
+    evaluation_group = (
+        "validation_evaluation" if split == "validation" else "evaluation"
+    )
+    theta_path = run / evaluation_group / method / f"{split}_full_theta.npy"
+    records_path = run / "data" / f"{split}_records.jsonl"
+    annotations_path = run / "mag" / "annotations" / method / "annotations.jsonl"
+    annotation_summary_path = run / "mag" / "annotations" / method / "complete.json"
+
+    theta = np.load(theta_path, mmap_mode="r")
+    records = load_heldout_records(run / "data", split)
+    if theta.shape[0] != len(records):
+        msg = "full mixtures and held-out records differ"
+        raise ValueError(msg)
+    annotations = [
+        json.loads(line)
+        for line in annotations_path.read_text(encoding="utf-8").splitlines()
+        if line
+    ]
+    annotation = read_json(annotation_summary_path)
+    summary = score_precomputed_annotations(
+        theta=theta,
+        records=records,
+        annotations=annotations,
+        fingerprint_threshold=float(protocol["chemistry"]["mag_fingerprint_threshold"]),
+    )
+    if summary["association_rule"] != "dominant_topic":
+        msg = "chemical evaluation did not use dominant-topic assignment"
+        raise RuntimeError(msg)
+    if int(summary["associated_spectra"]) != len(records):
+        msg = "dominant-topic evaluation must assign every spectrum once"
+        raise RuntimeError(msg)
+    return {
+        "method": method,
+        "annotation_method": method,
+        "split": split,
+        "topics": len(annotations),
+        "annotation_coverage": annotation["annotation_coverage"],
+        "chemical_evaluation": summary,
+        "heldout_compounds_excluded_from_mag": annotation[
+            "heldout_compounds_excluded_from_mag"
+        ],
+        "mag_failures": annotation["mag_failures"],
+        "evidence_inputs": {
+            "theta_sha256": sha256_file(theta_path),
+            "records_sha256": sha256_file(records_path),
+            "annotations_sha256": sha256_file(annotations_path),
+            "annotation_summary_sha256": sha256_file(annotation_summary_path),
+        },
+    }
 
 
 def _synthetic_row(result: Mapping[str, Any], *, stage: str) -> dict[str, object]:
@@ -175,7 +251,7 @@ def _require_neural_device(value: object, *, label: str) -> None:
 def _synthetic_tables(
     root: Path,
 ) -> tuple[list[dict[str, object]], list[dict[str, object]], list[dict[str, object]]]:
-    """Read exactly the predeclared 12 K=36 and three K=128 fits."""
+    """Read exactly the study's 12 K=36 and three K=128 fits."""
     synthetic_root = reproduction_paths(root).synthetic / "synthetic_runs"
     rows = []
     for result_path in sorted(synthetic_root.glob("*/result.json")):
@@ -264,6 +340,10 @@ def _model_row(
         "optimized_motifs": int(chemistry["optimized_motifs"]),
         "evaluable_motifs": int(chemistry["eligible_topics"]),
         "useful_motifs": int(chemistry["useful_motifs"]),
+        "useful_fraction_evaluable": (
+            int(chemistry["useful_motifs"]) / int(chemistry["eligible_topics"])
+        ),
+        "spectrum_topic_associations": int(chemistry["associated_spectra"]),
         "mean_sos": float(chemistry["mean_sos"]),
         "median_sos": float(chemistry["median_sos"]),
         "completion_nll": float(metrics["document_completion"]["nll_per_token"]),
@@ -313,6 +393,10 @@ def _validation_model_row(
         "optimized_motifs": int(chemistry["optimized_motifs"]),
         "evaluable_motifs": int(chemistry["eligible_topics"]),
         "useful_motifs": int(chemistry["useful_motifs"]),
+        "useful_fraction_evaluable": (
+            int(chemistry["useful_motifs"]) / int(chemistry["eligible_topics"])
+        ),
+        "spectrum_topic_associations": int(chemistry["associated_spectra"]),
         "mean_sos": float(chemistry["mean_sos"]),
         "median_sos": float(chemistry["median_sos"]),
         "completion_nll": float(
@@ -328,19 +412,141 @@ def _validation_model_row(
     }
 
 
+def _tomotopy_evidence(
+    run: Path,
+    protocol: Mapping[str, Any],
+) -> tuple[
+    dict[str, Any],
+    dict[str, object],
+    dict[str, object],
+    dict[str, Any],
+    dict[str, Any],
+]:
+    """Build LDA summaries from one frozen fit and its full-spectrum mixtures."""
+    validation_raw = read_json(run / "tomotopy/validation_only_result.json")
+    test_raw = read_json(run / "tomotopy/test_result.json")
+    validation_result = _chemical_evaluation_result(
+        run,
+        method="tomotopy",
+        split="validation",
+        protocol=protocol,
+    )
+    test_result = _chemical_evaluation_result(
+        run,
+        method="tomotopy",
+        split="test",
+        protocol=protocol,
+    )
+    validation_chemistry = _chemistry_summary(validation_result)
+    test_chemistry = _chemistry_summary(test_result)
+    validation_completion = validation_raw["validation"]["metrics"][
+        "validation_document_completion"
+    ]
+    test_completion = test_raw["evaluation"]["metrics"]["test_document_completion"]
+    summary = {
+        "method": "tomotopy",
+        "training": validation_raw["training"],
+        "validation": {
+            **validation_chemistry,
+            "completion_nll": float(validation_completion["nll_per_token"]),
+            "document_completion": validation_completion,
+        },
+        "test": {
+            **test_chemistry,
+            "completion_nll": float(test_completion["nll_per_token"]),
+            "document_completion": test_completion,
+        },
+        "validation_access_audit": validation_raw["validation_access_audit"],
+        "test_access_audit": {
+            "model_sha256": test_raw["model_sha256"],
+            "model_unchanged_after_evaluation": test_raw[
+                "model_unchanged_after_evaluation"
+            ],
+            "training_or_optimization_performed": False,
+        },
+    }
+    test_row = {
+        "model": "Tomotopy LDA",
+        "optimized_motifs": test_chemistry["optimized_motifs"],
+        "evaluable_motifs": test_chemistry["eligible_topics"],
+        "useful_motifs": test_chemistry["useful_motifs"],
+        "useful_fraction_evaluable": (
+            test_chemistry["useful_motifs"] / test_chemistry["eligible_topics"]
+        ),
+        "spectrum_topic_associations": test_chemistry["associated_spectra"],
+        "mean_sos": test_chemistry["mean_sos"],
+        "median_sos": test_chemistry["median_sos"],
+        "completion_nll": summary["test"]["completion_nll"],
+        "median_effective_topics": "",
+        "mean_effective_topics": "",
+        "median_exact_support": "",
+        "p95_exact_support": "",
+        "unique_top1_topics": "",
+        "active_topics_gt_0_0005": "",
+        "corpus_effective_topics": "",
+        "maximum_mean_topic_usage": "",
+        "mean_nearest_beta_cosine": "",
+        "maximum_beta_cosine": "",
+        "catastrophic_duplicate_component": "",
+        "training_seconds": summary["training"]["training_seconds_total"],
+        "parameters": "",
+        "finite_stable": True,
+        "mag_clustering_failures": test_chemistry["mag_failures"]["clustering_count"],
+        "mag_optimization_failures": test_chemistry["mag_failures"][
+            "optimization_count"
+        ],
+        "heldout_compounds_excluded_from_mag": bool(
+            test_chemistry["heldout_compounds_excluded_from_mag"],
+        ),
+        "sos_band_accounting_valid": bool(
+            test_chemistry["sos_band_accounting_valid"],
+        ),
+    }
+    validation_row = {
+        "model": "Tomotopy LDA",
+        "optimized_motifs": validation_chemistry["optimized_motifs"],
+        "evaluable_motifs": validation_chemistry["eligible_topics"],
+        "useful_motifs": validation_chemistry["useful_motifs"],
+        "useful_fraction_evaluable": (
+            validation_chemistry["useful_motifs"]
+            / validation_chemistry["eligible_topics"]
+        ),
+        "spectrum_topic_associations": validation_chemistry["associated_spectra"],
+        "mean_sos": validation_chemistry["mean_sos"],
+        "median_sos": validation_chemistry["median_sos"],
+        "completion_nll": summary["validation"]["completion_nll"],
+        "median_effective_topics": "",
+        "median_exact_support": "",
+        "unique_top1_topics": "",
+        "finite_stable": True,
+        "parameters": "",
+    }
+    chemistry = {"validation": validation_result, "test": test_result}
+    test_raw = {**test_raw, "chemistry": test_result}
+    return summary, test_row, validation_row, chemistry, test_raw
+
+
 def _real_evidence(
     root: Path,
+    protocol: Mapping[str, Any],
 ) -> tuple[
     list[dict[str, object]],
     list[dict[str, object]],
     dict[str, Any],
     list[dict[str, object]],
     dict[str, Any],
+    dict[str, Any],
+    dict[str, Any],
 ]:
     """Extract final test, development validation, and multiseed evidence."""
     paths = reproduction_paths(root)
     rows: list[dict[str, object]] = []
     validation_rows: list[dict[str, object]] = []
+    chemical_results: dict[str, Any] = {
+        "controls": {},
+        "contextual": {},
+        "tomotopy": {},
+    }
     for label, method in (("canonical ETM", "etm"), ("balanced ETM", "etm_balanced")):
         model = paths.controls / "models" / method
         training_result = read_json(model / "result.json")
@@ -356,14 +562,27 @@ def _real_evidence(
             test_evaluation.get("device"),
             label=f"{label} test inference",
         )
-        validation_chemistry = read_json(
-            paths.controls / "validation_chemical" / method / "complete.json",
+        validation_chemistry = _chemical_evaluation_result(
+            paths.controls,
+            method=method,
+            split="validation",
+            protocol=protocol,
         )
+        test_chemistry = _chemical_evaluation_result(
+            paths.controls,
+            method=method,
+            split="test",
+            protocol=protocol,
+        )
+        chemical_results["controls"][method] = {
+            "validation": validation_chemistry,
+            "test": test_chemistry,
+        }
         rows.append(
             _model_row(
                 label,
                 test_evaluation,
-                read_json(paths.controls / "chemical" / method / "complete.json"),
+                test_chemistry,
                 training_result,
                 training_metrics,
             ),
@@ -388,8 +607,11 @@ def _real_evidence(
             config.get("device"),
             label=f"Contextual Sparse ETM seed {seed} training",
         )
-        validation_chemistry = read_json(
-            paths.contextual[seed] / "validation_chemical" / METHOD / "complete.json",
+        validation_chemistry = _chemical_evaluation_result(
+            paths.contextual[seed],
+            method=METHOD,
+            split="validation",
+            protocol=protocol,
         )
         if int(config["training_seed"]) != seed:
             msg = f"seed {seed} does not match its declared training seed"
@@ -401,10 +623,20 @@ def _real_evidence(
             test_evaluation.get("device"),
             label=f"Contextual Sparse ETM seed {seed} test inference",
         )
+        test_chemistry = _chemical_evaluation_result(
+            paths.contextual[seed],
+            method=METHOD,
+            split="test",
+            protocol=protocol,
+        )
+        chemical_results["contextual"][seed] = {
+            "validation": validation_chemistry,
+            "test": test_chemistry,
+        }
         row = _model_row(
             "Contextual Sparse ETM",
             test_evaluation,
-            read_json(paths.contextual[seed] / "chemical" / METHOD / "complete.json"),
+            test_chemistry,
             training_result,
             training_metrics,
         )
@@ -421,14 +653,7 @@ def _real_evidence(
             test_metrics = dict(test_evaluation["metrics"])
             test_metrics.update(
                 {
-                    "test_chemistry": _chemistry_summary(
-                        read_json(
-                            paths.contextual[seed]
-                            / "chemical"
-                            / METHOD
-                            / "complete.json",
-                        ),
-                    ),
+                    "test_chemistry": _chemistry_summary(test_chemistry),
                     "parameters": int(training_result["parameters"]),
                     "learned_context_scale": float(
                         training_metrics["learned_context_scale"],
@@ -457,106 +682,24 @@ def _real_evidence(
         msg = "primary Contextual Sparse ETM seed is missing"
         raise RuntimeError(msg)
 
-    tomotopy_validation_raw = read_json(
-        paths.tomotopy / "tomotopy/validation_only_result.json",
+    (
+        tomotopy,
+        tomotopy_test_row,
+        tomotopy_validation_row,
+        chemical_results["tomotopy"],
+        tomotopy_test_raw,
+    ) = _tomotopy_evidence(paths.tomotopy, protocol)
+    rows.append(tomotopy_test_row)
+    validation_rows.append(tomotopy_validation_row)
+    return (
+        rows,
+        validation_rows,
+        tomotopy,
+        seed_rows,
+        proposed,
+        chemical_results,
+        tomotopy_test_raw,
     )
-    tomotopy_test_raw = read_json(paths.tomotopy / "tomotopy/test_result.json")
-    tomotopy_validation_chemistry = _chemistry_summary(
-        read_json(paths.tomotopy / "validation_chemical/tomotopy/complete.json"),
-    )
-    tomotopy_validation_completion = tomotopy_validation_raw["validation"]["metrics"][
-        "validation_document_completion"
-    ]
-    tomotopy_test_chemistry = _chemistry_summary(tomotopy_test_raw["chemistry"])
-    tomotopy_test_completion = tomotopy_test_raw["evaluation"]["metrics"][
-        "test_document_completion"
-    ]
-    tomotopy = {
-        "method": "tomotopy",
-        "training": tomotopy_validation_raw["training"],
-        "validation": {
-            **tomotopy_validation_chemistry,
-            "high_confidence_evaluable_motifs": tomotopy_validation_chemistry[
-                "eligible_topics"
-            ],
-            "useful_high_confidence_motifs": tomotopy_validation_chemistry[
-                "useful_motifs"
-            ],
-            "completion_nll": float(tomotopy_validation_completion["nll_per_token"]),
-            "document_completion": tomotopy_validation_completion,
-        },
-        "test": {
-            **tomotopy_test_chemistry,
-            "high_confidence_evaluable_motifs": tomotopy_test_chemistry[
-                "eligible_topics"
-            ],
-            "useful_high_confidence_motifs": tomotopy_test_chemistry["useful_motifs"],
-            "completion_nll": float(tomotopy_test_completion["nll_per_token"]),
-            "document_completion": tomotopy_test_completion,
-        },
-        "validation_access_audit": tomotopy_validation_raw["validation_access_audit"],
-        "test_access_audit": {
-            "model_sha256": tomotopy_test_raw["model_sha256"],
-            "model_unchanged_after_evaluation": tomotopy_test_raw[
-                "model_unchanged_after_evaluation"
-            ],
-            "training_or_optimization_performed": False,
-        },
-    }
-    rows.append(
-        {
-            "model": "Tomotopy LDA",
-            "optimized_motifs": tomotopy_test_chemistry["optimized_motifs"],
-            "evaluable_motifs": tomotopy_test_chemistry["eligible_topics"],
-            "useful_motifs": tomotopy_test_chemistry["useful_motifs"],
-            "mean_sos": tomotopy_test_chemistry["mean_sos"],
-            "median_sos": tomotopy_test_chemistry["median_sos"],
-            "completion_nll": tomotopy["test"]["completion_nll"],
-            "median_effective_topics": "",
-            "mean_effective_topics": "",
-            "median_exact_support": "",
-            "p95_exact_support": "",
-            "unique_top1_topics": "",
-            "active_topics_gt_0_0005": "",
-            "corpus_effective_topics": "",
-            "maximum_mean_topic_usage": "",
-            "mean_nearest_beta_cosine": "",
-            "maximum_beta_cosine": "",
-            "catastrophic_duplicate_component": "",
-            "training_seconds": tomotopy["training"]["training_seconds_total"],
-            "parameters": "",
-            "finite_stable": True,
-            "mag_clustering_failures": tomotopy_test_chemistry["mag_failures"][
-                "clustering_count"
-            ],
-            "mag_optimization_failures": tomotopy_test_chemistry["mag_failures"][
-                "optimization_count"
-            ],
-            "heldout_compounds_excluded_from_mag": bool(
-                tomotopy_test_chemistry["heldout_compounds_excluded_from_mag"],
-            ),
-            "sos_band_accounting_valid": bool(
-                tomotopy_test_chemistry["sos_band_accounting_valid"],
-            ),
-        },
-    )
-    validation_rows.append(
-        {
-            "model": "Tomotopy LDA",
-            "optimized_motifs": tomotopy_validation_chemistry["optimized_motifs"],
-            "evaluable_motifs": tomotopy_validation_chemistry["eligible_topics"],
-            "useful_motifs": tomotopy_validation_chemistry["useful_motifs"],
-            "mean_sos": tomotopy_validation_chemistry["mean_sos"],
-            "median_sos": tomotopy_validation_chemistry["median_sos"],
-            "completion_nll": tomotopy["validation"]["completion_nll"],
-            "median_effective_topics": "",
-            "median_exact_support": "",
-            "unique_top1_topics": "",
-            "finite_stable": True,
-            "parameters": "",
-        },
-    )
-    return rows, validation_rows, tomotopy, seed_rows, proposed
 
 
 def _stability(
@@ -643,7 +786,7 @@ def _exact_data_checks(
     preparation: Mapping[str, Any],
     protocol: Mapping[str, Any],
 ) -> dict[str, Any]:
-    """Apply predeclared immutable data and configuration gates."""
+    """Apply immutable data and configuration gates."""
     data = preparation["data"]
     actual = {
         "source_spectra": int(data["parsing"]["parsed_blocks"]),
@@ -689,11 +832,11 @@ def _claim_checks(
     comparison: Sequence[Mapping[str, object]],
     stability: Mapping[str, Any],
     high_k: Sequence[Mapping[str, object]],
+    expected_test_spectra: int,
 ) -> dict[str, Any]:
-    """Evaluate the directional claims frozen before results were opened."""
+    """Evaluate the report's directional claims."""
     models = {str(row["model"]): row for row in comparison}
     proposed = models["Contextual Sparse ETM"]
-    tomotopy = models["Tomotopy LDA"]
     controls = [models["canonical ETM"], models["balanced ETM"]]
     high_k_proposed = next(
         row for row in high_k if row["formulation"] == FINAL_SYNTHETIC_LABEL
@@ -711,10 +854,10 @@ def _claim_checks(
             for name, row in models.items()
             if name != "Contextual Sparse ETM"
         ),
-        "tomotopy_has_higher_conditional_mean_sos": float(tomotopy["mean_sos"])
-        > float(proposed["mean_sos"]),
-        "tomotopy_has_higher_conditional_median_sos": float(tomotopy["median_sos"])
-        > float(proposed["median_sos"]),
+        "all_models_assign_every_test_spectrum_once": all(
+            int(row["spectrum_topic_associations"]) == expected_test_spectra
+            for row in models.values()
+        ),
         "dense_etm_controls_have_lower_completion_nll": all(
             float(row["completion_nll"]) < float(proposed["completion_nll"])
             for row in controls
@@ -792,18 +935,29 @@ def _build_package(
     probability = probability_audit(raw_root)
     paths = reproduction_paths(raw_root)
     preparation = read_json(paths.prepared / "preparation_summary.json")
-    protocol = read_json(paths.prepared / "protocol.json")
+    protocol = load_protocol()
     data_checks = _exact_data_checks(preparation, protocol)
     if not data_checks["all_passed"]:
         msg = "immutable data/configuration checks failed"
         raise RuntimeError(msg)
 
     primary, synthetic_summary, high_k = _synthetic_tables(raw_root)
-    comparison, validation_comparison, tomotopy, seed_rows, proposed = _real_evidence(
-        raw_root,
-    )
+    (
+        comparison,
+        validation_comparison,
+        tomotopy,
+        seed_rows,
+        proposed,
+        chemical_results,
+        tomotopy_test_raw,
+    ) = _real_evidence(raw_root, protocol)
     stability = _stability(seed_rows, comparison)
-    claims = _claim_checks(comparison, stability, high_k)
+    claims = _claim_checks(
+        comparison,
+        stability,
+        high_k,
+        int(preparation["data"]["split"]["spectrum_counts"]["test"]),
+    )
     chemical_integrity = _chemical_integrity_checks(comparison, stability)
     chemical_integrity_passed = chemical_integrity["all_passed"]
     data_quality = {
@@ -830,6 +984,8 @@ def _build_package(
         "primary": primary,
         "synthetic_summary": synthetic_summary,
         "high_k": high_k,
+        "chemical_results": chemical_results,
+        "tomotopy_test_raw": tomotopy_test_raw,
     }
     destination.mkdir(parents=True)
     _write_summary_artifacts(destination, evidence)
@@ -838,6 +994,8 @@ def _build_package(
         destination,
         manifest=manifest,
         claims=claims,
+        chemical_results=chemical_results,
+        tomotopy_test_raw=tomotopy_test_raw,
     )
     replacements = _path_replacements(paths, manifest)
     _rewrite_json_as_portable(destination, replacements)

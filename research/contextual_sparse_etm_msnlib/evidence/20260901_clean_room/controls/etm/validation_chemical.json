@@ -1,18 +1,17 @@
 {
   "annotation_coverage": 0.601,
   "annotation_method": "etm",
-  "heldout_compounds_excluded_from_mag": true,
-  "high_confidence_chemistry": {
-    "associated_molecules": 1209,
-    "associated_spectra": 1221,
-    "eligible_topics": 137,
-    "mean_sos": 0.6491154533189764,
-    "median_sos": 0.6405585913782635,
-    "membership_threshold": 0.5,
+  "chemical_evaluation": {
+    "associated_molecules": 3862,
+    "associated_spectra": 3889,
+    "association_rule": "dominant_topic",
+    "eligible_topics": 199,
+    "mean_sos": 0.6352859945464516,
+    "median_sos": 0.632,
     "sos_bands": {
-      "high_gt_0_8": 21,
-      "intermediate_0_6_to_0_8": 66,
-      "low_lt_0_6": 50
+      "high_gt_0_8": 24,
+      "intermediate_0_6_to_0_8": 94,
+      "low_lt_0_6": 81
     },
     "topic_scores": [
       {
@@ -65,10 +64,10 @@
         "topic_id": 6
       },
       {
-        "associated_molecules": 18,
-        "associated_spectra": 18,
+        "associated_molecules": 67,
+        "associated_spectra": 67,
         "eligible": true,
-        "sos": 0.6720430107526882,
+        "sos": 0.675493500240732,
         "topic_id": 7
       },
       {
@@ -114,10 +113,10 @@
         "topic_id": 13
       },
       {
-        "associated_molecules": 2,
-        "associated_spectra": 2,
+        "associated_molecules": 5,
+        "associated_spectra": 5,
         "eligible": true,
-        "sos": 0.6216216216216216,
+        "sos": 0.7351351351351352,
         "topic_id": 14
       },
       {
@@ -142,10 +141,10 @@
         "topic_id": 17
       },
       {
-        "associated_molecules": 2,
-        "associated_spectra": 2,
+        "associated_molecules": 6,
+        "associated_spectra": 6,
         "eligible": true,
-        "sos": 0.3557692307692307,
+        "sos": 0.37179487179487175,
         "topic_id": 18
       },
       {
@@ -156,8 +155,8 @@
         "topic_id": 19
       },
       {
-        "associated_molecules": 1,
-        "associated_spectra": 1,
+        "associated_molecules": 3,
+        "associated_spectra": 3,
         "eligible": false,
         "sos": null,
         "topic_id": 20
@@ -191,10 +190,10 @@
         "topic_id": 24
       },
       {
-        "associated_molecules": 18,
-        "associated_spectra": 18,
+        "associated_molecules": 29,
+        "associated_spectra": 29,
         "eligible": true,
-        "sos": 0.6186868686868686,
+        "sos": 0.6010971786833855,
         "topic_id": 25
       },
       {
@@ -219,17 +218,17 @@
         "topic_id": 28
       },
       {
-        "associated_molecules": 1,
-        "associated_spectra": 1,
+        "associated_molecules": 4,
+        "associated_spectra": 4,
         "eligible": false,
         "sos": null,
         "topic_id": 29
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 1,
+        "associated_spectra": 1,
+        "eligible": true,
+        "sos": 0.328125,
         "topic_id": 30
       },
       {
@@ -268,10 +267,10 @@
         "topic_id": 35
       },
       {
-        "associated_molecules": 49,
-        "associated_spectra": 50,
+        "associated_molecules": 174,
+        "associated_spectra": 177,
         "eligible": true,
-        "sos": 0.5079365079365079,
+        "sos": 0.5226692209450831,
         "topic_id": 36
       },
       {
@@ -345,22 +344,22 @@
         "topic_id": 46
       },
       {
-        "associated_molecules": 20,
-        "associated_spectra": 20,
+        "associated_molecules": 69,
+        "associated_spectra": 70,
         "eligible": true,
-        "sos": 0.6199999999999999,
+        "sos": 0.618550724637681,
         "topic_id": 47
       },
       {
-        "associated_molecules": 2,
-        "associated_spectra": 2,
+        "associated_molecules": 5,
+        "associated_spectra": 5,
         "eligible": true,
-        "sos": 0.64,
+        "sos": 0.584,
         "topic_id": 48
       },
       {
-        "associated_molecules": 1,
-        "associated_spectra": 1,
+        "associated_molecules": 4,
+        "associated_spectra": 4,
         "eligible": false,
         "sos": null,
         "topic_id": 49
@@ -373,17 +372,17 @@
         "topic_id": 50
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 1,
+        "associated_spectra": 1,
+        "eligible": true,
+        "sos": 0.6808510638297872,
         "topic_id": 51
       },
       {
-        "associated_molecules": 16,
-        "associated_spectra": 18,
+        "associated_molecules": 99,
+        "associated_spectra": 101,
         "eligible": true,
-        "sos": 0.5392857142857143,
+        "sos": 0.554978354978355,
         "topic_id": 52
       },
       {
@@ -478,10 +477,10 @@
         "topic_id": 65
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 1,
+        "associated_spectra": 1,
+        "eligible": true,
+        "sos": 0.7777777777777778,
         "topic_id": 66
       },
       {
@@ -506,10 +505,10 @@
         "topic_id": 69
       },
       {
-        "associated_molecules": 3,
-        "associated_spectra": 3,
+        "associated_molecules": 5,
+        "associated_spectra": 5,
         "eligible": true,
-        "sos": 0.7232704402515724,
+        "sos": 0.690566037735849,
         "topic_id": 70
       },
       {
@@ -520,10 +519,10 @@
         "topic_id": 71
       },
       {
-        "associated_molecules": 8,
-        "associated_spectra": 8,
+        "associated_molecules": 14,
+        "associated_spectra": 14,
         "eligible": true,
-        "sos": 0.7039473684210527,
+        "sos": 0.7481203007518797,
         "topic_id": 72
       },
       {
@@ -534,10 +533,10 @@
         "topic_id": 73
       },
       {
-        "associated_molecules": 61,
-        "associated_spectra": 64,
+        "associated_molecules": 108,
+        "associated_spectra": 114,
         "eligible": true,
-        "sos": 0.6405585913782635,
+        "sos": 0.6150548696844993,
         "topic_id": 74
       },
       {
@@ -548,8 +547,8 @@
         "topic_id": 75
       },
       {
-        "associated_molecules": 4,
-        "associated_spectra": 4,
+        "associated_molecules": 6,
+        "associated_spectra": 6,
         "eligible": false,
         "sos": null,
         "topic_id": 76
@@ -569,17 +568,17 @@
         "topic_id": 78
       },
       {
-        "associated_molecules": 10,
-        "associated_spectra": 10,
+        "associated_molecules": 16,
+        "associated_spectra": 16,
         "eligible": true,
-        "sos": 0.617948717948718,
+        "sos": 0.6282051282051282,
         "topic_id": 79
       },
       {
-        "associated_molecules": 1,
-        "associated_spectra": 1,
+        "associated_molecules": 7,
+        "associated_spectra": 7,
         "eligible": true,
-        "sos": 0.35294117647058826,
+        "sos": 0.5504201680672269,
         "topic_id": 80
       },
       {
@@ -590,8 +589,8 @@
         "topic_id": 81
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
+        "associated_molecules": 3,
+        "associated_spectra": 3,
         "eligible": false,
         "sos": null,
         "topic_id": 82
@@ -625,17 +624,17 @@
         "topic_id": 86
       },
       {
-        "associated_molecules": 3,
-        "associated_spectra": 3,
+        "associated_molecules": 9,
+        "associated_spectra": 9,
         "eligible": true,
-        "sos": 0.8148148148148149,
+        "sos": 0.7181069958847737,
         "topic_id": 87
       },
       {
-        "associated_molecules": 7,
-        "associated_spectra": 7,
+        "associated_molecules": 24,
+        "associated_spectra": 24,
         "eligible": true,
-        "sos": 0.6726190476190476,
+        "sos": 0.6397569444444445,
         "topic_id": 88
       },
       {
@@ -646,10 +645,10 @@
         "topic_id": 89
       },
       {
-        "associated_molecules": 2,
-        "associated_spectra": 2,
+        "associated_molecules": 6,
+        "associated_spectra": 6,
         "eligible": true,
-        "sos": 0.6805555555555556,
+        "sos": 0.5555555555555555,
         "topic_id": 90
       },
       {
@@ -695,10 +694,10 @@
         "topic_id": 96
       },
       {
-        "associated_molecules": 3,
-        "associated_spectra": 3,
+        "associated_molecules": 12,
+        "associated_spectra": 12,
         "eligible": true,
-        "sos": 0.7692307692307692,
+        "sos": 0.7542735042735043,
         "topic_id": 97
       },
       {
@@ -744,17 +743,17 @@
         "topic_id": 103
       },
       {
-        "associated_molecules": 1,
-        "associated_spectra": 1,
+        "associated_molecules": 4,
+        "associated_spectra": 4,
         "eligible": true,
-        "sos": 0.5217391304347826,
+        "sos": 0.44565217391304346,
         "topic_id": 104
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 2,
+        "associated_spectra": 2,
+        "eligible": true,
+        "sos": 0.532258064516129,
         "topic_id": 105
       },
       {
@@ -779,17 +778,17 @@
         "topic_id": 108
       },
       {
-        "associated_molecules": 35,
-        "associated_spectra": 36,
+        "associated_molecules": 141,
+        "associated_spectra": 142,
         "eligible": true,
-        "sos": 0.683116883116883,
+        "sos": 0.7221147646679561,
         "topic_id": 109
       },
       {
-        "associated_molecules": 10,
-        "associated_spectra": 10,
+        "associated_molecules": 23,
+        "associated_spectra": 23,
         "eligible": true,
-        "sos": 0.4793103448275862,
+        "sos": 0.502248875562219,
         "topic_id": 110
       },
       {
@@ -807,10 +806,10 @@
         "topic_id": 112
       },
       {
-        "associated_molecules": 14,
-        "associated_spectra": 14,
+        "associated_molecules": 44,
+        "associated_spectra": 44,
         "eligible": true,
-        "sos": 0.3826530612244898,
+        "sos": 0.3977272727272727,
         "topic_id": 113
       },
       {
@@ -821,17 +820,17 @@
         "topic_id": 114
       },
       {
-        "associated_molecules": 1,
-        "associated_spectra": 1,
+        "associated_molecules": 3,
+        "associated_spectra": 3,
         "eligible": true,
-        "sos": 0.7666666666666667,
+        "sos": 0.7722222222222223,
         "topic_id": 115
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 1,
+        "associated_spectra": 1,
+        "eligible": true,
+        "sos": 0.8571428571428571,
         "topic_id": 116
       },
       {
@@ -870,10 +869,10 @@
         "topic_id": 121
       },
       {
-        "associated_molecules": 6,
-        "associated_spectra": 6,
+        "associated_molecules": 18,
+        "associated_spectra": 18,
         "eligible": true,
-        "sos": 0.7028985507246377,
+        "sos": 0.6582125603864735,
         "topic_id": 122
       },
       {
@@ -905,10 +904,10 @@
         "topic_id": 126
       },
       {
-        "associated_molecules": 1,
-        "associated_spectra": 1,
+        "associated_molecules": 5,
+        "associated_spectra": 5,
         "eligible": true,
-        "sos": 0.6756756756756757,
+        "sos": 0.5783783783783785,
         "topic_id": 127
       },
       {
@@ -940,10 +939,10 @@
         "topic_id": 131
       },
       {
-        "associated_molecules": 1,
-        "associated_spectra": 1,
+        "associated_molecules": 2,
+        "associated_spectra": 2,
         "eligible": true,
-        "sos": 0.59375,
+        "sos": 0.609375,
         "topic_id": 132
       },
       {
@@ -968,10 +967,10 @@
         "topic_id": 135
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 3,
+        "associated_spectra": 3,
+        "eligible": true,
+        "sos": 0.5703703703703703,
         "topic_id": 136
       },
       {
@@ -996,8 +995,8 @@
         "topic_id": 139
       },
       {
-        "associated_molecules": 1,
-        "associated_spectra": 1,
+        "associated_molecules": 5,
+        "associated_spectra": 5,
         "eligible": false,
         "sos": null,
         "topic_id": 140
@@ -1038,17 +1037,17 @@
         "topic_id": 145
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 2,
+        "associated_spectra": 2,
+        "eligible": true,
+        "sos": 0.635593220338983,
         "topic_id": 146
       },
       {
-        "associated_molecules": 20,
-        "associated_spectra": 21,
+        "associated_molecules": 47,
+        "associated_spectra": 48,
         "eligible": true,
-        "sos": 0.6200000000000001,
+        "sos": 0.6382978723404255,
         "topic_id": 147
       },
       {
@@ -1094,10 +1093,10 @@
         "topic_id": 153
       },
       {
-        "associated_molecules": 3,
-        "associated_spectra": 3,
+        "associated_molecules": 12,
+        "associated_spectra": 12,
         "eligible": true,
-        "sos": 0.8787878787878788,
+        "sos": 0.8636363636363636,
         "topic_id": 154
       },
       {
@@ -1157,10 +1156,10 @@
         "topic_id": 162
       },
       {
-        "associated_molecules": 1,
-        "associated_spectra": 1,
+        "associated_molecules": 4,
+        "associated_spectra": 4,
         "eligible": true,
-        "sos": 0.5238095238095238,
+        "sos": 0.5059523809523809,
         "topic_id": 163
       },
       {
@@ -1206,10 +1205,10 @@
         "topic_id": 169
       },
       {
-        "associated_molecules": 4,
-        "associated_spectra": 4,
+        "associated_molecules": 7,
+        "associated_spectra": 7,
         "eligible": true,
-        "sos": 0.7166666666666667,
+        "sos": 0.6476190476190476,
         "topic_id": 170
       },
       {
@@ -1227,8 +1226,8 @@
         "topic_id": 172
       },
       {
-        "associated_molecules": 2,
-        "associated_spectra": 2,
+        "associated_molecules": 6,
+        "associated_spectra": 6,
         "eligible": false,
         "sos": null,
         "topic_id": 173
@@ -1241,17 +1240,17 @@
         "topic_id": 174
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 9,
+        "associated_spectra": 9,
+        "eligible": true,
+        "sos": 0.5952380952380953,
         "topic_id": 175
       },
       {
-        "associated_molecules": 1,
-        "associated_spectra": 1,
+        "associated_molecules": 5,
+        "associated_spectra": 5,
         "eligible": true,
-        "sos": 0.6410256410256411,
+        "sos": 0.5333333333333333,
         "topic_id": 176
       },
       {
@@ -1311,8 +1310,8 @@
         "topic_id": 184
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
+        "associated_molecules": 1,
+        "associated_spectra": 1,
         "eligible": false,
         "sos": null,
         "topic_id": 185
@@ -1367,10 +1366,10 @@
         "topic_id": 192
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 2,
+        "associated_spectra": 2,
+        "eligible": true,
+        "sos": 0.4552238805970149,
         "topic_id": 193
       },
       {
@@ -1388,10 +1387,10 @@
         "topic_id": 195
       },
       {
-        "associated_molecules": 2,
-        "associated_spectra": 2,
+        "associated_molecules": 5,
+        "associated_spectra": 5,
         "eligible": true,
-        "sos": 0.7019230769230769,
+        "sos": 0.6615384615384615,
         "topic_id": 196
       },
       {
@@ -1458,10 +1457,10 @@
         "topic_id": 205
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 1,
+        "associated_spectra": 1,
+        "eligible": true,
+        "sos": 0.75,
         "topic_id": 206
       },
       {
@@ -1486,8 +1485,8 @@
         "topic_id": 209
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
+        "associated_molecules": 1,
+        "associated_spectra": 1,
         "eligible": false,
         "sos": null,
         "topic_id": 210
@@ -1514,31 +1513,31 @@
         "topic_id": 213
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 2,
+        "associated_spectra": 3,
+        "eligible": true,
+        "sos": 0.6296296296296297,
         "topic_id": 214
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
+        "associated_molecules": 1,
+        "associated_spectra": 1,
         "eligible": false,
         "sos": null,
         "topic_id": 215
       },
       {
-        "associated_molecules": 2,
-        "associated_spectra": 2,
+        "associated_molecules": 5,
+        "associated_spectra": 5,
         "eligible": true,
-        "sos": 0.6276595744680851,
+        "sos": 0.5872340425531914,
         "topic_id": 216
       },
       {
-        "associated_molecules": 9,
-        "associated_spectra": 9,
+        "associated_molecules": 53,
+        "associated_spectra": 53,
         "eligible": true,
-        "sos": 0.5956790123456791,
+        "sos": 0.5880503144654088,
         "topic_id": 217
       },
       {
@@ -1563,10 +1562,10 @@
         "topic_id": 220
       },
       {
-        "associated_molecules": 3,
-        "associated_spectra": 3,
+        "associated_molecules": 7,
+        "associated_spectra": 7,
         "eligible": true,
-        "sos": 0.8412698412698413,
+        "sos": 0.8299319727891156,
         "topic_id": 221
       },
       {
@@ -1577,10 +1576,10 @@
         "topic_id": 222
       },
       {
-        "associated_molecules": 2,
-        "associated_spectra": 2,
+        "associated_molecules": 6,
+        "associated_spectra": 6,
         "eligible": true,
-        "sos": 0.7685185185185186,
+        "sos": 0.6666666666666666,
         "topic_id": 223
       },
       {
@@ -1640,17 +1639,17 @@
         "topic_id": 231
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 2,
+        "associated_spectra": 2,
+        "eligible": true,
+        "sos": 0.4387755102040816,
         "topic_id": 232
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 3,
+        "associated_spectra": 3,
+        "eligible": true,
+        "sos": 0.632768361581921,
         "topic_id": 233
       },
       {
@@ -1675,10 +1674,10 @@
         "topic_id": 236
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 1,
+        "associated_spectra": 1,
+        "eligible": true,
+        "sos": 0.5641025641025641,
         "topic_id": 237
       },
       {
@@ -1731,8 +1730,8 @@
         "topic_id": 244
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
+        "associated_molecules": 1,
+        "associated_spectra": 1,
         "eligible": false,
         "sos": null,
         "topic_id": 245
@@ -1745,10 +1744,10 @@
         "topic_id": 246
       },
       {
-        "associated_molecules": 1,
-        "associated_spectra": 1,
+        "associated_molecules": 3,
+        "associated_spectra": 3,
         "eligible": true,
-        "sos": 0.4411764705882353,
+        "sos": 0.4313725490196078,
         "topic_id": 247
       },
       {
@@ -1766,10 +1765,10 @@
         "topic_id": 249
       },
       {
-        "associated_molecules": 1,
-        "associated_spectra": 1,
+        "associated_molecules": 2,
+        "associated_spectra": 2,
         "eligible": true,
-        "sos": 0.7692307692307693,
+        "sos": 0.5961538461538461,
         "topic_id": 250
       },
       {
@@ -1836,10 +1835,10 @@
         "topic_id": 259
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 1,
+        "associated_spectra": 1,
+        "eligible": true,
+        "sos": 0.6949152542372882,
         "topic_id": 260
       },
       {
@@ -1878,8 +1877,8 @@
         "topic_id": 265
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
+        "associated_molecules": 3,
+        "associated_spectra": 3,
         "eligible": false,
         "sos": null,
         "topic_id": 266
@@ -1948,10 +1947,10 @@
         "topic_id": 275
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 6,
+        "associated_spectra": 6,
+        "eligible": true,
+        "sos": 0.6134751773049646,
         "topic_id": 276
       },
       {
@@ -1962,17 +1961,17 @@
         "topic_id": 277
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 3,
+        "associated_spectra": 3,
+        "eligible": true,
+        "sos": 0.42857142857142855,
         "topic_id": 278
       },
       {
-        "associated_molecules": 4,
-        "associated_spectra": 4,
+        "associated_molecules": 8,
+        "associated_spectra": 8,
         "eligible": true,
-        "sos": 0.7111111111111111,
+        "sos": 0.6555555555555556,
         "topic_id": 279
       },
       {
@@ -1997,24 +1996,24 @@
         "topic_id": 282
       },
       {
-        "associated_molecules": 20,
-        "associated_spectra": 20,
+        "associated_molecules": 34,
+        "associated_spectra": 34,
         "eligible": true,
-        "sos": 0.5044444444444445,
+        "sos": 0.5248366013071896,
         "topic_id": 283
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
+        "associated_molecules": 1,
+        "associated_spectra": 1,
         "eligible": false,
         "sos": null,
         "topic_id": 284
       },
       {
-        "associated_molecules": 1,
-        "associated_spectra": 1,
+        "associated_molecules": 2,
+        "associated_spectra": 2,
         "eligible": true,
-        "sos": 0.8,
+        "sos": 0.875,
         "topic_id": 285
       },
       {
@@ -2025,17 +2024,17 @@
         "topic_id": 286
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
+        "associated_molecules": 1,
+        "associated_spectra": 1,
         "eligible": false,
         "sos": null,
         "topic_id": 287
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 2,
+        "associated_spectra": 2,
+        "eligible": true,
+        "sos": 0.5384615384615384,
         "topic_id": 288
       },
       {
@@ -2046,10 +2045,10 @@
         "topic_id": 289
       },
       {
-        "associated_molecules": 1,
-        "associated_spectra": 1,
+        "associated_molecules": 4,
+        "associated_spectra": 4,
         "eligible": true,
-        "sos": 0.8571428571428571,
+        "sos": 0.8392857142857143,
         "topic_id": 290
       },
       {
@@ -2067,17 +2066,17 @@
         "topic_id": 292
       },
       {
-        "associated_molecules": 3,
-        "associated_spectra": 3,
+        "associated_molecules": 6,
+        "associated_spectra": 6,
         "eligible": false,
         "sos": null,
         "topic_id": 293
       },
       {
-        "associated_molecules": 1,
-        "associated_spectra": 1,
+        "associated_molecules": 11,
+        "associated_spectra": 11,
         "eligible": true,
-        "sos": 0.48717948717948717,
+        "sos": 0.5011655011655012,
         "topic_id": 294
       },
       {
@@ -2116,10 +2115,10 @@
         "topic_id": 299
       },
       {
-        "associated_molecules": 10,
-        "associated_spectra": 10,
+        "associated_molecules": 40,
+        "associated_spectra": 40,
         "eligible": true,
-        "sos": 0.4644444444444445,
+        "sos": 0.5038888888888889,
         "topic_id": 300
       },
       {
@@ -2130,8 +2129,8 @@
         "topic_id": 301
       },
       {
-        "associated_molecules": 4,
-        "associated_spectra": 4,
+        "associated_molecules": 13,
+        "associated_spectra": 13,
         "eligible": false,
         "sos": null,
         "topic_id": 302
@@ -2179,10 +2178,10 @@
         "topic_id": 308
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 3,
+        "associated_spectra": 3,
+        "eligible": true,
+        "sos": 0.5625,
         "topic_id": 309
       },
       {
@@ -2228,10 +2227,10 @@
         "topic_id": 315
       },
       {
-        "associated_molecules": 3,
-        "associated_spectra": 3,
+        "associated_molecules": 7,
+        "associated_spectra": 7,
         "eligible": true,
-        "sos": 0.6956521739130436,
+        "sos": 0.6459627329192547,
         "topic_id": 316
       },
       {
@@ -2277,10 +2276,10 @@
         "topic_id": 322
       },
       {
-        "associated_molecules": 2,
-        "associated_spectra": 2,
+        "associated_molecules": 5,
+        "associated_spectra": 5,
         "eligible": true,
-        "sos": 0.5471698113207547,
+        "sos": 0.5245283018867924,
         "topic_id": 323
       },
       {
@@ -2305,10 +2304,10 @@
         "topic_id": 326
       },
       {
-        "associated_molecules": 57,
-        "associated_spectra": 58,
+        "associated_molecules": 131,
+        "associated_spectra": 137,
         "eligible": true,
-        "sos": 0.5856950067476384,
+        "sos": 0.5992366412213741,
         "topic_id": 327
       },
       {
@@ -2319,8 +2318,8 @@
         "topic_id": 328
       },
       {
-        "associated_molecules": 2,
-        "associated_spectra": 2,
+        "associated_molecules": 7,
+        "associated_spectra": 7,
         "eligible": true,
         "sos": 0.0,
         "topic_id": 329
@@ -2375,10 +2374,10 @@
         "topic_id": 336
       },
       {
-        "associated_molecules": 2,
-        "associated_spectra": 2,
+        "associated_molecules": 3,
+        "associated_spectra": 3,
         "eligible": true,
-        "sos": 0.6625,
+        "sos": 0.7000000000000001,
         "topic_id": 337
       },
       {
@@ -2424,10 +2423,10 @@
         "topic_id": 343
       },
       {
-        "associated_molecules": 3,
-        "associated_spectra": 3,
+        "associated_molecules": 7,
+        "associated_spectra": 7,
         "eligible": true,
-        "sos": 0.7916666666666666,
+        "sos": 0.7321428571428573,
         "topic_id": 344
       },
       {
@@ -2438,8 +2437,8 @@
         "topic_id": 345
       },
       {
-        "associated_molecules": 1,
-        "associated_spectra": 1,
+        "associated_molecules": 2,
+        "associated_spectra": 2,
         "eligible": false,
         "sos": null,
         "topic_id": 346
@@ -2452,15 +2451,15 @@
         "topic_id": 347
       },
       {
-        "associated_molecules": 1,
-        "associated_spectra": 1,
+        "associated_molecules": 4,
+        "associated_spectra": 4,
         "eligible": false,
         "sos": null,
         "topic_id": 348
       },
       {
-        "associated_molecules": 3,
-        "associated_spectra": 3,
+        "associated_molecules": 9,
+        "associated_spectra": 9,
         "eligible": false,
         "sos": null,
         "topic_id": 349
@@ -2515,15 +2514,15 @@
         "topic_id": 356
       },
       {
-        "associated_molecules": 4,
-        "associated_spectra": 4,
+        "associated_molecules": 17,
+        "associated_spectra": 17,
         "eligible": true,
         "sos": 1.0,
         "topic_id": 357
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
+        "associated_molecules": 1,
+        "associated_spectra": 1,
         "eligible": false,
         "sos": null,
         "topic_id": 358
@@ -2571,17 +2570,17 @@
         "topic_id": 364
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 1,
+        "associated_spectra": 1,
+        "eligible": true,
+        "sos": 1.0,
         "topic_id": 365
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 1,
+        "associated_spectra": 1,
+        "eligible": true,
+        "sos": 0.4375,
         "topic_id": 366
       },
       {
@@ -2606,10 +2605,10 @@
         "topic_id": 369
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 1,
+        "associated_spectra": 1,
+        "eligible": true,
+        "sos": 0.6470588235294118,
         "topic_id": 370
       },
       {
@@ -2620,10 +2619,10 @@
         "topic_id": 371
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 4,
+        "associated_spectra": 4,
+        "eligible": true,
+        "sos": 0.7196969696969697,
         "topic_id": 372
       },
       {
@@ -2634,8 +2633,8 @@
         "topic_id": 373
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
+        "associated_molecules": 2,
+        "associated_spectra": 2,
         "eligible": false,
         "sos": null,
         "topic_id": 374
@@ -2669,10 +2668,10 @@
         "topic_id": 378
       },
       {
-        "associated_molecules": 9,
-        "associated_spectra": 9,
+        "associated_molecules": 27,
+        "associated_spectra": 27,
         "eligible": true,
-        "sos": 0.8562091503267973,
+        "sos": 0.8061002178649238,
         "topic_id": 379
       },
       {
@@ -2725,10 +2724,10 @@
         "topic_id": 386
       },
       {
-        "associated_molecules": 2,
-        "associated_spectra": 2,
+        "associated_molecules": 5,
+        "associated_spectra": 5,
         "eligible": true,
-        "sos": 0.4436619718309859,
+        "sos": 0.4563380281690141,
         "topic_id": 387
       },
       {
@@ -2753,8 +2752,8 @@
         "topic_id": 390
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
+        "associated_molecules": 3,
+        "associated_spectra": 3,
         "eligible": false,
         "sos": null,
         "topic_id": 391
@@ -2795,10 +2794,10 @@
         "topic_id": 396
       },
       {
-        "associated_molecules": 12,
-        "associated_spectra": 12,
+        "associated_molecules": 71,
+        "associated_spectra": 71,
         "eligible": true,
-        "sos": 0.6075268817204301,
+        "sos": 0.5454338936846886,
         "topic_id": 397
       },
       {
@@ -2809,10 +2808,10 @@
         "topic_id": 398
       },
       {
-        "associated_molecules": 6,
-        "associated_spectra": 6,
+        "associated_molecules": 16,
+        "associated_spectra": 16,
         "eligible": true,
-        "sos": 0.4458333333333333,
+        "sos": 0.49531250000000004,
         "topic_id": 399
       },
       {
@@ -2823,10 +2822,10 @@
         "topic_id": 400
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 3,
+        "associated_spectra": 3,
+        "eligible": true,
+        "sos": 0.22222222222222224,
         "topic_id": 401
       },
       {
@@ -2837,17 +2836,17 @@
         "topic_id": 402
       },
       {
-        "associated_molecules": 3,
-        "associated_spectra": 3,
+        "associated_molecules": 9,
+        "associated_spectra": 10,
         "eligible": true,
-        "sos": 0.888888888888889,
+        "sos": 0.8814814814814814,
         "topic_id": 403
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 4,
+        "associated_spectra": 4,
+        "eligible": true,
+        "sos": 0.6166666666666667,
         "topic_id": 404
       },
       {
@@ -2858,15 +2857,15 @@
         "topic_id": 405
       },
       {
-        "associated_molecules": 6,
-        "associated_spectra": 6,
+        "associated_molecules": 31,
+        "associated_spectra": 31,
         "eligible": true,
-        "sos": 0.648936170212766,
+        "sos": 0.6362388469457791,
         "topic_id": 406
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
+        "associated_molecules": 1,
+        "associated_spectra": 1,
         "eligible": false,
         "sos": null,
         "topic_id": 407
@@ -2886,10 +2885,10 @@
         "topic_id": 409
       },
       {
-        "associated_molecules": 12,
-        "associated_spectra": 12,
+        "associated_molecules": 20,
+        "associated_spectra": 20,
         "eligible": true,
-        "sos": 0.4621212121212121,
+        "sos": 0.4779220779220779,
         "topic_id": 410
       },
       {
@@ -2921,24 +2920,24 @@
         "topic_id": 414
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 1,
+        "associated_spectra": 1,
+        "eligible": true,
+        "sos": 0.7678571428571429,
         "topic_id": 415
       },
       {
-        "associated_molecules": 11,
-        "associated_spectra": 11,
+        "associated_molecules": 43,
+        "associated_spectra": 43,
         "eligible": true,
-        "sos": 0.5745454545454546,
+        "sos": 0.5883720930232559,
         "topic_id": 416
       },
       {
-        "associated_molecules": 2,
-        "associated_spectra": 2,
+        "associated_molecules": 5,
+        "associated_spectra": 5,
         "eligible": true,
-        "sos": 0.4672131147540983,
+        "sos": 0.5147540983606558,
         "topic_id": 417
       },
       {
@@ -2949,8 +2948,8 @@
         "topic_id": 418
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
+        "associated_molecules": 1,
+        "associated_spectra": 1,
         "eligible": false,
         "sos": null,
         "topic_id": 419
@@ -2991,10 +2990,10 @@
         "topic_id": 424
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 3,
+        "associated_spectra": 3,
+        "eligible": true,
+        "sos": 0.7044025157232704,
         "topic_id": 425
       },
       {
@@ -3019,10 +3018,10 @@
         "topic_id": 428
       },
       {
-        "associated_molecules": 3,
-        "associated_spectra": 3,
+        "associated_molecules": 7,
+        "associated_spectra": 7,
         "eligible": true,
-        "sos": 0.45,
+        "sos": 0.6035714285714285,
         "topic_id": 429
       },
       {
@@ -3054,10 +3053,10 @@
         "topic_id": 433
       },
       {
-        "associated_molecules": 18,
-        "associated_spectra": 18,
+        "associated_molecules": 38,
+        "associated_spectra": 38,
         "eligible": true,
-        "sos": 0.7592592592592591,
+        "sos": 0.7570175438596491,
         "topic_id": 434
       },
       {
@@ -3089,10 +3088,10 @@
         "topic_id": 438
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 3,
+        "associated_spectra": 3,
+        "eligible": true,
+        "sos": 0.5476190476190477,
         "topic_id": 439
       },
       {
@@ -3117,8 +3116,8 @@
         "topic_id": 442
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
+        "associated_molecules": 1,
+        "associated_spectra": 1,
         "eligible": false,
         "sos": null,
         "topic_id": 443
@@ -3138,17 +3137,17 @@
         "topic_id": 445
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 1,
+        "associated_spectra": 1,
+        "eligible": true,
+        "sos": 0.47368421052631576,
         "topic_id": 446
       },
       {
-        "associated_molecules": 7,
-        "associated_spectra": 7,
+        "associated_molecules": 14,
+        "associated_spectra": 14,
         "eligible": true,
-        "sos": 0.7658730158730159,
+        "sos": 0.7103174603174603,
         "topic_id": 447
       },
       {
@@ -3166,10 +3165,10 @@
         "topic_id": 449
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 1,
+        "associated_spectra": 1,
+        "eligible": true,
+        "sos": 0.6785714285714286,
         "topic_id": 450
       },
       {
@@ -3201,10 +3200,10 @@
         "topic_id": 454
       },
       {
-        "associated_molecules": 6,
-        "associated_spectra": 6,
+        "associated_molecules": 13,
+        "associated_spectra": 13,
         "eligible": true,
-        "sos": 0.7037037037037037,
+        "sos": 0.7863247863247863,
         "topic_id": 455
       },
       {
@@ -3264,10 +3263,10 @@
         "topic_id": 463
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 5,
+        "associated_spectra": 5,
+        "eligible": true,
+        "sos": 0.632,
         "topic_id": 464
       },
       {
@@ -3320,8 +3319,8 @@
         "topic_id": 471
       },
       {
-        "associated_molecules": 51,
-        "associated_spectra": 51,
+        "associated_molecules": 169,
+        "associated_spectra": 169,
         "eligible": false,
         "sos": null,
         "topic_id": 472
@@ -3334,8 +3333,8 @@
         "topic_id": 473
       },
       {
-        "associated_molecules": 1,
-        "associated_spectra": 1,
+        "associated_molecules": 2,
+        "associated_spectra": 2,
         "eligible": false,
         "sos": null,
         "topic_id": 474
@@ -3369,10 +3368,10 @@
         "topic_id": 478
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 5,
+        "associated_spectra": 5,
+        "eligible": true,
+        "sos": 0.6962962962962962,
         "topic_id": 479
       },
       {
@@ -3383,10 +3382,10 @@
         "topic_id": 480
       },
       {
-        "associated_molecules": 2,
-        "associated_spectra": 2,
+        "associated_molecules": 6,
+        "associated_spectra": 6,
         "eligible": true,
-        "sos": 0.33870967741935487,
+        "sos": 0.3548387096774193,
         "topic_id": 481
       },
       {
@@ -3425,10 +3424,10 @@
         "topic_id": 486
       },
       {
-        "associated_molecules": 4,
-        "associated_spectra": 4,
+        "associated_molecules": 8,
+        "associated_spectra": 8,
         "eligible": true,
-        "sos": 0.5652173913043479,
+        "sos": 0.6168478260869565,
         "topic_id": 487
       },
       {
@@ -3530,10 +3529,10 @@
         "topic_id": 501
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 3,
+        "associated_spectra": 3,
+        "eligible": true,
+        "sos": 0.6818181818181818,
         "topic_id": 502
       },
       {
@@ -3544,8 +3543,8 @@
         "topic_id": 503
       },
       {
-        "associated_molecules": 3,
-        "associated_spectra": 3,
+        "associated_molecules": 8,
+        "associated_spectra": 8,
         "eligible": false,
         "sos": null,
         "topic_id": 504
@@ -3565,10 +3564,10 @@
         "topic_id": 506
       },
       {
-        "associated_molecules": 3,
-        "associated_spectra": 3,
+        "associated_molecules": 7,
+        "associated_spectra": 7,
         "eligible": true,
-        "sos": 0.5555555555555556,
+        "sos": 0.6084656084656085,
         "topic_id": 507
       },
       {
@@ -3614,10 +3613,10 @@
         "topic_id": 513
       },
       {
-        "associated_molecules": 3,
-        "associated_spectra": 3,
+        "associated_molecules": 11,
+        "associated_spectra": 11,
         "eligible": true,
-        "sos": 0.6244131455399061,
+        "sos": 0.5403329065300896,
         "topic_id": 514
       },
       {
@@ -3642,10 +3641,10 @@
         "topic_id": 517
       },
       {
-        "associated_molecules": 5,
-        "associated_spectra": 5,
+        "associated_molecules": 12,
+        "associated_spectra": 12,
         "eligible": true,
-        "sos": 0.6857142857142857,
+        "sos": 0.6934523809523809,
         "topic_id": 518
       },
       {
@@ -3677,8 +3676,8 @@
         "topic_id": 522
       },
       {
-        "associated_molecules": 3,
-        "associated_spectra": 3,
+        "associated_molecules": 5,
+        "associated_spectra": 5,
         "eligible": false,
         "sos": null,
         "topic_id": 523
@@ -3698,10 +3697,10 @@
         "topic_id": 525
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 3,
+        "associated_spectra": 3,
+        "eligible": true,
+        "sos": 0.9444444444444445,
         "topic_id": 526
       },
       {
@@ -3726,17 +3725,17 @@
         "topic_id": 529
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 1,
+        "associated_spectra": 1,
+        "eligible": true,
+        "sos": 0.6136363636363636,
         "topic_id": 530
       },
       {
-        "associated_molecules": 20,
-        "associated_spectra": 22,
+        "associated_molecules": 86,
+        "associated_spectra": 88,
         "eligible": true,
-        "sos": 0.7446428571428572,
+        "sos": 0.7404485049833885,
         "topic_id": 531
       },
       {
@@ -3754,15 +3753,15 @@
         "topic_id": 533
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 4,
+        "associated_spectra": 4,
+        "eligible": true,
+        "sos": 0.75,
         "topic_id": 534
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
+        "associated_molecules": 2,
+        "associated_spectra": 2,
         "eligible": false,
         "sos": null,
         "topic_id": 535
@@ -3775,10 +3774,10 @@
         "topic_id": 536
       },
       {
-        "associated_molecules": 5,
-        "associated_spectra": 5,
+        "associated_molecules": 13,
+        "associated_spectra": 13,
         "eligible": true,
-        "sos": 0.5,
+        "sos": 0.5961538461538461,
         "topic_id": 537
       },
       {
@@ -3824,17 +3823,17 @@
         "topic_id": 543
       },
       {
-        "associated_molecules": 3,
-        "associated_spectra": 3,
+        "associated_molecules": 4,
+        "associated_spectra": 4,
         "eligible": true,
-        "sos": 0.7777777777777778,
+        "sos": 0.7708333333333334,
         "topic_id": 544
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 1,
+        "associated_spectra": 1,
+        "eligible": true,
+        "sos": 0.6379310344827587,
         "topic_id": 545
       },
       {
@@ -3852,10 +3851,10 @@
         "topic_id": 547
       },
       {
-        "associated_molecules": 3,
-        "associated_spectra": 3,
+        "associated_molecules": 5,
+        "associated_spectra": 5,
         "eligible": true,
-        "sos": 0.5238095238095237,
+        "sos": 0.5642857142857143,
         "topic_id": 548
       },
       {
@@ -3908,8 +3907,8 @@
         "topic_id": 555
       },
       {
-        "associated_molecules": 3,
-        "associated_spectra": 3,
+        "associated_molecules": 4,
+        "associated_spectra": 4,
         "eligible": false,
         "sos": null,
         "topic_id": 556
@@ -3922,8 +3921,8 @@
         "topic_id": 557
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
+        "associated_molecules": 4,
+        "associated_spectra": 4,
         "eligible": false,
         "sos": null,
         "topic_id": 558
@@ -3936,10 +3935,10 @@
         "topic_id": 559
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 3,
+        "associated_spectra": 3,
+        "eligible": true,
+        "sos": 0.9696969696969697,
         "topic_id": 560
       },
       {
@@ -3964,8 +3963,8 @@
         "topic_id": 563
       },
       {
-        "associated_molecules": 4,
-        "associated_spectra": 4,
+        "associated_molecules": 7,
+        "associated_spectra": 7,
         "eligible": false,
         "sos": null,
         "topic_id": 564
@@ -3978,8 +3977,8 @@
         "topic_id": 565
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
+        "associated_molecules": 3,
+        "associated_spectra": 3,
         "eligible": false,
         "sos": null,
         "topic_id": 566
@@ -4013,10 +4012,10 @@
         "topic_id": 570
       },
       {
-        "associated_molecules": 1,
-        "associated_spectra": 1,
+        "associated_molecules": 4,
+        "associated_spectra": 4,
         "eligible": true,
-        "sos": 0.94,
+        "sos": 0.8749999999999999,
         "topic_id": 571
       },
       {
@@ -4027,10 +4026,10 @@
         "topic_id": 572
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 1,
+        "associated_spectra": 1,
+        "eligible": true,
+        "sos": 0.4583333333333333,
         "topic_id": 573
       },
       {
@@ -4041,17 +4040,17 @@
         "topic_id": 574
       },
       {
-        "associated_molecules": 19,
-        "associated_spectra": 19,
+        "associated_molecules": 64,
+        "associated_spectra": 64,
         "eligible": false,
         "sos": null,
         "topic_id": 575
       },
       {
-        "associated_molecules": 83,
-        "associated_spectra": 84,
+        "associated_molecules": 280,
+        "associated_spectra": 282,
         "eligible": true,
-        "sos": 0.5465765501028504,
+        "sos": 0.5348432055749128,
         "topic_id": 576
       },
       {
@@ -4104,15 +4103,15 @@
         "topic_id": 583
       },
       {
-        "associated_molecules": 1,
-        "associated_spectra": 1,
+        "associated_molecules": 4,
+        "associated_spectra": 4,
         "eligible": false,
         "sos": null,
         "topic_id": 584
       },
       {
-        "associated_molecules": 18,
-        "associated_spectra": 18,
+        "associated_molecules": 87,
+        "associated_spectra": 87,
         "eligible": false,
         "sos": null,
         "topic_id": 585
@@ -4160,10 +4159,10 @@
         "topic_id": 591
       },
       {
-        "associated_molecules": 3,
-        "associated_spectra": 3,
+        "associated_molecules": 8,
+        "associated_spectra": 8,
         "eligible": true,
-        "sos": 0.71875,
+        "sos": 0.6875,
         "topic_id": 592
       },
       {
@@ -4174,15 +4173,15 @@
         "topic_id": 593
       },
       {
-        "associated_molecules": 1,
-        "associated_spectra": 1,
+        "associated_molecules": 2,
+        "associated_spectra": 2,
         "eligible": false,
         "sos": null,
         "topic_id": 594
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
+        "associated_molecules": 1,
+        "associated_spectra": 1,
         "eligible": false,
         "sos": null,
         "topic_id": 595
@@ -4195,10 +4194,10 @@
         "topic_id": 596
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 2,
+        "associated_spectra": 2,
+        "eligible": true,
+        "sos": 0.5166666666666666,
         "topic_id": 597
       },
       {
@@ -4223,8 +4222,8 @@
         "topic_id": 600
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
+        "associated_molecules": 1,
+        "associated_spectra": 1,
         "eligible": false,
         "sos": null,
         "topic_id": 601
@@ -4237,8 +4236,8 @@
         "topic_id": 602
       },
       {
-        "associated_molecules": 1,
-        "associated_spectra": 1,
+        "associated_molecules": 5,
+        "associated_spectra": 5,
         "eligible": false,
         "sos": null,
         "topic_id": 603
@@ -4272,10 +4271,10 @@
         "topic_id": 607
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 1,
+        "associated_spectra": 1,
+        "eligible": true,
+        "sos": 0.7457627118644068,
         "topic_id": 608
       },
       {
@@ -4321,10 +4320,10 @@
         "topic_id": 614
       },
       {
-        "associated_molecules": 4,
-        "associated_spectra": 4,
+        "associated_molecules": 10,
+        "associated_spectra": 10,
         "eligible": true,
-        "sos": 0.6136363636363636,
+        "sos": 0.5863636363636363,
         "topic_id": 615
       },
       {
@@ -4342,15 +4341,15 @@
         "topic_id": 617
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 1,
+        "associated_spectra": 1,
+        "eligible": true,
+        "sos": 0.6428571428571429,
         "topic_id": 618
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
+        "associated_molecules": 2,
+        "associated_spectra": 2,
         "eligible": false,
         "sos": null,
         "topic_id": 619
@@ -4419,10 +4418,10 @@
         "topic_id": 628
       },
       {
-        "associated_molecules": 5,
-        "associated_spectra": 5,
+        "associated_molecules": 9,
+        "associated_spectra": 9,
         "eligible": true,
-        "sos": 0.65,
+        "sos": 0.6875,
         "topic_id": 629
       },
       {
@@ -4433,10 +4432,10 @@
         "topic_id": 630
       },
       {
-        "associated_molecules": 2,
-        "associated_spectra": 2,
+        "associated_molecules": 8,
+        "associated_spectra": 8,
         "eligible": true,
-        "sos": 0.8888888888888888,
+        "sos": 0.8194444444444444,
         "topic_id": 631
       },
       {
@@ -4461,8 +4460,8 @@
         "topic_id": 634
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
+        "associated_molecules": 2,
+        "associated_spectra": 2,
         "eligible": false,
         "sos": null,
         "topic_id": 635
@@ -4496,10 +4495,10 @@
         "topic_id": 639
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 2,
+        "associated_spectra": 2,
+        "eligible": true,
+        "sos": 0.6923076923076923,
         "topic_id": 640
       },
       {
@@ -4517,17 +4516,17 @@
         "topic_id": 642
       },
       {
-        "associated_molecules": 3,
-        "associated_spectra": 3,
+        "associated_molecules": 8,
+        "associated_spectra": 8,
         "eligible": true,
-        "sos": 0.42424242424242425,
+        "sos": 0.5727272727272728,
         "topic_id": 643
       },
       {
-        "associated_molecules": 2,
-        "associated_spectra": 2,
+        "associated_molecules": 4,
+        "associated_spectra": 4,
         "eligible": true,
-        "sos": 0.6216216216216217,
+        "sos": 0.641891891891892,
         "topic_id": 644
       },
       {
@@ -4601,8 +4600,8 @@
         "topic_id": 654
       },
       {
-        "associated_molecules": 13,
-        "associated_spectra": 13,
+        "associated_molecules": 43,
+        "associated_spectra": 43,
         "eligible": false,
         "sos": null,
         "topic_id": 655
@@ -4657,17 +4656,17 @@
         "topic_id": 662
       },
       {
-        "associated_molecules": 13,
-        "associated_spectra": 13,
+        "associated_molecules": 42,
+        "associated_spectra": 42,
         "eligible": false,
         "sos": null,
         "topic_id": 663
       },
       {
-        "associated_molecules": 1,
-        "associated_spectra": 1,
+        "associated_molecules": 2,
+        "associated_spectra": 2,
         "eligible": true,
-        "sos": 0.7586206896551724,
+        "sos": 0.603448275862069,
         "topic_id": 664
       },
       {
@@ -4699,8 +4698,8 @@
         "topic_id": 668
       },
       {
-        "associated_molecules": 2,
-        "associated_spectra": 2,
+        "associated_molecules": 3,
+        "associated_spectra": 3,
         "eligible": false,
         "sos": null,
         "topic_id": 669
@@ -4713,8 +4712,8 @@
         "topic_id": 670
       },
       {
-        "associated_molecules": 1,
-        "associated_spectra": 1,
+        "associated_molecules": 4,
+        "associated_spectra": 4,
         "eligible": false,
         "sos": null,
         "topic_id": 671
@@ -4727,10 +4726,10 @@
         "topic_id": 672
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 1,
+        "associated_spectra": 1,
+        "eligible": true,
+        "sos": 0.5384615384615384,
         "topic_id": 673
       },
       {
@@ -4762,10 +4761,10 @@
         "topic_id": 677
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 1,
+        "associated_spectra": 1,
+        "eligible": true,
+        "sos": 0.547945205479452,
         "topic_id": 678
       },
       {
@@ -4783,17 +4782,17 @@
         "topic_id": 680
       },
       {
-        "associated_molecules": 35,
-        "associated_spectra": 35,
+        "associated_molecules": 140,
+        "associated_spectra": 140,
         "eligible": true,
-        "sos": 0.477056277056277,
+        "sos": 0.47099567099567097,
         "topic_id": 681
       },
       {
-        "associated_molecules": 1,
-        "associated_spectra": 1,
+        "associated_molecules": 2,
+        "associated_spectra": 2,
         "eligible": true,
-        "sos": 0.47368421052631576,
+        "sos": 0.543859649122807,
         "topic_id": 682
       },
       {
@@ -4804,10 +4803,10 @@
         "topic_id": 683
       },
       {
-        "associated_molecules": 2,
-        "associated_spectra": 2,
+        "associated_molecules": 19,
+        "associated_spectra": 19,
         "eligible": true,
-        "sos": 0.5857142857142856,
+        "sos": 0.5473684210526316,
         "topic_id": 684
       },
       {
@@ -4832,10 +4831,10 @@
         "topic_id": 687
       },
       {
-        "associated_molecules": 12,
-        "associated_spectra": 12,
+        "associated_molecules": 21,
+        "associated_spectra": 21,
         "eligible": true,
-        "sos": 0.6785714285714285,
+        "sos": 0.6639455782312926,
         "topic_id": 688
       },
       {
@@ -4888,8 +4887,8 @@
         "topic_id": 695
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
+        "associated_molecules": 1,
+        "associated_spectra": 1,
         "eligible": false,
         "sos": null,
         "topic_id": 696
@@ -4951,10 +4950,10 @@
         "topic_id": 704
       },
       {
-        "associated_molecules": 2,
-        "associated_spectra": 2,
+        "associated_molecules": 6,
+        "associated_spectra": 6,
         "eligible": true,
-        "sos": 0.6493506493506493,
+        "sos": 0.5822510822510822,
         "topic_id": 705
       },
       {
@@ -4965,10 +4964,10 @@
         "topic_id": 706
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 1,
+        "associated_spectra": 1,
+        "eligible": true,
+        "sos": 0.5476190476190477,
         "topic_id": 707
       },
       {
@@ -5007,31 +5006,31 @@
         "topic_id": 712
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 1,
+        "associated_spectra": 1,
+        "eligible": true,
+        "sos": 0.5348837209302325,
         "topic_id": 713
       },
       {
-        "associated_molecules": 3,
-        "associated_spectra": 3,
+        "associated_molecules": 10,
+        "associated_spectra": 10,
         "eligible": true,
-        "sos": 0.45698924731182794,
+        "sos": 0.5,
         "topic_id": 714
       },
       {
-        "associated_molecules": 5,
-        "associated_spectra": 5,
+        "associated_molecules": 12,
+        "associated_spectra": 12,
         "eligible": false,
         "sos": null,
         "topic_id": 715
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 3,
+        "associated_spectra": 3,
+        "eligible": true,
+        "sos": 0.6266666666666666,
         "topic_id": 716
       },
       {
@@ -5049,10 +5048,10 @@
         "topic_id": 718
       },
       {
-        "associated_molecules": 2,
-        "associated_spectra": 2,
+        "associated_molecules": 3,
+        "associated_spectra": 3,
         "eligible": true,
-        "sos": 0.5543478260869565,
+        "sos": 0.5797101449275363,
         "topic_id": 719
       },
       {
@@ -5098,10 +5097,10 @@
         "topic_id": 725
       },
       {
-        "associated_molecules": 2,
-        "associated_spectra": 2,
+        "associated_molecules": 9,
+        "associated_spectra": 9,
         "eligible": true,
-        "sos": 0.8666666666666667,
+        "sos": 0.8074074074074075,
         "topic_id": 726
       },
       {
@@ -5182,8 +5181,8 @@
         "topic_id": 737
       },
       {
-        "associated_molecules": 1,
-        "associated_spectra": 1,
+        "associated_molecules": 6,
+        "associated_spectra": 6,
         "eligible": false,
         "sos": null,
         "topic_id": 738
@@ -5210,17 +5209,17 @@
         "topic_id": 741
       },
       {
-        "associated_molecules": 1,
-        "associated_spectra": 1,
+        "associated_molecules": 8,
+        "associated_spectra": 8,
         "eligible": true,
-        "sos": 0.6086956521739131,
+        "sos": 0.6467391304347827,
         "topic_id": 742
       },
       {
-        "associated_molecules": 1,
-        "associated_spectra": 1,
+        "associated_molecules": 5,
+        "associated_spectra": 5,
         "eligible": true,
-        "sos": 0.660377358490566,
+        "sos": 0.6,
         "topic_id": 743
       },
       {
@@ -5231,10 +5230,10 @@
         "topic_id": 744
       },
       {
-        "associated_molecules": 8,
-        "associated_spectra": 8,
+        "associated_molecules": 14,
+        "associated_spectra": 14,
         "eligible": true,
-        "sos": 0.80625,
+        "sos": 0.8,
         "topic_id": 745
       },
       {
@@ -5245,15 +5244,15 @@
         "topic_id": 746
       },
       {
-        "associated_molecules": 16,
-        "associated_spectra": 16,
+        "associated_molecules": 41,
+        "associated_spectra": 41,
         "eligible": false,
         "sos": null,
         "topic_id": 747
       },
       {
-        "associated_molecules": 1,
-        "associated_spectra": 1,
+        "associated_molecules": 4,
+        "associated_spectra": 4,
         "eligible": false,
         "sos": null,
         "topic_id": 748
@@ -5266,10 +5265,10 @@
         "topic_id": 749
       },
       {
-        "associated_molecules": 3,
-        "associated_spectra": 3,
+        "associated_molecules": 4,
+        "associated_spectra": 4,
         "eligible": true,
-        "sos": 0.8666666666666667,
+        "sos": 0.875,
         "topic_id": 750
       },
       {
@@ -5322,10 +5321,10 @@
         "topic_id": 757
       },
       {
-        "associated_molecules": 24,
-        "associated_spectra": 24,
+        "associated_molecules": 123,
+        "associated_spectra": 123,
         "eligible": true,
-        "sos": 0.5354166666666667,
+        "sos": 0.5201219512195122,
         "topic_id": 758
       },
       {
@@ -5399,10 +5398,10 @@
         "topic_id": 768
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 1,
+        "associated_spectra": 1,
+        "eligible": true,
+        "sos": 0.5,
         "topic_id": 769
       },
       {
@@ -5462,17 +5461,17 @@
         "topic_id": 777
       },
       {
-        "associated_molecules": 1,
-        "associated_spectra": 1,
+        "associated_molecules": 2,
+        "associated_spectra": 2,
         "eligible": true,
-        "sos": 1.0,
+        "sos": 0.9,
         "topic_id": 778
       },
       {
-        "associated_molecules": 5,
-        "associated_spectra": 5,
+        "associated_molecules": 6,
+        "associated_spectra": 6,
         "eligible": true,
-        "sos": 0.5743589743589743,
+        "sos": 0.576923076923077,
         "topic_id": 779
       },
       {
@@ -5483,10 +5482,10 @@
         "topic_id": 780
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 1,
+        "associated_spectra": 1,
+        "eligible": true,
+        "sos": 0.7241379310344828,
         "topic_id": 781
       },
       {
@@ -5497,10 +5496,10 @@
         "topic_id": 782
       },
       {
-        "associated_molecules": 6,
-        "associated_spectra": 6,
+        "associated_molecules": 13,
+        "associated_spectra": 13,
         "eligible": true,
-        "sos": 0.9035087719298246,
+        "sos": 0.7246963562753037,
         "topic_id": 783
       },
       {
@@ -5532,8 +5531,8 @@
         "topic_id": 787
       },
       {
-        "associated_molecules": 3,
-        "associated_spectra": 3,
+        "associated_molecules": 6,
+        "associated_spectra": 6,
         "eligible": false,
         "sos": null,
         "topic_id": 788
@@ -5553,10 +5552,10 @@
         "topic_id": 790
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 1,
+        "associated_spectra": 1,
+        "eligible": true,
+        "sos": 0.38,
         "topic_id": 791
       },
       {
@@ -5574,10 +5573,10 @@
         "topic_id": 793
       },
       {
-        "associated_molecules": 13,
-        "associated_spectra": 13,
+        "associated_molecules": 34,
+        "associated_spectra": 34,
         "eligible": true,
-        "sos": 0.7769230769230769,
+        "sos": 0.7676470588235293,
         "topic_id": 794
       },
       {
@@ -5588,10 +5587,10 @@
         "topic_id": 795
       },
       {
-        "associated_molecules": 3,
-        "associated_spectra": 3,
+        "associated_molecules": 4,
+        "associated_spectra": 4,
         "eligible": true,
-        "sos": 0.7866666666666666,
+        "sos": 0.755,
         "topic_id": 796
       },
       {
@@ -5630,10 +5629,10 @@
         "topic_id": 801
       },
       {
-        "associated_molecules": 4,
-        "associated_spectra": 4,
+        "associated_molecules": 16,
+        "associated_spectra": 16,
         "eligible": true,
-        "sos": 0.625,
+        "sos": 0.744140625,
         "topic_id": 802
       },
       {
@@ -5644,10 +5643,10 @@
         "topic_id": 803
       },
       {
-        "associated_molecules": 2,
-        "associated_spectra": 2,
+        "associated_molecules": 3,
+        "associated_spectra": 3,
         "eligible": true,
-        "sos": 0.564516129032258,
+        "sos": 0.6989247311827956,
         "topic_id": 804
       },
       {
@@ -5700,10 +5699,10 @@
         "topic_id": 811
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 1,
+        "associated_spectra": 1,
+        "eligible": true,
+        "sos": 0.8571428571428571,
         "topic_id": 812
       },
       {
@@ -5721,10 +5720,10 @@
         "topic_id": 814
       },
       {
-        "associated_molecules": 1,
-        "associated_spectra": 1,
+        "associated_molecules": 6,
+        "associated_spectra": 6,
         "eligible": true,
-        "sos": 0.6216216216216216,
+        "sos": 0.6711711711711712,
         "topic_id": 815
       },
       {
@@ -5756,10 +5755,10 @@
         "topic_id": 819
       },
       {
-        "associated_molecules": 2,
-        "associated_spectra": 2,
+        "associated_molecules": 4,
+        "associated_spectra": 4,
         "eligible": true,
-        "sos": 0.6272727272727272,
+        "sos": 0.6090909090909091,
         "topic_id": 820
       },
       {
@@ -5840,10 +5839,10 @@
         "topic_id": 831
       },
       {
-        "associated_molecules": 2,
-        "associated_spectra": 2,
+        "associated_molecules": 6,
+        "associated_spectra": 6,
         "eligible": true,
-        "sos": 0.54,
+        "sos": 0.5533333333333333,
         "topic_id": 832
       },
       {
@@ -5861,10 +5860,10 @@
         "topic_id": 834
       },
       {
-        "associated_molecules": 3,
-        "associated_spectra": 3,
+        "associated_molecules": 7,
+        "associated_spectra": 7,
         "eligible": true,
-        "sos": 0.6388888888888888,
+        "sos": 0.6388888888888887,
         "topic_id": 835
       },
       {
@@ -5875,10 +5874,10 @@
         "topic_id": 836
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 4,
+        "associated_spectra": 4,
+        "eligible": true,
+        "sos": 0.6026785714285714,
         "topic_id": 837
       },
       {
@@ -5917,24 +5916,24 @@
         "topic_id": 842
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 3,
+        "associated_spectra": 3,
+        "eligible": true,
+        "sos": 0.4761904761904762,
         "topic_id": 843
       },
       {
-        "associated_molecules": 2,
-        "associated_spectra": 2,
+        "associated_molecules": 3,
+        "associated_spectra": 3,
         "eligible": true,
         "sos": 0.75,
         "topic_id": 844
       },
       {
-        "associated_molecules": 2,
-        "associated_spectra": 2,
+        "associated_molecules": 8,
+        "associated_spectra": 8,
         "eligible": true,
-        "sos": 0.5901639344262295,
+        "sos": 0.6557377049180328,
         "topic_id": 845
       },
       {
@@ -5973,8 +5972,8 @@
         "topic_id": 850
       },
       {
-        "associated_molecules": 2,
-        "associated_spectra": 2,
+        "associated_molecules": 5,
+        "associated_spectra": 5,
         "eligible": false,
         "sos": null,
         "topic_id": 851
@@ -5994,10 +5993,10 @@
         "topic_id": 853
       },
       {
-        "associated_molecules": 21,
-        "associated_spectra": 21,
+        "associated_molecules": 75,
+        "associated_spectra": 76,
         "eligible": true,
-        "sos": 0.5534105534105535,
+        "sos": 0.5715315315315316,
         "topic_id": 854
       },
       {
@@ -6029,10 +6028,10 @@
         "topic_id": 858
       },
       {
-        "associated_molecules": 1,
-        "associated_spectra": 1,
+        "associated_molecules": 6,
+        "associated_spectra": 6,
         "eligible": true,
-        "sos": 1.0,
+        "sos": 0.8026315789473685,
         "topic_id": 859
       },
       {
@@ -6127,8 +6126,8 @@
         "topic_id": 872
       },
       {
-        "associated_molecules": 1,
-        "associated_spectra": 1,
+        "associated_molecules": 5,
+        "associated_spectra": 5,
         "eligible": false,
         "sos": null,
         "topic_id": 873
@@ -6148,10 +6147,10 @@
         "topic_id": 875
       },
       {
-        "associated_molecules": 3,
-        "associated_spectra": 3,
+        "associated_molecules": 4,
+        "associated_spectra": 4,
         "eligible": true,
-        "sos": 0.4202898550724638,
+        "sos": 0.4891304347826087,
         "topic_id": 876
       },
       {
@@ -6169,10 +6168,10 @@
         "topic_id": 878
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 2,
+        "associated_spectra": 2,
+        "eligible": true,
+        "sos": 0.8611111111111112,
         "topic_id": 879
       },
       {
@@ -6225,10 +6224,10 @@
         "topic_id": 886
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 2,
+        "associated_spectra": 2,
+        "eligible": true,
+        "sos": 0.6764705882352942,
         "topic_id": 887
       },
       {
@@ -6295,38 +6294,38 @@
         "topic_id": 896
       },
       {
-        "associated_molecules": 8,
-        "associated_spectra": 8,
+        "associated_molecules": 16,
+        "associated_spectra": 16,
         "eligible": false,
         "sos": null,
         "topic_id": 897
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
+        "associated_molecules": 1,
+        "associated_spectra": 1,
+        "eligible": true,
+        "sos": 0.5454545454545454,
+        "topic_id": 898
+      },
+      {
+        "associated_molecules": 5,
+        "associated_spectra": 5,
         "eligible": false,
         "sos": null,
-        "topic_id": 898
+        "topic_id": 899
       },
       {
         "associated_molecules": 2,
         "associated_spectra": 2,
         "eligible": false,
         "sos": null,
-        "topic_id": 899
-      },
-      {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
         "topic_id": 900
       },
       {
-        "associated_molecules": 4,
-        "associated_spectra": 4,
+        "associated_molecules": 6,
+        "associated_spectra": 6,
         "eligible": true,
-        "sos": 0.6931818181818181,
+        "sos": 0.6363636363636364,
         "topic_id": 901
       },
       {
@@ -6337,15 +6336,15 @@
         "topic_id": 902
       },
       {
-        "associated_molecules": 15,
-        "associated_spectra": 15,
+        "associated_molecules": 60,
+        "associated_spectra": 60,
         "eligible": true,
-        "sos": 0.6326797385620915,
+        "sos": 0.6483660130718955,
         "topic_id": 903
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
+        "associated_molecules": 5,
+        "associated_spectra": 5,
         "eligible": false,
         "sos": null,
         "topic_id": 904
@@ -6400,10 +6399,10 @@
         "topic_id": 911
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 2,
+        "associated_spectra": 2,
+        "eligible": true,
+        "sos": 0.6982758620689655,
         "topic_id": 912
       },
       {
@@ -6435,10 +6434,10 @@
         "topic_id": 916
       },
       {
-        "associated_molecules": 1,
-        "associated_spectra": 1,
+        "associated_molecules": 2,
+        "associated_spectra": 2,
         "eligible": true,
-        "sos": 0.5517241379310345,
+        "sos": 0.6551724137931034,
         "topic_id": 917
       },
       {
@@ -6484,17 +6483,17 @@
         "topic_id": 923
       },
       {
-        "associated_molecules": 3,
-        "associated_spectra": 3,
+        "associated_molecules": 8,
+        "associated_spectra": 8,
         "eligible": true,
         "sos": 1.0,
         "topic_id": 924
       },
       {
-        "associated_molecules": 8,
-        "associated_spectra": 8,
+        "associated_molecules": 16,
+        "associated_spectra": 16,
         "eligible": true,
-        "sos": 0.7627551020408163,
+        "sos": 0.7665816326530612,
         "topic_id": 925
       },
       {
@@ -6505,8 +6504,8 @@
         "topic_id": 926
       },
       {
-        "associated_molecules": 1,
-        "associated_spectra": 1,
+        "associated_molecules": 5,
+        "associated_spectra": 5,
         "eligible": false,
         "sos": null,
         "topic_id": 927
@@ -6575,24 +6574,24 @@
         "topic_id": 936
       },
       {
-        "associated_molecules": 1,
-        "associated_spectra": 1,
-        "eligible": true,
-        "sos": 0.6730769230769231,
-        "topic_id": 937
-      },
-      {
         "associated_molecules": 2,
         "associated_spectra": 2,
         "eligible": true,
-        "sos": 0.7,
+        "sos": 0.6346153846153846,
+        "topic_id": 937
+      },
+      {
+        "associated_molecules": 5,
+        "associated_spectra": 5,
+        "eligible": true,
+        "sos": 0.6633333333333333,
         "topic_id": 938
       },
       {
-        "associated_molecules": 4,
-        "associated_spectra": 4,
+        "associated_molecules": 5,
+        "associated_spectra": 5,
         "eligible": true,
-        "sos": 0.6764705882352942,
+        "sos": 0.6313725490196079,
         "topic_id": 939
       },
       {
@@ -6666,10 +6665,10 @@
         "topic_id": 949
       },
       {
-        "associated_molecules": 1,
-        "associated_spectra": 1,
+        "associated_molecules": 2,
+        "associated_spectra": 2,
         "eligible": true,
-        "sos": 0.5,
+        "sos": 0.5583333333333333,
         "topic_id": 950
       },
       {
@@ -6715,8 +6714,8 @@
         "topic_id": 956
       },
       {
-        "associated_molecules": 3,
-        "associated_spectra": 3,
+        "associated_molecules": 8,
+        "associated_spectra": 8,
         "eligible": false,
         "sos": null,
         "topic_id": 957
@@ -6729,10 +6728,10 @@
         "topic_id": 958
       },
       {
-        "associated_molecules": 3,
-        "associated_spectra": 3,
+        "associated_molecules": 7,
+        "associated_spectra": 7,
         "eligible": true,
-        "sos": 0.7333333333333334,
+        "sos": 0.7523809523809524,
         "topic_id": 959
       },
       {
@@ -6743,10 +6742,10 @@
         "topic_id": 960
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 4,
+        "associated_spectra": 4,
+        "eligible": true,
+        "sos": 0.5535714285714285,
         "topic_id": 961
       },
       {
@@ -6764,10 +6763,10 @@
         "topic_id": 963
       },
       {
-        "associated_molecules": 23,
-        "associated_spectra": 23,
+        "associated_molecules": 118,
+        "associated_spectra": 118,
         "eligible": true,
-        "sos": 0.826086956521739,
+        "sos": 0.8059322033898306,
         "topic_id": 964
       },
       {
@@ -6785,10 +6784,10 @@
         "topic_id": 966
       },
       {
-        "associated_molecules": 3,
-        "associated_spectra": 3,
+        "associated_molecules": 4,
+        "associated_spectra": 4,
         "eligible": true,
-        "sos": 0.6727272727272727,
+        "sos": 0.6454545454545455,
         "topic_id": 967
       },
       {
@@ -6799,8 +6798,8 @@
         "topic_id": 968
       },
       {
-        "associated_molecules": 1,
-        "associated_spectra": 1,
+        "associated_molecules": 3,
+        "associated_spectra": 3,
         "eligible": false,
         "sos": null,
         "topic_id": 969
@@ -6834,15 +6833,15 @@
         "topic_id": 973
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 2,
+        "associated_spectra": 2,
+        "eligible": true,
+        "sos": 0.5263157894736842,
         "topic_id": 974
       },
       {
-        "associated_molecules": 14,
-        "associated_spectra": 14,
+        "associated_molecules": 28,
+        "associated_spectra": 28,
         "eligible": false,
         "sos": null,
         "topic_id": 975
@@ -6862,10 +6861,10 @@
         "topic_id": 977
       },
       {
-        "associated_molecules": 2,
-        "associated_spectra": 2,
+        "associated_molecules": 7,
+        "associated_spectra": 7,
         "eligible": true,
-        "sos": 0.6153846153846154,
+        "sos": 0.6373626373626374,
         "topic_id": 978
       },
       {
@@ -6876,10 +6875,10 @@
         "topic_id": 979
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 3,
+        "associated_spectra": 3,
+        "eligible": true,
+        "sos": 0.5866666666666667,
         "topic_id": 980
       },
       {
@@ -6932,8 +6931,8 @@
         "topic_id": 987
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
+        "associated_molecules": 1,
+        "associated_spectra": 1,
         "eligible": false,
         "sos": null,
         "topic_id": 988
@@ -6946,15 +6945,15 @@
         "topic_id": 989
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
+        "associated_molecules": 2,
+        "associated_spectra": 2,
         "eligible": false,
         "sos": null,
         "topic_id": 990
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
+        "associated_molecules": 1,
+        "associated_spectra": 1,
         "eligible": false,
         "sos": null,
         "topic_id": 991
@@ -6974,10 +6973,10 @@
         "topic_id": 993
       },
       {
-        "associated_molecules": 29,
-        "associated_spectra": 29,
+        "associated_molecules": 82,
+        "associated_spectra": 82,
         "eligible": true,
-        "sos": 0.8247126436781607,
+        "sos": 0.7926829268292683,
         "topic_id": 994
       },
       {
@@ -7009,15 +7008,22 @@
         "topic_id": 998
       },
       {
-        "associated_molecules": 0,
-        "associated_spectra": 0,
-        "eligible": false,
-        "sos": null,
+        "associated_molecules": 1,
+        "associated_spectra": 1,
+        "eligible": true,
+        "sos": 0.29411764705882354,
         "topic_id": 999
       }
     ],
     "total_topics": 1000
   },
+  "evidence_inputs": {
+    "annotation_summary_sha256": "1154eaf21ee5f1cbcf5e154683f1f063f83fd562ef98216ef36b690cf85f219a",
+    "annotations_sha256": "31505955762241d49a750a0f7525e81515fc209fa41b409b0a69eff216d23597",
+    "records_sha256": "0e85218489af6a07413474bb2db6ce74da537f6fd3c8ee77d5286f5775ba068c",
+    "theta_sha256": "e5e05892627c482dbc64c289519ba5173a4fc9042b550669a030c7cb9902559f"
+  },
+  "heldout_compounds_excluded_from_mag": true,
   "mag_failures": {
     "clustering_count": 0,
     "clustering_topic_ids": [],

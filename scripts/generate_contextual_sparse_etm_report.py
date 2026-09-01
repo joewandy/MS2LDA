@@ -142,6 +142,10 @@ def _generate_macros(evidence: dict[str, Any]) -> tuple[str, str]:
     def pct(numerator: float, denominator: float) -> str:
         return f"{100.0 * numerator / denominator:.1f}\\%"
 
+    useful_rate_difference = 100.0 * abs(
+        chemistry["useful_motifs"] / chemistry["eligible_topics"]
+        - tomotopy["useful_motifs"] / tomotopy["eligible_topics"],
+    )
     values: dict[str, str | int] = {
         "SourceSpectra": data["parsing"]["parsed_blocks"],
         "RetainedSpectra": data["parsing"]["retained_spectra"],
@@ -161,6 +165,11 @@ def _generate_macros(evidence: dict[str, Any]) -> tuple[str, str]:
         "ContextualOptimized": chemistry["optimized_motifs"],
         "ContextualEvaluable": chemistry["eligible_topics"],
         "ContextualUseful": chemistry["useful_motifs"],
+        "ContextualAssociations": chemistry["associated_spectra"],
+        "ContextualUsefulRate": pct(
+            chemistry["useful_motifs"],
+            chemistry["eligible_topics"],
+        ),
         "ContextualMeanSOS": f"{chemistry['mean_sos']:.4f}",
         "ContextualMedianSOS": f"{chemistry['median_sos']:.4f}",
         "ContextualNLL": f"{completion['nll_per_token']:.4f}",
@@ -174,8 +183,25 @@ def _generate_macros(evidence: dict[str, Any]) -> tuple[str, str]:
             chemistry["optimized_motifs"],
         ),
         "TomotopyOptimized": tomotopy["optimized_motifs"],
-        "TomotopyEvaluable": tomotopy["high_confidence_evaluable_motifs"],
-        "TomotopyUseful": tomotopy["useful_high_confidence_motifs"],
+        "TomotopyEvaluable": tomotopy["eligible_topics"],
+        "TomotopyUseful": tomotopy["useful_motifs"],
+        "TomotopyAssociations": tomotopy["associated_spectra"],
+        "TomotopyUsefulRate": pct(
+            tomotopy["useful_motifs"],
+            tomotopy["eligible_topics"],
+        ),
+        "ContextualEvaluableGainVsTomotopy": pct(
+            chemistry["eligible_topics"] - tomotopy["eligible_topics"],
+            tomotopy["eligible_topics"],
+        ),
+        "ContextualUsefulGainVsTomotopy": pct(
+            chemistry["useful_motifs"] - tomotopy["useful_motifs"],
+            tomotopy["useful_motifs"],
+        ),
+        "ContextualMeanSOSDifferenceVsTomotopy": (
+            f"{abs(chemistry['mean_sos'] - tomotopy['mean_sos']):.4f}"
+        ),
+        "ContextualUsefulRateDifferenceVsTomotopy": (f"{useful_rate_difference:.1f}"),
         "TomotopyMeanSOS": f"{tomotopy['mean_sos']:.4f}",
         "TomotopyMedianSOS": f"{tomotopy['median_sos']:.4f}",
         "TomotopyNLL": f"{evidence['tomotopy_nll']:.4f}",
@@ -365,10 +391,12 @@ def _generate_test_table(evidence: dict[str, Any]) -> tuple[str, str]:
         {
             "model": "Tomotopy LDA",
             "optimized_motifs": str(tomotopy["optimized_motifs"]),
-            "evaluable_motifs": str(tomotopy["high_confidence_evaluable_motifs"]),
-            "useful_motifs": str(tomotopy["useful_high_confidence_motifs"]),
+            "evaluable_motifs": str(tomotopy["eligible_topics"]),
+            "useful_motifs": str(tomotopy["useful_motifs"]),
+            "useful_fraction_evaluable": str(
+                tomotopy["useful_motifs"] / tomotopy["eligible_topics"],
+            ),
             "mean_sos": str(tomotopy["mean_sos"]),
-            "median_sos": str(tomotopy["median_sos"]),
             "completion_nll": str(evidence["tomotopy_nll"]),
         },
     ]
@@ -376,8 +404,10 @@ def _generate_test_table(evidence: dict[str, Any]) -> tuple[str, str]:
         "optimized_motifs": max(_integer(row, "optimized_motifs") for row in rows),
         "evaluable_motifs": max(_integer(row, "evaluable_motifs") for row in rows),
         "useful_motifs": max(_integer(row, "useful_motifs") for row in rows),
+        "useful_fraction_evaluable": max(
+            _float(row, "useful_fraction_evaluable") for row in rows
+        ),
         "mean_sos": max(_float(row, "mean_sos") for row in rows),
-        "median_sos": max(_float(row, "median_sos") for row in rows),
         "completion_nll": min(_float(row, "completion_nll") for row in rows),
     }
     lines = []
@@ -389,7 +419,17 @@ def _generate_test_table(evidence: dict[str, Any]) -> tuple[str, str]:
         for key in ("optimized_motifs", "evaluable_motifs", "useful_motifs"):
             value = _integer(row, key)
             rendered.append(_bold_if(str(value), condition=value == best[key]))
-        for key in ("mean_sos", "median_sos", "completion_nll"):
+        useful_rate = _float(row, "useful_fraction_evaluable")
+        rendered.append(
+            _bold_if(
+                f"{100 * useful_rate:.1f}\\%",
+                condition=math.isclose(
+                    useful_rate,
+                    best["useful_fraction_evaluable"],
+                ),
+            ),
+        )
+        for key in ("mean_sos", "completion_nll"):
             value = _float(row, key)
             rendered.append(
                 _bold_if(f"{value:.4f}", condition=math.isclose(value, best[key])),
@@ -544,7 +584,10 @@ def _generate_hyperparameters(evidence: dict[str, Any]) -> tuple[str, str]:
             f"${_tex_scientific(float(config['weight_decay']))}$",
         ),
         ("Batch size; epochs", f"{config['batch_size']}; {config['epochs']}"),
-        ("Device; host worker threads", f"{config['device']}; {config['threads']}"),
+        (
+            "Device; host worker threads",
+            f"{str(config['device']).upper()}; {config['threads']}",
+        ),
         (
             "Mass2Motif Annotation Guidance (MAG) query",
             f"top {chemistry['motif_spectrum_top_n']} words; search "
@@ -552,8 +595,8 @@ def _generate_hyperparameters(evidence: dict[str, Any]) -> tuple[str, str]:
             f"{chemistry['mag_unique_molecules']} unique molecules",
         ),
         (
-            "MAG and substructure overlap score (SOS) thresholds",
-            f"membership $\\geq{chemistry['membership_threshold']}$; "
+            "MAG and substructure overlap score (SOS) settings",
+            "one dominant topic per spectrum; "
             f"cluster cosine {chemistry['mag_cluster_cosine']}; "
             f"consensus {chemistry['mag_fingerprint_threshold']}",
         ),
@@ -615,7 +658,11 @@ def _generate_code_map() -> tuple[str, str]:
             "Document completion",
             r"\texttt{model\_evaluation.py: completion\_metrics}",
         ),
-        ("MAG and SOS", r"\texttt{mag.py; chemical.py}"),
+        (
+            r"Dominant-topic association and SOS (Eqs.~"
+            r"\ref{eq:dominant-assignment}--\ref{eq:sos})",
+            r"\texttt{chemical.py: \_associated\_record\_indices; \_topic\_scores}",
+        ),
         (
             "Equation--code correspondence test",
             r"\texttt{tests/test\_contextual\_sparse\_etm.py}",
