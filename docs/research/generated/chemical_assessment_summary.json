@@ -1,0 +1,447 @@
+{
+  "evidence_stage_sha256": {
+    "references": "c139f4506f777a9ff4b2149efa16301256b14e7f1a46ac1d8346775013060cd8",
+    "specificity": "696475ee6aac439d65ac67be9bcbb1d9a4a649e4f9931d052062599c29ab124b",
+    "stability": "86c3f81e811803698cd762e2cb40cad6f4c0dbe74c398458f52bc8af238fe11f"
+  },
+  "fit_aggregates": {
+    "primary_50": {
+      "selected": {
+        "background": {
+          "mean": 0.5944813917667574,
+          "sample_sd": 0.0034573048360584755
+        },
+        "excess": {
+          "mean": 0.034580565628662206,
+          "sample_sd": 0.0026460495681476445
+        },
+        "feature_q05_topics": {
+          "mean": 10,
+          "sample_sd": 1.7320508075688772
+        },
+        "recurring_eligible_topics": {
+          "mean": 514.6666666666666,
+          "sample_sd": 14.189197769195175
+        },
+        "single_compound_topics": {
+          "mean": 197,
+          "sample_sd": 8.888194417315589
+        },
+        "sos_q05_topics": {
+          "mean": 10.666666666666666,
+          "sample_sd": 1.5275252316519468
+        }
+      },
+      "tomotopy": {
+        "background": {
+          "mean": 0.603932633237846,
+          "sample_sd": 0.002152984259982335
+        },
+        "excess": {
+          "mean": 0.03477085029811355,
+          "sample_sd": 0.00082728710160098
+        },
+        "feature_q05_topics": {
+          "mean": 12,
+          "sample_sd": 3.0
+        },
+        "recurring_eligible_topics": {
+          "mean": 502.6666666666667,
+          "sample_sd": 13.012814197295423
+        },
+        "single_compound_topics": {
+          "mean": 132.66666666666666,
+          "sample_sd": 12.897028081435403
+        },
+        "sos_q05_topics": {
+          "mean": 9.666666666666666,
+          "sample_sd": 3.511884584284246
+        }
+      }
+    },
+    "scaffold_50": {
+      "selected": {
+        "background": {
+          "mean": 0.6073535022989357,
+          "sample_sd": 0.0028402077026792203
+        },
+        "excess": {
+          "mean": 0.03246804713925225,
+          "sample_sd": 0.001610756329999144
+        },
+        "feature_q05_topics": {
+          "mean": 3,
+          "sample_sd": 1.0
+        },
+        "recurring_eligible_topics": {
+          "mean": 445,
+          "sample_sd": 10.583005244258363
+        },
+        "single_compound_topics": {
+          "mean": 229.66666666666666,
+          "sample_sd": 7.767453465154029
+        },
+        "sos_q05_topics": {
+          "mean": 6,
+          "sample_sd": 2.0
+        }
+      },
+      "tomotopy": {
+        "background": {
+          "mean": 0.6149853946746802,
+          "sample_sd": 0.003552845385585546
+        },
+        "excess": {
+          "mean": 0.02909874968207555,
+          "sample_sd": 0.0007193082334273714
+        },
+        "feature_q05_topics": {
+          "mean": 3,
+          "sample_sd": 0.0
+        },
+        "recurring_eligible_topics": {
+          "mean": 440.3333333333333,
+          "sample_sd": 8.144527815247077
+        },
+        "single_compound_topics": {
+          "mean": 202.66666666666666,
+          "sample_sd": 17.502380790433435
+        },
+        "sos_q05_topics": {
+          "mean": 2.6666666666666665,
+          "sample_sd": 2.0816659994661326
+        }
+      }
+    },
+    "sensitivity_100": {
+      "selected": {
+        "background": {
+          "mean": 0.5941323104776037,
+          "sample_sd": 0.0036787429878253116
+        },
+        "excess": {
+          "mean": 0.034929646917815936,
+          "sample_sd": 0.0026016196555820647
+        },
+        "feature_q05_topics": {
+          "mean": 9.333333333333334,
+          "sample_sd": 2.0816659994661326
+        },
+        "recurring_eligible_topics": {
+          "mean": 514.6666666666666,
+          "sample_sd": 14.189197769195175
+        },
+        "single_compound_topics": {
+          "mean": 197,
+          "sample_sd": 8.888194417315589
+        },
+        "sos_q05_topics": {
+          "mean": 11,
+          "sample_sd": 1.7320508075688772
+        }
+      },
+      "tomotopy": {
+        "background": {
+          "mean": 0.603521569974153,
+          "sample_sd": 0.0025565315892747725
+        },
+        "excess": {
+          "mean": 0.03518191356180646,
+          "sample_sd": 0.0004748045050650671
+        },
+        "feature_q05_topics": {
+          "mean": 12.333333333333334,
+          "sample_sd": 3.511884584284246
+        },
+        "recurring_eligible_topics": {
+          "mean": 502.6666666666667,
+          "sample_sd": 13.012814197295423
+        },
+        "single_compound_topics": {
+          "mean": 132.66666666666666,
+          "sample_sd": 12.897028081435403
+        },
+        "sos_q05_topics": {
+          "mean": 9.666666666666666,
+          "sample_sd": 2.516611478423583
+        }
+      }
+    },
+    "sensitivity_25": {
+      "selected": {
+        "background": {
+          "mean": 0.5952492813885909,
+          "sample_sd": 0.0034040373656107695
+        },
+        "excess": {
+          "mean": 0.033812676006828794,
+          "sample_sd": 0.0022592440015873198
+        },
+        "feature_q05_topics": {
+          "mean": 9,
+          "sample_sd": 2.0
+        },
+        "recurring_eligible_topics": {
+          "mean": 514.6666666666666,
+          "sample_sd": 14.189197769195175
+        },
+        "single_compound_topics": {
+          "mean": 197,
+          "sample_sd": 8.888194417315589
+        },
+        "sos_q05_topics": {
+          "mean": 10.666666666666666,
+          "sample_sd": 1.1547005383792515
+        }
+      },
+      "tomotopy": {
+        "background": {
+          "mean": 0.6048368259736885,
+          "sample_sd": 0.0019546304549416665
+        },
+        "excess": {
+          "mean": 0.03386665756227101,
+          "sample_sd": 0.0011672796050817775
+        },
+        "feature_q05_topics": {
+          "mean": 10.666666666666666,
+          "sample_sd": 2.516611478423583
+        },
+        "recurring_eligible_topics": {
+          "mean": 502.6666666666667,
+          "sample_sd": 13.012814197295423
+        },
+        "single_compound_topics": {
+          "mean": 132.66666666666666,
+          "sample_sd": 12.897028081435403
+        },
+        "sos_q05_topics": {
+          "mean": 10.333333333333334,
+          "sample_sd": 1.5275252316519468
+        }
+      }
+    }
+  },
+  "reference_examples": [
+    {
+      "direct_overlaps": [
+        {
+          "channel": "fragment",
+          "matched": 1,
+          "query_coverage": 0.25,
+          "query_features": 4,
+          "reference_coverage": 1.0,
+          "reference_features": 1,
+          "tolerance_da": 0.01
+        },
+        {
+          "channel": "loss",
+          "matched": 0,
+          "query_coverage": 0.0,
+          "query_features": 16,
+          "reference_coverage": null,
+          "reference_features": 0,
+          "tolerance_da": 0.01
+        },
+        {
+          "channel": "fragment",
+          "matched": 1,
+          "query_coverage": 0.25,
+          "query_features": 4,
+          "reference_coverage": 1.0,
+          "reference_features": 1,
+          "tolerance_da": 0.005
+        },
+        {
+          "channel": "loss",
+          "matched": 0,
+          "query_coverage": 0.0,
+          "query_features": 16,
+          "reference_coverage": null,
+          "reference_features": 0,
+          "tolerance_da": 0.005
+        },
+        {
+          "channel": "fragment",
+          "matched": 1,
+          "query_coverage": 0.25,
+          "query_features": 4,
+          "reference_coverage": 1.0,
+          "reference_features": 1,
+          "tolerance_da": 0.02
+        },
+        {
+          "channel": "loss",
+          "matched": 0,
+          "query_coverage": 0.0,
+          "query_features": 16,
+          "reference_coverage": null,
+          "reference_features": 0,
+          "tolerance_da": 0.02
+        }
+      ],
+      "display_example": 1,
+      "fit": "selected_11",
+      "model": "selected",
+      "rank": 1,
+      "reference_id": "e5428f71e4add047775e51977824c6f735341901cd841d4dd3f6a654a313f599",
+      "reference_index": 209,
+      "reference_labels": [
+        "Fragment indicative for aromatic compounds related to methylbenzene substructure (C7H7 fragment)"
+      ],
+      "reference_sources": [
+        "GNPS library derived Mass2Motifs: motif_52",
+        "Massbank library derived Mass2Motifs: motif_30"
+      ],
+      "spec2vec_cosine": 0.949681606820475,
+      "support_compounds": 36,
+      "topic_id": 191
+    },
+    {
+      "direct_overlaps": [
+        {
+          "channel": "fragment",
+          "matched": 2,
+          "query_coverage": 0.6666666666666666,
+          "query_features": 3,
+          "reference_coverage": 0.6666666666666666,
+          "reference_features": 3,
+          "tolerance_da": 0.01
+        },
+        {
+          "channel": "loss",
+          "matched": 0,
+          "query_coverage": 0.0,
+          "query_features": 17,
+          "reference_coverage": null,
+          "reference_features": 0,
+          "tolerance_da": 0.01
+        },
+        {
+          "channel": "fragment",
+          "matched": 2,
+          "query_coverage": 0.6666666666666666,
+          "query_features": 3,
+          "reference_coverage": 0.6666666666666666,
+          "reference_features": 3,
+          "tolerance_da": 0.005
+        },
+        {
+          "channel": "loss",
+          "matched": 0,
+          "query_coverage": 0.0,
+          "query_features": 17,
+          "reference_coverage": null,
+          "reference_features": 0,
+          "tolerance_da": 0.005
+        },
+        {
+          "channel": "fragment",
+          "matched": 2,
+          "query_coverage": 0.6666666666666666,
+          "query_features": 3,
+          "reference_coverage": 0.6666666666666666,
+          "reference_features": 3,
+          "tolerance_da": 0.02
+        },
+        {
+          "channel": "loss",
+          "matched": 0,
+          "query_coverage": 0.0,
+          "query_features": 17,
+          "reference_coverage": null,
+          "reference_features": 0,
+          "tolerance_da": 0.02
+        }
+      ],
+      "display_example": 2,
+      "fit": "selected_42",
+      "model": "selected",
+      "rank": 1,
+      "reference_id": "a31b058608c8dfd9ccb99ff21c577dbf011ec599fe1571ed464e3ae82ff70a5b",
+      "reference_index": 148,
+      "reference_labels": [
+        "Fragments indicative for dihydroxylated benzene ring substructure (MzCloud) \u00e2\u20ac\u201c C6H5O2 fragment corresponds to positively charged fragment with two hydroxyl groups."
+      ],
+      "reference_sources": [
+        "Massbank library derived Mass2Motifs: motif_38"
+      ],
+      "spec2vec_cosine": 0.9447904652150385,
+      "support_compounds": 19,
+      "topic_id": 827
+    },
+    {
+      "direct_overlaps": [
+        {
+          "channel": "fragment",
+          "matched": 2,
+          "query_coverage": 1.0,
+          "query_features": 2,
+          "reference_coverage": 0.6666666666666666,
+          "reference_features": 3,
+          "tolerance_da": 0.01
+        },
+        {
+          "channel": "loss",
+          "matched": 0,
+          "query_coverage": 0.0,
+          "query_features": 18,
+          "reference_coverage": null,
+          "reference_features": 0,
+          "tolerance_da": 0.01
+        },
+        {
+          "channel": "fragment",
+          "matched": 2,
+          "query_coverage": 1.0,
+          "query_features": 2,
+          "reference_coverage": 0.6666666666666666,
+          "reference_features": 3,
+          "tolerance_da": 0.005
+        },
+        {
+          "channel": "loss",
+          "matched": 0,
+          "query_coverage": 0.0,
+          "query_features": 18,
+          "reference_coverage": null,
+          "reference_features": 0,
+          "tolerance_da": 0.005
+        },
+        {
+          "channel": "fragment",
+          "matched": 2,
+          "query_coverage": 1.0,
+          "query_features": 2,
+          "reference_coverage": 0.6666666666666666,
+          "reference_features": 3,
+          "tolerance_da": 0.02
+        },
+        {
+          "channel": "loss",
+          "matched": 0,
+          "query_coverage": 0.0,
+          "query_features": 18,
+          "reference_coverage": null,
+          "reference_features": 0,
+          "tolerance_da": 0.02
+        }
+      ],
+      "display_example": 3,
+      "fit": "selected_23",
+      "model": "selected",
+      "rank": 1,
+      "reference_id": "cc54ccfb01dccc685ae2950d74ddfa64ee6aec383ba266a19faf451bf87948b2",
+      "reference_index": 188,
+      "reference_labels": [
+        "Fragments indicative for dihydroxylated benzene ring substructure (MzCloud) \u00e2\u20ac\u201c C6H5O2 fragment corresponds to positively charged fragment with two hydroxyl groups."
+      ],
+      "reference_sources": [
+        "GNPS library derived Mass2Motifs: motif_55"
+      ],
+      "spec2vec_cosine": 0.9424981614302149,
+      "support_compounds": 20,
+      "topic_id": 178
+    }
+  ]
+}

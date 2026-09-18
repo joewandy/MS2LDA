@@ -1,0 +1,17 @@
+{
+  "observation_scope": "In-run observation after baseline launch; not a retrospective launch-time snapshot",
+  "observed_utc": "2026-09-08T15:17:03.905937+00:00",
+  "packages": {
+    "gensim": "4.4.0",
+    "matchms": "0.29.0",
+    "numpy": "1.26.4",
+    "pandas": "2.3.3",
+    "rdkit": "2024.9.6",
+    "scipy": "1.17.1",
+    "spec2vec": "0.9.1",
+    "tomotopy": "0.13.0",
+    "torch": "2.10.0+cu128"
+  },
+  "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.43",
+  "python": "3.11.16 (main, Sep  2 2026, 23:39:52) [GCC 15.3.0]"
+}

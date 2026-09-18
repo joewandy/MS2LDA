@@ -1,0 +1,108 @@
+{
+  "candidate_test_artifacts_accessed": false,
+  "candidate_test_metrics_inspected": false,
+  "local_artifacts": [
+    {
+      "bytes": 81193085,
+      "path": "models/contextual_sparse_etm/weights.pt",
+      "sha256": "7133ec455b2112ff6b78b8e627d179fdcac2472c50424b9deba486f73c2ce159"
+    },
+    {
+      "bytes": 84932128,
+      "path": "validation_evaluation/contextual_sparse_etm/beta.npy",
+      "sha256": "e23cf12907ed6a0a141da86c6cb4389c028e2a76d6432309fab9d9a624ac16cc"
+    },
+    {
+      "bytes": 15556128,
+      "path": "validation_evaluation/contextual_sparse_etm/validation_full_theta.npy",
+      "sha256": "1be62d9ad0483bbbd883f51043d87f03f5fb4af46766572829f5f2c89a3d7bee"
+    },
+    {
+      "bytes": 5705,
+      "path": "validation_evaluation/contextual_sparse_etm/complete.json",
+      "sha256": "c21dfe5b76e3201fa13e0baf3fe196968d900c7b463c1efdff1bfd0ce1a12f7d"
+    }
+  ],
+  "validation_inputs": {
+    "candidate_test_artifacts_accessed": false,
+    "candidate_test_metrics_inspected": false,
+    "evidence_boundary": "training plus validation only",
+    "forbidden_test_files": [],
+    "linked_inputs": [
+      {
+        "bytes": 1933,
+        "linked_path": "<reproduction-root>/real/contextual_seed_37/protocol.json",
+        "path": "<reproduction-root>/prepared/protocol.json",
+        "sha256": "006a14e8112d86be34b461bcef32feef06224f95fe20bfaf816387e69e610955"
+      },
+      {
+        "bytes": 10657989,
+        "linked_path": "<reproduction-root>/real/contextual_seed_37/data/train.npz",
+        "path": "<reproduction-root>/prepared/data/train.npz",
+        "sha256": "b4808f341864ba1df246a5093992f52397c2f96e0b48b23245b9b17e30aa5b52"
+      },
+      {
+        "bytes": 775961,
+        "linked_path": "<reproduction-root>/real/contextual_seed_37/data/validation_observed.npz",
+        "path": "<reproduction-root>/prepared/data/validation_observed.npz",
+        "sha256": "76afa43a3540d91edd4dd7e851afe10c65e3d67bcf06007c83eac1d9b6e15bff"
+      },
+      {
+        "bytes": 778241,
+        "linked_path": "<reproduction-root>/real/contextual_seed_37/data/validation_completion.npz",
+        "path": "<reproduction-root>/prepared/data/validation_completion.npz",
+        "sha256": "f75245b599bc3c087aad97ff7247112d422ec0ab87418c5f96b0a889b2f661f0"
+      },
+      {
+        "bytes": 1528665,
+        "linked_path": "<reproduction-root>/real/contextual_seed_37/data/validation_full.npz",
+        "path": "<reproduction-root>/prepared/data/validation_full.npz",
+        "sha256": "51888951815f448d0527a6a876be345cfe76ab346d9e97bada9a186e8857fab2"
+      },
+      {
+        "bytes": 1285639,
+        "linked_path": "<reproduction-root>/real/contextual_seed_37/data/validation_records.jsonl",
+        "path": "<reproduction-root>/prepared/data/validation_records.jsonl",
+        "sha256": "0e85218489af6a07413474bb2db6ce74da537f6fd3c8ee77d5286f5775ba068c"
+      },
+      {
+        "bytes": 399495,
+        "linked_path": "<reproduction-root>/real/contextual_seed_37/data/vocabulary.json",
+        "path": "<reproduction-root>/prepared/data/vocabulary.json",
+        "sha256": "9ed46f54a4e4917560f764d4ac662bae7036c1b98733d6b25a62a869799bd90e"
+      },
+      {
+        "bytes": 4246728,
+        "linked_path": "<reproduction-root>/real/contextual_seed_37/token_features/features.npy",
+        "path": "<reproduction-root>/prepared/token_features/features.npy",
+        "sha256": "a9d21070b111be3e5f59e3650f47d2eede9ae264ecb3085305bcd160c2d1883d"
+      },
+      {
+        "bytes": 169,
+        "linked_path": "<reproduction-root>/real/contextual_seed_37/mag/index/complete.json",
+        "path": "<reproduction-root>/prepared/mag/index/complete.json",
+        "sha256": "6157d53dc131841a8e02e9f6047efbb7e18163a003ff2e70ff5ae3950f3bb25b"
+      },
+      {
+        "bytes": 254110,
+        "linked_path": "<reproduction-root>/real/contextual_seed_37/mag/index/excluded_connectivity_keys.json",
+        "path": "<reproduction-root>/prepared/mag/index/excluded_connectivity_keys.json",
+        "sha256": "36ad6649271965ddc88e8c5c7484362e121887f204bbf8c5bf3fd27f6c624a70"
+      },
+      {
+        "bytes": 2982960,
+        "linked_path": "<reproduction-root>/real/contextual_seed_37/mag/index/kept_original_ids.npy",
+        "path": "<reproduction-root>/prepared/mag/index/kept_original_ids.npy",
+        "sha256": "97c63d3da5e77877a7786993a0b5bc123f3e37161febf8b006628194c9f3485b"
+      },
+      {
+        "bytes": 447424845,
+        "linked_path": "<reproduction-root>/real/contextual_seed_37/mag/index/spec2vec_filtered.faiss",
+        "path": "<reproduction-root>/prepared/mag/index/spec2vec_filtered.faiss",
+        "sha256": "845408fe7338135cb23cbe9023f5805c11dafcb8d028ca631fb1968292aef300"
+      }
+    ],
+    "prepared_run": "<reproduction-root>/prepared",
+    "test_spectra_exposed_to_model_run": false
+  }
+}

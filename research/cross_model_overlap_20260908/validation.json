@@ -1,0 +1,36 @@
+{
+  "byte_identical_scientific_payloads": [
+    "directed_matches.npy",
+    "summary.json",
+    "inventory.json",
+    "examples.json"
+  ],
+  "counterpart_invariants": {
+    "nearest_ge_previous_forced_comparisons": {
+      "all": 30000,
+      "recurring_evaluable": 9834
+    },
+    "previous_matches_sha256": "39f6ce734860562005daede5a0c2376cefcedd8956aaa78387a5784d71336172",
+    "reciprocal_flags_checked": 133220
+  },
+  "input_seals": {
+    "original": "c039edaa71385e505703f70ec4940961bf029315dfde1ef97b943098665aaa0b",
+    "replay": "3d034133bfab4c007288bcc7f770d9e38d9fa189b3284059c6fbf2698cc0fe83"
+  },
+  "interpretation": "Descriptive cross-model recovery on fixed development-validation fits; no chemical-equivalence test, retraining or model selection.",
+  "pair_curves": {
+    "checked_directed_rows": 133220,
+    "fit_pair_cohort_metric_groups": 180,
+    "maximum_coverage_error": 0.0
+  },
+  "validated_source_sha256": {
+    "benchmarks/neural_ms2lda/cross_model_overlap.py": "4dacefaf41da8480008d2633a6f28e407d2f9f7da3478250e0d07d08635c1ea7",
+    "benchmarks/neural_ms2lda/cross_model_overlap_evidence.py": "3a6b077dbfa3fa6ec4b51eba2e2b78868468a59c70cd232cc60acc5a7cb042f3",
+    "benchmarks/neural_ms2lda/cross_model_overlap_examples.py": "97f2d12e823c04216f1e45efcca2e3ce83cf7ff7765807a7f8aa8f63dfb57640",
+    "benchmarks/neural_ms2lda/cross_model_overlap_figures.py": "abc7c209739f4c12c08e9192e1c42e673da06afa90ec5b4a700d19bd665fd3f4",
+    "benchmarks/neural_ms2lda/cross_model_overlap_report.py": "592e4de375f7c6854ebeae98849acc8d4de500243ce0c8c1b84e3d71515f486d",
+    "scripts/generate_cross_model_overlap_report.py": "34f3aae78c270686972e68d51b74e987e921e61b943aa3e93cbd0453c8c9867b",
+    "scripts/run_cross_model_overlap.py": "25e56b7ddab4b832547146ad6ed876a7e1b9eff391def33098b4444f3b72c8c5",
+    "scripts/validate_cross_model_overlap.py": "648cc4173ba6df57bf58156147ab34bb76795fa8c8fc524de01fb4f20e40466f"
+  }
+}

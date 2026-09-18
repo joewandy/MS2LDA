@@ -1,0 +1,1440 @@
+{
+  "examples": [
+    {
+      "best_score": 0.4223160218354502,
+      "direct_overlaps": [
+        [
+          {
+            "channel": "frag",
+            "matched": 1,
+            "source_words": 10,
+            "target_words": 15,
+            "tolerance_da": 0.005
+          },
+          {
+            "channel": "frag",
+            "matched": 1,
+            "source_words": 10,
+            "target_words": 15,
+            "tolerance_da": 0.01
+          },
+          {
+            "channel": "frag",
+            "matched": 1,
+            "source_words": 10,
+            "target_words": 15,
+            "tolerance_da": 0.02
+          },
+          {
+            "channel": "loss",
+            "matched": 0,
+            "source_words": 10,
+            "target_words": 5,
+            "tolerance_da": 0.005
+          },
+          {
+            "channel": "loss",
+            "matched": 0,
+            "source_words": 10,
+            "target_words": 5,
+            "tolerance_da": 0.01
+          },
+          {
+            "channel": "loss",
+            "matched": 0,
+            "source_words": 10,
+            "target_words": 5,
+            "tolerance_da": 0.02
+          }
+        ]
+      ],
+      "direction": "selected_to_tomotopy",
+      "matched_metrics": {
+        "compound_jaccard": 0.0,
+        "feature_effect_cosine": 0.09207885042447918,
+        "fragment_cosine": 0.5728456476200231,
+        "loss_cosine": 0.0033332525047033404
+      },
+      "pooled_quantile_score": 0.4222493665325412,
+      "second_score": 0.10691112783809317,
+      "selection_field": "best_score",
+      "selection_quantile": 0.5,
+      "source": {
+        "MAG_available": true,
+        "compound_ids": [
+          1487,
+          2929,
+          3401
+        ],
+        "fit": "selected_11",
+        "model": "selected",
+        "support_compounds": 3,
+        "topic_id": 805,
+        "words": [
+          {
+            "probability": 0.13531307876110077,
+            "token": "frag@222.1"
+          },
+          {
+            "probability": 0.07244589179754257,
+            "token": "loss@279.14"
+          },
+          {
+            "probability": 0.052734315395355225,
+            "token": "loss@316.14"
+          },
+          {
+            "probability": 0.03423665091395378,
+            "token": "loss@365.15"
+          },
+          {
+            "probability": 0.023609545081853867,
+            "token": "frag@210.13"
+          },
+          {
+            "probability": 0.012664731591939926,
+            "token": "frag@343.19"
+          },
+          {
+            "probability": 0.011309748515486717,
+            "token": "loss@136.01"
+          },
+          {
+            "probability": 0.010486231185495853,
+            "token": "loss@203.0"
+          },
+          {
+            "probability": 0.006935254670679569,
+            "token": "frag@170.15"
+          },
+          {
+            "probability": 0.006194997578859329,
+            "token": "loss@249.16"
+          },
+          {
+            "probability": 0.00527511490508914,
+            "token": "frag@154.06"
+          },
+          {
+            "probability": 0.005264268722385168,
+            "token": "loss@221.98"
+          },
+          {
+            "probability": 0.005094658117741346,
+            "token": "loss@100.13"
+          },
+          {
+            "probability": 0.005082779563963413,
+            "token": "frag@238.05"
+          },
+          {
+            "probability": 0.004520939197391272,
+            "token": "frag@221.11"
+          },
+          {
+            "probability": 0.004144771955907345,
+            "token": "frag@119.02"
+          },
+          {
+            "probability": 0.004086816217750311,
+            "token": "frag@110.99"
+          },
+          {
+            "probability": 0.003939932212233543,
+            "token": "loss@120.05"
+          },
+          {
+            "probability": 0.003650914877653122,
+            "token": "loss@297.02"
+          },
+          {
+            "probability": 0.0034989630803465843,
+            "token": "frag@258.1"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "MAG_available": true,
+          "compound_ids": [
+            1786,
+            2285,
+            3417,
+            3477
+          ],
+          "fit": "tomotopy_42",
+          "model": "tomotopy",
+          "support_compounds": 4,
+          "topic_id": 132,
+          "words": [
+            {
+              "probability": 0.08469130843877792,
+              "token": "frag@222.1"
+            },
+            {
+              "probability": 0.07908355444669724,
+              "token": "frag@234.1"
+            },
+            {
+              "probability": 0.05546446517109871,
+              "token": "frag@248.12"
+            },
+            {
+              "probability": 0.05365857854485512,
+              "token": "loss@231.08"
+            },
+            {
+              "probability": 0.02638019435107708,
+              "token": "frag@276.11"
+            },
+            {
+              "probability": 0.025714866816997528,
+              "token": "frag@224.12"
+            },
+            {
+              "probability": 0.025334680452942848,
+              "token": "loss@238.0"
+            },
+            {
+              "probability": 0.024004029110074043,
+              "token": "loss@287.02"
+            },
+            {
+              "probability": 0.023623842746019363,
+              "token": "frag@235.11"
+            },
+            {
+              "probability": 0.018063614144921303,
+              "token": "loss@170.18"
+            },
+            {
+              "probability": 0.016400298103690147,
+              "token": "frag@308.06"
+            },
+            {
+              "probability": 0.01535478513687849,
+              "token": "frag@248.11"
+            },
+            {
+              "probability": 0.01459441240876913,
+              "token": "loss@39.05"
+            },
+            {
+              "probability": 0.013786515220999718,
+              "token": "frag@306.16"
+            },
+            {
+              "probability": 0.013738992623984814,
+              "token": "frag@246.1"
+            },
+            {
+              "probability": 0.0135488985106349,
+              "token": "frag@236.12"
+            },
+            {
+              "probability": 0.010840069502592087,
+              "token": "frag@207.08"
+            },
+            {
+              "probability": 0.010697499848902225,
+              "token": "frag@220.09"
+            },
+            {
+              "probability": 0.010222266428172588,
+              "token": "frag@250.1"
+            },
+            {
+              "probability": 0.010127220302820206,
+              "token": "frag@274.13"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "best_score": 0.8872149688882067,
+      "direct_overlaps": [
+        [
+          {
+            "channel": "frag",
+            "matched": 2,
+            "source_words": 5,
+            "target_words": 16,
+            "tolerance_da": 0.005
+          },
+          {
+            "channel": "frag",
+            "matched": 2,
+            "source_words": 5,
+            "target_words": 16,
+            "tolerance_da": 0.01
+          },
+          {
+            "channel": "frag",
+            "matched": 2,
+            "source_words": 5,
+            "target_words": 16,
+            "tolerance_da": 0.02
+          },
+          {
+            "channel": "loss",
+            "matched": 0,
+            "source_words": 15,
+            "target_words": 4,
+            "tolerance_da": 0.005
+          },
+          {
+            "channel": "loss",
+            "matched": 0,
+            "source_words": 15,
+            "target_words": 4,
+            "tolerance_da": 0.01
+          },
+          {
+            "channel": "loss",
+            "matched": 0,
+            "source_words": 15,
+            "target_words": 4,
+            "tolerance_da": 0.02
+          }
+        ]
+      ],
+      "direction": "selected_to_tomotopy",
+      "matched_metrics": {
+        "compound_jaccard": 0.2,
+        "feature_effect_cosine": 0.6862261294716433,
+        "fragment_cosine": 0.9458965166476618,
+        "loss_cosine": 0.0059062415112091475
+      },
+      "pooled_quantile_score": 0.8872039165722091,
+      "second_score": 0.08713665160311564,
+      "selection_field": "best_score",
+      "selection_quantile": 0.9,
+      "source": {
+        "MAG_available": true,
+        "compound_ids": [
+          1636,
+          1841,
+          1890,
+          1962,
+          2112,
+          2535,
+          2680
+        ],
+        "fit": "selected_42",
+        "model": "selected",
+        "support_compounds": 7,
+        "topic_id": 265,
+        "words": [
+          {
+            "probability": 0.24287991225719452,
+            "token": "frag@138.07"
+          },
+          {
+            "probability": 0.08293993771076202,
+            "token": "frag@164.08"
+          },
+          {
+            "probability": 0.05854472890496254,
+            "token": "loss@185.98"
+          },
+          {
+            "probability": 0.04637854918837547,
+            "token": "loss@286.04"
+          },
+          {
+            "probability": 0.02469303458929062,
+            "token": "loss@231.02"
+          },
+          {
+            "probability": 0.007181218359619379,
+            "token": "loss@137.06"
+          },
+          {
+            "probability": 0.003887053346261382,
+            "token": "frag@162.07"
+          },
+          {
+            "probability": 0.0036832799669355154,
+            "token": "loss@221.12"
+          },
+          {
+            "probability": 0.0033134918194264174,
+            "token": "loss@313.15"
+          },
+          {
+            "probability": 0.0031155275646597147,
+            "token": "loss@277.07"
+          },
+          {
+            "probability": 0.0027211224660277367,
+            "token": "loss@186.05"
+          },
+          {
+            "probability": 0.0025994095485657454,
+            "token": "loss@210.0"
+          },
+          {
+            "probability": 0.0025165702681988478,
+            "token": "frag@208.13"
+          },
+          {
+            "probability": 0.0024660700000822544,
+            "token": "loss@201.05"
+          },
+          {
+            "probability": 0.0023584032896906137,
+            "token": "loss@325.16"
+          },
+          {
+            "probability": 0.0023426502011716366,
+            "token": "loss@250.09"
+          },
+          {
+            "probability": 0.0022803903557360172,
+            "token": "loss@165.09"
+          },
+          {
+            "probability": 0.0022356666158884764,
+            "token": "loss@170.15"
+          },
+          {
+            "probability": 0.002216813387349248,
+            "token": "loss@233.08"
+          },
+          {
+            "probability": 0.0021298350766301155,
+            "token": "frag@135.09"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "MAG_available": true,
+          "compound_ids": [
+            1082,
+            1636,
+            1961,
+            2680,
+            2924
+          ],
+          "fit": "tomotopy_11",
+          "model": "tomotopy",
+          "support_compounds": 5,
+          "topic_id": 882,
+          "words": [
+            {
+              "probability": 0.5561444163322449,
+              "token": "frag@138.07"
+            },
+            {
+              "probability": 0.09012579917907715,
+              "token": "loss@180.11"
+            },
+            {
+              "probability": 0.052377596497535706,
+              "token": "loss@168.11"
+            },
+            {
+              "probability": 0.023921268060803413,
+              "token": "frag@181.11"
+            },
+            {
+              "probability": 0.017797086387872696,
+              "token": "loss@125.09"
+            },
+            {
+              "probability": 0.011725697666406631,
+              "token": "frag@179.1"
+            },
+            {
+              "probability": 0.009561116807162762,
+              "token": "frag@328.01"
+            },
+            {
+              "probability": 0.006710203364491463,
+              "token": "frag@126.07"
+            },
+            {
+              "probability": 0.006235051434487104,
+              "token": "frag@136.06"
+            },
+            {
+              "probability": 0.005284747574478388,
+              "token": "frag@310.0"
+            },
+            {
+              "probability": 0.005231952760368586,
+              "token": "frag@369.14"
+            },
+            {
+              "probability": 0.005126363132148981,
+              "token": "frag@110.05"
+            },
+            {
+              "probability": 0.004809595178812742,
+              "token": "frag@150.07"
+            },
+            {
+              "probability": 0.0037537014577537775,
+              "token": "frag@124.06"
+            },
+            {
+              "probability": 0.0037537014577537775,
+              "token": "frag@355.12"
+            },
+            {
+              "probability": 0.0033841386903077364,
+              "token": "frag@329.14"
+            },
+            {
+              "probability": 0.0030673707369714975,
+              "token": "frag@164.08"
+            },
+            {
+              "probability": 0.002908986760303378,
+              "token": "frag@112.09"
+            },
+            {
+              "probability": 0.0028561921790242195,
+              "token": "frag@163.07"
+            },
+            {
+              "probability": 0.0028561921790242195,
+              "token": "loss@384.13"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "best_score": 0.5222886371483316,
+      "direct_overlaps": [
+        [
+          {
+            "channel": "frag",
+            "matched": 5,
+            "source_words": 9,
+            "target_words": 15,
+            "tolerance_da": 0.005
+          },
+          {
+            "channel": "frag",
+            "matched": 5,
+            "source_words": 9,
+            "target_words": 15,
+            "tolerance_da": 0.01
+          },
+          {
+            "channel": "frag",
+            "matched": 5,
+            "source_words": 9,
+            "target_words": 15,
+            "tolerance_da": 0.02
+          },
+          {
+            "channel": "loss",
+            "matched": 0,
+            "source_words": 11,
+            "target_words": 5,
+            "tolerance_da": 0.005
+          },
+          {
+            "channel": "loss",
+            "matched": 0,
+            "source_words": 11,
+            "target_words": 5,
+            "tolerance_da": 0.01
+          },
+          {
+            "channel": "loss",
+            "matched": 0,
+            "source_words": 11,
+            "target_words": 5,
+            "tolerance_da": 0.02
+          }
+        ],
+        [
+          {
+            "channel": "frag",
+            "matched": 3,
+            "source_words": 9,
+            "target_words": 12,
+            "tolerance_da": 0.005
+          },
+          {
+            "channel": "frag",
+            "matched": 3,
+            "source_words": 9,
+            "target_words": 12,
+            "tolerance_da": 0.01
+          },
+          {
+            "channel": "frag",
+            "matched": 3,
+            "source_words": 9,
+            "target_words": 12,
+            "tolerance_da": 0.02
+          },
+          {
+            "channel": "loss",
+            "matched": 0,
+            "source_words": 11,
+            "target_words": 8,
+            "tolerance_da": 0.005
+          },
+          {
+            "channel": "loss",
+            "matched": 0,
+            "source_words": 11,
+            "target_words": 8,
+            "tolerance_da": 0.01
+          },
+          {
+            "channel": "loss",
+            "matched": 0,
+            "source_words": 11,
+            "target_words": 8,
+            "tolerance_da": 0.02
+          }
+        ]
+      ],
+      "direction": "selected_to_tomotopy",
+      "matched_metrics": {
+        "compound_jaccard": 0.0,
+        "feature_effect_cosine": 0.03666889751867974,
+        "fragment_cosine": 0.6095513840378532,
+        "loss_cosine": 0.010304500519587256
+      },
+      "pooled_quantile_score": 0.3234968733943969,
+      "second_score": 0.32352057468136003,
+      "selection_field": "second_score",
+      "selection_quantile": 0.9,
+      "source": {
+        "MAG_available": true,
+        "compound_ids": [
+          2236,
+          2889,
+          3645,
+          3831
+        ],
+        "fit": "selected_42",
+        "model": "selected",
+        "support_compounds": 4,
+        "topic_id": 14,
+        "words": [
+          {
+            "probability": 0.09997313469648361,
+            "token": "frag@109.01"
+          },
+          {
+            "probability": 0.09497736394405365,
+            "token": "frag@136.02"
+          },
+          {
+            "probability": 0.08301527798175812,
+            "token": "frag@152.02"
+          },
+          {
+            "probability": 0.03350676968693733,
+            "token": "frag@124.02"
+          },
+          {
+            "probability": 0.02473156712949276,
+            "token": "frag@134.01"
+          },
+          {
+            "probability": 0.00740395113825798,
+            "token": "frag@163.03"
+          },
+          {
+            "probability": 0.007131537422537804,
+            "token": "frag@175.03"
+          },
+          {
+            "probability": 0.007114619482308626,
+            "token": "frag@65.04"
+          },
+          {
+            "probability": 0.007052304223179817,
+            "token": "loss@146.03"
+          },
+          {
+            "probability": 0.005940559320151806,
+            "token": "frag@99.03"
+          },
+          {
+            "probability": 0.005661111790686846,
+            "token": "loss@201.07"
+          },
+          {
+            "probability": 0.005377645138651133,
+            "token": "loss@247.98"
+          },
+          {
+            "probability": 0.005173616576939821,
+            "token": "loss@84.0"
+          },
+          {
+            "probability": 0.005161259323358536,
+            "token": "loss@249.06"
+          },
+          {
+            "probability": 0.004991950932890177,
+            "token": "loss@227.07"
+          },
+          {
+            "probability": 0.004680063109844923,
+            "token": "loss@54.02"
+          },
+          {
+            "probability": 0.004537779837846756,
+            "token": "loss@263.11"
+          },
+          {
+            "probability": 0.004455368500202894,
+            "token": "loss@183.07"
+          },
+          {
+            "probability": 0.00440343888476491,
+            "token": "loss@192.04"
+          },
+          {
+            "probability": 0.004164478275924921,
+            "token": "loss@237.08"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "MAG_available": true,
+          "compound_ids": [
+            390,
+            1423,
+            2797,
+            3744
+          ],
+          "fit": "tomotopy_23",
+          "model": "tomotopy",
+          "support_compounds": 4,
+          "topic_id": 91,
+          "words": [
+            {
+              "probability": 0.32382386922836304,
+              "token": "frag@136.02"
+            },
+            {
+              "probability": 0.15594510734081268,
+              "token": "loss@126.04"
+            },
+            {
+              "probability": 0.1220182329416275,
+              "token": "loss@204.08"
+            },
+            {
+              "probability": 0.09638654440641403,
+              "token": "frag@161.02"
+            },
+            {
+              "probability": 0.038495805114507675,
+              "token": "frag@109.01"
+            },
+            {
+              "probability": 0.03586241230368614,
+              "token": "frag@144.01"
+            },
+            {
+              "probability": 0.02923504076898098,
+              "token": "frag@135.01"
+            },
+            {
+              "probability": 0.02129097655415535,
+              "token": "frag@189.01"
+            },
+            {
+              "probability": 0.013917477801442146,
+              "token": "loss@355.14"
+            },
+            {
+              "probability": 0.00496394420042634,
+              "token": "frag@134.01"
+            },
+            {
+              "probability": 0.003998367115855217,
+              "token": "frag@146.01"
+            },
+            {
+              "probability": 0.003647248027846217,
+              "token": "frag@123.01"
+            },
+            {
+              "probability": 0.002506111515685916,
+              "token": "loss@198.98"
+            },
+            {
+              "probability": 0.002506111515685916,
+              "token": "loss@244.98"
+            },
+            {
+              "probability": 0.0024622215423732996,
+              "token": "frag@149.03"
+            },
+            {
+              "probability": 0.0024622215423732996,
+              "token": "frag@152.02"
+            },
+            {
+              "probability": 0.002330552088096738,
+              "token": "frag@121.01"
+            },
+            {
+              "probability": 0.0022866621147841215,
+              "token": "frag@179.03"
+            },
+            {
+              "probability": 0.001979433000087738,
+              "token": "frag@124.02"
+            },
+            {
+              "probability": 0.001891653286293149,
+              "token": "frag@162.02"
+            }
+          ]
+        },
+        {
+          "MAG_available": true,
+          "compound_ids": [
+            529,
+            893,
+            1175,
+            2515
+          ],
+          "fit": "tomotopy_23",
+          "model": "tomotopy",
+          "support_compounds": 4,
+          "topic_id": 469,
+          "words": [
+            {
+              "probability": 0.2149370163679123,
+              "token": "frag@152.02"
+            },
+            {
+              "probability": 0.2070179134607315,
+              "token": "loss@199.04"
+            },
+            {
+              "probability": 0.1748395413160324,
+              "token": "frag@142.09"
+            },
+            {
+              "probability": 0.06592383235692978,
+              "token": "frag@134.01"
+            },
+            {
+              "probability": 0.06146235764026642,
+              "token": "loss@301.11"
+            },
+            {
+              "probability": 0.017851468175649643,
+              "token": "frag@218.15"
+            },
+            {
+              "probability": 0.014338057488203049,
+              "token": "frag@234.03"
+            },
+            {
+              "probability": 0.011661174707114697,
+              "token": "frag@213.97"
+            },
+            {
+              "probability": 0.006697785574942827,
+              "token": "frag@178.0"
+            },
+            {
+              "probability": 0.005917028058320284,
+              "token": "loss@282.02"
+            },
+            {
+              "probability": 0.005582417361438274,
+              "token": "loss@406.11"
+            },
+            {
+              "probability": 0.005582417361438274,
+              "token": "frag@223.18"
+            },
+            {
+              "probability": 0.005526649300009012,
+              "token": "frag@312.11"
+            },
+            {
+              "probability": 0.005526649300009012,
+              "token": "loss@186.98"
+            },
+            {
+              "probability": 0.005247807130217552,
+              "token": "loss@200.05"
+            },
+            {
+              "probability": 0.005192038603127003,
+              "token": "loss@110.94"
+            },
+            {
+              "probability": 0.0028497655875980854,
+              "token": "frag@237.99"
+            },
+            {
+              "probability": 0.002124776365235448,
+              "token": "frag@162.01"
+            },
+            {
+              "probability": 0.0020690078381448984,
+              "token": "loss@268.03"
+            },
+            {
+              "probability": 0.0017901657847687602,
+              "token": "frag@124.02"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "best_score": 0.46118638062852396,
+      "direct_overlaps": [
+        [
+          {
+            "channel": "frag",
+            "matched": 2,
+            "source_words": 9,
+            "target_words": 13,
+            "tolerance_da": 0.005
+          },
+          {
+            "channel": "frag",
+            "matched": 2,
+            "source_words": 9,
+            "target_words": 13,
+            "tolerance_da": 0.01
+          },
+          {
+            "channel": "frag",
+            "matched": 2,
+            "source_words": 9,
+            "target_words": 13,
+            "tolerance_da": 0.02
+          },
+          {
+            "channel": "loss",
+            "matched": 0,
+            "source_words": 11,
+            "target_words": 7,
+            "tolerance_da": 0.005
+          },
+          {
+            "channel": "loss",
+            "matched": 0,
+            "source_words": 11,
+            "target_words": 7,
+            "tolerance_da": 0.01
+          },
+          {
+            "channel": "loss",
+            "matched": 0,
+            "source_words": 11,
+            "target_words": 7,
+            "tolerance_da": 0.02
+          }
+        ]
+      ],
+      "direction": "tomotopy_to_selected",
+      "matched_metrics": {
+        "compound_jaccard": 0.07142857142857142,
+        "feature_effect_cosine": 0.07566290843153065,
+        "fragment_cosine": 0.759893113081381,
+        "loss_cosine": 0.0003816046787389518
+      },
+      "pooled_quantile_score": 0.4614975643136988,
+      "second_score": 0.13607025992649985,
+      "selection_field": "best_score",
+      "selection_quantile": 0.5,
+      "source": {
+        "MAG_available": true,
+        "compound_ids": [
+          1328,
+          1731,
+          3063,
+          3299,
+          3838
+        ],
+        "fit": "tomotopy_23",
+        "model": "tomotopy",
+        "support_compounds": 5,
+        "topic_id": 910,
+        "words": [
+          {
+            "probability": 0.31719058752059937,
+            "token": "frag@139.04"
+          },
+          {
+            "probability": 0.2489420473575592,
+            "token": "loss@149.07"
+          },
+          {
+            "probability": 0.1451045274734497,
+            "token": "loss@199.03"
+          },
+          {
+            "probability": 0.046502504497766495,
+            "token": "loss@169.08"
+          },
+          {
+            "probability": 0.02624608762562275,
+            "token": "frag@241.13"
+          },
+          {
+            "probability": 0.010165606625378132,
+            "token": "frag@289.07"
+          },
+          {
+            "probability": 0.006238976959139109,
+            "token": "frag@168.97"
+          },
+          {
+            "probability": 0.0059896670281887054,
+            "token": "frag@111.04"
+          },
+          {
+            "probability": 0.0031849320512264967,
+            "token": "loss@151.09"
+          },
+          {
+            "probability": 0.0022500206250697374,
+            "token": "frag@213.14"
+          },
+          {
+            "probability": 0.001876056077890098,
+            "token": "loss@168.96"
+          },
+          {
+            "probability": 0.0018137285951524973,
+            "token": "loss@226.04"
+          },
+          {
+            "probability": 0.0016890737460926175,
+            "token": "frag@137.93"
+          },
+          {
+            "probability": 0.0016890737460926175,
+            "token": "loss@120.59"
+          },
+          {
+            "probability": 0.0016267462633550167,
+            "token": "frag@119.03"
+          },
+          {
+            "probability": 0.0016267462633550167,
+            "token": "loss@152.16"
+          },
+          {
+            "probability": 0.001564418780617416,
+            "token": "loss@649.16"
+          },
+          {
+            "probability": 0.0014397639315575361,
+            "token": "loss@164.09"
+          },
+          {
+            "probability": 0.0013151090824976563,
+            "token": "loss@163.09"
+          },
+          {
+            "probability": 0.0013151090824976563,
+            "token": "frag@269.06"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "MAG_available": true,
+          "compound_ids": [
+            282,
+            466,
+            468,
+            665,
+            835,
+            1714,
+            1818,
+            3072,
+            3235,
+            3838
+          ],
+          "fit": "selected_11",
+          "model": "selected",
+          "support_compounds": 10,
+          "topic_id": 46,
+          "words": [
+            {
+              "probability": 0.13792462646961212,
+              "token": "frag@139.04"
+            },
+            {
+              "probability": 0.09435064345598221,
+              "token": "loss@168.04"
+            },
+            {
+              "probability": 0.09058310836553574,
+              "token": "frag@111.04"
+            },
+            {
+              "probability": 0.07612688094377518,
+              "token": "frag@179.07"
+            },
+            {
+              "probability": 0.05352165922522545,
+              "token": "loss@232.11"
+            },
+            {
+              "probability": 0.048492249101400375,
+              "token": "loss@208.03"
+            },
+            {
+              "probability": 0.033904582262039185,
+              "token": "loss@221.05"
+            },
+            {
+              "probability": 0.021213160827755928,
+              "token": "loss@320.05"
+            },
+            {
+              "probability": 0.01078736037015915,
+              "token": "frag@123.04"
+            },
+            {
+              "probability": 0.005741882603615522,
+              "token": "frag@365.14"
+            },
+            {
+              "probability": 0.00551798427477479,
+              "token": "loss@238.05"
+            },
+            {
+              "probability": 0.005331122316420078,
+              "token": "frag@79.05"
+            },
+            {
+              "probability": 0.0049957395531237125,
+              "token": "loss@462.15"
+            },
+            {
+              "probability": 0.004749751184135675,
+              "token": "frag@65.04"
+            },
+            {
+              "probability": 0.004523252137005329,
+              "token": "frag@93.03"
+            },
+            {
+              "probability": 0.0042801243253052235,
+              "token": "frag@153.02"
+            },
+            {
+              "probability": 0.003881813259795308,
+              "token": "frag@162.07"
+            },
+            {
+              "probability": 0.0036128947976976633,
+              "token": "frag@109.06"
+            },
+            {
+              "probability": 0.0034977176692336798,
+              "token": "frag@149.04"
+            },
+            {
+              "probability": 0.0034156390465795994,
+              "token": "frag@111.03"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "best_score": 0.8917029407395298,
+      "direct_overlaps": [
+        [
+          {
+            "channel": "frag",
+            "matched": 4,
+            "source_words": 8,
+            "target_words": 8,
+            "tolerance_da": 0.005
+          },
+          {
+            "channel": "frag",
+            "matched": 4,
+            "source_words": 8,
+            "target_words": 8,
+            "tolerance_da": 0.01
+          },
+          {
+            "channel": "frag",
+            "matched": 4,
+            "source_words": 8,
+            "target_words": 8,
+            "tolerance_da": 0.02
+          },
+          {
+            "channel": "loss",
+            "matched": 1,
+            "source_words": 12,
+            "target_words": 12,
+            "tolerance_da": 0.005
+          },
+          {
+            "channel": "loss",
+            "matched": 1,
+            "source_words": 12,
+            "target_words": 12,
+            "tolerance_da": 0.01
+          },
+          {
+            "channel": "loss",
+            "matched": 1,
+            "source_words": 12,
+            "target_words": 12,
+            "tolerance_da": 0.02
+          }
+        ]
+      ],
+      "direction": "tomotopy_to_selected",
+      "matched_metrics": {
+        "compound_jaccard": 0.35714285714285715,
+        "feature_effect_cosine": 0.7808473822877733,
+        "fragment_cosine": 0.9657116958213101,
+        "loss_cosine": 0.051944313194278384
+      },
+      "pooled_quantile_score": 0.8914405210641094,
+      "second_score": 0.07121743935921611,
+      "selection_field": "best_score",
+      "selection_quantile": 0.9,
+      "source": {
+        "MAG_available": true,
+        "compound_ids": [
+          408,
+          747,
+          1125,
+          1358,
+          2295,
+          2381,
+          2541,
+          2588,
+          2966,
+          3289,
+          3338,
+          3751
+        ],
+        "fit": "tomotopy_42",
+        "model": "tomotopy",
+        "support_compounds": 12,
+        "topic_id": 289,
+        "words": [
+          {
+            "probability": 0.2239321619272232,
+            "token": "frag@182.94"
+          },
+          {
+            "probability": 0.11667361110448837,
+            "token": "frag@172.96"
+          },
+          {
+            "probability": 0.06735064089298248,
+            "token": "loss@153.0"
+          },
+          {
+            "probability": 0.056217260658741,
+            "token": "loss@198.96"
+          },
+          {
+            "probability": 0.050503525882959366,
+            "token": "frag@182.96"
+          },
+          {
+            "probability": 0.024917762726545334,
+            "token": "frag@195.98"
+          },
+          {
+            "probability": 0.023615367710590363,
+            "token": "loss@225.97"
+          },
+          {
+            "probability": 0.02357335388660431,
+            "token": "frag@94.04"
+          },
+          {
+            "probability": 0.012986141256988049,
+            "token": "frag@182.95"
+          },
+          {
+            "probability": 0.010339337401092052,
+            "token": "loss@170.97"
+          },
+          {
+            "probability": 0.009835184551775455,
+            "token": "loss@250.99"
+          },
+          {
+            "probability": 0.006768254563212395,
+            "token": "loss@226.96"
+          },
+          {
+            "probability": 0.0066422163508832455,
+            "token": "loss@282.0"
+          },
+          {
+            "probability": 0.005255794618278742,
+            "token": "loss@269.01"
+          },
+          {
+            "probability": 0.005003718193620443,
+            "token": "loss@227.0"
+          },
+          {
+            "probability": 0.004751641768962145,
+            "token": "frag@154.95"
+          },
+          {
+            "probability": 0.004709629341959953,
+            "token": "loss@170.96"
+          },
+          {
+            "probability": 0.004625603556632996,
+            "token": "frag@181.96"
+          },
+          {
+            "probability": 0.004373527131974697,
+            "token": "loss@193.98"
+          },
+          {
+            "probability": 0.004247488919645548,
+            "token": "loss@226.0"
+          }
+        ]
+      },
+      "targets": [
+        {
+          "MAG_available": true,
+          "compound_ids": [
+            747,
+            936,
+            1358,
+            2381,
+            2395,
+            2588,
+            3289
+          ],
+          "fit": "selected_23",
+          "model": "selected",
+          "support_compounds": 7,
+          "topic_id": 86,
+          "words": [
+            {
+              "probability": 0.20932091772556305,
+              "token": "frag@182.94"
+            },
+            {
+              "probability": 0.09018789976835251,
+              "token": "frag@172.96"
+            },
+            {
+              "probability": 0.04925186559557915,
+              "token": "frag@94.04"
+            },
+            {
+              "probability": 0.03692653775215149,
+              "token": "loss@240.14"
+            },
+            {
+              "probability": 0.02876272425055504,
+              "token": "loss@302.0"
+            },
+            {
+              "probability": 0.009545359760522842,
+              "token": "frag@223.07"
+            },
+            {
+              "probability": 0.007428094744682312,
+              "token": "loss@133.09"
+            },
+            {
+              "probability": 0.00602258974686265,
+              "token": "loss@253.04"
+            },
+            {
+              "probability": 0.003754640929400921,
+              "token": "frag@439.18"
+            },
+            {
+              "probability": 0.0036949734203517437,
+              "token": "loss@276.21"
+            },
+            {
+              "probability": 0.003635939909145236,
+              "token": "loss@138.12"
+            },
+            {
+              "probability": 0.0033992603421211243,
+              "token": "loss@115.08"
+            },
+            {
+              "probability": 0.0033967390190809965,
+              "token": "loss@198.96"
+            },
+            {
+              "probability": 0.0032150556799024343,
+              "token": "frag@182.96"
+            },
+            {
+              "probability": 0.003163814777508378,
+              "token": "loss@126.09"
+            },
+            {
+              "probability": 0.0022074300795793533,
+              "token": "loss@261.09"
+            },
+            {
+              "probability": 0.0020569683983922005,
+              "token": "loss@176.13"
+            },
+            {
+              "probability": 0.0019978932105004787,
+              "token": "frag@258.08"
+            },
+            {
+              "probability": 0.001987507799640298,
+              "token": "frag@150.03"
+            },
+            {
+              "probability": 0.0019777624402195215,
+              "token": "loss@173.06"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "selection": {
+    "cohort": "recurring_evaluable",
+    "display_quantiles": [
+      0.5,
+      0.9
+    ],
+    "mass_tolerances_da": [
+      0.005,
+      0.01,
+      0.02
+    ],
+    "matched_pairs": "For each direction select the query nearest the pooled median and 90th percentile of best scores; exact ties by source fit, target fit, topic. Show the median neural-to-Tomotopy pair and 90th-percentile pair as illustrative spectra, not representative chemical validations",
+    "multiplicity": "Select the neural-to-Tomotopy query nearest the pooled 90th percentile of second-best scores, and its two best targets; inspect actual spectral features instead of selecting an arbitrary high-overlap cutoff",
+    "similarity": "full_beta",
+    "spectra": "Top 20 words per topic, retaining typed mass, unrenormalized beta probability, support and MAG availability. Display probabilities relative to each topic's maximum, never as experimental ion intensities"
+  }
+}

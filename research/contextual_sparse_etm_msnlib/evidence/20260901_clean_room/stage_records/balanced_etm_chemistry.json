@@ -1,0 +1,36 @@
+{
+  "attempt": 1,
+  "command": [
+    "<python-prefix>/bin/python",
+    "-m",
+    "scripts.run_etm_controls",
+    "chemical",
+    "--run",
+    "<reproduction-root>/real/controls",
+    "--data-root",
+    "<reproduction-root>/assets",
+    "--method",
+    "etm_balanced"
+  ],
+  "finished_utc": "2026-09-01T21:11:54.921909+00:00",
+  "log": "<reproduction-root>/logs/balanced_etm_chemistry.attempt-1.log",
+  "name": "balanced_etm_chemistry",
+  "outputs": [
+    {
+      "bytes": 159559,
+      "modified_ns": 1788297113957314132,
+      "path": "<reproduction-root>/real/controls/validation_chemical/etm_balanced/complete.json",
+      "sha256": "cd79cf1af4285898008c37b75ed22b2dcd0436aeb3a36e764f381cee558c0e31"
+    },
+    {
+      "bytes": 5426,
+      "modified_ns": 1788297113957552471,
+      "path": "<reproduction-root>/real/controls/models/etm_balanced/validation_access_audit.json",
+      "sha256": "b2dc60651d417d7d7e4c454550ad6ec4940e388b9e14fabbd169dd19fe8bd8bb"
+    }
+  ],
+  "pre_stage_load": null,
+  "return_code": 0,
+  "started_utc": "2026-09-01T21:11:19.179516+00:00",
+  "status": "complete"
+}

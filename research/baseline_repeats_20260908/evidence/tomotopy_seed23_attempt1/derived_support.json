@@ -1,0 +1,37 @@
+{
+  "implementation": {
+    "bytes": 11260,
+    "path": "benchmarks/neural_ms2lda/model_evaluation.py",
+    "sha256": "501c5694179cd0cbb7fd218ad1cf974f063c40d035fb745ec08bb6c3cd84ae25"
+  },
+  "metrics": {
+    "fraction_max_theta_ge_0_2": 0.7644638724607868,
+    "fraction_max_theta_ge_0_3": 0.5191565955258421,
+    "fraction_max_theta_ge_0_5": 0.12162509642581641,
+    "fraction_support_le_3": 0.0,
+    "maximum_exact_support": 1000,
+    "mean_effective_topics_per_spectrum": 11.964478460668056,
+    "mean_exact_support": 1000.0,
+    "median_effective_topics_per_spectrum": 9.218294441606927,
+    "median_exact_support": 1000.0,
+    "median_maximum_theta": 0.30691144575108575,
+    "minimum_exact_support": 1000,
+    "support_size_percentiles": {
+      "1": 1000.0,
+      "25": 1000.0,
+      "5": 1000.0,
+      "50": 1000.0,
+      "75": 1000.0,
+      "95": 1000.0,
+      "99": 1000.0
+    },
+    "unique_top1_topics": 945
+  },
+  "model_fitting_performed": false,
+  "split": "validation",
+  "theta": {
+    "bytes": 15556128,
+    "path": "output/benchmarks/baseline_repeats_20260908/real/tomotopy_seed23_attempt1/validation_evaluation/tomotopy/validation_full_theta.npy",
+    "sha256": "a8f8d56bc69de8c04e3c699dec792a57c8ad77669d462fbb5d449311fd733802"
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "batch_size": 200,
+  "device": "cpu",
+  "probability_audit_note": "A preliminary naive float32 NumPy sum over non-contiguous beta rows had up to 1.48e-4 accumulation error. Float64 accumulation separately identified a smaller CPU float32 softmax normalization error, recorded per run. The existing runner already normalizes exported beta in high precision. The independent float64 decoder verifies the exact channel equation, and saved GPU probabilities remain intact; no trained model or reported score is changed.",
+  "runs": [
+    {
+      "checkpoint_sha256": "96e2b9063efca8fa7891c3837056121ea5a600b93e0e122414a3c57d4207ae76",
+      "cpu_float64_decoder_vs_saved_gpu_nll_absolute_error": 1.0605747391423392e-08,
+      "cpu_vs_saved_gpu_max_theta_error": 7.748603820800781e-07,
+      "cpu_vs_saved_gpu_nll_absolute_error": 1.0154751706181742e-08,
+      "fitted_new_model": false,
+      "frozen_state_unchanged": true,
+      "high_precision_probability_checks_passed": true,
+      "normalized_cpu_beta_channel_mass_error": 5.317373955204818e-06,
+      "normalized_cpu_beta_mass_error": 3.265828785181668e-08,
+      "raw_cpu_beta_mass_error_float64_accumulation": 1.0999300815051072e-05,
+      "saved_gpu_beta_channel_mass_error": 7.965457554659494e-08,
+      "seed": 11,
+      "test_matrices_loaded": false,
+      "validation_rows": 3889,
+      "variant": "reduced_document_context"
+    },
+    {
+      "checkpoint_sha256": "41de7fc3c88d67fbd33c403a12e2f6d23c1537970cd622acf4ace1b5997a1f8f",
+      "cpu_float64_decoder_vs_saved_gpu_nll_absolute_error": 3.525130765069662e-08,
+      "cpu_vs_saved_gpu_max_theta_error": 5.960464477539062e-07,
+      "cpu_vs_saved_gpu_nll_absolute_error": 2.2416877243358613e-09,
+      "fitted_new_model": false,
+      "frozen_state_unchanged": true,
+      "high_precision_probability_checks_passed": true,
+      "normalized_cpu_beta_channel_mass_error": 5.1340418949497035e-06,
+      "normalized_cpu_beta_mass_error": 3.224599343099044e-08,
+      "raw_cpu_beta_mass_error_float64_accumulation": 1.0234918685014804e-05,
+      "saved_gpu_beta_channel_mass_error": 7.788203504333069e-08,
+      "seed": 23,
+      "test_matrices_loaded": false,
+      "validation_rows": 3889,
+      "variant": "reduced_document_context"
+    },
+    {
+      "checkpoint_sha256": "d561a122991c9f29e13c30b891d76f401a7dcd554f9acaeeda842d831faafe8c",
+      "cpu_float64_decoder_vs_saved_gpu_nll_absolute_error": 3.438753459761301e-08,
+      "cpu_vs_saved_gpu_max_theta_error": 7.152557373046875e-07,
+      "cpu_vs_saved_gpu_nll_absolute_error": 8.065295986625642e-09,
+      "fitted_new_model": false,
+      "frozen_state_unchanged": true,
+      "high_precision_probability_checks_passed": true,
+      "normalized_cpu_beta_channel_mass_error": 3.606886719687008e-06,
+      "normalized_cpu_beta_mass_error": 3.188796604547406e-08,
+      "raw_cpu_beta_mass_error_float64_accumulation": 8.253125749480006e-06,
+      "saved_gpu_beta_channel_mass_error": 8.00313326720925e-08,
+      "seed": 42,
+      "test_matrices_loaded": false,
+      "validation_rows": 3889,
+      "variant": "reduced_document_context"
+    }
+  ],
+  "source_sha256": {
+    "benchmarks/neural_ms2lda/contextual_reductions.py": "6bcb0e6c30c1fa6814269ae5cb2a6e9ee90fe1e39b9f49a94b63b82f17dec02d",
+    "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+    "benchmarks/neural_ms2lda/model_evaluation.py": "262fd2db293d7ccd6cb053312a2df38a6181e09e028c65beaf331dadd6a0e476",
+    "benchmarks/neural_ms2lda/reproducibility.py": "000ced8c92f9e524cdaa3d2237ee3d593caa2970b93d0d268272aeb535748e87",
+    "scripts/run_etm_controls.py": "447f33a3006aef93b506d23b5c6c0e0e5078e9248bbaae7a792e8ffbf47b583c",
+    "scripts/run_minimal_etm.py": "395635474837d7bdd43ad7ca3efcd4f9a4ec231f050ac1ef39310dc83350c6bf"
+  }
+}

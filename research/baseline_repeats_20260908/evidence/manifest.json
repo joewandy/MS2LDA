@@ -1,0 +1,1049 @@
+{
+  "historical_tomotopy_included": false,
+  "inference_policy": "Tomotopy 0.13.0 default per-document RNG; 100 iterations; one worker",
+  "postprocessing_source": "postprocessing_source.tar.gz and its manifest preserve the separate source used to derive support metrics and package results after fitting. Training used execution_source.tar.gz.",
+  "records": [
+    {
+      "fit_identity": {
+        "input_sha256": {
+          "data/train.npz": "b4808f341864ba1df246a5093992f52397c2f96e0b48b23245b9b17e30aa5b52",
+          "data/validation_completion.npz": "f75245b599bc3c087aad97ff7247112d422ec0ab87418c5f96b0a889b2f661f0",
+          "data/validation_full.npz": "51888951815f448d0527a6a876be345cfe76ab346d9e97bada9a186e8857fab2",
+          "data/validation_observed.npz": "76afa43a3540d91edd4dd7e851afe10c65e3d67bcf06007c83eac1d9b6e15bff",
+          "data/validation_records.jsonl": "0e85218489af6a07413474bb2db6ce74da537f6fd3c8ee77d5286f5775ba068c",
+          "data/vocabulary.json": "9ed46f54a4e4917560f764d4ac662bae7036c1b98733d6b25a62a869799bd90e",
+          "protocol.json": "8044718d019cac4f92524c7980bc5217d7db861d58c940b3f0a6ac8970d48021",
+          "token_features/features.npy": "a9d21070b111be3e5f59e3650f47d2eede9ae264ecb3085305bcd160c2d1883d"
+        },
+        "recipe": {
+          "alpha_optimization_interval": 10,
+          "tomotopy": {
+            "alpha": 0.6,
+            "convergence_threshold": 0.005,
+            "convergence_window": 10,
+            "eta": 0.1,
+            "inference_iterations": 100,
+            "maximum_iterations": 5000,
+            "parallel": 1,
+            "step_size": 50,
+            "workers": 1
+          },
+          "topics": 1000,
+          "version": "0.13.0"
+        },
+        "training_seed": 11
+      },
+      "model": "Tomotopy LDA",
+      "origin": "new_fit",
+      "raw_artifacts": [
+        {
+          "bytes": 2240,
+          "path": "output/benchmarks/baseline_repeats_20260908/real/tomotopy_seed11_attempt1/tomotopy/validation_only_result.json",
+          "sha256": "d4a584d390389e53aae60211c7bacb01450d2ad03383eb475fba61a2b8ee6686"
+        },
+        {
+          "bytes": 15556128,
+          "path": "output/benchmarks/baseline_repeats_20260908/real/tomotopy_seed11_attempt1/validation_evaluation/tomotopy/validation_full_theta.npy",
+          "sha256": "3cfb3ed022a76797b4ab733c73f942452a3c9316fbba1cc7853d86fdaa99812d"
+        },
+        {
+          "bytes": 274547245,
+          "path": "output/benchmarks/baseline_repeats_20260908/real/tomotopy_seed11_attempt1/tomotopy/model.bin",
+          "sha256": "e558624f85049e9a08ec2117bee80792f2ca3086f56048dadf1b68a4f3721283"
+        }
+      ],
+      "run": "tomotopy_seed11_attempt1",
+      "stages": {
+        "execution": [
+          {
+            "log": "tomotopy_seed11_attempt1/execution/seal.log",
+            "raw_log": {
+              "bytes": 5172,
+              "path": "output/benchmarks/baseline_repeats_20260908/logs/tomotopy_seed11_attempt1.seal.log",
+              "sha256": "be77fb8bc3e08b2d3fe67d18d09141bb3116e5efa6fcba49f49bcfb9a6cd18f9"
+            },
+            "raw_record": {
+              "bytes": 936,
+              "path": "output/benchmarks/baseline_repeats_20260908/stages/tomotopy_seed11_attempt1.seal.json",
+              "sha256": "71b94372b1b9c28a2b8973e7421f9050839d5f1316c0e1b001d5c9616bc5306f"
+            },
+            "record": "tomotopy_seed11_attempt1/execution/stage_seal.json",
+            "stage": "seal"
+          },
+          {
+            "log": "tomotopy_seed11_attempt1/execution/fit_validation.log",
+            "raw_log": {
+              "bytes": 2240,
+              "path": "output/benchmarks/baseline_repeats_20260908/logs/tomotopy_seed11_attempt1.fit_validation.log",
+              "sha256": "d4a584d390389e53aae60211c7bacb01450d2ad03383eb475fba61a2b8ee6686"
+            },
+            "raw_record": {
+              "bytes": 871,
+              "path": "output/benchmarks/baseline_repeats_20260908/stages/tomotopy_seed11_attempt1.fit_validation.json",
+              "sha256": "db45be13cc90787c757d7e46f0d1213235658b85e3fb3e132b28f1e843447276"
+            },
+            "record": "tomotopy_seed11_attempt1/execution/stage_fit_validation.json",
+            "stage": "fit_validation"
+          },
+          {
+            "log": "tomotopy_seed11_attempt1/execution/chemistry.log",
+            "raw_log": {
+              "bytes": 163852,
+              "path": "output/benchmarks/baseline_repeats_20260908/logs/tomotopy_seed11_attempt1.chemistry.log",
+              "sha256": "e34d9d68c0afa3c5d91b6c2bc2579206b95684a797d376041a7d778db971f5f8"
+            },
+            "raw_record": {
+              "bytes": 1001,
+              "path": "output/benchmarks/baseline_repeats_20260908/stages/tomotopy_seed11_attempt1.chemistry.json",
+              "sha256": "2ea6d09cdf489f7d60d707fbed0b346f3632fdd4c5333a012ebc83fa60bbce16"
+            },
+            "record": "tomotopy_seed11_attempt1/execution/stage_chemistry.json",
+            "stage": "chemistry"
+          }
+        ]
+      },
+      "training_seed": 11
+    },
+    {
+      "fit_identity": {
+        "input_sha256": {
+          "data/train.npz": "b4808f341864ba1df246a5093992f52397c2f96e0b48b23245b9b17e30aa5b52",
+          "data/validation_completion.npz": "f75245b599bc3c087aad97ff7247112d422ec0ab87418c5f96b0a889b2f661f0",
+          "data/validation_full.npz": "51888951815f448d0527a6a876be345cfe76ab346d9e97bada9a186e8857fab2",
+          "data/validation_observed.npz": "76afa43a3540d91edd4dd7e851afe10c65e3d67bcf06007c83eac1d9b6e15bff",
+          "data/validation_records.jsonl": "0e85218489af6a07413474bb2db6ce74da537f6fd3c8ee77d5286f5775ba068c",
+          "data/vocabulary.json": "9ed46f54a4e4917560f764d4ac662bae7036c1b98733d6b25a62a869799bd90e",
+          "protocol.json": "8044718d019cac4f92524c7980bc5217d7db861d58c940b3f0a6ac8970d48021",
+          "token_features/features.npy": "a9d21070b111be3e5f59e3650f47d2eede9ae264ecb3085305bcd160c2d1883d"
+        },
+        "recipe": {
+          "alpha_optimization_interval": 10,
+          "tomotopy": {
+            "alpha": 0.6,
+            "convergence_threshold": 0.005,
+            "convergence_window": 10,
+            "eta": 0.1,
+            "inference_iterations": 100,
+            "maximum_iterations": 5000,
+            "parallel": 1,
+            "step_size": 50,
+            "workers": 1
+          },
+          "topics": 1000,
+          "version": "0.13.0"
+        },
+        "training_seed": 23
+      },
+      "model": "Tomotopy LDA",
+      "origin": "new_fit",
+      "raw_artifacts": [
+        {
+          "bytes": 2240,
+          "path": "output/benchmarks/baseline_repeats_20260908/real/tomotopy_seed23_attempt1/tomotopy/validation_only_result.json",
+          "sha256": "92e03602bfdbe77aad74bbbcc0813ef4e4f1d1becaf842f324e08830e9bb7856"
+        },
+        {
+          "bytes": 15556128,
+          "path": "output/benchmarks/baseline_repeats_20260908/real/tomotopy_seed23_attempt1/validation_evaluation/tomotopy/validation_full_theta.npy",
+          "sha256": "a8f8d56bc69de8c04e3c699dec792a57c8ad77669d462fbb5d449311fd733802"
+        },
+        {
+          "bytes": 274547245,
+          "path": "output/benchmarks/baseline_repeats_20260908/real/tomotopy_seed23_attempt1/tomotopy/model.bin",
+          "sha256": "2e16a41ab88d9377655ffd7dc6a6890336af55da6bf5ca146fd3ac552ac6e033"
+        }
+      ],
+      "run": "tomotopy_seed23_attempt1",
+      "stages": {
+        "cache_recheck": [
+          {
+            "log": "tomotopy_seed23_attempt1/cache_recheck/seal.log",
+            "raw_log": {
+              "bytes": 5172,
+              "path": "output/benchmarks/baseline_repeats_20260908/logs/tomotopy_seed23_attempt1.seal.log",
+              "sha256": "c973b0d6c6eb27947ddb0ad4d31f43298618c907c65efa3030dd1fd12cd0da4b"
+            },
+            "raw_record": {
+              "bytes": 936,
+              "path": "output/benchmarks/baseline_repeats_20260908/stages/tomotopy_seed23_attempt1.seal.json",
+              "sha256": "d6395f92ce7293bdf7d8cd2fd5327b2ebd718575b6b438d87b526d08bd35346a"
+            },
+            "record": "tomotopy_seed23_attempt1/cache_recheck/stage_seal.json",
+            "stage": "seal"
+          },
+          {
+            "log": "tomotopy_seed23_attempt1/cache_recheck/fit_validation.log",
+            "raw_log": {
+              "bytes": 2240,
+              "path": "output/benchmarks/baseline_repeats_20260908/logs/tomotopy_seed23_attempt1.fit_validation.log",
+              "sha256": "92e03602bfdbe77aad74bbbcc0813ef4e4f1d1becaf842f324e08830e9bb7856"
+            },
+            "raw_record": {
+              "bytes": 871,
+              "path": "output/benchmarks/baseline_repeats_20260908/stages/tomotopy_seed23_attempt1.fit_validation.json",
+              "sha256": "e5c445e1ec0cb48978f21aab69d89e41ce11ea4e22b4b2dec32accf8ca03895c"
+            },
+            "record": "tomotopy_seed23_attempt1/cache_recheck/stage_fit_validation.json",
+            "stage": "fit_validation"
+          },
+          {
+            "log": "tomotopy_seed23_attempt1/cache_recheck/chemistry.log",
+            "raw_log": {
+              "bytes": 164038,
+              "path": "output/benchmarks/baseline_repeats_20260908/logs/tomotopy_seed23_attempt1.chemistry.log",
+              "sha256": "916bde822cb837409ac0ec741e289151041f27c8f76cf69ff55c1fb335c4f001"
+            },
+            "raw_record": {
+              "bytes": 1001,
+              "path": "output/benchmarks/baseline_repeats_20260908/stages/tomotopy_seed23_attempt1.chemistry.json",
+              "sha256": "93e90e0bb64670e99110ada28fa6000885a5c68e3a5df72fbf212c3e7225e139"
+            },
+            "record": "tomotopy_seed23_attempt1/cache_recheck/stage_chemistry.json",
+            "stage": "chemistry"
+          }
+        ],
+        "execution": [
+          {
+            "log": "tomotopy_seed23_attempt1/execution/seal.log",
+            "raw_log": {
+              "bytes": 5172,
+              "path": "output/benchmarks/baseline_repeats_20260908/parallel_handoff/logs/tomotopy_seed23_attempt1.seal.log",
+              "sha256": "c973b0d6c6eb27947ddb0ad4d31f43298618c907c65efa3030dd1fd12cd0da4b"
+            },
+            "raw_record": {
+              "bytes": 953,
+              "path": "output/benchmarks/baseline_repeats_20260908/parallel_handoff/stages/tomotopy_seed23_attempt1.seal.json",
+              "sha256": "aff8c3ce37586555fc37d999be4fc2143dbdbfbadf88c21b7ee411b3c1b05b62"
+            },
+            "record": "tomotopy_seed23_attempt1/execution/stage_seal.json",
+            "stage": "seal"
+          },
+          {
+            "log": "tomotopy_seed23_attempt1/execution/fit_validation.log",
+            "raw_log": {
+              "bytes": 2240,
+              "path": "output/benchmarks/baseline_repeats_20260908/parallel_handoff/logs/tomotopy_seed23_attempt1.fit_validation.log",
+              "sha256": "92e03602bfdbe77aad74bbbcc0813ef4e4f1d1becaf842f324e08830e9bb7856"
+            },
+            "raw_record": {
+              "bytes": 888,
+              "path": "output/benchmarks/baseline_repeats_20260908/parallel_handoff/stages/tomotopy_seed23_attempt1.fit_validation.json",
+              "sha256": "840e71efde4269a7fca7952c6b1eae941059c65bcad5a2dfc605fac282c771c1"
+            },
+            "record": "tomotopy_seed23_attempt1/execution/stage_fit_validation.json",
+            "stage": "fit_validation"
+          },
+          {
+            "log": "tomotopy_seed23_attempt1/execution/chemistry.log",
+            "raw_log": {
+              "bytes": 164038,
+              "path": "output/benchmarks/baseline_repeats_20260908/parallel_handoff/logs/tomotopy_seed23_attempt1.chemistry.log",
+              "sha256": "916bde822cb837409ac0ec741e289151041f27c8f76cf69ff55c1fb335c4f001"
+            },
+            "raw_record": {
+              "bytes": 1018,
+              "path": "output/benchmarks/baseline_repeats_20260908/parallel_handoff/stages/tomotopy_seed23_attempt1.chemistry.json",
+              "sha256": "19821640d7e3b501c303ea997acf18eb10017de5e5a546854e1958ca43f3f5a0"
+            },
+            "record": "tomotopy_seed23_attempt1/execution/stage_chemistry.json",
+            "stage": "chemistry"
+          }
+        ]
+      },
+      "training_seed": 23
+    },
+    {
+      "fit_identity": {
+        "input_sha256": {
+          "data/train.npz": "b4808f341864ba1df246a5093992f52397c2f96e0b48b23245b9b17e30aa5b52",
+          "data/validation_completion.npz": "f75245b599bc3c087aad97ff7247112d422ec0ab87418c5f96b0a889b2f661f0",
+          "data/validation_full.npz": "51888951815f448d0527a6a876be345cfe76ab346d9e97bada9a186e8857fab2",
+          "data/validation_observed.npz": "76afa43a3540d91edd4dd7e851afe10c65e3d67bcf06007c83eac1d9b6e15bff",
+          "data/validation_records.jsonl": "0e85218489af6a07413474bb2db6ce74da537f6fd3c8ee77d5286f5775ba068c",
+          "data/vocabulary.json": "9ed46f54a4e4917560f764d4ac662bae7036c1b98733d6b25a62a869799bd90e",
+          "protocol.json": "8044718d019cac4f92524c7980bc5217d7db861d58c940b3f0a6ac8970d48021",
+          "token_features/features.npy": "a9d21070b111be3e5f59e3650f47d2eede9ae264ecb3085305bcd160c2d1883d"
+        },
+        "recipe": {
+          "alpha_optimization_interval": 10,
+          "tomotopy": {
+            "alpha": 0.6,
+            "convergence_threshold": 0.005,
+            "convergence_window": 10,
+            "eta": 0.1,
+            "inference_iterations": 100,
+            "maximum_iterations": 5000,
+            "parallel": 1,
+            "step_size": 50,
+            "workers": 1
+          },
+          "topics": 1000,
+          "version": "0.13.0"
+        },
+        "training_seed": 42
+      },
+      "model": "Tomotopy LDA",
+      "origin": "new_fit",
+      "raw_artifacts": [
+        {
+          "bytes": 2241,
+          "path": "output/benchmarks/baseline_repeats_20260908/real/tomotopy_seed42_attempt1/tomotopy/validation_only_result.json",
+          "sha256": "b5375e305365036bb748d4d604c8af0d4cb030e44775dc423b4de0498bea94f9"
+        },
+        {
+          "bytes": 15556128,
+          "path": "output/benchmarks/baseline_repeats_20260908/real/tomotopy_seed42_attempt1/validation_evaluation/tomotopy/validation_full_theta.npy",
+          "sha256": "0ab3a32df0743a2f8ae5ff75a984bcca90cab9a76c5fefe49f7eba0ea1fbaf54"
+        },
+        {
+          "bytes": 274547245,
+          "path": "output/benchmarks/baseline_repeats_20260908/real/tomotopy_seed42_attempt1/tomotopy/model.bin",
+          "sha256": "67b51cb661b61a950f04efa244b9fc8168b963fa20b6b3e5272f64f55e79226a"
+        }
+      ],
+      "run": "tomotopy_seed42_attempt1",
+      "stages": {
+        "cache_recheck": [
+          {
+            "log": "tomotopy_seed42_attempt1/cache_recheck/seal.log",
+            "raw_log": {
+              "bytes": 5172,
+              "path": "output/benchmarks/baseline_repeats_20260908/logs/tomotopy_seed42_attempt1.seal.log",
+              "sha256": "12b74cfb135486bdcf60f9f563f78ad95549b25e58d013284b481d6e34c30375"
+            },
+            "raw_record": {
+              "bytes": 936,
+              "path": "output/benchmarks/baseline_repeats_20260908/stages/tomotopy_seed42_attempt1.seal.json",
+              "sha256": "7f2da568f5d17ea432d65b033aab279018feb2719b6be579f840d9fcd4f9b917"
+            },
+            "record": "tomotopy_seed42_attempt1/cache_recheck/stage_seal.json",
+            "stage": "seal"
+          },
+          {
+            "log": "tomotopy_seed42_attempt1/cache_recheck/fit_validation.log",
+            "raw_log": {
+              "bytes": 2241,
+              "path": "output/benchmarks/baseline_repeats_20260908/logs/tomotopy_seed42_attempt1.fit_validation.log",
+              "sha256": "b5375e305365036bb748d4d604c8af0d4cb030e44775dc423b4de0498bea94f9"
+            },
+            "raw_record": {
+              "bytes": 871,
+              "path": "output/benchmarks/baseline_repeats_20260908/stages/tomotopy_seed42_attempt1.fit_validation.json",
+              "sha256": "0282518ed7bedfb3d2ea1eaf9f6bc4e0d703b315780c266bb44fd1e9302b68a2"
+            },
+            "record": "tomotopy_seed42_attempt1/cache_recheck/stage_fit_validation.json",
+            "stage": "fit_validation"
+          },
+          {
+            "log": "tomotopy_seed42_attempt1/cache_recheck/chemistry.log",
+            "raw_log": {
+              "bytes": 164148,
+              "path": "output/benchmarks/baseline_repeats_20260908/logs/tomotopy_seed42_attempt1.chemistry.log",
+              "sha256": "1a43d7b16ed56399cdcbe3e8151db476d2aff64e0b0d2b2f483178aa906daae1"
+            },
+            "raw_record": {
+              "bytes": 1001,
+              "path": "output/benchmarks/baseline_repeats_20260908/stages/tomotopy_seed42_attempt1.chemistry.json",
+              "sha256": "0d7285db9ce84b73d8bc938e6204d18c1099a381ffc2bf16ae6cf70807383805"
+            },
+            "record": "tomotopy_seed42_attempt1/cache_recheck/stage_chemistry.json",
+            "stage": "chemistry"
+          }
+        ],
+        "execution": [
+          {
+            "log": "tomotopy_seed42_attempt1/execution/seal.log",
+            "raw_log": {
+              "bytes": 5172,
+              "path": "output/benchmarks/baseline_repeats_20260908/parallel_handoff/logs/tomotopy_seed42_attempt1.seal.log",
+              "sha256": "12b74cfb135486bdcf60f9f563f78ad95549b25e58d013284b481d6e34c30375"
+            },
+            "raw_record": {
+              "bytes": 953,
+              "path": "output/benchmarks/baseline_repeats_20260908/parallel_handoff/stages/tomotopy_seed42_attempt1.seal.json",
+              "sha256": "f25fa57995a5e084fec88350e5e66340d9525b4794116b97769d36bf55ee13b9"
+            },
+            "record": "tomotopy_seed42_attempt1/execution/stage_seal.json",
+            "stage": "seal"
+          },
+          {
+            "log": "tomotopy_seed42_attempt1/execution/fit_validation.log",
+            "raw_log": {
+              "bytes": 2241,
+              "path": "output/benchmarks/baseline_repeats_20260908/parallel_handoff/logs/tomotopy_seed42_attempt1.fit_validation.log",
+              "sha256": "b5375e305365036bb748d4d604c8af0d4cb030e44775dc423b4de0498bea94f9"
+            },
+            "raw_record": {
+              "bytes": 888,
+              "path": "output/benchmarks/baseline_repeats_20260908/parallel_handoff/stages/tomotopy_seed42_attempt1.fit_validation.json",
+              "sha256": "f72c2385efade387e8125a45c8dee1bae01815c3e74f8cf253c723cccafc0742"
+            },
+            "record": "tomotopy_seed42_attempt1/execution/stage_fit_validation.json",
+            "stage": "fit_validation"
+          },
+          {
+            "log": "tomotopy_seed42_attempt1/execution/chemistry.log",
+            "raw_log": {
+              "bytes": 164148,
+              "path": "output/benchmarks/baseline_repeats_20260908/parallel_handoff/logs/tomotopy_seed42_attempt1.chemistry.log",
+              "sha256": "1a43d7b16ed56399cdcbe3e8151db476d2aff64e0b0d2b2f483178aa906daae1"
+            },
+            "raw_record": {
+              "bytes": 1018,
+              "path": "output/benchmarks/baseline_repeats_20260908/parallel_handoff/stages/tomotopy_seed42_attempt1.chemistry.json",
+              "sha256": "7469f5ddcd7ae232d9f1dd1a93cc4838334dcfb0c8d8b149adbf6e00b6a117e2"
+            },
+            "record": "tomotopy_seed42_attempt1/execution/stage_chemistry.json",
+            "stage": "chemistry"
+          }
+        ]
+      },
+      "training_seed": 42
+    },
+    {
+      "fit_identity": {
+        "input_sha256": {
+          "data/train.npz": "b4808f341864ba1df246a5093992f52397c2f96e0b48b23245b9b17e30aa5b52",
+          "data/validation_completion.npz": "f75245b599bc3c087aad97ff7247112d422ec0ab87418c5f96b0a889b2f661f0",
+          "data/validation_full.npz": "51888951815f448d0527a6a876be345cfe76ab346d9e97bada9a186e8857fab2",
+          "data/validation_observed.npz": "76afa43a3540d91edd4dd7e851afe10c65e3d67bcf06007c83eac1d9b6e15bff",
+          "data/validation_records.jsonl": "0e85218489af6a07413474bb2db6ce74da537f6fd3c8ee77d5286f5775ba068c",
+          "data/vocabulary.json": "9ed46f54a4e4917560f764d4ac662bae7036c1b98733d6b25a62a869799bd90e",
+          "protocol.json": "8044718d019cac4f92524c7980bc5217d7db861d58c940b3f0a6ac8970d48021",
+          "token_features/features.npy": "a9d21070b111be3e5f59e3650f47d2eede9ae264ecb3085305bcd160c2d1883d"
+        },
+        "recipe": {
+          "adam_betas": [
+            0.9,
+            0.999
+          ],
+          "batch_size": 256,
+          "device": "cuda",
+          "epochs": 120,
+          "hidden": 800,
+          "learning_rate": 0.005,
+          "method": "etm",
+          "shuffle_seed": 7030,
+          "threads": 6,
+          "topics": 1000,
+          "torch": "2.10.0+cu128",
+          "weight_decay": 1.2e-06
+        },
+        "training_seed": 7012
+      },
+      "model": "canonical ETM",
+      "origin": "new_fit",
+      "raw_artifacts": [
+        {
+          "bytes": 5712,
+          "path": "output/benchmarks/baseline_repeats_20260908/real/etm_seed7012_attempt1/models/etm/result.json",
+          "sha256": "b81a3ff9658758ac2062598243fd92bd2751b51272fb1d6ee83bb947905da666"
+        },
+        {
+          "bytes": 15556128,
+          "path": "output/benchmarks/baseline_repeats_20260908/real/etm_seed7012_attempt1/validation_evaluation/etm/validation_full_theta.npy",
+          "sha256": "c70260796b31e0249208f17e3626036aab98b424541108e7536b7fed15cd09e8"
+        },
+        {
+          "bytes": 81192821,
+          "path": "output/benchmarks/baseline_repeats_20260908/real/etm_seed7012_attempt1/models/etm/weights.pt",
+          "sha256": "516a251431a3147e92791bf5eca79791374beabe889a9eb8beb404d4c86a3df6"
+        }
+      ],
+      "run": "etm_seed7012_attempt1",
+      "stages": {
+        "execution": [
+          {
+            "log": "etm_seed7012_attempt1/execution/seal.log",
+            "raw_log": {
+              "bytes": 5136,
+              "path": "output/benchmarks/baseline_repeats_20260908/logs/etm_seed7012_attempt1.seal.log",
+              "sha256": "e20e0c0940206458e0658f966e6fa72d4906d3b5ee958a84e4d66bf095e70f90"
+            },
+            "raw_record": {
+              "bytes": 927,
+              "path": "output/benchmarks/baseline_repeats_20260908/stages/etm_seed7012_attempt1.seal.json",
+              "sha256": "847ff4636d9dff18fde45052b56d08a79c81382eb5e0f910e59fbac0781bbda6"
+            },
+            "record": "etm_seed7012_attempt1/execution/stage_seal.json",
+            "stage": "seal"
+          },
+          {
+            "log": "etm_seed7012_attempt1/execution/fit_validation.log",
+            "raw_log": {
+              "bytes": 22700,
+              "path": "output/benchmarks/baseline_repeats_20260908/logs/etm_seed7012_attempt1.fit_validation.log",
+              "sha256": "85741686af794c974155467e8298abff35330401e0cf6b495258154c7805a4dd"
+            },
+            "raw_record": {
+              "bytes": 983,
+              "path": "output/benchmarks/baseline_repeats_20260908/stages/etm_seed7012_attempt1.fit_validation.json",
+              "sha256": "9c87b14313237b16e1d5a01b968ab3dc67154547d85c0ff8d69450bf66fae04d"
+            },
+            "record": "etm_seed7012_attempt1/execution/stage_fit_validation.json",
+            "stage": "fit_validation"
+          },
+          {
+            "log": "etm_seed7012_attempt1/execution/chemistry.log",
+            "raw_log": {
+              "bytes": 160232,
+              "path": "output/benchmarks/baseline_repeats_20260908/logs/etm_seed7012_attempt1.chemistry.log",
+              "sha256": "67b58d5c5b788d9cc110e650f27048135b689744d28e6b62f66400e42f1224cf"
+            },
+            "raw_record": {
+              "bytes": 987,
+              "path": "output/benchmarks/baseline_repeats_20260908/stages/etm_seed7012_attempt1.chemistry.json",
+              "sha256": "4e80d3591bee6ba681100cd9bdb19c87929e6fbaf4697da2b4ec4416d2274a44"
+            },
+            "record": "etm_seed7012_attempt1/execution/stage_chemistry.json",
+            "stage": "chemistry"
+          }
+        ]
+      },
+      "training_seed": 7012
+    },
+    {
+      "fit_identity": {
+        "input_sha256": {
+          "data/train.npz": "b4808f341864ba1df246a5093992f52397c2f96e0b48b23245b9b17e30aa5b52",
+          "data/validation_completion.npz": "f75245b599bc3c087aad97ff7247112d422ec0ab87418c5f96b0a889b2f661f0",
+          "data/validation_full.npz": "51888951815f448d0527a6a876be345cfe76ab346d9e97bada9a186e8857fab2",
+          "data/validation_observed.npz": "76afa43a3540d91edd4dd7e851afe10c65e3d67bcf06007c83eac1d9b6e15bff",
+          "data/validation_records.jsonl": "0e85218489af6a07413474bb2db6ce74da537f6fd3c8ee77d5286f5775ba068c",
+          "data/vocabulary.json": "9ed46f54a4e4917560f764d4ac662bae7036c1b98733d6b25a62a869799bd90e",
+          "protocol.json": "8044718d019cac4f92524c7980bc5217d7db861d58c940b3f0a6ac8970d48021",
+          "token_features/features.npy": "a9d21070b111be3e5f59e3650f47d2eede9ae264ecb3085305bcd160c2d1883d"
+        },
+        "recipe": {
+          "adam_betas": [
+            0.9,
+            0.999
+          ],
+          "batch_size": 256,
+          "device": "cuda",
+          "epochs": 120,
+          "hidden": 800,
+          "learning_rate": 0.005,
+          "method": "etm",
+          "shuffle_seed": 7042,
+          "threads": 6,
+          "topics": 1000,
+          "torch": "2.10.0+cu128",
+          "weight_decay": 1.2e-06
+        },
+        "training_seed": 7024
+      },
+      "model": "canonical ETM",
+      "origin": "new_fit",
+      "raw_artifacts": [
+        {
+          "bytes": 5711,
+          "path": "output/benchmarks/baseline_repeats_20260908/real/etm_seed7024_attempt1/models/etm/result.json",
+          "sha256": "801af1cbed4b5c73d3b60b522f6f47fe0f1b1d073eb7166d08e7f5c4cc812f2c"
+        },
+        {
+          "bytes": 15556128,
+          "path": "output/benchmarks/baseline_repeats_20260908/real/etm_seed7024_attempt1/validation_evaluation/etm/validation_full_theta.npy",
+          "sha256": "46a694054e6d46f59c526fdebc9b739e579b9e83f7b2ea14f4546d6bb3a5ccb2"
+        },
+        {
+          "bytes": 81192821,
+          "path": "output/benchmarks/baseline_repeats_20260908/real/etm_seed7024_attempt1/models/etm/weights.pt",
+          "sha256": "3772748b26df3b381e5ccea3cab6861932198bf07ebf56c53b08ff261bfb27d9"
+        }
+      ],
+      "run": "etm_seed7024_attempt1",
+      "stages": {
+        "execution": [
+          {
+            "log": "etm_seed7024_attempt1/execution/seal.log",
+            "raw_log": {
+              "bytes": 5136,
+              "path": "output/benchmarks/baseline_repeats_20260908/logs/etm_seed7024_attempt1.seal.log",
+              "sha256": "17f0be37b58d0bc88882fe98907b473987ebdcb9760a45998a343dd5091d7f0c"
+            },
+            "raw_record": {
+              "bytes": 927,
+              "path": "output/benchmarks/baseline_repeats_20260908/stages/etm_seed7024_attempt1.seal.json",
+              "sha256": "b7ca9f6f17b609613ca04b64404dbeb54f580f72c04db777996eb1f3a72cb048"
+            },
+            "record": "etm_seed7024_attempt1/execution/stage_seal.json",
+            "stage": "seal"
+          },
+          {
+            "log": "etm_seed7024_attempt1/execution/fit_validation.log",
+            "raw_log": {
+              "bytes": 22720,
+              "path": "output/benchmarks/baseline_repeats_20260908/logs/etm_seed7024_attempt1.fit_validation.log",
+              "sha256": "976e1103070a8e0650746573364c1e8d8b348540b46de80f6ac97da5bb01798b"
+            },
+            "raw_record": {
+              "bytes": 983,
+              "path": "output/benchmarks/baseline_repeats_20260908/stages/etm_seed7024_attempt1.fit_validation.json",
+              "sha256": "9e9f38cabb58271a41c9d256eb9a442860e77f5667c821c2419f57a695e9aa11"
+            },
+            "record": "etm_seed7024_attempt1/execution/stage_fit_validation.json",
+            "stage": "fit_validation"
+          },
+          {
+            "log": "etm_seed7024_attempt1/execution/chemistry.log",
+            "raw_log": {
+              "bytes": 160044,
+              "path": "output/benchmarks/baseline_repeats_20260908/logs/etm_seed7024_attempt1.chemistry.log",
+              "sha256": "97ea5911a9fba17896479b8218a23a5c20b8cd5c6ad7cf1c56ef9fb8dcc60ac3"
+            },
+            "raw_record": {
+              "bytes": 987,
+              "path": "output/benchmarks/baseline_repeats_20260908/stages/etm_seed7024_attempt1.chemistry.json",
+              "sha256": "5e5ba0bbfc286248af2069cbef76596a4e2db9ae6026c5d0c963433daa5f70c9"
+            },
+            "record": "etm_seed7024_attempt1/execution/stage_chemistry.json",
+            "stage": "chemistry"
+          }
+        ]
+      },
+      "training_seed": 7024
+    },
+    {
+      "config": {
+        "architecture": "canonical fixed-SGNS ETM",
+        "batch_size": 256,
+        "decoder_normalization": "global topic-word softmax",
+        "device": "cuda",
+        "embedding_dimensions": 48,
+        "epochs": 120,
+        "hidden_dimensions": 800,
+        "learning_rate": 0.005,
+        "only_scientific_change": null,
+        "optimizer": "Adam",
+        "paired_reference_method": null,
+        "seed": 7043,
+        "topics": 1000,
+        "trained_separately": true,
+        "weight_decay": 1.2e-06
+      },
+      "execution_provenance": "frozen_etm_seed7043/execution_provenance.json",
+      "model": "canonical ETM",
+      "origin": "retained_historical_fit",
+      "raw_artifacts": [
+        {
+          "bytes": 4394,
+          "path": "research/contextual_sparse_etm_msnlib/evidence/20260901_clean_room/controls/etm/result.json",
+          "sha256": "3bf57150d2604ea18ea185f62b471446c806663ed8f8d3c433c472c35d5f3f9d"
+        },
+        {
+          "bytes": 160382,
+          "path": "research/contextual_sparse_etm_msnlib/evidence/20260901_clean_room/controls/etm/validation_chemical.json",
+          "sha256": "dd4300031ef2704104038cd3dba30736b326e04459c877ade56313909a096b0f"
+        },
+        {
+          "bytes": 3631,
+          "path": "research/contextual_sparse_etm_msnlib/evidence/20260901_clean_room/controls/etm/validation_input_manifest.json",
+          "sha256": "fecfad325a062709a1a5d64f03ac40836c13e52a4d5cdd247d8a1729ad9306b2"
+        }
+      ],
+      "run": "frozen_etm_seed7043",
+      "training_seed": 7043
+    }
+  ],
+  "reported_split": "validation",
+  "scheduling": "Initial sequential-LDA driver plus audited parallel handoff; one worker per LDA fit, serialized ETM fitting and chemistry.",
+  "schema_version": 1,
+  "scientific_input_sha256": {
+    "data/train.npz": "b4808f341864ba1df246a5093992f52397c2f96e0b48b23245b9b17e30aa5b52",
+    "data/validation_completion.npz": "f75245b599bc3c087aad97ff7247112d422ec0ab87418c5f96b0a889b2f661f0",
+    "data/validation_full.npz": "51888951815f448d0527a6a876be345cfe76ab346d9e97bada9a186e8857fab2",
+    "data/validation_observed.npz": "76afa43a3540d91edd4dd7e851afe10c65e3d67bcf06007c83eac1d9b6e15bff",
+    "data/validation_records.jsonl": "0e85218489af6a07413474bb2db6ce74da537f6fd3c8ee77d5286f5775ba068c",
+    "data/vocabulary.json": "9ed46f54a4e4917560f764d4ac662bae7036c1b98733d6b25a62a869799bd90e",
+    "mag/index/complete.json": "6157d53dc131841a8e02e9f6047efbb7e18163a003ff2e70ff5ae3950f3bb25b",
+    "mag/index/excluded_connectivity_keys.json": "36ad6649271965ddc88e8c5c7484362e121887f204bbf8c5bf3fd27f6c624a70",
+    "mag/index/kept_original_ids.npy": "97c63d3da5e77877a7786993a0b5bc123f3e37161febf8b006628194c9f3485b",
+    "mag/index/spec2vec_filtered.faiss": "845408fe7338135cb23cbe9023f5805c11dafcb8d028ca631fb1968292aef300",
+    "token_features/features.npy": "a9d21070b111be3e5f59e3650f47d2eede9ae264ecb3085305bcd160c2d1883d"
+  },
+  "selected_model_refitted": false,
+  "sources": [
+    {
+      "bytes": 160232,
+      "path": "etm_seed7012_attempt1/chemical.json",
+      "sha256": "67b58d5c5b788d9cc110e650f27048135b689744d28e6b62f66400e42f1224cf"
+    },
+    {
+      "bytes": 1246,
+      "path": "etm_seed7012_attempt1/derived_support.json",
+      "sha256": "5887de94bf1089c8e4536213d02884784f9193b1f3625aaa750a849ae8b77b5d"
+    },
+    {
+      "bytes": 160232,
+      "path": "etm_seed7012_attempt1/execution/chemistry.log",
+      "sha256": "67b58d5c5b788d9cc110e650f27048135b689744d28e6b62f66400e42f1224cf"
+    },
+    {
+      "bytes": 22700,
+      "path": "etm_seed7012_attempt1/execution/fit_validation.log",
+      "sha256": "85741686af794c974155467e8298abff35330401e0cf6b495258154c7805a4dd"
+    },
+    {
+      "bytes": 4170,
+      "path": "etm_seed7012_attempt1/execution/seal.log",
+      "sha256": "df00b2ee15222f2b4166a1ff2cfce5746e1b2fcd292ddc678652cea67c27609b"
+    },
+    {
+      "bytes": 725,
+      "path": "etm_seed7012_attempt1/execution/stage_chemistry.json",
+      "sha256": "506295a375b4e12d52a67bb3734abb5055635d19cdb2dc1916f4fcbeb42a238d"
+    },
+    {
+      "bytes": 739,
+      "path": "etm_seed7012_attempt1/execution/stage_fit_validation.json",
+      "sha256": "cf5db19cb151868659675af16661aac3c6fac01e27edc7d6d99ac6be26504337"
+    },
+    {
+      "bytes": 665,
+      "path": "etm_seed7012_attempt1/execution/stage_seal.json",
+      "sha256": "a338f805b1166753d246fd1d1395077eaf507e1caeb3fb8e2ca93d01dd8b93f2"
+    },
+    {
+      "bytes": 5712,
+      "path": "etm_seed7012_attempt1/result.json",
+      "sha256": "b81a3ff9658758ac2062598243fd92bd2751b51272fb1d6ee83bb947905da666"
+    },
+    {
+      "bytes": 4170,
+      "path": "etm_seed7012_attempt1/validation_input_manifest.json",
+      "sha256": "df00b2ee15222f2b4166a1ff2cfce5746e1b2fcd292ddc678652cea67c27609b"
+    },
+    {
+      "bytes": 160044,
+      "path": "etm_seed7024_attempt1/chemical.json",
+      "sha256": "97ea5911a9fba17896479b8218a23a5c20b8cd5c6ad7cf1c56ef9fb8dcc60ac3"
+    },
+    {
+      "bytes": 1247,
+      "path": "etm_seed7024_attempt1/derived_support.json",
+      "sha256": "c7e64c251670b1cd87a4ed776aa6488ea522e4c4801014c0567a8cb3dfea7a86"
+    },
+    {
+      "bytes": 160044,
+      "path": "etm_seed7024_attempt1/execution/chemistry.log",
+      "sha256": "97ea5911a9fba17896479b8218a23a5c20b8cd5c6ad7cf1c56ef9fb8dcc60ac3"
+    },
+    {
+      "bytes": 22720,
+      "path": "etm_seed7024_attempt1/execution/fit_validation.log",
+      "sha256": "976e1103070a8e0650746573364c1e8d8b348540b46de80f6ac97da5bb01798b"
+    },
+    {
+      "bytes": 4170,
+      "path": "etm_seed7024_attempt1/execution/seal.log",
+      "sha256": "17d6f58cc92e371fedc1ff5f6a983083d56cc66d3ba9a12c2e04f2237514d7f8"
+    },
+    {
+      "bytes": 725,
+      "path": "etm_seed7024_attempt1/execution/stage_chemistry.json",
+      "sha256": "ed0a0777b4ba9119c30e8c053e50325da7bff7f53147c949ee03f872f8d46b00"
+    },
+    {
+      "bytes": 739,
+      "path": "etm_seed7024_attempt1/execution/stage_fit_validation.json",
+      "sha256": "6ba747174b3f17720aaf4e0707d84c63224d966db4a032758de361953a8f6d39"
+    },
+    {
+      "bytes": 665,
+      "path": "etm_seed7024_attempt1/execution/stage_seal.json",
+      "sha256": "3ec29125128856bb2ef43357536079a7af268d682a0a4966d4a3d97fdf79a4e8"
+    },
+    {
+      "bytes": 5711,
+      "path": "etm_seed7024_attempt1/result.json",
+      "sha256": "801af1cbed4b5c73d3b60b522f6f47fe0f1b1d073eb7166d08e7f5c4cc812f2c"
+    },
+    {
+      "bytes": 4170,
+      "path": "etm_seed7024_attempt1/validation_input_manifest.json",
+      "sha256": "17d6f58cc92e371fedc1ff5f6a983083d56cc66d3ba9a12c2e04f2237514d7f8"
+    },
+    {
+      "bytes": 231441,
+      "path": "execution_source.tar.gz",
+      "sha256": "9b4a4578b3a9752f0243d65c87c9e755c60ea5c5588099ddc3de5312f07338e0"
+    },
+    {
+      "bytes": 19591,
+      "path": "execution_source_manifest.json",
+      "sha256": "d7460f0dda6e8f940f4261149402524195f806911ea4133ef5e8edd5b649b971"
+    },
+    {
+      "bytes": 160382,
+      "path": "frozen_etm_seed7043/chemical.json",
+      "sha256": "dd4300031ef2704104038cd3dba30736b326e04459c877ade56313909a096b0f"
+    },
+    {
+      "bytes": 11015,
+      "path": "frozen_etm_seed7043/execution_provenance.json",
+      "sha256": "e0fed90819deaa464d846c9c867c051600c63e60c1f0bb1605e26c13126773f5"
+    },
+    {
+      "bytes": 4394,
+      "path": "frozen_etm_seed7043/result.json",
+      "sha256": "3bf57150d2604ea18ea185f62b471446c806663ed8f8d3c433c472c35d5f3f9d"
+    },
+    {
+      "bytes": 3631,
+      "path": "frozen_etm_seed7043/validation_input_manifest.json",
+      "sha256": "fecfad325a062709a1a5d64f03ac40836c13e52a4d5cdd247d8a1729ad9306b2"
+    },
+    {
+      "bytes": 140924,
+      "path": "postprocessing_source.tar.gz",
+      "sha256": "937100e51ca3dd6d933c0e289e303425af57a353792da2fd767e64d642fc56f6"
+    },
+    {
+      "bytes": 10188,
+      "path": "postprocessing_source_manifest.json",
+      "sha256": "a599bd2a949bbc577532767db71c9b6db7a32702051b4f3a13b54c2acfb7be86"
+    },
+    {
+      "bytes": 1951,
+      "path": "protocol.json",
+      "sha256": "8044718d019cac4f92524c7980bc5217d7db861d58c940b3f0a6ac8970d48021"
+    },
+    {
+      "bytes": 1368,
+      "path": "runs.csv",
+      "sha256": "0283a587afa3487875ede02e5f21b2840c720e0e53d985ef3ecee96059eacba2"
+    },
+    {
+      "bytes": 536,
+      "path": "runtime_observation.json",
+      "sha256": "6ce6e9c1b91261b3064246ee9ec500ac224f9493cac18f81e2f27e76fa2f7d1e"
+    },
+    {
+      "bytes": 2356,
+      "path": "scheduling_handoff/audit.json",
+      "sha256": "85744c0cb0d15f9e9bd56d4b8a0a554e74b76ffc1bc0a5256ce101cc1fcd0416"
+    },
+    {
+      "bytes": 4810,
+      "path": "scheduling_handoff/handoff_runner.py",
+      "sha256": "007336ab9c703917ebfa7c5a0de24af0420e66e125d14ebdd3118282407250df"
+    },
+    {
+      "bytes": 1206,
+      "path": "summary.json",
+      "sha256": "5db55d6793036698745f42df644daeb7b611ef3425a89efa44d2e5db8e769554"
+    },
+    {
+      "bytes": 163852,
+      "path": "tomotopy_seed11_attempt1/chemical.json",
+      "sha256": "e34d9d68c0afa3c5d91b6c2bc2579206b95684a797d376041a7d778db971f5f8"
+    },
+    {
+      "bytes": 1256,
+      "path": "tomotopy_seed11_attempt1/derived_support.json",
+      "sha256": "86a286fb8c1a8134ed26550cfd2c9d507a2c880f9825f812f187b79b60a251a3"
+    },
+    {
+      "bytes": 163852,
+      "path": "tomotopy_seed11_attempt1/execution/chemistry.log",
+      "sha256": "e34d9d68c0afa3c5d91b6c2bc2579206b95684a797d376041a7d778db971f5f8"
+    },
+    {
+      "bytes": 2240,
+      "path": "tomotopy_seed11_attempt1/execution/fit_validation.log",
+      "sha256": "d4a584d390389e53aae60211c7bacb01450d2ad03383eb475fba61a2b8ee6686"
+    },
+    {
+      "bytes": 4206,
+      "path": "tomotopy_seed11_attempt1/execution/seal.log",
+      "sha256": "8346d609066040a0b9b97fdc2efc55f3fe390d2ce03c31a0f281d68783dc80ba"
+    },
+    {
+      "bytes": 739,
+      "path": "tomotopy_seed11_attempt1/execution/stage_chemistry.json",
+      "sha256": "e4351da85f00e9bb5e21d3004f6cbde96e76aca97702b9b07185f0dfd08d4340"
+    },
+    {
+      "bytes": 627,
+      "path": "tomotopy_seed11_attempt1/execution/stage_fit_validation.json",
+      "sha256": "e07f8f9782654b3add225b00d2ff21a0001639cc305a2bfc4c891798bfed914f"
+    },
+    {
+      "bytes": 674,
+      "path": "tomotopy_seed11_attempt1/execution/stage_seal.json",
+      "sha256": "840a92fbd90f292230ee31d72e19620652a045ed0f5b718e8a7108b01c2e20cc"
+    },
+    {
+      "bytes": 2240,
+      "path": "tomotopy_seed11_attempt1/result.json",
+      "sha256": "d4a584d390389e53aae60211c7bacb01450d2ad03383eb475fba61a2b8ee6686"
+    },
+    {
+      "bytes": 4206,
+      "path": "tomotopy_seed11_attempt1/validation_input_manifest.json",
+      "sha256": "8346d609066040a0b9b97fdc2efc55f3fe390d2ce03c31a0f281d68783dc80ba"
+    },
+    {
+      "bytes": 164038,
+      "path": "tomotopy_seed23_attempt1/cache_recheck/chemistry.log",
+      "sha256": "916bde822cb837409ac0ec741e289151041f27c8f76cf69ff55c1fb335c4f001"
+    },
+    {
+      "bytes": 2240,
+      "path": "tomotopy_seed23_attempt1/cache_recheck/fit_validation.log",
+      "sha256": "92e03602bfdbe77aad74bbbcc0813ef4e4f1d1becaf842f324e08830e9bb7856"
+    },
+    {
+      "bytes": 4206,
+      "path": "tomotopy_seed23_attempt1/cache_recheck/seal.log",
+      "sha256": "ac2640c34629d9d5082ce6f3a1fbd906f361c4477eba5061962e9591ea82fc74"
+    },
+    {
+      "bytes": 739,
+      "path": "tomotopy_seed23_attempt1/cache_recheck/stage_chemistry.json",
+      "sha256": "962107851c316d23e538d24743560d6800b8725c47c8d11a756a1b8f2bb82676"
+    },
+    {
+      "bytes": 627,
+      "path": "tomotopy_seed23_attempt1/cache_recheck/stage_fit_validation.json",
+      "sha256": "219126cb9bf57353efe4224f4d6701a7e7fe9279af7e5aa6ccd9d930f42920ab"
+    },
+    {
+      "bytes": 674,
+      "path": "tomotopy_seed23_attempt1/cache_recheck/stage_seal.json",
+      "sha256": "4770c563f8151745dc444727a7f2baaac85b19816e06f5d7753b8472d03c1c58"
+    },
+    {
+      "bytes": 164038,
+      "path": "tomotopy_seed23_attempt1/chemical.json",
+      "sha256": "916bde822cb837409ac0ec741e289151041f27c8f76cf69ff55c1fb335c4f001"
+    },
+    {
+      "bytes": 1256,
+      "path": "tomotopy_seed23_attempt1/derived_support.json",
+      "sha256": "55b12087c4a779315380d387e29cbcce2831f1a3543d4cf996a787c8e498cfe1"
+    },
+    {
+      "bytes": 164038,
+      "path": "tomotopy_seed23_attempt1/execution/chemistry.log",
+      "sha256": "916bde822cb837409ac0ec741e289151041f27c8f76cf69ff55c1fb335c4f001"
+    },
+    {
+      "bytes": 2240,
+      "path": "tomotopy_seed23_attempt1/execution/fit_validation.log",
+      "sha256": "92e03602bfdbe77aad74bbbcc0813ef4e4f1d1becaf842f324e08830e9bb7856"
+    },
+    {
+      "bytes": 4206,
+      "path": "tomotopy_seed23_attempt1/execution/seal.log",
+      "sha256": "ac2640c34629d9d5082ce6f3a1fbd906f361c4477eba5061962e9591ea82fc74"
+    },
+    {
+      "bytes": 756,
+      "path": "tomotopy_seed23_attempt1/execution/stage_chemistry.json",
+      "sha256": "a8b495ab0a75e0a365fe303f0450e141a0adb876b0089496de9ba526a1f87328"
+    },
+    {
+      "bytes": 644,
+      "path": "tomotopy_seed23_attempt1/execution/stage_fit_validation.json",
+      "sha256": "617267c7ed7a5ce6645126cb7fed01c596f9f9383951b75f06d60ecdbfb78ac4"
+    },
+    {
+      "bytes": 691,
+      "path": "tomotopy_seed23_attempt1/execution/stage_seal.json",
+      "sha256": "3169caba0d0816e8fd80a9f80b546d54ff89f223ca879291fa41993af58b610e"
+    },
+    {
+      "bytes": 2240,
+      "path": "tomotopy_seed23_attempt1/result.json",
+      "sha256": "92e03602bfdbe77aad74bbbcc0813ef4e4f1d1becaf842f324e08830e9bb7856"
+    },
+    {
+      "bytes": 4206,
+      "path": "tomotopy_seed23_attempt1/validation_input_manifest.json",
+      "sha256": "ac2640c34629d9d5082ce6f3a1fbd906f361c4477eba5061962e9591ea82fc74"
+    },
+    {
+      "bytes": 164148,
+      "path": "tomotopy_seed42_attempt1/cache_recheck/chemistry.log",
+      "sha256": "1a43d7b16ed56399cdcbe3e8151db476d2aff64e0b0d2b2f483178aa906daae1"
+    },
+    {
+      "bytes": 2241,
+      "path": "tomotopy_seed42_attempt1/cache_recheck/fit_validation.log",
+      "sha256": "b5375e305365036bb748d4d604c8af0d4cb030e44775dc423b4de0498bea94f9"
+    },
+    {
+      "bytes": 4206,
+      "path": "tomotopy_seed42_attempt1/cache_recheck/seal.log",
+      "sha256": "ca44ba91945dd0ab557e4b017d9efed51273e8bdaa54c6e0b30d2f882ea7bfd1"
+    },
+    {
+      "bytes": 739,
+      "path": "tomotopy_seed42_attempt1/cache_recheck/stage_chemistry.json",
+      "sha256": "7c4fb735d0dff70ba7c2f2d89970fe2ea6939058b54310c674fc27adc1ab743e"
+    },
+    {
+      "bytes": 627,
+      "path": "tomotopy_seed42_attempt1/cache_recheck/stage_fit_validation.json",
+      "sha256": "82530af04d62e05b49c4208da517df476ae3fef7ecd560294a621329461ea020"
+    },
+    {
+      "bytes": 674,
+      "path": "tomotopy_seed42_attempt1/cache_recheck/stage_seal.json",
+      "sha256": "ed953a10a585889fe37cef31a89c5a982c8236702ed3d2bb098225ea2b76508c"
+    },
+    {
+      "bytes": 164148,
+      "path": "tomotopy_seed42_attempt1/chemical.json",
+      "sha256": "1a43d7b16ed56399cdcbe3e8151db476d2aff64e0b0d2b2f483178aa906daae1"
+    },
+    {
+      "bytes": 1254,
+      "path": "tomotopy_seed42_attempt1/derived_support.json",
+      "sha256": "0946a71d325754bfece1da2658db4c542a1e607fc0a8e6dda3e7361ae6f809c5"
+    },
+    {
+      "bytes": 164148,
+      "path": "tomotopy_seed42_attempt1/execution/chemistry.log",
+      "sha256": "1a43d7b16ed56399cdcbe3e8151db476d2aff64e0b0d2b2f483178aa906daae1"
+    },
+    {
+      "bytes": 2241,
+      "path": "tomotopy_seed42_attempt1/execution/fit_validation.log",
+      "sha256": "b5375e305365036bb748d4d604c8af0d4cb030e44775dc423b4de0498bea94f9"
+    },
+    {
+      "bytes": 4206,
+      "path": "tomotopy_seed42_attempt1/execution/seal.log",
+      "sha256": "ca44ba91945dd0ab557e4b017d9efed51273e8bdaa54c6e0b30d2f882ea7bfd1"
+    },
+    {
+      "bytes": 756,
+      "path": "tomotopy_seed42_attempt1/execution/stage_chemistry.json",
+      "sha256": "5d3518c2633243fe1e9957983c547ef36e74abf91f8f40f82d84f85e380ffcb8"
+    },
+    {
+      "bytes": 644,
+      "path": "tomotopy_seed42_attempt1/execution/stage_fit_validation.json",
+      "sha256": "8fb590db3794031f2eee81b75d61a0631fcae5278b64d1e34bb8fabf59d45c39"
+    },
+    {
+      "bytes": 691,
+      "path": "tomotopy_seed42_attempt1/execution/stage_seal.json",
+      "sha256": "a449521807cb4e8c3b209197db1a78ce7f4fba55a8638f17ad2e499daed7762f"
+    },
+    {
+      "bytes": 2241,
+      "path": "tomotopy_seed42_attempt1/result.json",
+      "sha256": "b5375e305365036bb748d4d604c8af0d4cb030e44775dc423b4de0498bea94f9"
+    },
+    {
+      "bytes": 4206,
+      "path": "tomotopy_seed42_attempt1/validation_input_manifest.json",
+      "sha256": "ca44ba91945dd0ab557e4b017d9efed51273e8bdaa54c6e0b30d2f882ea7bfd1"
+    }
+  ],
+  "stage_timestamp_semantics": "finished_utc is when the supervisor observed child exit. It may be delayed for children preserved while the original supervisor was paused. Actual parallel launch records and later validated cache rechecks are separate; fit durations come from model results, never cache recheck wall time."
+}

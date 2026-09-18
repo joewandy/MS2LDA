@@ -1,0 +1,62 @@
+{
+  "attempt": 1,
+  "command": [
+    "<python-prefix>/bin/python",
+    "-m",
+    "scripts.evaluate_frozen_etm_test",
+    "--run",
+    "<reproduction-root>/real/contextual_seed_7043",
+    "--method",
+    "contextual_sparse_etm",
+    "--device",
+    "cuda",
+    "--batch-size",
+    "256",
+    "--threads",
+    "6"
+  ],
+  "finished_utc": "2026-09-01T22:35:20.961738+00:00",
+  "log": "<reproduction-root>/logs/contextual_seed_7043_test_evaluation.attempt-1.log",
+  "name": "contextual_seed_7043_test_evaluation",
+  "outputs": [
+    {
+      "bytes": 6067,
+      "modified_ns": 1788302120473758046,
+      "path": "<reproduction-root>/real/contextual_seed_7043/evaluation/contextual_sparse_etm/complete.json",
+      "sha256": "65b3266092344c20c7b5132334d8f4c79715e449d3c3e82100e3af9f43f38314"
+    },
+    {
+      "bytes": 343,
+      "modified_ns": 1788302120473863074,
+      "path": "<reproduction-root>/real/contextual_seed_7043/evaluation/contextual_sparse_etm/test_access_audit.json",
+      "sha256": "a3985ef0c34806c3f69527c78fd60e312d599a7a7c45b3cf32c8e90e8478d1d4"
+    },
+    {
+      "bytes": 84932128,
+      "modified_ns": 1788302120343154787,
+      "path": "<reproduction-root>/real/contextual_seed_7043/evaluation/contextual_sparse_etm/beta.npy",
+      "sha256": "6a92e3db42cca54d83a37b204af07801f813f602410fbd73486be8b26821064f"
+    },
+    {
+      "bytes": 31108128,
+      "modified_ns": 1788302120395157933,
+      "path": "<reproduction-root>/real/contextual_seed_7043/evaluation/contextual_sparse_etm/test_observed_theta.npy",
+      "sha256": "78674e899dc8f9e9f5af3779dd7f11eaf288f966c9143c478eee7d9fe007c8da"
+    },
+    {
+      "bytes": 31108128,
+      "modified_ns": 1788302120419159385,
+      "path": "<reproduction-root>/real/contextual_seed_7043/evaluation/contextual_sparse_etm/test_full_theta.npy",
+      "sha256": "7b3dc7e55a0527583006003cec6706f0e8a0a33719fcbd988867feafa0cd2974"
+    }
+  ],
+  "pre_stage_load": {
+    "available_memory_bytes": 13533622272,
+    "gpu_compute_processes": [],
+    "one_minute_load_average": 1.0556640625,
+    "utc": "2026-09-01T22:35:15.913505+00:00"
+  },
+  "return_code": 0,
+  "started_utc": "2026-09-01T22:35:15.913523+00:00",
+  "status": "complete"
+}

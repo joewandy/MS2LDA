@@ -1,0 +1,23 @@
+{
+  "channel_mask_serialized": true,
+  "checkpoint_sha256": "ad5a4bf71b8e6d4e1e27859a6d1ef5e57c300d55804901292d1c58ae386edddf",
+  "cpu_vs_saved_gpu_max_theta_error": 6.556510925292969e-07,
+  "cpu_vs_saved_gpu_nll_absolute_error": 2.1232594882292233e-07,
+  "decoder": "unchanged channel-balanced token-emission ETM",
+  "encoder_contract": "opaque observations -> Gaussian mean and log variance",
+  "fitted_new_model": false,
+  "fixed_embedding_coordinates": 1019184,
+  "foundation_model_used": false,
+  "frozen_state_unchanged": true,
+  "same_device_theta_and_beta_bit_identical": true,
+  "seed": 42,
+  "source_sha256": {
+    "benchmarks/neural_ms2lda/attention_etm.py": "f8254dbad6a645865d98a13f7c80745f60fdfd9b50f0dc75fcab0a20e0102c23",
+    "benchmarks/neural_ms2lda/tests/test_attention_etm.py": "30954147080b4cc0e15befa45f89ebd721cc142f2307615abddab00818b221a3",
+    "scripts/audit_attention_etm_interface.py": "2465197440b29fddc0ca22c92673eace6b6f0f5c51b77de45d6ac2bc904c5087"
+  },
+  "test_matrices_loaded": false,
+  "trainable_parameters": 49001,
+  "validation_rows": 3889,
+  "variant": "reduced_evidence_only"
+}

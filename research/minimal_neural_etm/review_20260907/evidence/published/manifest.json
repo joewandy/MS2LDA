@@ -1,0 +1,525 @@
+{
+  "sources": [
+    {
+      "path": "real/prodlda_entmax_seed42/validation_chemical/minimal_etm/complete.json",
+      "sha256": "472e2eb5e84f4dbe960b6303c277cc330a9dc491e3e7f4ee959148706dacf396"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/diagnostics.py": "b2f39e91b32114ce9400537868de9438359e96278a86436a3cc3fdf3305b3dfa",
+        "benchmarks/neural_ms2lda/model_evaluation.py": "262fd2db293d7ccd6cb053312a2df38a6181e09e028c65beaf331dadd6a0e476",
+        "benchmarks/neural_ms2lda/published_evaluation.py": "b25d35e162a544b6e2a6ac17aaafd0e71588b6cebe2c5123842459f324360140",
+        "benchmarks/neural_ms2lda/published_models.py": "3c16bd4a7f53ff8698e4f7d8392534b4eb9bd00722543522f7eca080c804edd6",
+        "benchmarks/neural_ms2lda/reproducibility.py": "000ced8c92f9e524cdaa3d2237ee3d593caa2970b93d0d268272aeb535748e87",
+        "benchmarks/neural_ms2lda/synthetic_msms.py": "ed836c9fc37e2fc7ad8893c5c9b8bf8db025dd5ba279c3dbff6370222aaf299a",
+        "scripts/run_etm_controls.py": "447f33a3006aef93b506d23b5c6c0e0e5078e9248bbaae7a792e8ffbf47b583c",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c",
+        "scripts/run_published_neural.py": "cf503efe78eab286282b3aefabadbea77ac9ad44a15089f521fc2b5e4db25686"
+      },
+      "path": "real/prodlda_entmax_seed42/models/minimal_etm/result.json",
+      "sha256": "cbedf31c4e8528e378da38322f7bddf32a5e9366059b622637711122615d2f93"
+    },
+    {
+      "path": "real/prodlda_seed42/validation_chemical/minimal_etm/complete.json",
+      "sha256": "ab14864173ccba0f79ad48a264a2c6385bfd944e51d65ad6955b4d5b458f7996"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/diagnostics.py": "b2f39e91b32114ce9400537868de9438359e96278a86436a3cc3fdf3305b3dfa",
+        "benchmarks/neural_ms2lda/model_evaluation.py": "262fd2db293d7ccd6cb053312a2df38a6181e09e028c65beaf331dadd6a0e476",
+        "benchmarks/neural_ms2lda/published_evaluation.py": "b25d35e162a544b6e2a6ac17aaafd0e71588b6cebe2c5123842459f324360140",
+        "benchmarks/neural_ms2lda/published_models.py": "3c16bd4a7f53ff8698e4f7d8392534b4eb9bd00722543522f7eca080c804edd6",
+        "benchmarks/neural_ms2lda/reproducibility.py": "000ced8c92f9e524cdaa3d2237ee3d593caa2970b93d0d268272aeb535748e87",
+        "benchmarks/neural_ms2lda/synthetic_msms.py": "ed836c9fc37e2fc7ad8893c5c9b8bf8db025dd5ba279c3dbff6370222aaf299a",
+        "scripts/run_etm_controls.py": "447f33a3006aef93b506d23b5c6c0e0e5078e9248bbaae7a792e8ffbf47b583c",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c",
+        "scripts/run_published_neural.py": "cf503efe78eab286282b3aefabadbea77ac9ad44a15089f521fc2b5e4db25686"
+      },
+      "path": "real/prodlda_seed42/models/minimal_etm/result.json",
+      "sha256": "3dd1669eb3f9f4832ac61ca92f76a7ce3856eefa05896ae36f94d924d9705f1b"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/diagnostics.py": "b2f39e91b32114ce9400537868de9438359e96278a86436a3cc3fdf3305b3dfa",
+        "benchmarks/neural_ms2lda/model_evaluation.py": "262fd2db293d7ccd6cb053312a2df38a6181e09e028c65beaf331dadd6a0e476",
+        "benchmarks/neural_ms2lda/published_evaluation.py": "eebcd55eedc8c010e9f9aeae900cb0b52ff84ea577fec28ea075378dccf93a07",
+        "benchmarks/neural_ms2lda/published_models.py": "5feb269c99135d0488a12d35b1b6cca5be72309312c34aeeb57e6040e11a2125",
+        "benchmarks/neural_ms2lda/reproducibility.py": "000ced8c92f9e524cdaa3d2237ee3d593caa2970b93d0d268272aeb535748e87",
+        "benchmarks/neural_ms2lda/synthetic_msms.py": "ed836c9fc37e2fc7ad8893c5c9b8bf8db025dd5ba279c3dbff6370222aaf299a",
+        "scripts/run_etm_controls.py": "447f33a3006aef93b506d23b5c6c0e0e5078e9248bbaae7a792e8ffbf47b583c",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c",
+        "scripts/run_published_neural.py": "fa9b07b8a37fc11ae8b343603716690771e01223c0244193ed14494c7c4235cb"
+      },
+      "path": "synthetic/seed11_k128_dirichlet_etm/result.json",
+      "sha256": "6acf0dc1431cdc5f26c125f1c8022a927eb4a9b89bf55070d4626308d4276086"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/diagnostics.py": "b2f39e91b32114ce9400537868de9438359e96278a86436a3cc3fdf3305b3dfa",
+        "benchmarks/neural_ms2lda/model_evaluation.py": "262fd2db293d7ccd6cb053312a2df38a6181e09e028c65beaf331dadd6a0e476",
+        "benchmarks/neural_ms2lda/published_evaluation.py": "eebcd55eedc8c010e9f9aeae900cb0b52ff84ea577fec28ea075378dccf93a07",
+        "benchmarks/neural_ms2lda/published_models.py": "5feb269c99135d0488a12d35b1b6cca5be72309312c34aeeb57e6040e11a2125",
+        "benchmarks/neural_ms2lda/reproducibility.py": "000ced8c92f9e524cdaa3d2237ee3d593caa2970b93d0d268272aeb535748e87",
+        "benchmarks/neural_ms2lda/synthetic_msms.py": "ed836c9fc37e2fc7ad8893c5c9b8bf8db025dd5ba279c3dbff6370222aaf299a",
+        "scripts/run_etm_controls.py": "447f33a3006aef93b506d23b5c6c0e0e5078e9248bbaae7a792e8ffbf47b583c",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c",
+        "scripts/run_published_neural.py": "fa9b07b8a37fc11ae8b343603716690771e01223c0244193ed14494c7c4235cb"
+      },
+      "path": "synthetic/seed11_k128_dirichlet_lda/result.json",
+      "sha256": "af9d2407c15a8c89f36d3051b27108228dfc466ab0b1e8244a109ce65afc36f1"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/diagnostics.py": "b2f39e91b32114ce9400537868de9438359e96278a86436a3cc3fdf3305b3dfa",
+        "benchmarks/neural_ms2lda/model_evaluation.py": "262fd2db293d7ccd6cb053312a2df38a6181e09e028c65beaf331dadd6a0e476",
+        "benchmarks/neural_ms2lda/published_evaluation.py": "eebcd55eedc8c010e9f9aeae900cb0b52ff84ea577fec28ea075378dccf93a07",
+        "benchmarks/neural_ms2lda/published_models.py": "5feb269c99135d0488a12d35b1b6cca5be72309312c34aeeb57e6040e11a2125",
+        "benchmarks/neural_ms2lda/reproducibility.py": "000ced8c92f9e524cdaa3d2237ee3d593caa2970b93d0d268272aeb535748e87",
+        "benchmarks/neural_ms2lda/synthetic_msms.py": "ed836c9fc37e2fc7ad8893c5c9b8bf8db025dd5ba279c3dbff6370222aaf299a",
+        "scripts/run_etm_controls.py": "447f33a3006aef93b506d23b5c6c0e0e5078e9248bbaae7a792e8ffbf47b583c",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c",
+        "scripts/run_published_neural.py": "fa9b07b8a37fc11ae8b343603716690771e01223c0244193ed14494c7c4235cb"
+      },
+      "path": "synthetic/seed11_k128_dvae_poe/result.json",
+      "sha256": "08206ab7cd07ff1f01a8e4dda8fb5ef438b87cbf9a17e704ff051378924f796b"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/diagnostics.py": "b2f39e91b32114ce9400537868de9438359e96278a86436a3cc3fdf3305b3dfa",
+        "benchmarks/neural_ms2lda/model_evaluation.py": "262fd2db293d7ccd6cb053312a2df38a6181e09e028c65beaf331dadd6a0e476",
+        "benchmarks/neural_ms2lda/published_evaluation.py": "eebcd55eedc8c010e9f9aeae900cb0b52ff84ea577fec28ea075378dccf93a07",
+        "benchmarks/neural_ms2lda/published_models.py": "5feb269c99135d0488a12d35b1b6cca5be72309312c34aeeb57e6040e11a2125",
+        "benchmarks/neural_ms2lda/reproducibility.py": "000ced8c92f9e524cdaa3d2237ee3d593caa2970b93d0d268272aeb535748e87",
+        "benchmarks/neural_ms2lda/synthetic_msms.py": "ed836c9fc37e2fc7ad8893c5c9b8bf8db025dd5ba279c3dbff6370222aaf299a",
+        "scripts/run_etm_controls.py": "447f33a3006aef93b506d23b5c6c0e0e5078e9248bbaae7a792e8ffbf47b583c",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c",
+        "scripts/run_published_neural.py": "fa9b07b8a37fc11ae8b343603716690771e01223c0244193ed14494c7c4235cb"
+      },
+      "path": "synthetic/seed11_k128_prodlda/result.json",
+      "sha256": "1d6d82d598f48aed77e89c96c2247ad9a6119ea229e375bd0f74b195beaad8ba"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/diagnostics.py": "b2f39e91b32114ce9400537868de9438359e96278a86436a3cc3fdf3305b3dfa",
+        "benchmarks/neural_ms2lda/model_evaluation.py": "262fd2db293d7ccd6cb053312a2df38a6181e09e028c65beaf331dadd6a0e476",
+        "benchmarks/neural_ms2lda/published_evaluation.py": "b25d35e162a544b6e2a6ac17aaafd0e71588b6cebe2c5123842459f324360140",
+        "benchmarks/neural_ms2lda/published_models.py": "3c16bd4a7f53ff8698e4f7d8392534b4eb9bd00722543522f7eca080c804edd6",
+        "benchmarks/neural_ms2lda/reproducibility.py": "000ced8c92f9e524cdaa3d2237ee3d593caa2970b93d0d268272aeb535748e87",
+        "benchmarks/neural_ms2lda/synthetic_msms.py": "ed836c9fc37e2fc7ad8893c5c9b8bf8db025dd5ba279c3dbff6370222aaf299a",
+        "scripts/run_etm_controls.py": "447f33a3006aef93b506d23b5c6c0e0e5078e9248bbaae7a792e8ffbf47b583c",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c",
+        "scripts/run_published_neural.py": "cf503efe78eab286282b3aefabadbea77ac9ad44a15089f521fc2b5e4db25686"
+      },
+      "path": "synthetic/seed11_k128_prodlda_entmax/result.json",
+      "sha256": "cdf325cd34db54d713019b498ec8c6dafdfb9b312abb5f8f227368693e36383d"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/diagnostics.py": "b2f39e91b32114ce9400537868de9438359e96278a86436a3cc3fdf3305b3dfa",
+        "benchmarks/neural_ms2lda/model_evaluation.py": "262fd2db293d7ccd6cb053312a2df38a6181e09e028c65beaf331dadd6a0e476",
+        "benchmarks/neural_ms2lda/published_evaluation.py": "eebcd55eedc8c010e9f9aeae900cb0b52ff84ea577fec28ea075378dccf93a07",
+        "benchmarks/neural_ms2lda/published_models.py": "5feb269c99135d0488a12d35b1b6cca5be72309312c34aeeb57e6040e11a2125",
+        "benchmarks/neural_ms2lda/reproducibility.py": "000ced8c92f9e524cdaa3d2237ee3d593caa2970b93d0d268272aeb535748e87",
+        "benchmarks/neural_ms2lda/synthetic_msms.py": "ed836c9fc37e2fc7ad8893c5c9b8bf8db025dd5ba279c3dbff6370222aaf299a",
+        "scripts/run_etm_controls.py": "447f33a3006aef93b506d23b5c6c0e0e5078e9248bbaae7a792e8ffbf47b583c",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c",
+        "scripts/run_published_neural.py": "fa9b07b8a37fc11ae8b343603716690771e01223c0244193ed14494c7c4235cb"
+      },
+      "path": "synthetic/seed11_k36_dirichlet_etm/result.json",
+      "sha256": "5dc4fef4bbf7f45eff2640231000e411a0299a543b65701e72f840ee79779f47"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/diagnostics.py": "b2f39e91b32114ce9400537868de9438359e96278a86436a3cc3fdf3305b3dfa",
+        "benchmarks/neural_ms2lda/model_evaluation.py": "262fd2db293d7ccd6cb053312a2df38a6181e09e028c65beaf331dadd6a0e476",
+        "benchmarks/neural_ms2lda/published_evaluation.py": "eebcd55eedc8c010e9f9aeae900cb0b52ff84ea577fec28ea075378dccf93a07",
+        "benchmarks/neural_ms2lda/published_models.py": "5feb269c99135d0488a12d35b1b6cca5be72309312c34aeeb57e6040e11a2125",
+        "benchmarks/neural_ms2lda/reproducibility.py": "000ced8c92f9e524cdaa3d2237ee3d593caa2970b93d0d268272aeb535748e87",
+        "benchmarks/neural_ms2lda/synthetic_msms.py": "ed836c9fc37e2fc7ad8893c5c9b8bf8db025dd5ba279c3dbff6370222aaf299a",
+        "scripts/run_etm_controls.py": "447f33a3006aef93b506d23b5c6c0e0e5078e9248bbaae7a792e8ffbf47b583c",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c",
+        "scripts/run_published_neural.py": "fa9b07b8a37fc11ae8b343603716690771e01223c0244193ed14494c7c4235cb"
+      },
+      "path": "synthetic/seed11_k36_dirichlet_lda/result.json",
+      "sha256": "322ad3cefde0c8b969f8d8d1bb1be08476e20febfbe9b1fe11cbda251f8deb93"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/diagnostics.py": "b2f39e91b32114ce9400537868de9438359e96278a86436a3cc3fdf3305b3dfa",
+        "benchmarks/neural_ms2lda/model_evaluation.py": "262fd2db293d7ccd6cb053312a2df38a6181e09e028c65beaf331dadd6a0e476",
+        "benchmarks/neural_ms2lda/published_evaluation.py": "eebcd55eedc8c010e9f9aeae900cb0b52ff84ea577fec28ea075378dccf93a07",
+        "benchmarks/neural_ms2lda/published_models.py": "5feb269c99135d0488a12d35b1b6cca5be72309312c34aeeb57e6040e11a2125",
+        "benchmarks/neural_ms2lda/reproducibility.py": "000ced8c92f9e524cdaa3d2237ee3d593caa2970b93d0d268272aeb535748e87",
+        "benchmarks/neural_ms2lda/synthetic_msms.py": "ed836c9fc37e2fc7ad8893c5c9b8bf8db025dd5ba279c3dbff6370222aaf299a",
+        "scripts/run_etm_controls.py": "447f33a3006aef93b506d23b5c6c0e0e5078e9248bbaae7a792e8ffbf47b583c",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c",
+        "scripts/run_published_neural.py": "fa9b07b8a37fc11ae8b343603716690771e01223c0244193ed14494c7c4235cb"
+      },
+      "path": "synthetic/seed11_k36_dvae_poe/result.json",
+      "sha256": "845f64631777d2cd37ae178456ce5177cf951c3c5b4b144b72dbd296b8f33d07"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/diagnostics.py": "b2f39e91b32114ce9400537868de9438359e96278a86436a3cc3fdf3305b3dfa",
+        "benchmarks/neural_ms2lda/model_evaluation.py": "262fd2db293d7ccd6cb053312a2df38a6181e09e028c65beaf331dadd6a0e476",
+        "benchmarks/neural_ms2lda/published_evaluation.py": "eebcd55eedc8c010e9f9aeae900cb0b52ff84ea577fec28ea075378dccf93a07",
+        "benchmarks/neural_ms2lda/published_models.py": "5feb269c99135d0488a12d35b1b6cca5be72309312c34aeeb57e6040e11a2125",
+        "benchmarks/neural_ms2lda/reproducibility.py": "000ced8c92f9e524cdaa3d2237ee3d593caa2970b93d0d268272aeb535748e87",
+        "benchmarks/neural_ms2lda/synthetic_msms.py": "ed836c9fc37e2fc7ad8893c5c9b8bf8db025dd5ba279c3dbff6370222aaf299a",
+        "scripts/run_etm_controls.py": "447f33a3006aef93b506d23b5c6c0e0e5078e9248bbaae7a792e8ffbf47b583c",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c",
+        "scripts/run_published_neural.py": "fa9b07b8a37fc11ae8b343603716690771e01223c0244193ed14494c7c4235cb"
+      },
+      "path": "synthetic/seed11_k36_prodlda/result.json",
+      "sha256": "c5667b21115dde5988e31f978fccccc5395397ff29c5280fca63fe767ea9ecc4"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/diagnostics.py": "b2f39e91b32114ce9400537868de9438359e96278a86436a3cc3fdf3305b3dfa",
+        "benchmarks/neural_ms2lda/model_evaluation.py": "262fd2db293d7ccd6cb053312a2df38a6181e09e028c65beaf331dadd6a0e476",
+        "benchmarks/neural_ms2lda/published_evaluation.py": "b25d35e162a544b6e2a6ac17aaafd0e71588b6cebe2c5123842459f324360140",
+        "benchmarks/neural_ms2lda/published_models.py": "3c16bd4a7f53ff8698e4f7d8392534b4eb9bd00722543522f7eca080c804edd6",
+        "benchmarks/neural_ms2lda/reproducibility.py": "000ced8c92f9e524cdaa3d2237ee3d593caa2970b93d0d268272aeb535748e87",
+        "benchmarks/neural_ms2lda/synthetic_msms.py": "ed836c9fc37e2fc7ad8893c5c9b8bf8db025dd5ba279c3dbff6370222aaf299a",
+        "scripts/run_etm_controls.py": "447f33a3006aef93b506d23b5c6c0e0e5078e9248bbaae7a792e8ffbf47b583c",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c",
+        "scripts/run_published_neural.py": "cf503efe78eab286282b3aefabadbea77ac9ad44a15089f521fc2b5e4db25686"
+      },
+      "path": "synthetic/seed11_k36_prodlda_entmax/result.json",
+      "sha256": "04dba1b52d53b530be409bc56c81b96239a796aeda807d1cb724f8d4905798a3"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/diagnostics.py": "b2f39e91b32114ce9400537868de9438359e96278a86436a3cc3fdf3305b3dfa",
+        "benchmarks/neural_ms2lda/model_evaluation.py": "262fd2db293d7ccd6cb053312a2df38a6181e09e028c65beaf331dadd6a0e476",
+        "benchmarks/neural_ms2lda/published_evaluation.py": "eebcd55eedc8c010e9f9aeae900cb0b52ff84ea577fec28ea075378dccf93a07",
+        "benchmarks/neural_ms2lda/published_models.py": "5feb269c99135d0488a12d35b1b6cca5be72309312c34aeeb57e6040e11a2125",
+        "benchmarks/neural_ms2lda/reproducibility.py": "000ced8c92f9e524cdaa3d2237ee3d593caa2970b93d0d268272aeb535748e87",
+        "benchmarks/neural_ms2lda/synthetic_msms.py": "ed836c9fc37e2fc7ad8893c5c9b8bf8db025dd5ba279c3dbff6370222aaf299a",
+        "scripts/run_etm_controls.py": "447f33a3006aef93b506d23b5c6c0e0e5078e9248bbaae7a792e8ffbf47b583c",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c",
+        "scripts/run_published_neural.py": "fa9b07b8a37fc11ae8b343603716690771e01223c0244193ed14494c7c4235cb"
+      },
+      "path": "synthetic/seed23_k128_dirichlet_etm/result.json",
+      "sha256": "25b0093abdb13469df69f5247720edceca3fbe97bb76dca9b444c4b1ed8fac23"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/diagnostics.py": "b2f39e91b32114ce9400537868de9438359e96278a86436a3cc3fdf3305b3dfa",
+        "benchmarks/neural_ms2lda/model_evaluation.py": "262fd2db293d7ccd6cb053312a2df38a6181e09e028c65beaf331dadd6a0e476",
+        "benchmarks/neural_ms2lda/published_evaluation.py": "eebcd55eedc8c010e9f9aeae900cb0b52ff84ea577fec28ea075378dccf93a07",
+        "benchmarks/neural_ms2lda/published_models.py": "5feb269c99135d0488a12d35b1b6cca5be72309312c34aeeb57e6040e11a2125",
+        "benchmarks/neural_ms2lda/reproducibility.py": "000ced8c92f9e524cdaa3d2237ee3d593caa2970b93d0d268272aeb535748e87",
+        "benchmarks/neural_ms2lda/synthetic_msms.py": "ed836c9fc37e2fc7ad8893c5c9b8bf8db025dd5ba279c3dbff6370222aaf299a",
+        "scripts/run_etm_controls.py": "447f33a3006aef93b506d23b5c6c0e0e5078e9248bbaae7a792e8ffbf47b583c",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c",
+        "scripts/run_published_neural.py": "fa9b07b8a37fc11ae8b343603716690771e01223c0244193ed14494c7c4235cb"
+      },
+      "path": "synthetic/seed23_k128_dirichlet_lda/result.json",
+      "sha256": "dafc71d73bc015264d071e522e581b4a2dc1c876fbc45aaaf463634854e6b5fe"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/diagnostics.py": "b2f39e91b32114ce9400537868de9438359e96278a86436a3cc3fdf3305b3dfa",
+        "benchmarks/neural_ms2lda/model_evaluation.py": "262fd2db293d7ccd6cb053312a2df38a6181e09e028c65beaf331dadd6a0e476",
+        "benchmarks/neural_ms2lda/published_evaluation.py": "eebcd55eedc8c010e9f9aeae900cb0b52ff84ea577fec28ea075378dccf93a07",
+        "benchmarks/neural_ms2lda/published_models.py": "5feb269c99135d0488a12d35b1b6cca5be72309312c34aeeb57e6040e11a2125",
+        "benchmarks/neural_ms2lda/reproducibility.py": "000ced8c92f9e524cdaa3d2237ee3d593caa2970b93d0d268272aeb535748e87",
+        "benchmarks/neural_ms2lda/synthetic_msms.py": "ed836c9fc37e2fc7ad8893c5c9b8bf8db025dd5ba279c3dbff6370222aaf299a",
+        "scripts/run_etm_controls.py": "447f33a3006aef93b506d23b5c6c0e0e5078e9248bbaae7a792e8ffbf47b583c",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c",
+        "scripts/run_published_neural.py": "fa9b07b8a37fc11ae8b343603716690771e01223c0244193ed14494c7c4235cb"
+      },
+      "path": "synthetic/seed23_k128_dvae_poe/result.json",
+      "sha256": "4d4b3f075f5d6f71ef78f601194b43b3365cbc1c94fa34fb2f264329a4492526"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/diagnostics.py": "b2f39e91b32114ce9400537868de9438359e96278a86436a3cc3fdf3305b3dfa",
+        "benchmarks/neural_ms2lda/model_evaluation.py": "262fd2db293d7ccd6cb053312a2df38a6181e09e028c65beaf331dadd6a0e476",
+        "benchmarks/neural_ms2lda/published_evaluation.py": "eebcd55eedc8c010e9f9aeae900cb0b52ff84ea577fec28ea075378dccf93a07",
+        "benchmarks/neural_ms2lda/published_models.py": "5feb269c99135d0488a12d35b1b6cca5be72309312c34aeeb57e6040e11a2125",
+        "benchmarks/neural_ms2lda/reproducibility.py": "000ced8c92f9e524cdaa3d2237ee3d593caa2970b93d0d268272aeb535748e87",
+        "benchmarks/neural_ms2lda/synthetic_msms.py": "ed836c9fc37e2fc7ad8893c5c9b8bf8db025dd5ba279c3dbff6370222aaf299a",
+        "scripts/run_etm_controls.py": "447f33a3006aef93b506d23b5c6c0e0e5078e9248bbaae7a792e8ffbf47b583c",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c",
+        "scripts/run_published_neural.py": "fa9b07b8a37fc11ae8b343603716690771e01223c0244193ed14494c7c4235cb"
+      },
+      "path": "synthetic/seed23_k128_prodlda/result.json",
+      "sha256": "980bcbcb51891a5acf492fcf8bd8160e7eecc8c3a89ca79e5276d8a9d96324b9"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/diagnostics.py": "b2f39e91b32114ce9400537868de9438359e96278a86436a3cc3fdf3305b3dfa",
+        "benchmarks/neural_ms2lda/model_evaluation.py": "262fd2db293d7ccd6cb053312a2df38a6181e09e028c65beaf331dadd6a0e476",
+        "benchmarks/neural_ms2lda/published_evaluation.py": "b25d35e162a544b6e2a6ac17aaafd0e71588b6cebe2c5123842459f324360140",
+        "benchmarks/neural_ms2lda/published_models.py": "3c16bd4a7f53ff8698e4f7d8392534b4eb9bd00722543522f7eca080c804edd6",
+        "benchmarks/neural_ms2lda/reproducibility.py": "000ced8c92f9e524cdaa3d2237ee3d593caa2970b93d0d268272aeb535748e87",
+        "benchmarks/neural_ms2lda/synthetic_msms.py": "ed836c9fc37e2fc7ad8893c5c9b8bf8db025dd5ba279c3dbff6370222aaf299a",
+        "scripts/run_etm_controls.py": "447f33a3006aef93b506d23b5c6c0e0e5078e9248bbaae7a792e8ffbf47b583c",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c",
+        "scripts/run_published_neural.py": "cf503efe78eab286282b3aefabadbea77ac9ad44a15089f521fc2b5e4db25686"
+      },
+      "path": "synthetic/seed23_k128_prodlda_entmax/result.json",
+      "sha256": "03309e30654abbc7c03adb1fe0f74d2f1ab2f4f4ffccb09a00e30b1da6b5cb00"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/diagnostics.py": "b2f39e91b32114ce9400537868de9438359e96278a86436a3cc3fdf3305b3dfa",
+        "benchmarks/neural_ms2lda/model_evaluation.py": "262fd2db293d7ccd6cb053312a2df38a6181e09e028c65beaf331dadd6a0e476",
+        "benchmarks/neural_ms2lda/published_evaluation.py": "eebcd55eedc8c010e9f9aeae900cb0b52ff84ea577fec28ea075378dccf93a07",
+        "benchmarks/neural_ms2lda/published_models.py": "5feb269c99135d0488a12d35b1b6cca5be72309312c34aeeb57e6040e11a2125",
+        "benchmarks/neural_ms2lda/reproducibility.py": "000ced8c92f9e524cdaa3d2237ee3d593caa2970b93d0d268272aeb535748e87",
+        "benchmarks/neural_ms2lda/synthetic_msms.py": "ed836c9fc37e2fc7ad8893c5c9b8bf8db025dd5ba279c3dbff6370222aaf299a",
+        "scripts/run_etm_controls.py": "447f33a3006aef93b506d23b5c6c0e0e5078e9248bbaae7a792e8ffbf47b583c",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c",
+        "scripts/run_published_neural.py": "fa9b07b8a37fc11ae8b343603716690771e01223c0244193ed14494c7c4235cb"
+      },
+      "path": "synthetic/seed23_k36_dirichlet_etm/result.json",
+      "sha256": "950e18c279266ccca7446483ef612025a0c90decf82429751638d418350c6188"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/diagnostics.py": "b2f39e91b32114ce9400537868de9438359e96278a86436a3cc3fdf3305b3dfa",
+        "benchmarks/neural_ms2lda/model_evaluation.py": "262fd2db293d7ccd6cb053312a2df38a6181e09e028c65beaf331dadd6a0e476",
+        "benchmarks/neural_ms2lda/published_evaluation.py": "eebcd55eedc8c010e9f9aeae900cb0b52ff84ea577fec28ea075378dccf93a07",
+        "benchmarks/neural_ms2lda/published_models.py": "5feb269c99135d0488a12d35b1b6cca5be72309312c34aeeb57e6040e11a2125",
+        "benchmarks/neural_ms2lda/reproducibility.py": "000ced8c92f9e524cdaa3d2237ee3d593caa2970b93d0d268272aeb535748e87",
+        "benchmarks/neural_ms2lda/synthetic_msms.py": "ed836c9fc37e2fc7ad8893c5c9b8bf8db025dd5ba279c3dbff6370222aaf299a",
+        "scripts/run_etm_controls.py": "447f33a3006aef93b506d23b5c6c0e0e5078e9248bbaae7a792e8ffbf47b583c",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c",
+        "scripts/run_published_neural.py": "fa9b07b8a37fc11ae8b343603716690771e01223c0244193ed14494c7c4235cb"
+      },
+      "path": "synthetic/seed23_k36_dirichlet_lda/result.json",
+      "sha256": "eb9d6794704ec61012e12dad2e30633b7f3543a067a2a649fdb11bfed1a9d026"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/diagnostics.py": "b2f39e91b32114ce9400537868de9438359e96278a86436a3cc3fdf3305b3dfa",
+        "benchmarks/neural_ms2lda/model_evaluation.py": "262fd2db293d7ccd6cb053312a2df38a6181e09e028c65beaf331dadd6a0e476",
+        "benchmarks/neural_ms2lda/published_evaluation.py": "eebcd55eedc8c010e9f9aeae900cb0b52ff84ea577fec28ea075378dccf93a07",
+        "benchmarks/neural_ms2lda/published_models.py": "5feb269c99135d0488a12d35b1b6cca5be72309312c34aeeb57e6040e11a2125",
+        "benchmarks/neural_ms2lda/reproducibility.py": "000ced8c92f9e524cdaa3d2237ee3d593caa2970b93d0d268272aeb535748e87",
+        "benchmarks/neural_ms2lda/synthetic_msms.py": "ed836c9fc37e2fc7ad8893c5c9b8bf8db025dd5ba279c3dbff6370222aaf299a",
+        "scripts/run_etm_controls.py": "447f33a3006aef93b506d23b5c6c0e0e5078e9248bbaae7a792e8ffbf47b583c",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c",
+        "scripts/run_published_neural.py": "fa9b07b8a37fc11ae8b343603716690771e01223c0244193ed14494c7c4235cb"
+      },
+      "path": "synthetic/seed23_k36_dvae_poe/result.json",
+      "sha256": "7e6277d2f3f8c9ea44982724f4777d0327a4a2a322ac9ca332542dddd5c32b6e"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/diagnostics.py": "b2f39e91b32114ce9400537868de9438359e96278a86436a3cc3fdf3305b3dfa",
+        "benchmarks/neural_ms2lda/model_evaluation.py": "262fd2db293d7ccd6cb053312a2df38a6181e09e028c65beaf331dadd6a0e476",
+        "benchmarks/neural_ms2lda/published_evaluation.py": "eebcd55eedc8c010e9f9aeae900cb0b52ff84ea577fec28ea075378dccf93a07",
+        "benchmarks/neural_ms2lda/published_models.py": "5feb269c99135d0488a12d35b1b6cca5be72309312c34aeeb57e6040e11a2125",
+        "benchmarks/neural_ms2lda/reproducibility.py": "000ced8c92f9e524cdaa3d2237ee3d593caa2970b93d0d268272aeb535748e87",
+        "benchmarks/neural_ms2lda/synthetic_msms.py": "ed836c9fc37e2fc7ad8893c5c9b8bf8db025dd5ba279c3dbff6370222aaf299a",
+        "scripts/run_etm_controls.py": "447f33a3006aef93b506d23b5c6c0e0e5078e9248bbaae7a792e8ffbf47b583c",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c",
+        "scripts/run_published_neural.py": "fa9b07b8a37fc11ae8b343603716690771e01223c0244193ed14494c7c4235cb"
+      },
+      "path": "synthetic/seed23_k36_prodlda/result.json",
+      "sha256": "198f5259d12fe98dbab266998d9e8ba59776a277ac6ecd2fa9a5aeb2fcdcd08b"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/diagnostics.py": "b2f39e91b32114ce9400537868de9438359e96278a86436a3cc3fdf3305b3dfa",
+        "benchmarks/neural_ms2lda/model_evaluation.py": "262fd2db293d7ccd6cb053312a2df38a6181e09e028c65beaf331dadd6a0e476",
+        "benchmarks/neural_ms2lda/published_evaluation.py": "b25d35e162a544b6e2a6ac17aaafd0e71588b6cebe2c5123842459f324360140",
+        "benchmarks/neural_ms2lda/published_models.py": "3c16bd4a7f53ff8698e4f7d8392534b4eb9bd00722543522f7eca080c804edd6",
+        "benchmarks/neural_ms2lda/reproducibility.py": "000ced8c92f9e524cdaa3d2237ee3d593caa2970b93d0d268272aeb535748e87",
+        "benchmarks/neural_ms2lda/synthetic_msms.py": "ed836c9fc37e2fc7ad8893c5c9b8bf8db025dd5ba279c3dbff6370222aaf299a",
+        "scripts/run_etm_controls.py": "447f33a3006aef93b506d23b5c6c0e0e5078e9248bbaae7a792e8ffbf47b583c",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c",
+        "scripts/run_published_neural.py": "cf503efe78eab286282b3aefabadbea77ac9ad44a15089f521fc2b5e4db25686"
+      },
+      "path": "synthetic/seed23_k36_prodlda_entmax/result.json",
+      "sha256": "af0b7b8c5c64ec27d43f4e54a178da2729922523c056be4c37481758ced2e883"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/diagnostics.py": "b2f39e91b32114ce9400537868de9438359e96278a86436a3cc3fdf3305b3dfa",
+        "benchmarks/neural_ms2lda/model_evaluation.py": "262fd2db293d7ccd6cb053312a2df38a6181e09e028c65beaf331dadd6a0e476",
+        "benchmarks/neural_ms2lda/published_evaluation.py": "eebcd55eedc8c010e9f9aeae900cb0b52ff84ea577fec28ea075378dccf93a07",
+        "benchmarks/neural_ms2lda/published_models.py": "5feb269c99135d0488a12d35b1b6cca5be72309312c34aeeb57e6040e11a2125",
+        "benchmarks/neural_ms2lda/reproducibility.py": "000ced8c92f9e524cdaa3d2237ee3d593caa2970b93d0d268272aeb535748e87",
+        "benchmarks/neural_ms2lda/synthetic_msms.py": "ed836c9fc37e2fc7ad8893c5c9b8bf8db025dd5ba279c3dbff6370222aaf299a",
+        "scripts/run_etm_controls.py": "447f33a3006aef93b506d23b5c6c0e0e5078e9248bbaae7a792e8ffbf47b583c",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c",
+        "scripts/run_published_neural.py": "fa9b07b8a37fc11ae8b343603716690771e01223c0244193ed14494c7c4235cb"
+      },
+      "path": "synthetic/seed37_k128_dirichlet_etm/result.json",
+      "sha256": "6c969c193f2e660a4e4d26931219b70998d8540ad9c64d2469132c52dac8b3a3"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/diagnostics.py": "b2f39e91b32114ce9400537868de9438359e96278a86436a3cc3fdf3305b3dfa",
+        "benchmarks/neural_ms2lda/model_evaluation.py": "262fd2db293d7ccd6cb053312a2df38a6181e09e028c65beaf331dadd6a0e476",
+        "benchmarks/neural_ms2lda/published_evaluation.py": "eebcd55eedc8c010e9f9aeae900cb0b52ff84ea577fec28ea075378dccf93a07",
+        "benchmarks/neural_ms2lda/published_models.py": "5feb269c99135d0488a12d35b1b6cca5be72309312c34aeeb57e6040e11a2125",
+        "benchmarks/neural_ms2lda/reproducibility.py": "000ced8c92f9e524cdaa3d2237ee3d593caa2970b93d0d268272aeb535748e87",
+        "benchmarks/neural_ms2lda/synthetic_msms.py": "ed836c9fc37e2fc7ad8893c5c9b8bf8db025dd5ba279c3dbff6370222aaf299a",
+        "scripts/run_etm_controls.py": "447f33a3006aef93b506d23b5c6c0e0e5078e9248bbaae7a792e8ffbf47b583c",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c",
+        "scripts/run_published_neural.py": "fa9b07b8a37fc11ae8b343603716690771e01223c0244193ed14494c7c4235cb"
+      },
+      "path": "synthetic/seed37_k128_dirichlet_lda/result.json",
+      "sha256": "62563630247fc248ef54dd117e36440eb95e2f0062849f372337c6b2dcdf5220"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/diagnostics.py": "b2f39e91b32114ce9400537868de9438359e96278a86436a3cc3fdf3305b3dfa",
+        "benchmarks/neural_ms2lda/model_evaluation.py": "262fd2db293d7ccd6cb053312a2df38a6181e09e028c65beaf331dadd6a0e476",
+        "benchmarks/neural_ms2lda/published_evaluation.py": "eebcd55eedc8c010e9f9aeae900cb0b52ff84ea577fec28ea075378dccf93a07",
+        "benchmarks/neural_ms2lda/published_models.py": "5feb269c99135d0488a12d35b1b6cca5be72309312c34aeeb57e6040e11a2125",
+        "benchmarks/neural_ms2lda/reproducibility.py": "000ced8c92f9e524cdaa3d2237ee3d593caa2970b93d0d268272aeb535748e87",
+        "benchmarks/neural_ms2lda/synthetic_msms.py": "ed836c9fc37e2fc7ad8893c5c9b8bf8db025dd5ba279c3dbff6370222aaf299a",
+        "scripts/run_etm_controls.py": "447f33a3006aef93b506d23b5c6c0e0e5078e9248bbaae7a792e8ffbf47b583c",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c",
+        "scripts/run_published_neural.py": "fa9b07b8a37fc11ae8b343603716690771e01223c0244193ed14494c7c4235cb"
+      },
+      "path": "synthetic/seed37_k128_dvae_poe/result.json",
+      "sha256": "7bd5dc2694f464569b2d75890eef9dacc7310e329a253a5b0de206d77d1f7eeb"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/diagnostics.py": "b2f39e91b32114ce9400537868de9438359e96278a86436a3cc3fdf3305b3dfa",
+        "benchmarks/neural_ms2lda/model_evaluation.py": "262fd2db293d7ccd6cb053312a2df38a6181e09e028c65beaf331dadd6a0e476",
+        "benchmarks/neural_ms2lda/published_evaluation.py": "eebcd55eedc8c010e9f9aeae900cb0b52ff84ea577fec28ea075378dccf93a07",
+        "benchmarks/neural_ms2lda/published_models.py": "5feb269c99135d0488a12d35b1b6cca5be72309312c34aeeb57e6040e11a2125",
+        "benchmarks/neural_ms2lda/reproducibility.py": "000ced8c92f9e524cdaa3d2237ee3d593caa2970b93d0d268272aeb535748e87",
+        "benchmarks/neural_ms2lda/synthetic_msms.py": "ed836c9fc37e2fc7ad8893c5c9b8bf8db025dd5ba279c3dbff6370222aaf299a",
+        "scripts/run_etm_controls.py": "447f33a3006aef93b506d23b5c6c0e0e5078e9248bbaae7a792e8ffbf47b583c",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c",
+        "scripts/run_published_neural.py": "fa9b07b8a37fc11ae8b343603716690771e01223c0244193ed14494c7c4235cb"
+      },
+      "path": "synthetic/seed37_k128_prodlda/result.json",
+      "sha256": "fae2083f941a412303da0ec4f9ab1534b9639f2192054381243eb8fdd1317518"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/diagnostics.py": "b2f39e91b32114ce9400537868de9438359e96278a86436a3cc3fdf3305b3dfa",
+        "benchmarks/neural_ms2lda/model_evaluation.py": "262fd2db293d7ccd6cb053312a2df38a6181e09e028c65beaf331dadd6a0e476",
+        "benchmarks/neural_ms2lda/published_evaluation.py": "b25d35e162a544b6e2a6ac17aaafd0e71588b6cebe2c5123842459f324360140",
+        "benchmarks/neural_ms2lda/published_models.py": "3c16bd4a7f53ff8698e4f7d8392534b4eb9bd00722543522f7eca080c804edd6",
+        "benchmarks/neural_ms2lda/reproducibility.py": "000ced8c92f9e524cdaa3d2237ee3d593caa2970b93d0d268272aeb535748e87",
+        "benchmarks/neural_ms2lda/synthetic_msms.py": "ed836c9fc37e2fc7ad8893c5c9b8bf8db025dd5ba279c3dbff6370222aaf299a",
+        "scripts/run_etm_controls.py": "447f33a3006aef93b506d23b5c6c0e0e5078e9248bbaae7a792e8ffbf47b583c",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c",
+        "scripts/run_published_neural.py": "cf503efe78eab286282b3aefabadbea77ac9ad44a15089f521fc2b5e4db25686"
+      },
+      "path": "synthetic/seed37_k128_prodlda_entmax/result.json",
+      "sha256": "139e72e14d4991385e1822ba94f755c4c11684abd206b4c0b2411bcb36854203"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/diagnostics.py": "b2f39e91b32114ce9400537868de9438359e96278a86436a3cc3fdf3305b3dfa",
+        "benchmarks/neural_ms2lda/model_evaluation.py": "262fd2db293d7ccd6cb053312a2df38a6181e09e028c65beaf331dadd6a0e476",
+        "benchmarks/neural_ms2lda/published_evaluation.py": "eebcd55eedc8c010e9f9aeae900cb0b52ff84ea577fec28ea075378dccf93a07",
+        "benchmarks/neural_ms2lda/published_models.py": "5feb269c99135d0488a12d35b1b6cca5be72309312c34aeeb57e6040e11a2125",
+        "benchmarks/neural_ms2lda/reproducibility.py": "000ced8c92f9e524cdaa3d2237ee3d593caa2970b93d0d268272aeb535748e87",
+        "benchmarks/neural_ms2lda/synthetic_msms.py": "ed836c9fc37e2fc7ad8893c5c9b8bf8db025dd5ba279c3dbff6370222aaf299a",
+        "scripts/run_etm_controls.py": "447f33a3006aef93b506d23b5c6c0e0e5078e9248bbaae7a792e8ffbf47b583c",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c",
+        "scripts/run_published_neural.py": "fa9b07b8a37fc11ae8b343603716690771e01223c0244193ed14494c7c4235cb"
+      },
+      "path": "synthetic/seed37_k36_dirichlet_etm/result.json",
+      "sha256": "387fb9b150fdb55d3ce339b8668f0bcbdd928ddb3a08e15a09c1628814db96c2"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/diagnostics.py": "b2f39e91b32114ce9400537868de9438359e96278a86436a3cc3fdf3305b3dfa",
+        "benchmarks/neural_ms2lda/model_evaluation.py": "262fd2db293d7ccd6cb053312a2df38a6181e09e028c65beaf331dadd6a0e476",
+        "benchmarks/neural_ms2lda/published_evaluation.py": "eebcd55eedc8c010e9f9aeae900cb0b52ff84ea577fec28ea075378dccf93a07",
+        "benchmarks/neural_ms2lda/published_models.py": "5feb269c99135d0488a12d35b1b6cca5be72309312c34aeeb57e6040e11a2125",
+        "benchmarks/neural_ms2lda/reproducibility.py": "000ced8c92f9e524cdaa3d2237ee3d593caa2970b93d0d268272aeb535748e87",
+        "benchmarks/neural_ms2lda/synthetic_msms.py": "ed836c9fc37e2fc7ad8893c5c9b8bf8db025dd5ba279c3dbff6370222aaf299a",
+        "scripts/run_etm_controls.py": "447f33a3006aef93b506d23b5c6c0e0e5078e9248bbaae7a792e8ffbf47b583c",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c",
+        "scripts/run_published_neural.py": "fa9b07b8a37fc11ae8b343603716690771e01223c0244193ed14494c7c4235cb"
+      },
+      "path": "synthetic/seed37_k36_dirichlet_lda/result.json",
+      "sha256": "6f436bd57923392c76b177366289e8d315ca9e66563a0d6e88dbe58ffa28f9be"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/diagnostics.py": "b2f39e91b32114ce9400537868de9438359e96278a86436a3cc3fdf3305b3dfa",
+        "benchmarks/neural_ms2lda/model_evaluation.py": "262fd2db293d7ccd6cb053312a2df38a6181e09e028c65beaf331dadd6a0e476",
+        "benchmarks/neural_ms2lda/published_evaluation.py": "eebcd55eedc8c010e9f9aeae900cb0b52ff84ea577fec28ea075378dccf93a07",
+        "benchmarks/neural_ms2lda/published_models.py": "5feb269c99135d0488a12d35b1b6cca5be72309312c34aeeb57e6040e11a2125",
+        "benchmarks/neural_ms2lda/reproducibility.py": "000ced8c92f9e524cdaa3d2237ee3d593caa2970b93d0d268272aeb535748e87",
+        "benchmarks/neural_ms2lda/synthetic_msms.py": "ed836c9fc37e2fc7ad8893c5c9b8bf8db025dd5ba279c3dbff6370222aaf299a",
+        "scripts/run_etm_controls.py": "447f33a3006aef93b506d23b5c6c0e0e5078e9248bbaae7a792e8ffbf47b583c",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c",
+        "scripts/run_published_neural.py": "fa9b07b8a37fc11ae8b343603716690771e01223c0244193ed14494c7c4235cb"
+      },
+      "path": "synthetic/seed37_k36_dvae_poe/result.json",
+      "sha256": "6e573d286bc560045ddc2ca3429a5a668263c4f1c50314425351124830892095"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/diagnostics.py": "b2f39e91b32114ce9400537868de9438359e96278a86436a3cc3fdf3305b3dfa",
+        "benchmarks/neural_ms2lda/model_evaluation.py": "262fd2db293d7ccd6cb053312a2df38a6181e09e028c65beaf331dadd6a0e476",
+        "benchmarks/neural_ms2lda/published_evaluation.py": "eebcd55eedc8c010e9f9aeae900cb0b52ff84ea577fec28ea075378dccf93a07",
+        "benchmarks/neural_ms2lda/published_models.py": "5feb269c99135d0488a12d35b1b6cca5be72309312c34aeeb57e6040e11a2125",
+        "benchmarks/neural_ms2lda/reproducibility.py": "000ced8c92f9e524cdaa3d2237ee3d593caa2970b93d0d268272aeb535748e87",
+        "benchmarks/neural_ms2lda/synthetic_msms.py": "ed836c9fc37e2fc7ad8893c5c9b8bf8db025dd5ba279c3dbff6370222aaf299a",
+        "scripts/run_etm_controls.py": "447f33a3006aef93b506d23b5c6c0e0e5078e9248bbaae7a792e8ffbf47b583c",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c",
+        "scripts/run_published_neural.py": "fa9b07b8a37fc11ae8b343603716690771e01223c0244193ed14494c7c4235cb"
+      },
+      "path": "synthetic/seed37_k36_prodlda/result.json",
+      "sha256": "09c354c824417a9525eae431356db37b64de678553469dcc7f9289c070fd2c8f"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/diagnostics.py": "b2f39e91b32114ce9400537868de9438359e96278a86436a3cc3fdf3305b3dfa",
+        "benchmarks/neural_ms2lda/model_evaluation.py": "262fd2db293d7ccd6cb053312a2df38a6181e09e028c65beaf331dadd6a0e476",
+        "benchmarks/neural_ms2lda/published_evaluation.py": "b25d35e162a544b6e2a6ac17aaafd0e71588b6cebe2c5123842459f324360140",
+        "benchmarks/neural_ms2lda/published_models.py": "3c16bd4a7f53ff8698e4f7d8392534b4eb9bd00722543522f7eca080c804edd6",
+        "benchmarks/neural_ms2lda/reproducibility.py": "000ced8c92f9e524cdaa3d2237ee3d593caa2970b93d0d268272aeb535748e87",
+        "benchmarks/neural_ms2lda/synthetic_msms.py": "ed836c9fc37e2fc7ad8893c5c9b8bf8db025dd5ba279c3dbff6370222aaf299a",
+        "scripts/run_etm_controls.py": "447f33a3006aef93b506d23b5c6c0e0e5078e9248bbaae7a792e8ffbf47b583c",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c",
+        "scripts/run_published_neural.py": "cf503efe78eab286282b3aefabadbea77ac9ad44a15089f521fc2b5e4db25686"
+      },
+      "path": "synthetic/seed37_k36_prodlda_entmax/result.json",
+      "sha256": "135e7d4b60a5bf9dace1ba489df483c7273e7a21f390bc05b7a3b8033de3855b"
+    }
+  ],
+  "stage": "validation development"
+}

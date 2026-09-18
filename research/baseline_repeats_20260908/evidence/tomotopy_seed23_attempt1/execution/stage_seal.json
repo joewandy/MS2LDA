@@ -1,0 +1,22 @@
+{
+  "attempt": 1,
+  "command": [
+    "/home/joewandy/miniforge3/envs/ms2lda-neural/bin/python",
+    "-u",
+    "-m",
+    "scripts.prepare_msnlib_validation_view",
+    "--run",
+    "<repeat-root>/real/tomotopy_seed23_attempt1",
+    "--prepared-run",
+    "<repository>/output/benchmarks/minimal_neural_20260905/prepared"
+  ],
+  "cwd": "<repeat-root>/source_snapshot",
+  "finished_utc": "2026-09-08T15:02:28.586173+00:00",
+  "log": "<repeat-root>/parallel_handoff/logs/tomotopy_seed23_attempt1.seal.log",
+  "pid": 456811,
+  "return_code": 0,
+  "run": "<repeat-root>/real/tomotopy_seed23_attempt1",
+  "stage": "seal",
+  "started_utc": "2026-09-08T15:02:27.490836+00:00",
+  "status": "complete"
+}

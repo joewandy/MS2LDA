@@ -1,0 +1,1856 @@
+{
+  "method": "contextual_sparse_etm",
+  "packaged_files": [
+    {
+      "bytes": 1227,
+      "path": "README.md",
+      "sha256": "c5e69c3af2c3e4ff6b8a990ff1d69d0436d95cbba622323f9007ca68a67124d4"
+    },
+    {
+      "bytes": 572,
+      "path": "acceptance.json",
+      "sha256": "82a1b9ea88fa55423d96825050a498c7f972328a67d53647ee963d1d1209c300"
+    },
+    {
+      "bytes": 1167,
+      "path": "acquisition_manifest.json",
+      "sha256": "1bd4d57f4b1d28cb0e3eb4ae9edc95eb06626d2e0149b6400768fc473e9f2063"
+    },
+    {
+      "bytes": 1638,
+      "path": "comparison.csv",
+      "sha256": "a46054d4c0dccc248208629a4b4f1599d616f7ef0bfd5ed688c49487bc36ee0e"
+    },
+    {
+      "bytes": 1257,
+      "path": "config.json",
+      "sha256": "0c714e5abf10f04755adf4c753ea50320482c2a971e7dc98ea253a76fee62a91"
+    },
+    {
+      "bytes": 565,
+      "path": "contextual/seed_23/context_evidence_support_summary.csv",
+      "sha256": "b0f13de1dd7ed7ed79de23f0ec566bb35ad6e054cee8c5e3e1a4ef1555012336"
+    },
+    {
+      "bytes": 652,
+      "path": "contextual/seed_23/duplicate_component_summary.json",
+      "sha256": "de6c321b21cc5add8f98a580f05e792653627de299176aa680e4e4f3c57ca8e6"
+    },
+    {
+      "bytes": 421,
+      "path": "contextual/seed_23/fragment_mass_summary.json",
+      "sha256": "205aee917263d0ae384b38e40e306bcfb0214332e49ba7ed65126d43293ab8be"
+    },
+    {
+      "bytes": 4827,
+      "path": "contextual/seed_23/provenance.json",
+      "sha256": "ec53dd8e1443163358d2e3463d279fd66ff6b4759cc56fbeb4106e8a74e1e845"
+    },
+    {
+      "bytes": 12134,
+      "path": "contextual/seed_23/result.json",
+      "sha256": "e9092a95f19d8c76cd9e08fa049a6b9d770df19fdd7b58c0c865594bcf7bf186"
+    },
+    {
+      "bytes": 167197,
+      "path": "contextual/seed_23/test_chemical.json",
+      "sha256": "b7ca459cbf7ccbe9ce11cb7e56cfc3c785f40ad5cb83670c67468294d70f2855"
+    },
+    {
+      "bytes": 5999,
+      "path": "contextual/seed_23/test_evaluation/complete.json",
+      "sha256": "8fac9855c20693eefec8c9d79d50b458ce840256a70ee2c60fbc0f225b0625fe"
+    },
+    {
+      "bytes": 281,
+      "path": "contextual/seed_23/test_evaluation/test_access_audit.json",
+      "sha256": "d95dbcdcb52f22ed3af9f410f72f25ff53dc16facdb9b998c47ae3eb5c28268a"
+    },
+    {
+      "bytes": 2575,
+      "path": "contextual/seed_23/test_input_manifest.json",
+      "sha256": "27563280977d9c99ec52b2f51521f7fdcf8437243beb7015e84d00033d7f6c22"
+    },
+    {
+      "bytes": 551,
+      "path": "contextual/seed_23/theta_support_summary.csv",
+      "sha256": "98899c77655c8329227b2f1cb57b1143649869a8d1bdca01f76f05a4c59a2ab8"
+    },
+    {
+      "bytes": 531447,
+      "path": "contextual/seed_23/top_words.csv",
+      "sha256": "a43e0cf4d12d0f979e134761dda9cd2cbf141401aae607740e0f64cf386f88f1"
+    },
+    {
+      "bytes": 16125,
+      "path": "contextual/seed_23/training_history.csv",
+      "sha256": "cbaeca5af2389c3d337ccb230f3e8d4c98536388f621973459fe234efe2c8c6f"
+    },
+    {
+      "bytes": 3996,
+      "path": "contextual/seed_23/validation_access_audit.json",
+      "sha256": "7b013f6b8283fcf3470ee7f7aa87e49d82de709af73497d3864576f855b733be"
+    },
+    {
+      "bytes": 166022,
+      "path": "contextual/seed_23/validation_chemical.json",
+      "sha256": "ceb4c795fa7dd6005ba82a62f14759f03cd8b25816d4108e3798f5041f2173cc"
+    },
+    {
+      "bytes": 3751,
+      "path": "contextual/seed_23/validation_input_manifest.json",
+      "sha256": "41f362c7328daf399e34fedf65fbc7956cae539dec07572e0864b4d6ff5ae464"
+    },
+    {
+      "bytes": 563,
+      "path": "contextual/seed_37/context_evidence_support_summary.csv",
+      "sha256": "83e1e2e972f61d861a5b27ccfff0b49b3f8a5b4f35dd17912182ea0a62acfc73"
+    },
+    {
+      "bytes": 653,
+      "path": "contextual/seed_37/duplicate_component_summary.json",
+      "sha256": "c10e237eee56830ccdccd9e8bff5d370bb629b2d60356d9e18504da0ea2608b2"
+    },
+    {
+      "bytes": 419,
+      "path": "contextual/seed_37/fragment_mass_summary.json",
+      "sha256": "bc5187510f2dcc47a17cfc5f2ad0a9ab4801660f49349b66702859f6c5553ece"
+    },
+    {
+      "bytes": 4827,
+      "path": "contextual/seed_37/provenance.json",
+      "sha256": "08fcadab1eac2293159db96caada83f1bcb699928354c38b93289225fb265d0c"
+    },
+    {
+      "bytes": 12138,
+      "path": "contextual/seed_37/result.json",
+      "sha256": "02698b9fb43c299dcdf27066823a72bb01dc42d46c1ac84eb7e9eae89c5a097c"
+    },
+    {
+      "bytes": 167191,
+      "path": "contextual/seed_37/test_chemical.json",
+      "sha256": "8f3c52fd7196bc915c988c16a0c4c74e01983651c663ee6a71a166aff0c59be2"
+    },
+    {
+      "bytes": 6008,
+      "path": "contextual/seed_37/test_evaluation/complete.json",
+      "sha256": "c3ba4b665fd6b9dd94304df0a3ec5c945160e03b06b4df0c0f61f58412a32d39"
+    },
+    {
+      "bytes": 281,
+      "path": "contextual/seed_37/test_evaluation/test_access_audit.json",
+      "sha256": "b1a095146f57915d2c8fc456ba058db615a29eec0b294852c72b21ab1dd0b5eb"
+    },
+    {
+      "bytes": 2575,
+      "path": "contextual/seed_37/test_input_manifest.json",
+      "sha256": "78a0016fdc7ef32c264af8134acd2cc54e051b96d8354e5d4c70edb534243625"
+    },
+    {
+      "bytes": 553,
+      "path": "contextual/seed_37/theta_support_summary.csv",
+      "sha256": "8c60725db45c05f0e51d7396c55519f4460de2e326329968e4b2c4f67e2c304e"
+    },
+    {
+      "bytes": 531369,
+      "path": "contextual/seed_37/top_words.csv",
+      "sha256": "f53fcf2e2b7c2dccdb9f260c87eb67059434824062014f4e471bba36e6dd71d5"
+    },
+    {
+      "bytes": 16094,
+      "path": "contextual/seed_37/training_history.csv",
+      "sha256": "461b8570524fee93d1094f5b6618b72edbaf1963e0d319b92116ef4540e6c593"
+    },
+    {
+      "bytes": 3996,
+      "path": "contextual/seed_37/validation_access_audit.json",
+      "sha256": "d4dbce81fd1bbe2c39d3d24235b09c62146f44a3dfac8f8a7e070e6f55000968"
+    },
+    {
+      "bytes": 165770,
+      "path": "contextual/seed_37/validation_chemical.json",
+      "sha256": "248ece87bc0062ff980ac574f71fb1f4dd99f6a8d8a8302a83e6a78f9a3018f5"
+    },
+    {
+      "bytes": 3751,
+      "path": "contextual/seed_37/validation_input_manifest.json",
+      "sha256": "2fd6095bfc18151c3c9fd129d3d1036814d6216fe61fa60dd439ddd1664166bb"
+    },
+    {
+      "bytes": 573,
+      "path": "contextual/seed_7043/context_evidence_support_summary.csv",
+      "sha256": "97d07a140e4d67c746c53cfc9a743a62433feebb01d96414ad94423849d7b717"
+    },
+    {
+      "bytes": 653,
+      "path": "contextual/seed_7043/duplicate_component_summary.json",
+      "sha256": "d783013697ad7606835626196324f9f49aca2866111cd2c0b25238af82d06e1b"
+    },
+    {
+      "bytes": 418,
+      "path": "contextual/seed_7043/fragment_mass_summary.json",
+      "sha256": "e816118056a2928a1f719b40f2a96d171efb255af1d77656232194c68c7e3a31"
+    },
+    {
+      "bytes": 4851,
+      "path": "contextual/seed_7043/provenance.json",
+      "sha256": "2f54989a7ee66aede6a77fa9fc5ca2239d1d8f203dc9e9cae1b85553cfb5fed3"
+    },
+    {
+      "bytes": 12169,
+      "path": "contextual/seed_7043/result.json",
+      "sha256": "ffb7303c8edf4872f46d547a65ad245e5856698662ae20b6ce46d35b2c27f6b9"
+    },
+    {
+      "bytes": 167048,
+      "path": "contextual/seed_7043/test_chemical.json",
+      "sha256": "8dc860f32225085e6653aeeeec998037b01eea0342cddccd490b8e7e0f97a239"
+    },
+    {
+      "bytes": 6007,
+      "path": "contextual/seed_7043/test_evaluation/complete.json",
+      "sha256": "98596b553ad198f220020e5857f9785ad46f1398243d1f3f63640213de62a228"
+    },
+    {
+      "bytes": 283,
+      "path": "contextual/seed_7043/test_evaluation/test_access_audit.json",
+      "sha256": "27dac3bdb69cf5124f3fdd641385f8e4568afd259db6b30c82dcc5ffe91dc427"
+    },
+    {
+      "bytes": 2593,
+      "path": "contextual/seed_7043/test_input_manifest.json",
+      "sha256": "5c0fd977fdb32b935ec683ab0fa6d6e42fcd4c36dac1999f6297f7464b3f1a8f"
+    },
+    {
+      "bytes": 550,
+      "path": "contextual/seed_7043/theta_support_summary.csv",
+      "sha256": "91894e30f53f114b278b4c5baa4540ab283ee07f4dfca2c77acde63703c80a29"
+    },
+    {
+      "bytes": 531583,
+      "path": "contextual/seed_7043/top_words.csv",
+      "sha256": "fc21d2bd9aae75ce26814d7329d3339de5fbee9bd0ae2072617ae240d072ddf1"
+    },
+    {
+      "bytes": 16085,
+      "path": "contextual/seed_7043/training_history.csv",
+      "sha256": "242256ad39acb6df9cc84c478d409427fd9203f9f37e25f61abccf94194419aa"
+    },
+    {
+      "bytes": 4022,
+      "path": "contextual/seed_7043/validation_access_audit.json",
+      "sha256": "0f4b33a9afb566d147255e7eb0f6110a17862021163bffd6c8929808a26b6bee"
+    },
+    {
+      "bytes": 165883,
+      "path": "contextual/seed_7043/validation_chemical.json",
+      "sha256": "e309a6001e6e2a6171826305f20fd1970a5a3a71aaa002aebdd4437f8bc7ca02"
+    },
+    {
+      "bytes": 3775,
+      "path": "contextual/seed_7043/validation_input_manifest.json",
+      "sha256": "0fecf85d6ee259a3dab28112dd62de7968b5a222e00e33c9060ca6ab9e084bae"
+    },
+    {
+      "bytes": 652,
+      "path": "controls/etm/duplicate_component_summary.json",
+      "sha256": "4c437e28d6f71017249f1328a5476b7c00299a3ccdd68131e6050d1559a54508"
+    },
+    {
+      "bytes": 425,
+      "path": "controls/etm/fragment_mass_summary.json",
+      "sha256": "4762c81700636c259967ef0f423cbfac30e9adbc6d9633034891a3aee35aacfb"
+    },
+    {
+      "bytes": 4394,
+      "path": "controls/etm/result.json",
+      "sha256": "3bf57150d2604ea18ea185f62b471446c806663ed8f8d3c433c472c35d5f3f9d"
+    },
+    {
+      "bytes": 160843,
+      "path": "controls/etm/test_chemical.json",
+      "sha256": "db482d2ed78b034654f971bfa68fdb0cf553c312d43be345ede8b2a628189af0"
+    },
+    {
+      "bytes": 5127,
+      "path": "controls/etm/test_evaluation/complete.json",
+      "sha256": "b3eab61f58c4110e442e008b653ca00d5d96c6969081966fb45ef19eeaec9c27"
+    },
+    {
+      "bytes": 271,
+      "path": "controls/etm/test_evaluation/test_access_audit.json",
+      "sha256": "d793acdc846a6559739443671acf09117c9b26dc70b1d8de7a7c4d4a71385ab1"
+    },
+    {
+      "bytes": 3473,
+      "path": "controls/etm/test_input_manifest.json",
+      "sha256": "55f64b96545bb98d3f507f846d1a73bef58bf37446bae10b98791b4b08d8870b"
+    },
+    {
+      "bytes": 528112,
+      "path": "controls/etm/top_words.csv",
+      "sha256": "b0dfa0653072fdbc0c33cfeb4c5187ed1a329984ab0c986698f81f90f1561b80"
+    },
+    {
+      "bytes": 7082,
+      "path": "controls/etm/training_history.csv",
+      "sha256": "33e6b60e9d9d1855024798b38e82c852d9fd56d74971ab931abd00d8712dfa17"
+    },
+    {
+      "bytes": 3866,
+      "path": "controls/etm/validation_access_audit.json",
+      "sha256": "c25d7887ba9d28e83a8598cd71d83e90e53540f784b9980c64264cdd6484ae9a"
+    },
+    {
+      "bytes": 160382,
+      "path": "controls/etm/validation_chemical.json",
+      "sha256": "dd4300031ef2704104038cd3dba30736b326e04459c877ade56313909a096b0f"
+    },
+    {
+      "bytes": 3631,
+      "path": "controls/etm/validation_input_manifest.json",
+      "sha256": "fecfad325a062709a1a5d64f03ac40836c13e52a4d5cdd247d8a1729ad9306b2"
+    },
+    {
+      "bytes": 654,
+      "path": "controls/etm_balanced/duplicate_component_summary.json",
+      "sha256": "e1539d2bddadb6e27dd4b3c302f692b78fe1b33a821eb6bed321c40f7e9bc1b5"
+    },
+    {
+      "bytes": 420,
+      "path": "controls/etm_balanced/fragment_mass_summary.json",
+      "sha256": "282d04f4d00969df4accff265efb14b6b4d7dc4bd311459c74dd12b66e71071d"
+    },
+    {
+      "bytes": 4523,
+      "path": "controls/etm_balanced/result.json",
+      "sha256": "ace7678ceb1a963401124a5797c13fbfecadf2960bf91d0a9c01fd0d4824f161"
+    },
+    {
+      "bytes": 161370,
+      "path": "controls/etm_balanced/test_chemical.json",
+      "sha256": "e19d3604ab4bb806040148f5b575533317d2a2245078e994f5d9412568107831"
+    },
+    {
+      "bytes": 5254,
+      "path": "controls/etm_balanced/test_evaluation/complete.json",
+      "sha256": "ffd0bc4829f5107d8a71833d5300d095e4e095ad8a743baec512e180393ef339"
+    },
+    {
+      "bytes": 271,
+      "path": "controls/etm_balanced/test_evaluation/test_access_audit.json",
+      "sha256": "dd31f8f843b1e46eb7a1bcb0426bc6ef6554fe532a73a75e81d66804cd07e0f1"
+    },
+    {
+      "bytes": 3473,
+      "path": "controls/etm_balanced/test_input_manifest.json",
+      "sha256": "55f64b96545bb98d3f507f846d1a73bef58bf37446bae10b98791b4b08d8870b"
+    },
+    {
+      "bytes": 526818,
+      "path": "controls/etm_balanced/top_words.csv",
+      "sha256": "9c9747fbc5e7cebf3b94d87584cb586da08683b327d208e708dc617ad6e9ba4f"
+    },
+    {
+      "bytes": 7080,
+      "path": "controls/etm_balanced/training_history.csv",
+      "sha256": "35b8caa6746b88082b5b6ce73eca0955e43dbd7b1bebf481b8399c21e5602feb"
+    },
+    {
+      "bytes": 3866,
+      "path": "controls/etm_balanced/validation_access_audit.json",
+      "sha256": "c25d7887ba9d28e83a8598cd71d83e90e53540f784b9980c64264cdd6484ae9a"
+    },
+    {
+      "bytes": 160864,
+      "path": "controls/etm_balanced/validation_chemical.json",
+      "sha256": "9d18cd226592efc3b4e191d18b3e48fef8b8403db28d21d3cebfdf0bf511fdd6"
+    },
+    {
+      "bytes": 3631,
+      "path": "controls/etm_balanced/validation_input_manifest.json",
+      "sha256": "fecfad325a062709a1a5d64f03ac40836c13e52a4d5cdd247d8a1729ad9306b2"
+    },
+    {
+      "bytes": 8370,
+      "path": "data_quality.json",
+      "sha256": "cdf04b3b9e6c438bb82465fe38a42254c6ab53b02367c16efa6960459e9161d8"
+    },
+    {
+      "bytes": 1007,
+      "path": "high_k_stress.csv",
+      "sha256": "c3d4823523025f3ac7a7d41765f5bad01e7a42bca348153bf18e54de3aa5b1bc"
+    },
+    {
+      "bytes": 5460,
+      "path": "metrics.json",
+      "sha256": "a5d9d9510a60693d983b4d35b79af025fe1f510eef088c2ff975727ad89e203c"
+    },
+    {
+      "bytes": 1804,
+      "path": "preparation_summary.json",
+      "sha256": "9e5f0e0d520da40133e09902ab01efa3f58cae2fa04cc822b144ccf73da3db31"
+    },
+    {
+      "bytes": 1951,
+      "path": "protocol.json",
+      "sha256": "8044718d019cac4f92524c7980bc5217d7db861d58c940b3f0a6ac8970d48021"
+    },
+    {
+      "bytes": 38028,
+      "path": "reproduction_manifest.json",
+      "sha256": "2f91fd328e53478ea0fc1d42ba4c4abd1eaaa213e771fcc129cf5fc79009c74e"
+    },
+    {
+      "bytes": 928,
+      "path": "stability_by_seed.csv",
+      "sha256": "32b4acd2a5ad4e77304d144aae03088798a04f0636093af7060ff1e05dda8d39"
+    },
+    {
+      "bytes": 5133,
+      "path": "stability_summary.json",
+      "sha256": "383f9edc1b16c74b2dc71c9c3d04999c22b6d6781a39bb28deabdd7cca8b046b"
+    },
+    {
+      "bytes": 717,
+      "path": "stage_records/acquire_public_assets.json",
+      "sha256": "4575ecc89bf5373387dca8be70876bc5819c1e24b17102b9b5c5a8990e881d97"
+    },
+    {
+      "bytes": 1097,
+      "path": "stage_records/balanced_etm_chemistry.json",
+      "sha256": "5e7ec891dea21f473cec9f08f707c92dab2625b6fae1fd9210f99a14259440e1"
+    },
+    {
+      "bytes": 3559,
+      "path": "stage_records/balanced_etm_train.json",
+      "sha256": "564e275516c855e28a6e4ef0062009e2d97eb6bec7a712546e7a67ecc15e1b97"
+    },
+    {
+      "bytes": 774,
+      "path": "stage_records/build_leakage_filtered_mag_index.json",
+      "sha256": "59f8110ac8f88e1a5b808762ce8b12ee342caa4cd5eaa8e8fbecf7b94a1b7471"
+    },
+    {
+      "bytes": 1072,
+      "path": "stage_records/canonical_etm_chemistry.json",
+      "sha256": "a3fecb8561f2ff73a2074ae1a1f5d27bf5ff83b290fda080ef8374d47ba2733b"
+    },
+    {
+      "bytes": 3456,
+      "path": "stage_records/canonical_etm_train.json",
+      "sha256": "7525a3ac2efc32cb3f27bf20e86520674a6c52fc4ff147fc9d7704e0ec60aace"
+    },
+    {
+      "bytes": 4728,
+      "path": "stage_records/contextual_one_epoch_smoke.json",
+      "sha256": "b351357c238e6f893f4d0907301920344c11831db529aa5f36ec571d40d96fab"
+    },
+    {
+      "bytes": 1135,
+      "path": "stage_records/contextual_seed_23_chemistry.json",
+      "sha256": "1e1f4e7dbd8e612d6021d3151881d99530fba01c6ee18058ede5f53985d7df07"
+    },
+    {
+      "bytes": 907,
+      "path": "stage_records/contextual_seed_23_test_chemistry.json",
+      "sha256": "d097d68d32de82d28edca7623bcd75063e5a292b909c0fc57e09f6c6b56b452a"
+    },
+    {
+      "bytes": 2181,
+      "path": "stage_records/contextual_seed_23_test_evaluation.json",
+      "sha256": "0d5a8230cbcc32b82efac51e9e03380878afc974bf73ce970ad8165cda7f630c"
+    },
+    {
+      "bytes": 4657,
+      "path": "stage_records/contextual_seed_23_train.json",
+      "sha256": "4e84f88fed204901a3837d011d39c48e95ce38920f85fed4f230b2aad5a8b4a5"
+    },
+    {
+      "bytes": 1135,
+      "path": "stage_records/contextual_seed_37_chemistry.json",
+      "sha256": "94932fd13ba4383b25400337ba931f64a5d6df1d183d722f8b8637d7f2219d68"
+    },
+    {
+      "bytes": 907,
+      "path": "stage_records/contextual_seed_37_test_chemistry.json",
+      "sha256": "5d058b8b7b7f347d41d231f06858838c844e175f796f45cc44f7178a6f504526"
+    },
+    {
+      "bytes": 2177,
+      "path": "stage_records/contextual_seed_37_test_evaluation.json",
+      "sha256": "6338477408e00bcd4439bd0a6f7fb55779ce9f52d4c5afc0acdb90bede1e3619"
+    },
+    {
+      "bytes": 4657,
+      "path": "stage_records/contextual_seed_37_train.json",
+      "sha256": "faeee7e42adaa2bc68918070df20aebd5b7e352739725222b0503a9643d48eeb"
+    },
+    {
+      "bytes": 1145,
+      "path": "stage_records/contextual_seed_7043_chemistry.json",
+      "sha256": "b3dafb8218182561e86e842ccff61d1c5adafcbbd64c6e7770c73793278062de"
+    },
+    {
+      "bytes": 915,
+      "path": "stage_records/contextual_seed_7043_test_chemistry.json",
+      "sha256": "f07a71a1e5809861b03dbc87c10151f1d448f8bfd9bb781d05f20249be273910"
+    },
+    {
+      "bytes": 2196,
+      "path": "stage_records/contextual_seed_7043_test_evaluation.json",
+      "sha256": "b85bb0c8f9ecff0e161bfe6fe90585f6dd05746af54ef61e6716df74b870c674"
+    },
+    {
+      "bytes": 4691,
+      "path": "stage_records/contextual_seed_7043_train.json",
+      "sha256": "192337d13666270a68a558972f47394f038229080d86a4831293cb2b7e39d0d9"
+    },
+    {
+      "bytes": 857,
+      "path": "stage_records/etm_balanced_test_chemistry.json",
+      "sha256": "8fe6be17f9e95e92f3127c7b04f957e161a8698bb0323f01dde910953a8722a2"
+    },
+    {
+      "bytes": 2055,
+      "path": "stage_records/etm_balanced_test_evaluation.json",
+      "sha256": "b75186c65c659a5290b6d5e82bcad81e262777677d4b2eabd7f2834c81a6e727"
+    },
+    {
+      "bytes": 821,
+      "path": "stage_records/etm_test_chemistry.json",
+      "sha256": "5d9e47bae46d09b4a3e295835bde4e420791a865d5b5b6d440385fdc61ba4911"
+    },
+    {
+      "bytes": 1983,
+      "path": "stage_records/etm_test_evaluation.json",
+      "sha256": "308c22eba2ea9953967638eb971e2b6e42b5f7d0eacbe699b527a2b5fcc16b64"
+    },
+    {
+      "bytes": 434,
+      "path": "stage_records/preflight_tests.json",
+      "sha256": "5a43d5290466ea347b0f761ffe8bad6e05136d84cbc4d73166766f98a111bddc"
+    },
+    {
+      "bytes": 1660,
+      "path": "stage_records/prepare_data_and_sgns.json",
+      "sha256": "7e0d3235136aa94a80288649732f93a7a80bef39b1502b509e5fa2e3622f6e33"
+    },
+    {
+      "bytes": 1155,
+      "path": "stage_records/prepare_synthetic_seed_11.json",
+      "sha256": "b3afaa72003e6a6dbac34d43639f4e6c4579b68d38d94b9b4b02af2e3b505eec"
+    },
+    {
+      "bytes": 1155,
+      "path": "stage_records/prepare_synthetic_seed_23.json",
+      "sha256": "408c944894965fcaba7b826a9b06ef9582efb2c1e34b676c0fae613b23dbe642"
+    },
+    {
+      "bytes": 1155,
+      "path": "stage_records/prepare_synthetic_seed_37.json",
+      "sha256": "60e21682fb11c3672fbd648c21f2ce74eccd0404637d70a0897fa682621d6b1c"
+    },
+    {
+      "bytes": 868,
+      "path": "stage_records/release_test_view_contextual_seed_23.json",
+      "sha256": "59e2192e622b1c000d0d762a0c1925a4925196db37aeee2d7a96260c5afbfc0d"
+    },
+    {
+      "bytes": 868,
+      "path": "stage_records/release_test_view_contextual_seed_37.json",
+      "sha256": "5779320f25fa02c6e38e18fe3f2b7c161ac00d03bd0b495e09f5b86073e0b8c2"
+    },
+    {
+      "bytes": 876,
+      "path": "stage_records/release_test_view_contextual_seed_7043.json",
+      "sha256": "e6122617a71ec604080a4734d3ce9a4f37ef9ed8620ff31cfe966534c27e39ae"
+    },
+    {
+      "bytes": 846,
+      "path": "stage_records/release_test_view_controls.json",
+      "sha256": "e4034bda1f1cf2518f3ca9b5bb4185b48ea7a466ac967ff09c8d226ce814ae01"
+    },
+    {
+      "bytes": 815,
+      "path": "stage_records/release_test_view_tomotopy.json",
+      "sha256": "877c844f758f14ee414615eefea708ec81a38b8314caaf5ef6663b572591a3cd"
+    },
+    {
+      "bytes": 841,
+      "path": "stage_records/seal_validation_view_contextual_seed_23.json",
+      "sha256": "6b87b75e0700adee31617958ee6d5494eb6e26d0d006913131fe085a9155ec70"
+    },
+    {
+      "bytes": 841,
+      "path": "stage_records/seal_validation_view_contextual_seed_37.json",
+      "sha256": "243b0534944ad8d038920c3c603269b55abed027ddc0cd526b979ba327045047"
+    },
+    {
+      "bytes": 849,
+      "path": "stage_records/seal_validation_view_contextual_seed_7043.json",
+      "sha256": "87ac43a297220fb4499c4951b657db58776eb5992ed1fcecc7ce5a4982141941"
+    },
+    {
+      "bytes": 847,
+      "path": "stage_records/seal_validation_view_contextual_smoke.json",
+      "sha256": "bbef51e81f528194735e5c8edf5c1dee06727485ec5811389e74bd5733dd32ee"
+    },
+    {
+      "bytes": 801,
+      "path": "stage_records/seal_validation_view_controls.json",
+      "sha256": "c8bc23ac1780d425ec8060e40746415320ae3da4d4e261c1de0fed0daeffa92d"
+    },
+    {
+      "bytes": 801,
+      "path": "stage_records/seal_validation_view_tomotopy.json",
+      "sha256": "155644637d2a240a246f0a9d83a2c3d6255fab6af4be0af54b5718cee5d43b4e"
+    },
+    {
+      "bytes": 1140,
+      "path": "stage_records/synthetic_seed_11_K_128_balanced_etm_entmax15_raw_counts.json",
+      "sha256": "c200d3529c84939712d3db6ccd9917f68e3c78b44dac5100eb7e814c4484ddf1"
+    },
+    {
+      "bytes": 1138,
+      "path": "stage_records/synthetic_seed_11_K_128_balanced_etm_softmax_raw_counts.json",
+      "sha256": "704436a090e9bb7c20d3aeafc402e4a43626046216a82d7ea06e4a5d269d8a26"
+    },
+    {
+      "bytes": 1169,
+      "path": "stage_records/synthetic_seed_11_K_128_contextual_sparse_etm_entmax15_raw_counts.json",
+      "sha256": "1bd1cdb30a81ae6afd5a3dcd7e8b7d23ec7dfffc8ad038c22c3ff7fb5c41b6b7"
+    },
+    {
+      "bytes": 1136,
+      "path": "stage_records/synthetic_seed_11_K_36_balanced_etm_entmax15_raw_counts.json",
+      "sha256": "cf8ec1739ecd6b9017aabe2a9efab4d9db39db9d789129018ff0df7c02484aa6"
+    },
+    {
+      "bytes": 1134,
+      "path": "stage_records/synthetic_seed_11_K_36_balanced_etm_softmax_raw_counts.json",
+      "sha256": "09d56c0210f82e3482f483e92cb70234ebccd96ed967d0368fdaffd55af40038"
+    },
+    {
+      "bytes": 1142,
+      "path": "stage_records/synthetic_seed_11_K_36_contextual_etm_softmax_raw_counts.json",
+      "sha256": "147666c2fb31a7be7b79349e0b65a1a23942d930aa9a69e7f3a848631414c59d"
+    },
+    {
+      "bytes": 1165,
+      "path": "stage_records/synthetic_seed_11_K_36_contextual_sparse_etm_entmax15_raw_counts.json",
+      "sha256": "192ddbbae90392d2a06fbb551fb250bd3b00239e9791ad64b87ef0485203518a"
+    },
+    {
+      "bytes": 1136,
+      "path": "stage_records/synthetic_seed_23_K_36_balanced_etm_entmax15_raw_counts.json",
+      "sha256": "c538c712e0e3716bf38a6e60f35c29e4d269e0e560f2d36cc6c68f96a9901238"
+    },
+    {
+      "bytes": 1134,
+      "path": "stage_records/synthetic_seed_23_K_36_balanced_etm_softmax_raw_counts.json",
+      "sha256": "147a8aebf7a6a868d23053ae1ae5265852aa3a5df8b6543b288ddc7259db9941"
+    },
+    {
+      "bytes": 1142,
+      "path": "stage_records/synthetic_seed_23_K_36_contextual_etm_softmax_raw_counts.json",
+      "sha256": "0d652fc95d33a51151484f290624dd0d535b2d0dfc7e06cdb26929a8bc9e28aa"
+    },
+    {
+      "bytes": 1165,
+      "path": "stage_records/synthetic_seed_23_K_36_contextual_sparse_etm_entmax15_raw_counts.json",
+      "sha256": "fda8eb554368613d6541a7e98e7ecd329482eb642bd1bc060c0023da303c566f"
+    },
+    {
+      "bytes": 1136,
+      "path": "stage_records/synthetic_seed_37_K_36_balanced_etm_entmax15_raw_counts.json",
+      "sha256": "3a6ef3b79dc3083911882f6fdb06176c6218c2b7b0a60cefc752c8275a028c7e"
+    },
+    {
+      "bytes": 1134,
+      "path": "stage_records/synthetic_seed_37_K_36_balanced_etm_softmax_raw_counts.json",
+      "sha256": "4384564913812cd141b0755ba2545265c344f6227b9350ae7c0f7130e0f1d8b9"
+    },
+    {
+      "bytes": 1142,
+      "path": "stage_records/synthetic_seed_37_K_36_contextual_etm_softmax_raw_counts.json",
+      "sha256": "8a82be371b0fd447b804a68e34afa70946a08af61881201cfef86558d04cc7c4"
+    },
+    {
+      "bytes": 1165,
+      "path": "stage_records/synthetic_seed_37_K_36_contextual_sparse_etm_entmax15_raw_counts.json",
+      "sha256": "9449b7e1eb865384cba11ea0976d7cedc1f6da63b6672cdfb4dcedfa57f189c2"
+    },
+    {
+      "bytes": 1720,
+      "path": "stage_records/tomotopy_test_evaluation_and_chemistry.json",
+      "sha256": "8f41918e90ba4974ae285cf9a01982e3a1eee3affe3d76877f6da417f6312370"
+    },
+    {
+      "bytes": 2377,
+      "path": "stage_records/tomotopy_validation.json",
+      "sha256": "6ff30ec83f38df2cc3c376a6c6f4a85417bfe37856add370fd2eb017d535ff0f"
+    },
+    {
+      "bytes": 870,
+      "path": "stage_records/tomotopy_validation_chemistry.json",
+      "sha256": "ffb1fd382b8825010a885f6fe63142cc97aea0f3c7d66f419fe4456eff9100ef"
+    },
+    {
+      "bytes": 2870,
+      "path": "synthetic_by_seed.csv",
+      "sha256": "a3c7713d7b6160dcf372f46bec7156affbe7d553447abf8417c7475fc5276dd3"
+    },
+    {
+      "bytes": 41195,
+      "path": "synthetic_results/seed_11_K_128_balanced_etm_entmax15_raw_counts/result.json",
+      "sha256": "252fce11a58cf18c9d808c339f3e1ef01bddc64bd7b8bf3ece61c2695ce9dbfc"
+    },
+    {
+      "bytes": 41242,
+      "path": "synthetic_results/seed_11_K_128_balanced_etm_softmax_raw_counts/result.json",
+      "sha256": "948894e2ce48bfb52214715a23c11ae50160a37a5e4273022d357d375477309a"
+    },
+    {
+      "bytes": 43527,
+      "path": "synthetic_results/seed_11_K_128_contextual_sparse_etm_entmax15_raw_counts/result.json",
+      "sha256": "aeaeb8427af08ccd7f3c200ad02f638243f8f79e074db5979b5f9bd2624158e8"
+    },
+    {
+      "bytes": 41189,
+      "path": "synthetic_results/seed_11_K_36_balanced_etm_entmax15_raw_counts/result.json",
+      "sha256": "776e48d1737dbe5f6208b8694d65ebe2166f67838cc7168a382d9db98c708c64"
+    },
+    {
+      "bytes": 41162,
+      "path": "synthetic_results/seed_11_K_36_balanced_etm_softmax_raw_counts/result.json",
+      "sha256": "08567c4a110dbd067140878b857fb36df9239e8d805388bfef7ff296e9cac661"
+    },
+    {
+      "bytes": 43473,
+      "path": "synthetic_results/seed_11_K_36_contextual_etm_softmax_raw_counts/result.json",
+      "sha256": "27d44ff4fc980ca8e5e70ce03cab85fa9f2004ed94a23d7e35bd413a7c001f7f"
+    },
+    {
+      "bytes": 43523,
+      "path": "synthetic_results/seed_11_K_36_contextual_sparse_etm_entmax15_raw_counts/result.json",
+      "sha256": "0b62b08e8875f3757d2a00cf53e7bf3e17b102b5851647ed8cc9e9b53c5895f8"
+    },
+    {
+      "bytes": 41134,
+      "path": "synthetic_results/seed_23_K_36_balanced_etm_entmax15_raw_counts/result.json",
+      "sha256": "813ce9d8957eaea0638a1bdddfb4820d93b426b7e7991781cbf71f9c4a5839b5"
+    },
+    {
+      "bytes": 41196,
+      "path": "synthetic_results/seed_23_K_36_balanced_etm_softmax_raw_counts/result.json",
+      "sha256": "ae4b7d63db233b8835fd7d6704a9e004198bad8fb0a0ad6e01fcc39004e6a47c"
+    },
+    {
+      "bytes": 43510,
+      "path": "synthetic_results/seed_23_K_36_contextual_etm_softmax_raw_counts/result.json",
+      "sha256": "08107e2966ac2467edc5f16560f052fa5f3c4d30266d070bb3b7ccde04d00754"
+    },
+    {
+      "bytes": 43446,
+      "path": "synthetic_results/seed_23_K_36_contextual_sparse_etm_entmax15_raw_counts/result.json",
+      "sha256": "30e139ef53135683128482d538610d69e63257c3f09c2e6e6f8b38812183b0c7"
+    },
+    {
+      "bytes": 41153,
+      "path": "synthetic_results/seed_37_K_36_balanced_etm_entmax15_raw_counts/result.json",
+      "sha256": "1c9f69e4c472f894defa7f72b3ad144dede6557479712beb14c8775dbd870d59"
+    },
+    {
+      "bytes": 41195,
+      "path": "synthetic_results/seed_37_K_36_balanced_etm_softmax_raw_counts/result.json",
+      "sha256": "f032e9b49e6d4530ae70e895c530f781160c91f26adbae5d1dc7880d12a316c4"
+    },
+    {
+      "bytes": 43478,
+      "path": "synthetic_results/seed_37_K_36_contextual_etm_softmax_raw_counts/result.json",
+      "sha256": "427bd247a6762225207dbf28a4e6668c2c2a306e22da82bc62da938896d4c587"
+    },
+    {
+      "bytes": 43484,
+      "path": "synthetic_results/seed_37_K_36_contextual_sparse_etm_entmax15_raw_counts/result.json",
+      "sha256": "e6e14fe93631ad33381970fe83f6328e386038c4d06bac3701f432cf053615a5"
+    },
+    {
+      "bytes": 786,
+      "path": "synthetic_summary.csv",
+      "sha256": "efc69b0f37202d65097b8522284bd6faf78a95e12fc15d53b6aaebe505dda1af"
+    },
+    {
+      "bytes": 1911,
+      "path": "tomotopy/test_input_manifest.json",
+      "sha256": "d4d2c0c3aad65efd0a94d47c8bd9664d8e39b68b6e7153cc4da02eb897586179"
+    },
+    {
+      "bytes": 3631,
+      "path": "tomotopy/validation_input_manifest.json",
+      "sha256": "24a1edce643264c751204381caf27deafcac61bb8b87f7cc5be3654bf7215bff"
+    },
+    {
+      "bytes": 2755,
+      "path": "tomotopy.json",
+      "sha256": "a9d75cda820c4fab745d834b19d89eee9732463e39f994bae5f36aa4f111d0d2"
+    },
+    {
+      "bytes": 869,
+      "path": "tomotopy_raw.json",
+      "sha256": "27192c679c6baf4c3699c337d8b0de8aeafb8ee739d6bc23b0476243dca3589e"
+    },
+    {
+      "bytes": 180345,
+      "path": "tomotopy_test_raw.json",
+      "sha256": "b6b0e9079b8a5c7354746f6b632c5b3ed7c9d66b46f1d401f53059f2b28628d4"
+    },
+    {
+      "bytes": 774,
+      "path": "validation_comparison.csv",
+      "sha256": "5fb5b6d90f470233a9ea35724c6eefebdf07a36dcef616d93d3c1b0302b0ebba"
+    },
+    {
+      "bytes": 6070,
+      "path": "validation_metrics.json",
+      "sha256": "b02c9a4bc1ef1f25446db0d848500abd5e42144cf31a317e01230253aea62995"
+    }
+  ],
+  "raw_stage_outputs": [
+    {
+      "bytes": 1167,
+      "modified_ns": 1788279192985623589,
+      "path": "<reproduction-root>/assets/acquisition_manifest.json",
+      "sha256": "1bd4d57f4b1d28cb0e3eb4ae9edc95eb06626d2e0149b6400768fc473e9f2063"
+    },
+    {
+      "bytes": 1804,
+      "modified_ns": 1788279234330205676,
+      "path": "<reproduction-root>/prepared/preparation_summary.json",
+      "sha256": "9e5f0e0d520da40133e09902ab01efa3f58cae2fa04cc822b144ccf73da3db31"
+    },
+    {
+      "bytes": 1933,
+      "modified_ns": 1788279198987131377,
+      "path": "<reproduction-root>/prepared/protocol.json",
+      "sha256": "006a14e8112d86be34b461bcef32feef06224f95fe20bfaf816387e69e610955"
+    },
+    {
+      "bytes": 87,
+      "modified_ns": 1788279198987225519,
+      "path": "<reproduction-root>/prepared/data_root.txt",
+      "sha256": "08fd7e9e219cec1a98ec608373b40a2abe96d834bc5da148467ec12787d782f4"
+    },
+    {
+      "bytes": 1489,
+      "modified_ns": 1788279228376493742,
+      "path": "<reproduction-root>/prepared/data/complete.json",
+      "sha256": "99625e08617061c8196854750625d048b135f60135fc824f65cd7cef5d3ea7d4"
+    },
+    {
+      "bytes": 31,
+      "modified_ns": 1788279234329844896,
+      "path": "<reproduction-root>/prepared/token_features/complete.json",
+      "sha256": "3e815c89c48f018ca71e0f14a171a1e74eefdff866a29fbe26c8bb6e0c92f4f2"
+    },
+    {
+      "bytes": 169,
+      "modified_ns": 1788279329506286138,
+      "path": "<reproduction-root>/prepared/mag/index/complete.json",
+      "sha256": "6157d53dc131841a8e02e9f6047efbb7e18163a003ff2e70ff5ae3950f3bb25b"
+    },
+    {
+      "bytes": 2852,
+      "modified_ns": 1788279331126785358,
+      "path": "<reproduction-root>/synthetic/synthetic_artifacts/seed_11/artifact_manifest.json",
+      "sha256": "c1307e3f2e2683c0f3e2d8846bcb737e371508474cc8970aeef93931ca2cacd7"
+    },
+    {
+      "bytes": 31,
+      "modified_ns": 1788279331813505846,
+      "path": "<reproduction-root>/synthetic/synthetic_artifacts/seed_11/token_features/complete.json",
+      "sha256": "3e815c89c48f018ca71e0f14a171a1e74eefdff866a29fbe26c8bb6e0c92f4f2"
+    },
+    {
+      "bytes": 2852,
+      "modified_ns": 1788279333436179758,
+      "path": "<reproduction-root>/synthetic/synthetic_artifacts/seed_23/artifact_manifest.json",
+      "sha256": "00fee6c4c8790d1eaadc5e59ab3fabf7ee175cc109fb65598a02e6e131f5624c"
+    },
+    {
+      "bytes": 31,
+      "modified_ns": 1788279334078027814,
+      "path": "<reproduction-root>/synthetic/synthetic_artifacts/seed_23/token_features/complete.json",
+      "sha256": "3e815c89c48f018ca71e0f14a171a1e74eefdff866a29fbe26c8bb6e0c92f4f2"
+    },
+    {
+      "bytes": 2852,
+      "modified_ns": 1788279335666787350,
+      "path": "<reproduction-root>/synthetic/synthetic_artifacts/seed_37/artifact_manifest.json",
+      "sha256": "c35fc923aa21da925cccf5364e550b350181375cc43478af34be38e00ef7419c"
+    },
+    {
+      "bytes": 31,
+      "modified_ns": 1788279336324534272,
+      "path": "<reproduction-root>/synthetic/synthetic_artifacts/seed_37/token_features/complete.json",
+      "sha256": "3e815c89c48f018ca71e0f14a171a1e74eefdff866a29fbe26c8bb6e0c92f4f2"
+    },
+    {
+      "bytes": 5131,
+      "modified_ns": 1788279337505540679,
+      "path": "<reproduction-root>/real/controls/validation_input_manifest.json",
+      "sha256": "1c32b3d9d969f316fedca5aa3f12c75b4169c3f9739ab32ca36638a0ba468846"
+    },
+    {
+      "bytes": 5131,
+      "modified_ns": 1788279338499002961,
+      "path": "<reproduction-root>/real/tomotopy/validation_input_manifest.json",
+      "sha256": "dcf31578eeec8a616dfc7ca85976ba205bd67e341af73ce396fc5768eb8c2a35"
+    },
+    {
+      "bytes": 5311,
+      "modified_ns": 1788279339521402705,
+      "path": "<reproduction-root>/real/contextual_smoke_epoch1/validation_input_manifest.json",
+      "sha256": "c6462d8de0e6c63fb9cb433446450767643c8bb0bd860e535460bb3e9f0a2f42"
+    },
+    {
+      "bytes": 5275,
+      "modified_ns": 1788279340524996813,
+      "path": "<reproduction-root>/real/contextual_seed_7043/validation_input_manifest.json",
+      "sha256": "eb43b69e4a5e8d005a66580e3b04e77c91192754fba197b8311021bae5edaa67"
+    },
+    {
+      "bytes": 5251,
+      "modified_ns": 1788279341556110418,
+      "path": "<reproduction-root>/real/contextual_seed_23/validation_input_manifest.json",
+      "sha256": "4e0cab8cb73e09bb5444aa5b85565604544092a55dba2b9fe3287d0e614d923e"
+    },
+    {
+      "bytes": 5251,
+      "modified_ns": 1788279342561059325,
+      "path": "<reproduction-root>/real/contextual_seed_37/validation_input_manifest.json",
+      "sha256": "5b5eb7c9edb674a1e9c55eba6d197789c0b34bcd5a533bb2f88203c5406812f3"
+    },
+    {
+      "bytes": 13741,
+      "modified_ns": 1788279354053860406,
+      "path": "<reproduction-root>/real/contextual_smoke_epoch1/models/contextual_sparse_etm/result.json",
+      "sha256": "45b7e33d6a81258968232266224cef98618a786e9f0a5ed3f7ed703f86faf44f"
+    },
+    {
+      "bytes": 81193085,
+      "modified_ns": 1788279353938292049,
+      "path": "<reproduction-root>/real/contextual_smoke_epoch1/models/contextual_sparse_etm/weights.pt",
+      "sha256": "3342c6b04db0d6e930d1b2ee990fa25575450dd0b5c1725c0b9e124541d75764"
+    },
+    {
+      "bytes": 1315,
+      "modified_ns": 1788279344389146340,
+      "path": "<reproduction-root>/real/contextual_smoke_epoch1/models/contextual_sparse_etm/config.json",
+      "sha256": "e030dabab2510aae64a5df31bf0f76795ee97cb296f2277a7ae4017560e62c56"
+    },
+    {
+      "bytes": 252,
+      "modified_ns": 1788279351837120058,
+      "path": "<reproduction-root>/real/contextual_smoke_epoch1/models/contextual_sparse_etm/training_history.csv",
+      "sha256": "c2c9b9d635bbac77bb7b2dc8c670342d543ce92b827fc867d33d0c59c9ecee38"
+    },
+    {
+      "bytes": 557937,
+      "modified_ns": 1788279353944278020,
+      "path": "<reproduction-root>/real/contextual_smoke_epoch1/models/contextual_sparse_etm/top_words.csv",
+      "sha256": "290c3a1d1a10f51892cf074afde64088c7f15483907345887e8fe5b01ebc88eb"
+    },
+    {
+      "bytes": 418,
+      "modified_ns": 1788279353947769714,
+      "path": "<reproduction-root>/real/contextual_smoke_epoch1/models/contextual_sparse_etm/fragment_mass_summary.json",
+      "sha256": "d563011ffc215bb29307c65ce645631c3c87d890e7308ea095788035856f600b"
+    },
+    {
+      "bytes": 670,
+      "modified_ns": 1788279353947654582,
+      "path": "<reproduction-root>/real/contextual_smoke_epoch1/models/contextual_sparse_etm/duplicate_component_summary.json",
+      "sha256": "1fc1fc42bb3c317aa5d6aa29d65db8ac382eea1c4118aa10a5a5a9cf6db14087"
+    },
+    {
+      "bytes": 5311,
+      "modified_ns": 1788279344389285387,
+      "path": "<reproduction-root>/real/contextual_smoke_epoch1/models/contextual_sparse_etm/training_access_audit.json",
+      "sha256": "c6462d8de0e6c63fb9cb433446450767643c8bb0bd860e535460bb3e9f0a2f42"
+    },
+    {
+      "bytes": 5688,
+      "modified_ns": 1788279353995833473,
+      "path": "<reproduction-root>/real/contextual_smoke_epoch1/validation_evaluation/contextual_sparse_etm/complete.json",
+      "sha256": "a79c3a25dc6a0305780874bb6de7a6cc0bcf86c57ca14668da5dda89aff5be8f"
+    },
+    {
+      "bytes": 84932128,
+      "modified_ns": 1788279353958293179,
+      "path": "<reproduction-root>/real/contextual_smoke_epoch1/validation_evaluation/contextual_sparse_etm/beta.npy",
+      "sha256": "ee48ae11d912aafe683a2d2ab697e8e9842abaf792ff6a0bdcb92db72e2316e7"
+    },
+    {
+      "bytes": 15556128,
+      "modified_ns": 1788279353987701414,
+      "path": "<reproduction-root>/real/contextual_smoke_epoch1/validation_evaluation/contextual_sparse_etm/validation_full_theta.npy",
+      "sha256": "fd0d2f0213e04697d2c8e46c052dfed88c9f6772cb2807a3f5a65fdd7b5b6f7d"
+    },
+    {
+      "bytes": 551,
+      "modified_ns": 1788279353947486381,
+      "path": "<reproduction-root>/real/contextual_smoke_epoch1/models/contextual_sparse_etm/theta_support_summary.csv",
+      "sha256": "965c7b9d2d269be3ae7d2896ad4f845d3be87e95275f4fee5dd6f8bc1a59df6c"
+    },
+    {
+      "bytes": 571,
+      "modified_ns": 1788279353947543722,
+      "path": "<reproduction-root>/real/contextual_smoke_epoch1/models/contextual_sparse_etm/context_evidence_support_summary.csv",
+      "sha256": "04a4e3714e2c69f690c384d830a2c1d5adbda953db4748c415c243b8453060e3"
+    },
+    {
+      "bytes": 6387,
+      "modified_ns": 1788279354050109583,
+      "path": "<reproduction-root>/real/contextual_smoke_epoch1/models/contextual_sparse_etm/provenance.json",
+      "sha256": "022ecd6ab13c51d6d5eabb034fbec9b7d82813cdc55d30e8daa436cad1d614f3"
+    },
+    {
+      "bytes": 41162,
+      "modified_ns": 1788279360391388494,
+      "path": "<reproduction-root>/synthetic/synthetic_runs/seed_11_K_36_balanced_etm_softmax_raw_counts/result.json",
+      "sha256": "08567c4a110dbd067140878b857fb36df9239e8d805388bfef7ff296e9cac661"
+    },
+    {
+      "bytes": 41189,
+      "modified_ns": 1788279366820462094,
+      "path": "<reproduction-root>/synthetic/synthetic_runs/seed_11_K_36_balanced_etm_entmax15_raw_counts/result.json",
+      "sha256": "776e48d1737dbe5f6208b8694d65ebe2166f67838cc7168a382d9db98c708c64"
+    },
+    {
+      "bytes": 43473,
+      "modified_ns": 1788279374862827105,
+      "path": "<reproduction-root>/synthetic/synthetic_runs/seed_11_K_36_contextual_etm_softmax_raw_counts/result.json",
+      "sha256": "27d44ff4fc980ca8e5e70ce03cab85fa9f2004ed94a23d7e35bd413a7c001f7f"
+    },
+    {
+      "bytes": 43523,
+      "modified_ns": 1788279383230568538,
+      "path": "<reproduction-root>/synthetic/synthetic_runs/seed_11_K_36_contextual_sparse_etm_entmax15_raw_counts/result.json",
+      "sha256": "0b62b08e8875f3757d2a00cf53e7bf3e17b102b5851647ed8cc9e9b53c5895f8"
+    },
+    {
+      "bytes": 41196,
+      "modified_ns": 1788279388956140745,
+      "path": "<reproduction-root>/synthetic/synthetic_runs/seed_23_K_36_balanced_etm_softmax_raw_counts/result.json",
+      "sha256": "ae4b7d63db233b8835fd7d6704a9e004198bad8fb0a0ad6e01fcc39004e6a47c"
+    },
+    {
+      "bytes": 41134,
+      "modified_ns": 1788279395498064441,
+      "path": "<reproduction-root>/synthetic/synthetic_runs/seed_23_K_36_balanced_etm_entmax15_raw_counts/result.json",
+      "sha256": "813ce9d8957eaea0638a1bdddfb4820d93b426b7e7991781cbf71f9c4a5839b5"
+    },
+    {
+      "bytes": 43510,
+      "modified_ns": 1788279403175028372,
+      "path": "<reproduction-root>/synthetic/synthetic_runs/seed_23_K_36_contextual_etm_softmax_raw_counts/result.json",
+      "sha256": "08107e2966ac2467edc5f16560f052fa5f3c4d30266d070bb3b7ccde04d00754"
+    },
+    {
+      "bytes": 43446,
+      "modified_ns": 1788279411362019044,
+      "path": "<reproduction-root>/synthetic/synthetic_runs/seed_23_K_36_contextual_sparse_etm_entmax15_raw_counts/result.json",
+      "sha256": "30e139ef53135683128482d538610d69e63257c3f09c2e6e6f8b38812183b0c7"
+    },
+    {
+      "bytes": 41195,
+      "modified_ns": 1788279417510610226,
+      "path": "<reproduction-root>/synthetic/synthetic_runs/seed_37_K_36_balanced_etm_softmax_raw_counts/result.json",
+      "sha256": "f032e9b49e6d4530ae70e895c530f781160c91f26adbae5d1dc7880d12a316c4"
+    },
+    {
+      "bytes": 41153,
+      "modified_ns": 1788279423855241211,
+      "path": "<reproduction-root>/synthetic/synthetic_runs/seed_37_K_36_balanced_etm_entmax15_raw_counts/result.json",
+      "sha256": "1c9f69e4c472f894defa7f72b3ad144dede6557479712beb14c8775dbd870d59"
+    },
+    {
+      "bytes": 43478,
+      "modified_ns": 1788279431837690125,
+      "path": "<reproduction-root>/synthetic/synthetic_runs/seed_37_K_36_contextual_etm_softmax_raw_counts/result.json",
+      "sha256": "427bd247a6762225207dbf28a4e6668c2c2a306e22da82bc62da938896d4c587"
+    },
+    {
+      "bytes": 43484,
+      "modified_ns": 1788279440242288568,
+      "path": "<reproduction-root>/synthetic/synthetic_runs/seed_37_K_36_contextual_sparse_etm_entmax15_raw_counts/result.json",
+      "sha256": "e6e14fe93631ad33381970fe83f6328e386038c4d06bac3701f432cf053615a5"
+    },
+    {
+      "bytes": 41242,
+      "modified_ns": 1788279446334068461,
+      "path": "<reproduction-root>/synthetic/synthetic_runs/seed_11_K_128_balanced_etm_softmax_raw_counts/result.json",
+      "sha256": "948894e2ce48bfb52214715a23c11ae50160a37a5e4273022d357d375477309a"
+    },
+    {
+      "bytes": 41195,
+      "modified_ns": 1788279452909296965,
+      "path": "<reproduction-root>/synthetic/synthetic_runs/seed_11_K_128_balanced_etm_entmax15_raw_counts/result.json",
+      "sha256": "252fce11a58cf18c9d808c339f3e1ef01bddc64bd7b8bf3ece61c2695ce9dbfc"
+    },
+    {
+      "bytes": 43527,
+      "modified_ns": 1788279461335804202,
+      "path": "<reproduction-root>/synthetic/synthetic_runs/seed_11_K_128_contextual_sparse_etm_entmax15_raw_counts/result.json",
+      "sha256": "aeaeb8427af08ccd7f3c200ad02f638243f8f79e074db5979b5f9bd2624158e8"
+    },
+    {
+      "bytes": 869,
+      "modified_ns": 1788285838056632481,
+      "path": "<reproduction-root>/real/tomotopy/tomotopy/validation_only_result.json",
+      "sha256": "27192c679c6baf4c3699c337d8b0de8aeafb8ee739d6bc23b0476243dca3589e"
+    },
+    {
+      "bytes": 274547245,
+      "modified_ns": 1788284820211965609,
+      "path": "<reproduction-root>/real/tomotopy/tomotopy/model.bin",
+      "sha256": "67b51cb661b61a950f04efa244b9fc8168b963fa20b6b3e5272f64f55e79226a"
+    },
+    {
+      "bytes": 98,
+      "modified_ns": 1788284820219106051,
+      "path": "<reproduction-root>/real/tomotopy/tomotopy/complete.json",
+      "sha256": "95c7e79e22de32410684458c3f32bf39e4d47886bc8779e0d9eccbb99e63a278"
+    },
+    {
+      "bytes": 286,
+      "modified_ns": 1788285838056529774,
+      "path": "<reproduction-root>/real/tomotopy/tomotopy/validation_access_audit.json",
+      "sha256": "4e37b3bfb8b90ddf5d7739740fca26b8675e65c2fdd929c924efcb698f49ab04"
+    },
+    {
+      "bytes": 348,
+      "modified_ns": 1788285838030133980,
+      "path": "<reproduction-root>/real/tomotopy/validation_evaluation/tomotopy/complete.json",
+      "sha256": "04ff946d0cd8eac5a798661c2cda84b4b148883e21fc7f74575ac501c4199a05"
+    },
+    {
+      "bytes": 84932128,
+      "modified_ns": 1788285838003591460,
+      "path": "<reproduction-root>/real/tomotopy/validation_evaluation/tomotopy/beta.npy",
+      "sha256": "b29f1640807298c5ab6a89cf204530d8eca128b9dab6ccd9193b46c8d56507f6"
+    },
+    {
+      "bytes": 15556128,
+      "modified_ns": 1788285837956760800,
+      "path": "<reproduction-root>/real/tomotopy/validation_evaluation/tomotopy/validation_full_theta.npy",
+      "sha256": "0ab3a32df0743a2f8ae5ff75a984bcca90cab9a76c5fefe49f7eba0ea1fbaf54"
+    },
+    {
+      "bytes": 159767,
+      "modified_ns": 1788285878102669530,
+      "path": "<reproduction-root>/real/tomotopy/validation_chemical/tomotopy/complete.json",
+      "sha256": "32c22e0ac0a33bba5179a2cf222806eaa4973dd4c5c563282259cc1a3697b6ea"
+    },
+    {
+      "bytes": 4394,
+      "modified_ns": 1788296289283706599,
+      "path": "<reproduction-root>/real/controls/models/etm/result.json",
+      "sha256": "3bf57150d2604ea18ea185f62b471446c806663ed8f8d3c433c472c35d5f3f9d"
+    },
+    {
+      "bytes": 81192805,
+      "modified_ns": 1788296289272360936,
+      "path": "<reproduction-root>/real/controls/models/etm/weights.pt",
+      "sha256": "10a4b18a1dd99ebfc7b87bf7a40108d2ea57c2cd9a6f8845ace21be784a659bd"
+    },
+    {
+      "bytes": 430,
+      "modified_ns": 1788296289279911525,
+      "path": "<reproduction-root>/real/controls/models/etm/config.json",
+      "sha256": "959a87d26280d093a261b87c3b0cfbc97c4e9424f70e3b859865e7e3985204ce"
+    },
+    {
+      "bytes": 7082,
+      "modified_ns": 1788296287742640773,
+      "path": "<reproduction-root>/real/controls/models/etm/training_history.csv",
+      "sha256": "33e6b60e9d9d1855024798b38e82c852d9fd56d74971ab931abd00d8712dfa17"
+    },
+    {
+      "bytes": 528112,
+      "modified_ns": 1788296289280361358,
+      "path": "<reproduction-root>/real/controls/models/etm/top_words.csv",
+      "sha256": "b0dfa0653072fdbc0c33cfeb4c5187ed1a329984ab0c986698f81f90f1561b80"
+    },
+    {
+      "bytes": 425,
+      "modified_ns": 1788296289283439279,
+      "path": "<reproduction-root>/real/controls/models/etm/fragment_mass_summary.json",
+      "sha256": "4762c81700636c259967ef0f423cbfac30e9adbc6d9633034891a3aee35aacfb"
+    },
+    {
+      "bytes": 652,
+      "modified_ns": 1788296289283511951,
+      "path": "<reproduction-root>/real/controls/models/etm/duplicate_component_summary.json",
+      "sha256": "4c437e28d6f71017249f1328a5476b7c00299a3ccdd68131e6050d1559a54508"
+    },
+    {
+      "bytes": 5131,
+      "modified_ns": 1788295591105559466,
+      "path": "<reproduction-root>/real/controls/models/etm/training_access_audit.json",
+      "sha256": "1c32b3d9d969f316fedca5aa3f12c75b4169c3f9739ab32ca36638a0ba468846"
+    },
+    {
+      "bytes": 3886,
+      "modified_ns": 1788296289398892529,
+      "path": "<reproduction-root>/real/controls/validation_evaluation/etm/complete.json",
+      "sha256": "eadc1aefa3a39cd45fa50555082aab724deb35e2b9a1c43f33d610d0aa77b746"
+    },
+    {
+      "bytes": 84932128,
+      "modified_ns": 1788296289296362201,
+      "path": "<reproduction-root>/real/controls/validation_evaluation/etm/beta.npy",
+      "sha256": "91b7536d3524876ba861556ce08517971bdf660fb40522b914c9111fae1793d2"
+    },
+    {
+      "bytes": 15556128,
+      "modified_ns": 1788296289392367266,
+      "path": "<reproduction-root>/real/controls/validation_evaluation/etm/validation_full_theta.npy",
+      "sha256": "e5e05892627c482dbc64c289519ba5173a4fc9042b550669a030c7cb9902559f"
+    },
+    {
+      "bytes": 159171,
+      "modified_ns": 1788296334586758927,
+      "path": "<reproduction-root>/real/controls/validation_chemical/etm/complete.json",
+      "sha256": "bfe961d8b5e25ba9f3fe8aa13ccd7cd2e7253dcfaa57077ee521e639ac36dbfa"
+    },
+    {
+      "bytes": 5426,
+      "modified_ns": 1788296334587093540,
+      "path": "<reproduction-root>/real/controls/models/etm/validation_access_audit.json",
+      "sha256": "b2dc60651d417d7d7e4c454550ad6ec4940e388b9e14fabbd169dd19fe8bd8bb"
+    },
+    {
+      "bytes": 4523,
+      "modified_ns": 1788297078587817640,
+      "path": "<reproduction-root>/real/controls/models/etm_balanced/result.json",
+      "sha256": "ace7678ceb1a963401124a5797c13fbfecadf2960bf91d0a9c01fd0d4824f161"
+    },
+    {
+      "bytes": 81192821,
+      "modified_ns": 1788297078579393584,
+      "path": "<reproduction-root>/real/controls/models/etm_balanced/weights.pt",
+      "sha256": "5bfe0d80646c6d4a6f77687886c60e600f0146c94c0ca915e743965bdf632841"
+    },
+    {
+      "bytes": 546,
+      "modified_ns": 1788297078584420324,
+      "path": "<reproduction-root>/real/controls/models/etm_balanced/config.json",
+      "sha256": "b9981a4cbf4a0d41127cdae9226a36346e7cb44fe2507f7f4fe081aa372cedf9"
+    },
+    {
+      "bytes": 7080,
+      "modified_ns": 1788297077247183476,
+      "path": "<reproduction-root>/real/controls/models/etm_balanced/training_history.csv",
+      "sha256": "35b8caa6746b88082b5b6ce73eca0955e43dbd7b1bebf481b8399c21e5602feb"
+    },
+    {
+      "bytes": 526818,
+      "modified_ns": 1788297078584469727,
+      "path": "<reproduction-root>/real/controls/models/etm_balanced/top_words.csv",
+      "sha256": "9c9747fbc5e7cebf3b94d87584cb586da08683b327d208e708dc617ad6e9ba4f"
+    },
+    {
+      "bytes": 420,
+      "modified_ns": 1788297078587507093,
+      "path": "<reproduction-root>/real/controls/models/etm_balanced/fragment_mass_summary.json",
+      "sha256": "282d04f4d00969df4accff265efb14b6b4d7dc4bd311459c74dd12b66e71071d"
+    },
+    {
+      "bytes": 654,
+      "modified_ns": 1788297078587583923,
+      "path": "<reproduction-root>/real/controls/models/etm_balanced/duplicate_component_summary.json",
+      "sha256": "e1539d2bddadb6e27dd4b3c302f692b78fe1b33a821eb6bed321c40f7e9bc1b5"
+    },
+    {
+      "bytes": 5131,
+      "modified_ns": 1788296337326939298,
+      "path": "<reproduction-root>/real/controls/models/etm_balanced/training_access_audit.json",
+      "sha256": "1c32b3d9d969f316fedca5aa3f12c75b4169c3f9739ab32ca36638a0ba468846"
+    },
+    {
+      "bytes": 3890,
+      "modified_ns": 1788297078647353373,
+      "path": "<reproduction-root>/real/controls/validation_evaluation/etm_balanced/complete.json",
+      "sha256": "be290578051992f5c66b84885bd19f56313553d140e197e61214fbe59cf9c6ae"
+    },
+    {
+      "bytes": 84932128,
+      "modified_ns": 1788297078599394592,
+      "path": "<reproduction-root>/real/controls/validation_evaluation/etm_balanced/beta.npy",
+      "sha256": "aa70082e0841b307b62f5728560343134f8778a27f6b5f7080df33d548dfe81c"
+    },
+    {
+      "bytes": 15556128,
+      "modified_ns": 1788297078639396608,
+      "path": "<reproduction-root>/real/controls/validation_evaluation/etm_balanced/validation_full_theta.npy",
+      "sha256": "6246974dea8bea335712a96c0ac39d8bc59b51c125370d1d1de42ad0adea3908"
+    },
+    {
+      "bytes": 159559,
+      "modified_ns": 1788297113957314132,
+      "path": "<reproduction-root>/real/controls/validation_chemical/etm_balanced/complete.json",
+      "sha256": "cd79cf1af4285898008c37b75ed22b2dcd0436aeb3a36e764f381cee558c0e31"
+    },
+    {
+      "bytes": 5426,
+      "modified_ns": 1788297113957552471,
+      "path": "<reproduction-root>/real/controls/models/etm_balanced/validation_access_audit.json",
+      "sha256": "b2dc60651d417d7d7e4c454550ad6ec4940e388b9e14fabbd169dd19fe8bd8bb"
+    },
+    {
+      "bytes": 13729,
+      "modified_ns": 1788297929731110184,
+      "path": "<reproduction-root>/real/contextual_seed_7043/models/contextual_sparse_etm/result.json",
+      "sha256": "818498e6f5bb10e4d2837e011cc536bbe683dbabe5d170b0f9487e82ad0f9c9f"
+    },
+    {
+      "bytes": 81193085,
+      "modified_ns": 1788297929613272366,
+      "path": "<reproduction-root>/real/contextual_seed_7043/models/contextual_sparse_etm/weights.pt",
+      "sha256": "823dea5b2cab036557f191043cde818d9d583edf378e6b8c3ac2319bd5c3641d"
+    },
+    {
+      "bytes": 1317,
+      "modified_ns": 1788297116589503482,
+      "path": "<reproduction-root>/real/contextual_seed_7043/models/contextual_sparse_etm/config.json",
+      "sha256": "9e9039c8d82ff27456c32daefa728c06cd77757092974d3a67bd7194186174c8"
+    },
+    {
+      "bytes": 16085,
+      "modified_ns": 1788297927854385892,
+      "path": "<reproduction-root>/real/contextual_seed_7043/models/contextual_sparse_etm/training_history.csv",
+      "sha256": "242256ad39acb6df9cc84c478d409427fd9203f9f37e25f61abccf94194419aa"
+    },
+    {
+      "bytes": 531583,
+      "modified_ns": 1788297929617272603,
+      "path": "<reproduction-root>/real/contextual_seed_7043/models/contextual_sparse_etm/top_words.csv",
+      "sha256": "fc21d2bd9aae75ce26814d7329d3339de5fbee9bd0ae2072617ae240d072ddf1"
+    },
+    {
+      "bytes": 418,
+      "modified_ns": 1788297929620144658,
+      "path": "<reproduction-root>/real/contextual_seed_7043/models/contextual_sparse_etm/fragment_mass_summary.json",
+      "sha256": "e816118056a2928a1f719b40f2a96d171efb255af1d77656232194c68c7e3a31"
+    },
+    {
+      "bytes": 653,
+      "modified_ns": 1788297929620081332,
+      "path": "<reproduction-root>/real/contextual_seed_7043/models/contextual_sparse_etm/duplicate_component_summary.json",
+      "sha256": "d783013697ad7606835626196324f9f49aca2866111cd2c0b25238af82d06e1b"
+    },
+    {
+      "bytes": 5275,
+      "modified_ns": 1788297116589643107,
+      "path": "<reproduction-root>/real/contextual_seed_7043/models/contextual_sparse_etm/training_access_audit.json",
+      "sha256": "eb43b69e4a5e8d005a66580e3b04e77c91192754fba197b8311021bae5edaa67"
+    },
+    {
+      "bytes": 5710,
+      "modified_ns": 1788297929670387525,
+      "path": "<reproduction-root>/real/contextual_seed_7043/validation_evaluation/contextual_sparse_etm/complete.json",
+      "sha256": "bd235789df132036d19fbb18af1cc88c278b6a05aa029101e8b4ab87b739ca28"
+    },
+    {
+      "bytes": 84932128,
+      "modified_ns": 1788297929633273552,
+      "path": "<reproduction-root>/real/contextual_seed_7043/validation_evaluation/contextual_sparse_etm/beta.npy",
+      "sha256": "6a92e3db42cca54d83a37b204af07801f813f602410fbd73486be8b26821064f"
+    },
+    {
+      "bytes": 15556128,
+      "modified_ns": 1788297929661275209,
+      "path": "<reproduction-root>/real/contextual_seed_7043/validation_evaluation/contextual_sparse_etm/validation_full_theta.npy",
+      "sha256": "0ac05e4dce032442c2cc5bc552ffc72d76535b86362682c8945dec4f16ee8cf2"
+    },
+    {
+      "bytes": 550,
+      "modified_ns": 1788297929619943125,
+      "path": "<reproduction-root>/real/contextual_seed_7043/models/contextual_sparse_etm/theta_support_summary.csv",
+      "sha256": "91894e30f53f114b278b4c5baa4540ab283ee07f4dfca2c77acde63703c80a29"
+    },
+    {
+      "bytes": 573,
+      "modified_ns": 1788297929619990311,
+      "path": "<reproduction-root>/real/contextual_seed_7043/models/contextual_sparse_etm/context_evidence_support_summary.csv",
+      "sha256": "97d07a140e4d67c746c53cfc9a743a62433feebb01d96414ad94423849d7b717"
+    },
+    {
+      "bytes": 6351,
+      "modified_ns": 1788297929728724027,
+      "path": "<reproduction-root>/real/contextual_seed_7043/models/contextual_sparse_etm/provenance.json",
+      "sha256": "a300c9ea9bc850fac33016dd18a3c84db925dbda979094fd3e9f275c690d3dc2"
+    },
+    {
+      "bytes": 162718,
+      "modified_ns": 1788297964991929843,
+      "path": "<reproduction-root>/real/contextual_seed_7043/validation_chemical/contextual_sparse_etm/complete.json",
+      "sha256": "c1c5cee34a3001812aca1bb043089b94ff3970eb4e28d00e364564805ec78313"
+    },
+    {
+      "bytes": 5582,
+      "modified_ns": 1788297964992240910,
+      "path": "<reproduction-root>/real/contextual_seed_7043/models/contextual_sparse_etm/validation_access_audit.json",
+      "sha256": "44281159a41af37ee00669fa7e8206305bc42a61e2ef3520005042a0cc64819f"
+    },
+    {
+      "bytes": 13694,
+      "modified_ns": 1788298790114558679,
+      "path": "<reproduction-root>/real/contextual_seed_23/models/contextual_sparse_etm/result.json",
+      "sha256": "aaf1852a1cf5c33f90acd5e95cf5b1a54610c4e2a36137289c9cf12b2f72b47f"
+    },
+    {
+      "bytes": 81193085,
+      "modified_ns": 1788298789995492125,
+      "path": "<reproduction-root>/real/contextual_seed_23/models/contextual_sparse_etm/weights.pt",
+      "sha256": "f1e30f1fab4a5a76ea4ceb4bb23f11345d2fb5f7ebf18442b53cd5e68703fa42"
+    },
+    {
+      "bytes": 1315,
+      "modified_ns": 1788297967685743780,
+      "path": "<reproduction-root>/real/contextual_seed_23/models/contextual_sparse_etm/config.json",
+      "sha256": "f8415ffc41f0d9a13fa5926506ecc5ef779fdb2749ec5d609b4b2e3d8834e011"
+    },
+    {
+      "bytes": 16125,
+      "modified_ns": 1788298788183928634,
+      "path": "<reproduction-root>/real/contextual_seed_23/models/contextual_sparse_etm/training_history.csv",
+      "sha256": "cbaeca5af2389c3d337ccb230f3e8d4c98536388f621973459fe234efe2c8c6f"
+    },
+    {
+      "bytes": 531447,
+      "modified_ns": 1788298790001018274,
+      "path": "<reproduction-root>/real/contextual_seed_23/models/contextual_sparse_etm/top_words.csv",
+      "sha256": "a43e0cf4d12d0f979e134761dda9cd2cbf141401aae607740e0f64cf386f88f1"
+    },
+    {
+      "bytes": 421,
+      "modified_ns": 1788298790004440322,
+      "path": "<reproduction-root>/real/contextual_seed_23/models/contextual_sparse_etm/fragment_mass_summary.json",
+      "sha256": "205aee917263d0ae384b38e40e306bcfb0214332e49ba7ed65126d43293ab8be"
+    },
+    {
+      "bytes": 652,
+      "modified_ns": 1788298790004369239,
+      "path": "<reproduction-root>/real/contextual_seed_23/models/contextual_sparse_etm/duplicate_component_summary.json",
+      "sha256": "de6c321b21cc5add8f98a580f05e792653627de299176aa680e4e4f3c57ca8e6"
+    },
+    {
+      "bytes": 5251,
+      "modified_ns": 1788297967685888729,
+      "path": "<reproduction-root>/real/contextual_seed_23/models/contextual_sparse_etm/training_access_audit.json",
+      "sha256": "4e0cab8cb73e09bb5444aa5b85565604544092a55dba2b9fe3287d0e614d923e"
+    },
+    {
+      "bytes": 5701,
+      "modified_ns": 1788298790054030665,
+      "path": "<reproduction-root>/real/contextual_seed_23/validation_evaluation/contextual_sparse_etm/complete.json",
+      "sha256": "a2db57558f0687dd7ceabfc1afe2013cec6654d70bcf8ef60b14ad60e7848252"
+    },
+    {
+      "bytes": 84932128,
+      "modified_ns": 1788298790019493558,
+      "path": "<reproduction-root>/real/contextual_seed_23/validation_evaluation/contextual_sparse_etm/beta.npy",
+      "sha256": "36a93c3fccb24d73c15af216c5d29fca116fc8f6e9b3fae48c327f6c58cd98a9"
+    },
+    {
+      "bytes": 15556128,
+      "modified_ns": 1788298790044815244,
+      "path": "<reproduction-root>/real/contextual_seed_23/validation_evaluation/contextual_sparse_etm/validation_full_theta.npy",
+      "sha256": "30207a9bfa8993bc9740b69d98976d1223c3a9216788c7bf7d349ca62295b099"
+    },
+    {
+      "bytes": 551,
+      "modified_ns": 1788298790004187003,
+      "path": "<reproduction-root>/real/contextual_seed_23/models/contextual_sparse_etm/theta_support_summary.csv",
+      "sha256": "98899c77655c8329227b2f1cb57b1143649869a8d1bdca01f76f05a4c59a2ab8"
+    },
+    {
+      "bytes": 565,
+      "modified_ns": 1788298790004260251,
+      "path": "<reproduction-root>/real/contextual_seed_23/models/contextual_sparse_etm/context_evidence_support_summary.csv",
+      "sha256": "b0f13de1dd7ed7ed79de23f0ec566bb35ad6e054cee8c5e3e1a4ef1555012336"
+    },
+    {
+      "bytes": 6327,
+      "modified_ns": 1788298790111481325,
+      "path": "<reproduction-root>/real/contextual_seed_23/models/contextual_sparse_etm/provenance.json",
+      "sha256": "8040908534e8bd2b2eafeeea37e415a9b96384e5f7b961c4e58c34c933498341"
+    },
+    {
+      "bytes": 162672,
+      "modified_ns": 1788298824905761650,
+      "path": "<reproduction-root>/real/contextual_seed_23/validation_chemical/contextual_sparse_etm/complete.json",
+      "sha256": "1c29b0a63e0a1bf0b7cc4e0e2e12b82db9711d4cd93925078296509a86de450e"
+    },
+    {
+      "bytes": 5556,
+      "modified_ns": 1788298824906125927,
+      "path": "<reproduction-root>/real/contextual_seed_23/models/contextual_sparse_etm/validation_access_audit.json",
+      "sha256": "5af05c79d8c1d67de30aa283b5126f5fd499022331ed191e912181a1cc5fe0a4"
+    },
+    {
+      "bytes": 13698,
+      "modified_ns": 1788299642972920386,
+      "path": "<reproduction-root>/real/contextual_seed_37/models/contextual_sparse_etm/result.json",
+      "sha256": "4368d34c44196be5cbf60e594b72ffac00c822f493a491fd2871d46d5403d78b"
+    },
+    {
+      "bytes": 81193085,
+      "modified_ns": 1788299642844422620,
+      "path": "<reproduction-root>/real/contextual_seed_37/models/contextual_sparse_etm/weights.pt",
+      "sha256": "7133ec455b2112ff6b78b8e627d179fdcac2472c50424b9deba486f73c2ce159"
+    },
+    {
+      "bytes": 1315,
+      "modified_ns": 1788298827643457326,
+      "path": "<reproduction-root>/real/contextual_seed_37/models/contextual_sparse_etm/config.json",
+      "sha256": "812e05d676791fdb0c630247d724bf989f6842d9dfd4b8634700a6db932ebeb2"
+    },
+    {
+      "bytes": 16094,
+      "modified_ns": 1788299641033242850,
+      "path": "<reproduction-root>/real/contextual_seed_37/models/contextual_sparse_etm/training_history.csv",
+      "sha256": "461b8570524fee93d1094f5b6618b72edbaf1963e0d319b92116ef4540e6c593"
+    },
+    {
+      "bytes": 531369,
+      "modified_ns": 1788299642852423151,
+      "path": "<reproduction-root>/real/contextual_seed_37/models/contextual_sparse_etm/top_words.csv",
+      "sha256": "f53fcf2e2b7c2dccdb9f260c87eb67059434824062014f4e471bba36e6dd71d5"
+    },
+    {
+      "bytes": 419,
+      "modified_ns": 1788299642854425289,
+      "path": "<reproduction-root>/real/contextual_seed_37/models/contextual_sparse_etm/fragment_mass_summary.json",
+      "sha256": "bc5187510f2dcc47a17cfc5f2ad0a9ab4801660f49349b66702859f6c5553ece"
+    },
+    {
+      "bytes": 653,
+      "modified_ns": 1788299642854360220,
+      "path": "<reproduction-root>/real/contextual_seed_37/models/contextual_sparse_etm/duplicate_component_summary.json",
+      "sha256": "c10e237eee56830ccdccd9e8bff5d370bb629b2d60356d9e18504da0ea2608b2"
+    },
+    {
+      "bytes": 5251,
+      "modified_ns": 1788298827643652973,
+      "path": "<reproduction-root>/real/contextual_seed_37/models/contextual_sparse_etm/training_access_audit.json",
+      "sha256": "5b5eb7c9edb674a1e9c55eba6d197789c0b34bcd5a533bb2f88203c5406812f3"
+    },
+    {
+      "bytes": 5705,
+      "modified_ns": 1788299642915990919,
+      "path": "<reproduction-root>/real/contextual_seed_37/validation_evaluation/contextual_sparse_etm/complete.json",
+      "sha256": "c21dfe5b76e3201fa13e0baf3fe196968d900c7b463c1efdff1bfd0ce1a12f7d"
+    },
+    {
+      "bytes": 84932128,
+      "modified_ns": 1788299642868424217,
+      "path": "<reproduction-root>/real/contextual_seed_37/validation_evaluation/contextual_sparse_etm/beta.npy",
+      "sha256": "e23cf12907ed6a0a141da86c6cb4389c028e2a76d6432309fab9d9a624ac16cc"
+    },
+    {
+      "bytes": 15556128,
+      "modified_ns": 1788299642905650947,
+      "path": "<reproduction-root>/real/contextual_seed_37/validation_evaluation/contextual_sparse_etm/validation_full_theta.npy",
+      "sha256": "1be62d9ad0483bbbd883f51043d87f03f5fb4af46766572829f5f2c89a3d7bee"
+    },
+    {
+      "bytes": 553,
+      "modified_ns": 1788299642854216392,
+      "path": "<reproduction-root>/real/contextual_seed_37/models/contextual_sparse_etm/theta_support_summary.csv",
+      "sha256": "8c60725db45c05f0e51d7396c55519f4460de2e326329968e4b2c4f67e2c304e"
+    },
+    {
+      "bytes": 563,
+      "modified_ns": 1788299642854269147,
+      "path": "<reproduction-root>/real/contextual_seed_37/models/contextual_sparse_etm/context_evidence_support_summary.csv",
+      "sha256": "83e1e2e972f61d861a5b27ccfff0b49b3f8a5b4f35dd17912182ea0a62acfc73"
+    },
+    {
+      "bytes": 6327,
+      "modified_ns": 1788299642970128604,
+      "path": "<reproduction-root>/real/contextual_seed_37/models/contextual_sparse_etm/provenance.json",
+      "sha256": "5afbacac3ba3bde547d2d3896c9996006c371c3502699093d7d809a077610730"
+    },
+    {
+      "bytes": 162361,
+      "modified_ns": 1788299675545404282,
+      "path": "<reproduction-root>/real/contextual_seed_37/validation_chemical/contextual_sparse_etm/complete.json",
+      "sha256": "c6119652de3e7afdc28dea7a5bb700ca5300cc166137f75f62b57aa307078d1d"
+    },
+    {
+      "bytes": 5556,
+      "modified_ns": 1788299675545719083,
+      "path": "<reproduction-root>/real/contextual_seed_37/models/contextual_sparse_etm/validation_access_audit.json",
+      "sha256": "172764a62a0c662920f310cb8f3b41b5504509ebe87505a44fb764963d876a56"
+    },
+    {
+      "bytes": 4553,
+      "modified_ns": 1788299677335299681,
+      "path": "<reproduction-root>/real/controls/test_input_manifest.json",
+      "sha256": "e85f4d93533b39b666a4124237f9060273ad67ba27320648b2d62c89e533e79b"
+    },
+    {
+      "bytes": 2571,
+      "modified_ns": 1788299678410097826,
+      "path": "<reproduction-root>/real/tomotopy/test_input_manifest.json",
+      "sha256": "03c854a445ff409e21a300663ef0b512db1c9f9f2a5b17d80fa32374d7830ae2"
+    },
+    {
+      "bytes": 3373,
+      "modified_ns": 1788299679450039165,
+      "path": "<reproduction-root>/real/contextual_seed_7043/test_input_manifest.json",
+      "sha256": "908a23bc17e0e9123d3a90659b392c2fd49f77e52ed1fc9fb5e9ffd8a31b0d4a"
+    },
+    {
+      "bytes": 3355,
+      "modified_ns": 1788299680397112663,
+      "path": "<reproduction-root>/real/contextual_seed_23/test_input_manifest.json",
+      "sha256": "207a17907c6bffdef443c8e18cb4555010e723fa6d760e5eade9f80698ff54bf"
+    },
+    {
+      "bytes": 3355,
+      "modified_ns": 1788299681366167499,
+      "path": "<reproduction-root>/real/contextual_seed_37/test_input_manifest.json",
+      "sha256": "2b21a0c136823fc1ac98c60b389b3e31816946069d078fdcbf98c1688616c3ef"
+    },
+    {
+      "bytes": 5127,
+      "modified_ns": 1788299685333018649,
+      "path": "<reproduction-root>/real/controls/evaluation/etm/complete.json",
+      "sha256": "b3eab61f58c4110e442e008b653ca00d5d96c6969081966fb45ef19eeaec9c27"
+    },
+    {
+      "bytes": 331,
+      "modified_ns": 1788299685333118486,
+      "path": "<reproduction-root>/real/controls/evaluation/etm/test_access_audit.json",
+      "sha256": "64805ea95c835753cb169d17afa0a0d16d4165ce67b2f0da257bdeca1c89c0ba"
+    },
+    {
+      "bytes": 84932128,
+      "modified_ns": 1788299685234464310,
+      "path": "<reproduction-root>/real/controls/evaluation/etm/beta.npy",
+      "sha256": "91b7536d3524876ba861556ce08517971bdf660fb40522b914c9111fae1793d2"
+    },
+    {
+      "bytes": 31108128,
+      "modified_ns": 1788299685278466703,
+      "path": "<reproduction-root>/real/controls/evaluation/etm/test_observed_theta.npy",
+      "sha256": "0024af2595287c23a87b159e7405b5c620911d54543d34b93b8ed553df8de3a9"
+    },
+    {
+      "bytes": 31108128,
+      "modified_ns": 1788299685294467572,
+      "path": "<reproduction-root>/real/controls/evaluation/etm/test_full_theta.npy",
+      "sha256": "f2c59229e169babfa8df06eee37ef1f001eac268d1e7ddb709504a9c5358a2b2"
+    },
+    {
+      "bytes": 159646,
+      "modified_ns": 1788299690227183409,
+      "path": "<reproduction-root>/real/controls/chemical/etm/complete.json",
+      "sha256": "d5d6e3db4b678f8adaa310781c6b2527a8c8e96bb42c3913ee36b6748f70d8ae"
+    },
+    {
+      "bytes": 5254,
+      "modified_ns": 1788299694517913879,
+      "path": "<reproduction-root>/real/controls/evaluation/etm_balanced/complete.json",
+      "sha256": "ffd0bc4829f5107d8a71833d5300d095e4e095ad8a743baec512e180393ef339"
+    },
+    {
+      "bytes": 331,
+      "modified_ns": 1788299694518060184,
+      "path": "<reproduction-root>/real/controls/evaluation/etm_balanced/test_access_audit.json",
+      "sha256": "918cc1f47427ae573d8fa88d540502e13127e6f92c404c3b64adf05564ebe4d5"
+    },
+    {
+      "bytes": 84932128,
+      "modified_ns": 1788299694429547936,
+      "path": "<reproduction-root>/real/controls/evaluation/etm_balanced/beta.npy",
+      "sha256": "aa70082e0841b307b62f5728560343134f8778a27f6b5f7080df33d548dfe81c"
+    },
+    {
+      "bytes": 31108128,
+      "modified_ns": 1788299694457549140,
+      "path": "<reproduction-root>/real/controls/evaluation/etm_balanced/test_observed_theta.npy",
+      "sha256": "b3470fb1af4f738f377edcebcba2f3f497efa9e831e6b9df83e5391bab822ad2"
+    },
+    {
+      "bytes": 31108128,
+      "modified_ns": 1788299694477550000,
+      "path": "<reproduction-root>/real/controls/evaluation/etm_balanced/test_full_theta.npy",
+      "sha256": "6e6b208c31d5f4b160d15abd761450795a38c267f43790dc6a35e7cf9da9f45e"
+    },
+    {
+      "bytes": 160178,
+      "modified_ns": 1788299699633127813,
+      "path": "<reproduction-root>/real/controls/chemical/etm_balanced/complete.json",
+      "sha256": "0d9535871b8508c66f5b0006d1846b1e4af4959f7533ede2d2fe4ee8f2770c5e"
+    },
+    {
+      "bytes": 175877,
+      "modified_ns": 1788302115547768815,
+      "path": "<reproduction-root>/real/tomotopy/tomotopy/test_result.json",
+      "sha256": "27227766ee744d829cfd6a7b6758920fb3f6de69a90479caaf093ecd85dce9b6"
+    },
+    {
+      "bytes": 459,
+      "modified_ns": 1788302111809909816,
+      "path": "<reproduction-root>/real/tomotopy/evaluation/tomotopy/complete.json",
+      "sha256": "5583b56ecabbaf2efa5f6516b9d9fd7c82911c9ac8bc38b05733625a63392340"
+    },
+    {
+      "bytes": 31108128,
+      "modified_ns": 1788302111786785472,
+      "path": "<reproduction-root>/real/tomotopy/evaluation/tomotopy/test_full_theta.npy",
+      "sha256": "7fa1e11b5bc89f8ea2078293d833cc268f33148f62991970b8eb80f90695cc5d"
+    },
+    {
+      "bytes": 161070,
+      "modified_ns": 1788302115454807674,
+      "path": "<reproduction-root>/real/tomotopy/chemical/tomotopy/complete.json",
+      "sha256": "a401a62c01a50b0682b62c31fd10b65bafbcff9519a9d95896ef9c7e0a6f39c0"
+    },
+    {
+      "bytes": 6067,
+      "modified_ns": 1788302120473758046,
+      "path": "<reproduction-root>/real/contextual_seed_7043/evaluation/contextual_sparse_etm/complete.json",
+      "sha256": "65b3266092344c20c7b5132334d8f4c79715e449d3c3e82100e3af9f43f38314"
+    },
+    {
+      "bytes": 343,
+      "modified_ns": 1788302120473863074,
+      "path": "<reproduction-root>/real/contextual_seed_7043/evaluation/contextual_sparse_etm/test_access_audit.json",
+      "sha256": "a3985ef0c34806c3f69527c78fd60e312d599a7a7c45b3cf32c8e90e8478d1d4"
+    },
+    {
+      "bytes": 84932128,
+      "modified_ns": 1788302120343154787,
+      "path": "<reproduction-root>/real/contextual_seed_7043/evaluation/contextual_sparse_etm/beta.npy",
+      "sha256": "6a92e3db42cca54d83a37b204af07801f813f602410fbd73486be8b26821064f"
+    },
+    {
+      "bytes": 31108128,
+      "modified_ns": 1788302120395157933,
+      "path": "<reproduction-root>/real/contextual_seed_7043/evaluation/contextual_sparse_etm/test_observed_theta.npy",
+      "sha256": "78674e899dc8f9e9f5af3779dd7f11eaf288f966c9143c478eee7d9fe007c8da"
+    },
+    {
+      "bytes": 31108128,
+      "modified_ns": 1788302120419159385,
+      "path": "<reproduction-root>/real/contextual_seed_7043/evaluation/contextual_sparse_etm/test_full_theta.npy",
+      "sha256": "7b3dc7e55a0527583006003cec6706f0e8a0a33719fcbd988867feafa0cd2974"
+    },
+    {
+      "bytes": 164243,
+      "modified_ns": 1788302125426249853,
+      "path": "<reproduction-root>/real/contextual_seed_7043/chemical/contextual_sparse_etm/complete.json",
+      "sha256": "cd49149cf5466f97a4e55c2c5fff708833f360d144f26d4fb62e186a0577b37b"
+    },
+    {
+      "bytes": 6059,
+      "modified_ns": 1788302130104816792,
+      "path": "<reproduction-root>/real/contextual_seed_23/evaluation/contextual_sparse_etm/complete.json",
+      "sha256": "66f74bb367f48e854957f5818f5a553caa5a1b83358cc6802ef66ba70f466508"
+    },
+    {
+      "bytes": 341,
+      "modified_ns": 1788302130104932664,
+      "path": "<reproduction-root>/real/contextual_seed_23/evaluation/contextual_sparse_etm/test_access_audit.json",
+      "sha256": "45f8c5e492ccc51bd2363fddc42500aa9ef4d45102330454dc8bb17938b83c64"
+    },
+    {
+      "bytes": 84932128,
+      "modified_ns": 1788302130004873181,
+      "path": "<reproduction-root>/real/contextual_seed_23/evaluation/contextual_sparse_etm/beta.npy",
+      "sha256": "36a93c3fccb24d73c15af216c5d29fca116fc8f6e9b3fae48c327f6c58cd98a9"
+    },
+    {
+      "bytes": 31108128,
+      "modified_ns": 1788302130033308651,
+      "path": "<reproduction-root>/real/contextual_seed_23/evaluation/contextual_sparse_etm/test_observed_theta.npy",
+      "sha256": "830582091f65de0d11d981a5ba0316bec35ff786588734c70d9d1257ecada3cd"
+    },
+    {
+      "bytes": 31108128,
+      "modified_ns": 1788302130049247909,
+      "path": "<reproduction-root>/real/contextual_seed_23/evaluation/contextual_sparse_etm/test_full_theta.npy",
+      "sha256": "638b18acb52fef64d31a74b0a08afe793b5e3fde7e3fac20a1e678aa3d7def85"
+    },
+    {
+      "bytes": 164294,
+      "modified_ns": 1788302135093557188,
+      "path": "<reproduction-root>/real/contextual_seed_23/chemical/contextual_sparse_etm/complete.json",
+      "sha256": "ec8d5ea5e9ba3ecf34a23e8e1390d80378cbc61376b413729eadcda771bfd301"
+    },
+    {
+      "bytes": 6068,
+      "modified_ns": 1788302140585868323,
+      "path": "<reproduction-root>/real/contextual_seed_37/evaluation/contextual_sparse_etm/complete.json",
+      "sha256": "2728a3f07700be9f3df46dcf60457c47fb98e9621c5ca14e8fe24a9c566a82bb"
+    },
+    {
+      "bytes": 341,
+      "modified_ns": 1788302140585968055,
+      "path": "<reproduction-root>/real/contextual_seed_37/evaluation/contextual_sparse_etm/test_access_audit.json",
+      "sha256": "eb3ecc8917b6e5b976f94feba1611d15facedc9b07a3fa8d40a7a270f9a38617"
+    },
+    {
+      "bytes": 84932128,
+      "modified_ns": 1788302140025646623,
+      "path": "<reproduction-root>/real/contextual_seed_37/evaluation/contextual_sparse_etm/beta.npy",
+      "sha256": "e23cf12907ed6a0a141da86c6cb4389c028e2a76d6432309fab9d9a624ac16cc"
+    },
+    {
+      "bytes": 31108128,
+      "modified_ns": 1788302140325669963,
+      "path": "<reproduction-root>/real/contextual_seed_37/evaluation/contextual_sparse_etm/test_observed_theta.npy",
+      "sha256": "2e0d976e15d3b970443fbbc52ee3dd15eed439da12ece291f2b449a43ae120dc"
+    },
+    {
+      "bytes": 31108128,
+      "modified_ns": 1788302140437678678,
+      "path": "<reproduction-root>/real/contextual_seed_37/evaluation/contextual_sparse_etm/test_full_theta.npy",
+      "sha256": "a970659995c0ac255e3a9f756630ce417b27e73f9ea308d752ce54ebd9ec16a1"
+    },
+    {
+      "bytes": 164032,
+      "modified_ns": 1788302145531524799,
+      "path": "<reproduction-root>/real/contextual_seed_37/chemical/contextual_sparse_etm/complete.json",
+      "sha256": "124145154d205b21b08f326db1930d935337d69732a92e4d6e8b8ae191c8d7b8"
+    }
+  ],
+  "reproduction_id": "f141cfa6-ce05-4cc6-bbad-424ae4afd52b",
+  "schema_version": 1,
+  "source": {
+    "branch": "codex/contextual-sparse-etm-cleanup",
+    "clean": true,
+    "commit": "102d59c07e2e6bd0a3cfc17ccfe153cbb34afec2",
+    "worktree": "<source-checkout>"
+  },
+  "split_protocol": "fit on train; select and ablate on validation; evaluate frozen models on test",
+  "stage_count": 57,
+  "synthetic_seeds": [
+    11,
+    23,
+    37
+  ],
+  "training_seeds": [
+    7043,
+    23,
+    37
+  ]
+}

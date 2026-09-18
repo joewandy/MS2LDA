@@ -1,0 +1,17 @@
+{
+  "attempts": [
+    {
+      "path": "real/reduced_document_context_seed42",
+      "variant": "reduced_document_context",
+      "seed": 42,
+      "training_seed": 7043,
+      "exit_code": 143,
+      "last_observed_completed_epoch": 80,
+      "reported_numerical_failure": false,
+      "final_checkpoint_saved": false,
+      "status": "process terminated by SIGTERM; cause unconfirmed",
+      "retry": "real/reduced_document_context_seed42_retry1",
+      "interpretation": "execution interruption, not a model-quality result or independent seed"
+    }
+  ]
+}

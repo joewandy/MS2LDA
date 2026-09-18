@@ -1,0 +1,276 @@
+ETM_CONTROL_EPOCH {"epoch": 1, "kl": 0.9041349871136318, "method": "etm", "reconstruction": 6260.781208929615, "seconds": 6.0570466599892825}
+ETM_CONTROL_EPOCH {"epoch": 2, "kl": 11.393070445996578, "method": "etm", "reconstruction": 6122.559086594626, "seconds": 5.618798705021618}
+ETM_CONTROL_EPOCH {"epoch": 3, "kl": 35.19635678228931, "method": "etm", "reconstruction": 5945.214788989486, "seconds": 5.620450038986746}
+ETM_CONTROL_EPOCH {"epoch": 4, "kl": 44.33128741968458, "method": "etm", "reconstruction": 5826.874831155082, "seconds": 5.6335566460038535}
+ETM_CONTROL_EPOCH {"epoch": 5, "kl": 44.42021421628578, "method": "etm", "reconstruction": 5771.029406396028, "seconds": 5.654613959981361}
+ETM_CONTROL_EPOCH {"epoch": 6, "kl": 44.98930291149104, "method": "etm", "reconstruction": 5745.305184908002, "seconds": 5.6412241679790895}
+ETM_CONTROL_EPOCH {"epoch": 7, "kl": 51.3733161498453, "method": "etm", "reconstruction": 5717.259770188376, "seconds": 5.6061654220102355}
+ETM_CONTROL_EPOCH {"epoch": 8, "kl": 55.623635693131206, "method": "etm", "reconstruction": 5679.1364586375585, "seconds": 5.60135329599143}
+ETM_CONTROL_EPOCH {"epoch": 9, "kl": 54.59385677587206, "method": "etm", "reconstruction": 5659.74396265333, "seconds": 5.632770550000714}
+ETM_CONTROL_EPOCH {"epoch": 10, "kl": 54.16800850128459, "method": "etm", "reconstruction": 5648.451468494451, "seconds": 5.657448114012368}
+ETM_CONTROL_EPOCH {"epoch": 11, "kl": 54.131749447261065, "method": "etm", "reconstruction": 5645.446261682243, "seconds": 5.66670480297762}
+ETM_CONTROL_EPOCH {"epoch": 12, "kl": 54.43167570595429, "method": "etm", "reconstruction": 5636.371289975175, "seconds": 5.6468178530049045}
+ETM_CONTROL_EPOCH {"epoch": 13, "kl": 55.92121530693268, "method": "etm", "reconstruction": 5636.275965610397, "seconds": 5.63676953400136}
+ETM_CONTROL_EPOCH {"epoch": 14, "kl": 60.61488752275984, "method": "etm", "reconstruction": 5607.759081118575, "seconds": 5.631705606996547}
+ETM_CONTROL_EPOCH {"epoch": 15, "kl": 64.1351778975157, "method": "etm", "reconstruction": 5586.71087817611, "seconds": 5.6177412800025195}
+ETM_CONTROL_EPOCH {"epoch": 16, "kl": 66.38106419215693, "method": "etm", "reconstruction": 5560.966513945677, "seconds": 5.634249135997379}
+ETM_CONTROL_EPOCH {"epoch": 17, "kl": 66.68612350036051, "method": "etm", "reconstruction": 5540.300452686916, "seconds": 5.65824650999275}
+ETM_CONTROL_EPOCH {"epoch": 18, "kl": 67.23215916000794, "method": "etm", "reconstruction": 5534.487487222546, "seconds": 5.6216793970088474}
+ETM_CONTROL_EPOCH {"epoch": 19, "kl": 68.97647126812801, "method": "etm", "reconstruction": 5521.3098076080605, "seconds": 5.593343273008941}
+ETM_CONTROL_EPOCH {"epoch": 20, "kl": 71.78428086610597, "method": "etm", "reconstruction": 5502.622170706775, "seconds": 5.604869039991172}
+ETM_CONTROL_EPOCH {"epoch": 21, "kl": 74.02639071740836, "method": "etm", "reconstruction": 5476.609867844626, "seconds": 5.61684449299355}
+ETM_CONTROL_EPOCH {"epoch": 22, "kl": 77.34864785738081, "method": "etm", "reconstruction": 5457.748434761975, "seconds": 5.633904702990549}
+ETM_CONTROL_EPOCH {"epoch": 23, "kl": 80.37678157057718, "method": "etm", "reconstruction": 5429.3381279205605, "seconds": 5.611584456986748}
+ETM_CONTROL_EPOCH {"epoch": 24, "kl": 83.06416434885186, "method": "etm", "reconstruction": 5403.5646676036795, "seconds": 5.597875111998292}
+ETM_CONTROL_EPOCH {"epoch": 25, "kl": 84.0670561745902, "method": "etm", "reconstruction": 5385.933894932827, "seconds": 5.642188569006976}
+ETM_CONTROL_EPOCH {"epoch": 26, "kl": 85.12579174576518, "method": "etm", "reconstruction": 5360.328093056367, "seconds": 5.628759868006455}
+ETM_CONTROL_EPOCH {"epoch": 27, "kl": 86.27392314304815, "method": "etm", "reconstruction": 5352.435870874708, "seconds": 5.639966754999477}
+ETM_CONTROL_EPOCH {"epoch": 28, "kl": 87.56855103679906, "method": "etm", "reconstruction": 5331.160083235981, "seconds": 5.656746741005918}
+ETM_CONTROL_EPOCH {"epoch": 29, "kl": 88.88584415043626, "method": "etm", "reconstruction": 5314.485634491823, "seconds": 5.633226498001022}
+ETM_CONTROL_EPOCH {"epoch": 30, "kl": 90.76747751681604, "method": "etm", "reconstruction": 5301.421368465245, "seconds": 5.620581610011868}
+ETM_CONTROL_EPOCH {"epoch": 31, "kl": 92.19994810585663, "method": "etm", "reconstruction": 5286.155953380549, "seconds": 5.614740143995732}
+ETM_CONTROL_EPOCH {"epoch": 32, "kl": 94.24375637446609, "method": "etm", "reconstruction": 5271.291052132009, "seconds": 5.642801036010496}
+ETM_CONTROL_EPOCH {"epoch": 33, "kl": 97.16325699280355, "method": "etm", "reconstruction": 5251.929765077395, "seconds": 5.65492708599777}
+ETM_CONTROL_EPOCH {"epoch": 34, "kl": 100.13454023699894, "method": "etm", "reconstruction": 5226.76763744889, "seconds": 5.6177368740027305}
+ETM_CONTROL_EPOCH {"epoch": 35, "kl": 103.12425481493229, "method": "etm", "reconstruction": 5204.597140588493, "seconds": 5.592454152007122}
+ETM_CONTROL_EPOCH {"epoch": 36, "kl": 106.47803675571335, "method": "etm", "reconstruction": 5182.810848057827, "seconds": 5.605380290013272}
+ETM_CONTROL_EPOCH {"epoch": 37, "kl": 109.50260504606729, "method": "etm", "reconstruction": 5165.860223787968, "seconds": 5.626645721989917}
+ETM_CONTROL_EPOCH {"epoch": 38, "kl": 111.83539574168553, "method": "etm", "reconstruction": 5149.50048828125, "seconds": 5.672928170999512}
+ETM_CONTROL_EPOCH {"epoch": 39, "kl": 113.79540766065365, "method": "etm", "reconstruction": 5131.2507301401865, "seconds": 5.658424566005124}
+ETM_CONTROL_EPOCH {"epoch": 40, "kl": 116.1516141802351, "method": "etm", "reconstruction": 5116.298882885514, "seconds": 5.628210096998373}
+ETM_CONTROL_EPOCH {"epoch": 41, "kl": 118.72533010322357, "method": "etm", "reconstruction": 5102.179819837909, "seconds": 5.59423323199735}
+ETM_CONTROL_EPOCH {"epoch": 42, "kl": 121.2477417705215, "method": "etm", "reconstruction": 5084.871230651285, "seconds": 5.616295186977368}
+ETM_CONTROL_EPOCH {"epoch": 43, "kl": 123.57564181033696, "method": "etm", "reconstruction": 5075.588109667056, "seconds": 5.657149495003978}
+ETM_CONTROL_EPOCH {"epoch": 44, "kl": 126.08901956148237, "method": "etm", "reconstruction": 5055.754303263727, "seconds": 5.638625453982968}
+ETM_CONTROL_EPOCH {"epoch": 45, "kl": 128.4743247344115, "method": "etm", "reconstruction": 5040.117812682535, "seconds": 5.622971885022707}
+ETM_CONTROL_EPOCH {"epoch": 46, "kl": 130.80086046735818, "method": "etm", "reconstruction": 5022.536735178154, "seconds": 5.605804621009156}
+ETM_CONTROL_EPOCH {"epoch": 47, "kl": 133.20806114695895, "method": "etm", "reconstruction": 5008.443783768984, "seconds": 5.596801271021832}
+ETM_CONTROL_EPOCH {"epoch": 48, "kl": 135.31194626282308, "method": "etm", "reconstruction": 4995.756822247372, "seconds": 5.604016463999869}
+ETM_CONTROL_EPOCH {"epoch": 49, "kl": 137.90284971433266, "method": "etm", "reconstruction": 4983.285562390479, "seconds": 5.639988073002314}
+ETM_CONTROL_EPOCH {"epoch": 50, "kl": 140.30826176438376, "method": "etm", "reconstruction": 4972.99554614486, "seconds": 5.637004871998215}
+ETM_CONTROL_EPOCH {"epoch": 51, "kl": 142.58691848327067, "method": "etm", "reconstruction": 4954.356066552278, "seconds": 5.604448051017243}
+ETM_CONTROL_EPOCH {"epoch": 52, "kl": 144.77152815489012, "method": "etm", "reconstruction": 4946.473427460573, "seconds": 5.607928207988152}
+ETM_CONTROL_EPOCH {"epoch": 53, "kl": 147.04541357878213, "method": "etm", "reconstruction": 4935.482974043516, "seconds": 5.616431714006467}
+ETM_CONTROL_EPOCH {"epoch": 54, "kl": 149.61831094617042, "method": "etm", "reconstruction": 4925.779100649825, "seconds": 5.61130023302394}
+ETM_CONTROL_EPOCH {"epoch": 55, "kl": 151.5888726065092, "method": "etm", "reconstruction": 4916.901358060748, "seconds": 5.632406880002236}
+ETM_CONTROL_EPOCH {"epoch": 56, "kl": 154.03832608517087, "method": "etm", "reconstruction": 4901.822804103388, "seconds": 5.61921346798772}
+ETM_CONTROL_EPOCH {"epoch": 57, "kl": 156.10607525121387, "method": "etm", "reconstruction": 4887.497864339954, "seconds": 5.599144645006163}
+ETM_CONTROL_EPOCH {"epoch": 58, "kl": 158.04278564453125, "method": "etm", "reconstruction": 4874.408335462909, "seconds": 5.611008677980863}
+ETM_CONTROL_EPOCH {"epoch": 59, "kl": 159.724975443332, "method": "etm", "reconstruction": 4864.455863025701, "seconds": 5.601381548010977}
+ETM_CONTROL_EPOCH {"epoch": 60, "kl": 161.94137017080718, "method": "etm", "reconstruction": 4862.951546071846, "seconds": 5.633694288000697}
+ETM_CONTROL_EPOCH {"epoch": 61, "kl": 163.4314312801183, "method": "etm", "reconstruction": 4850.191958418516, "seconds": 5.633719839010155}
+ETM_CONTROL_EPOCH {"epoch": 62, "kl": 165.1355117370035, "method": "etm", "reconstruction": 4840.105605651285, "seconds": 5.607763833977515}
+ETM_CONTROL_EPOCH {"epoch": 63, "kl": 166.77731622713748, "method": "etm", "reconstruction": 4831.816141574182, "seconds": 5.596108483005082}
+ETM_CONTROL_EPOCH {"epoch": 64, "kl": 168.4404462297386, "method": "etm", "reconstruction": 4818.802141136098, "seconds": 5.594791134994011}
+ETM_CONTROL_EPOCH {"epoch": 65, "kl": 169.9255048805308, "method": "etm", "reconstruction": 4816.369163441881, "seconds": 5.614060594991315}
+ETM_CONTROL_EPOCH {"epoch": 66, "kl": 171.00640412803008, "method": "etm", "reconstruction": 4808.134281907126, "seconds": 5.637779813987436}
+ETM_CONTROL_EPOCH {"epoch": 67, "kl": 172.3629017767505, "method": "etm", "reconstruction": 4799.3782080534465, "seconds": 5.655464081995888}
+ETM_CONTROL_EPOCH {"epoch": 68, "kl": 173.565728018217, "method": "etm", "reconstruction": 4797.100658951519, "seconds": 5.6013765090028755}
+ETM_CONTROL_EPOCH {"epoch": 69, "kl": 174.96924484110323, "method": "etm", "reconstruction": 4787.630624361127, "seconds": 5.6014328559977}
+ETM_CONTROL_EPOCH {"epoch": 70, "kl": 176.05943583550854, "method": "etm", "reconstruction": 4782.013845283294, "seconds": 5.602625316998456}
+ETM_CONTROL_EPOCH {"epoch": 71, "kl": 177.53939805075387, "method": "etm", "reconstruction": 4777.645151869159, "seconds": 5.609291959990514}
+ETM_CONTROL_EPOCH {"epoch": 72, "kl": 178.93441430207724, "method": "etm", "reconstruction": 4766.651933046145, "seconds": 5.614718849014025}
+ETM_CONTROL_EPOCH {"epoch": 73, "kl": 180.32897621226087, "method": "etm", "reconstruction": 4762.362637813961, "seconds": 5.615545765002025}
+ETM_CONTROL_EPOCH {"epoch": 74, "kl": 181.60114195636498, "method": "etm", "reconstruction": 4754.276732257594, "seconds": 5.608789003978018}
+ETM_CONTROL_EPOCH {"epoch": 75, "kl": 182.95637055869415, "method": "etm", "reconstruction": 4743.465274989048, "seconds": 5.632109080004739}
+ETM_CONTROL_EPOCH {"epoch": 76, "kl": 184.26972020229448, "method": "etm", "reconstruction": 4742.859251788844, "seconds": 5.642553698999109}
+ETM_CONTROL_EPOCH {"epoch": 77, "kl": 185.07456200145114, "method": "etm", "reconstruction": 4739.037994669977, "seconds": 5.679109869000968}
+ETM_CONTROL_EPOCH {"epoch": 78, "kl": 186.76122633319034, "method": "etm", "reconstruction": 4729.994984849591, "seconds": 5.657419611001387}
+ETM_CONTROL_EPOCH {"epoch": 79, "kl": 187.5133086587781, "method": "etm", "reconstruction": 4724.397511134638, "seconds": 5.609443991997978}
+ETM_CONTROL_EPOCH {"epoch": 80, "kl": 188.8988251017633, "method": "etm", "reconstruction": 4725.36334057389, "seconds": 5.60239640600048}
+ETM_CONTROL_EPOCH {"epoch": 81, "kl": 190.06318022826008, "method": "etm", "reconstruction": 4717.480642158294, "seconds": 5.63675671099918}
+ETM_CONTROL_EPOCH {"epoch": 82, "kl": 191.25966138037566, "method": "etm", "reconstruction": 4710.312878760222, "seconds": 5.679181697982131}
+ETM_CONTROL_EPOCH {"epoch": 83, "kl": 191.97683787123066, "method": "etm", "reconstruction": 4703.907212872372, "seconds": 5.640512640005909}
+ETM_CONTROL_EPOCH {"epoch": 84, "kl": 193.30278899290852, "method": "etm", "reconstruction": 4702.085754964954, "seconds": 5.640867749985773}
+ETM_CONTROL_EPOCH {"epoch": 85, "kl": 194.3166394100011, "method": "etm", "reconstruction": 4690.371328763873, "seconds": 5.59659238497261}
+ETM_CONTROL_EPOCH {"epoch": 86, "kl": 195.6790395005841, "method": "etm", "reconstruction": 4693.156341267523, "seconds": 5.650139635021333}
+ETM_CONTROL_EPOCH {"epoch": 87, "kl": 196.43183542412018, "method": "etm", "reconstruction": 4689.321708893108, "seconds": 5.670471567980712}
+ETM_CONTROL_EPOCH {"epoch": 88, "kl": 198.00630929536908, "method": "etm", "reconstruction": 4686.716730706045, "seconds": 5.66761413399945}
+ETM_CONTROL_EPOCH {"epoch": 89, "kl": 199.13855194377007, "method": "etm", "reconstruction": 4679.167831848715, "seconds": 5.622325592994457}
+ETM_CONTROL_EPOCH {"epoch": 90, "kl": 200.07944481395114, "method": "etm", "reconstruction": 4673.229382666472, "seconds": 5.597372212010669}
+ETM_CONTROL_EPOCH {"epoch": 91, "kl": 200.76106347770335, "method": "etm", "reconstruction": 4670.839994341413, "seconds": 5.603736190998461}
+ETM_CONTROL_EPOCH {"epoch": 92, "kl": 201.7935307582962, "method": "etm", "reconstruction": 4662.851028584988, "seconds": 5.59920648401021}
+ETM_CONTROL_EPOCH {"epoch": 93, "kl": 203.01531725731965, "method": "etm", "reconstruction": 4666.431535667348, "seconds": 5.603889641002752}
+ETM_CONTROL_EPOCH {"epoch": 94, "kl": 203.75704884751934, "method": "etm", "reconstruction": 4655.96044921875, "seconds": 5.621384549012873}
+ETM_CONTROL_EPOCH {"epoch": 95, "kl": 204.47491811591888, "method": "etm", "reconstruction": 4654.268465701664, "seconds": 5.625577346014325}
+ETM_CONTROL_EPOCH {"epoch": 96, "kl": 205.60888572051147, "method": "etm", "reconstruction": 4654.998069691881, "seconds": 5.614589044009335}
+ETM_CONTROL_EPOCH {"epoch": 97, "kl": 206.67904064142814, "method": "etm", "reconstruction": 4642.641558210426, "seconds": 5.6010796460032}
+ETM_CONTROL_EPOCH {"epoch": 98, "kl": 207.42769073771538, "method": "etm", "reconstruction": 4645.561384254527, "seconds": 5.644447325990768}
+ETM_CONTROL_EPOCH {"epoch": 99, "kl": 208.27320234352183, "method": "etm", "reconstruction": 4637.471081885222, "seconds": 5.684880849003093}
+ETM_CONTROL_EPOCH {"epoch": 100, "kl": 209.23354617680346, "method": "etm", "reconstruction": 4637.571905118282, "seconds": 5.621914484014269}
+ETM_CONTROL_EPOCH {"epoch": 101, "kl": 210.3572834050544, "method": "etm", "reconstruction": 4633.476614978826, "seconds": 5.595818008994684}
+ETM_CONTROL_EPOCH {"epoch": 102, "kl": 211.09770958445895, "method": "etm", "reconstruction": 4630.824994523949, "seconds": 5.6050476520031225}
+ETM_CONTROL_EPOCH {"epoch": 103, "kl": 211.7378773912091, "method": "etm", "reconstruction": 4626.662990106601, "seconds": 5.60924071498448}
+ETM_CONTROL_EPOCH {"epoch": 104, "kl": 212.51323022575022, "method": "etm", "reconstruction": 4621.127473349883, "seconds": 5.650578008004231}
+ETM_CONTROL_EPOCH {"epoch": 105, "kl": 213.35393417215792, "method": "etm", "reconstruction": 4620.540091541326, "seconds": 5.64865561699844}
+ETM_CONTROL_EPOCH {"epoch": 106, "kl": 214.05694323388215, "method": "etm", "reconstruction": 4614.350804979556, "seconds": 5.6265263829845935}
+ETM_CONTROL_EPOCH {"epoch": 107, "kl": 214.74199084700825, "method": "etm", "reconstruction": 4614.632666471963, "seconds": 5.593265271018026}
+ETM_CONTROL_EPOCH {"epoch": 108, "kl": 215.66434842403805, "method": "etm", "reconstruction": 4615.889888014749, "seconds": 5.600466454983689}
+ETM_CONTROL_EPOCH {"epoch": 109, "kl": 216.23895905396648, "method": "etm", "reconstruction": 4611.997670396466, "seconds": 5.609022033022484}
+ETM_CONTROL_EPOCH {"epoch": 110, "kl": 217.2200795111255, "method": "etm", "reconstruction": 4609.6540185090535, "seconds": 5.606879280996509}
+ETM_CONTROL_EPOCH {"epoch": 111, "kl": 217.99298922815055, "method": "etm", "reconstruction": 4600.480386609229, "seconds": 5.643637998000486}
+ETM_CONTROL_EPOCH {"epoch": 112, "kl": 219.08160485953928, "method": "etm", "reconstruction": 4599.073342581775, "seconds": 5.612181342992699}
+ETM_CONTROL_EPOCH {"epoch": 113, "kl": 219.7138587737752, "method": "etm", "reconstruction": 4596.571749963493, "seconds": 5.603762184997322}
+ETM_CONTROL_EPOCH {"epoch": 114, "kl": 220.0080673360379, "method": "etm", "reconstruction": 4597.580837927132, "seconds": 5.613478651008336}
+ETM_CONTROL_EPOCH {"epoch": 115, "kl": 221.16730606221708, "method": "etm", "reconstruction": 4590.689412054615, "seconds": 5.6496908940025605}
+ETM_CONTROL_EPOCH {"epoch": 116, "kl": 221.59009131315713, "method": "etm", "reconstruction": 4587.539559908002, "seconds": 5.65745712100761}
+ETM_CONTROL_EPOCH {"epoch": 117, "kl": 222.5741808169356, "method": "etm", "reconstruction": 4586.580169392523, "seconds": 5.606994236994069}
+ETM_CONTROL_EPOCH {"epoch": 118, "kl": 223.22472802278037, "method": "etm", "reconstruction": 4582.897280684141, "seconds": 5.610694685019553}
+ETM_CONTROL_EPOCH {"epoch": 119, "kl": 223.47944512768328, "method": "etm", "reconstruction": 4583.196654132594, "seconds": 5.6269005089998245}
+ETM_CONTROL_EPOCH {"epoch": 120, "kl": 224.51229273715865, "method": "etm", "reconstruction": 4575.686096761829, "seconds": 5.657763938012067}
+{
+  "architecture_method": "etm",
+  "config": {
+    "architecture": "canonical fixed-SGNS ETM",
+    "batch_size": 256,
+    "decoder_normalization": "global topic-word softmax",
+    "device": "cuda",
+    "embedding_dimensions": 48,
+    "epochs": 120,
+    "hidden_dimensions": 800,
+    "learning_rate": 0.005,
+    "only_scientific_change": null,
+    "optimizer": "Adam",
+    "paired_reference_method": null,
+    "seed": 7012,
+    "shuffle_seed": 7030,
+    "topics": 1000,
+    "trained_separately": true,
+    "training_seed": 7012,
+    "weight_decay": 1.2e-06
+  },
+  "fit_identity": {
+    "input_sha256": {
+      "data/train.npz": "b4808f341864ba1df246a5093992f52397c2f96e0b48b23245b9b17e30aa5b52",
+      "data/validation_completion.npz": "f75245b599bc3c087aad97ff7247112d422ec0ab87418c5f96b0a889b2f661f0",
+      "data/validation_full.npz": "51888951815f448d0527a6a876be345cfe76ab346d9e97bada9a186e8857fab2",
+      "data/validation_observed.npz": "76afa43a3540d91edd4dd7e851afe10c65e3d67bcf06007c83eac1d9b6e15bff",
+      "data/validation_records.jsonl": "0e85218489af6a07413474bb2db6ce74da537f6fd3c8ee77d5286f5775ba068c",
+      "data/vocabulary.json": "9ed46f54a4e4917560f764d4ac662bae7036c1b98733d6b25a62a869799bd90e",
+      "protocol.json": "8044718d019cac4f92524c7980bc5217d7db861d58c940b3f0a6ac8970d48021",
+      "token_features/features.npy": "a9d21070b111be3e5f59e3650f47d2eede9ae264ecb3085305bcd160c2d1883d"
+    },
+    "recipe": {
+      "adam_betas": [
+        0.9,
+        0.999
+      ],
+      "batch_size": 256,
+      "device": "cuda",
+      "epochs": 120,
+      "hidden": 800,
+      "learning_rate": 0.005,
+      "method": "etm",
+      "shuffle_seed": 7030,
+      "threads": 6,
+      "topics": 1000,
+      "torch": "2.10.0+cu128",
+      "weight_decay": 1.2e-06
+    },
+    "training_seed": 7012
+  },
+  "method": "etm",
+  "metrics": {
+    "document_completion": {
+      "eligible_documents": 3888,
+      "in_vocabulary_tokens": 1277983,
+      "nll_per_token": 8.711593291272205,
+      "oov_fraction": 0.031355544236867795,
+      "out_of_vocabulary_tokens": 41369,
+      "total_documents": 3889
+    },
+    "finite_stable": true,
+    "fragment_probability_mass": {
+      "extreme_definition": "fragment mass <0.1 or >0.9",
+      "fraction_extreme_skew": 0.17,
+      "maximum": 0.997378715354335,
+      "median": 0.33321033021807756,
+      "minimum": 0.011636379943029776,
+      "percentiles": {
+        "1": 0.025834356706843812,
+        "25": 0.17021340852981087,
+        "5": 0.05493436410930076,
+        "50": 0.33321033021807756,
+        "75": 0.5394531091257275,
+        "95": 0.8846656865824327,
+        "99": 0.9818795709632295
+      }
+    },
+    "runtime": {
+      "memory": {
+        "measurement": "sampled per epoch; process is platform-normalized ru_maxrss and system is minimum /proc/meminfo MemAvailable",
+        "minimum_system_available_bytes": 17661865984,
+        "peak_cuda_allocated_bytes": 757880832,
+        "peak_cuda_reserved_bytes": 1038090240,
+        "peak_process_bytes": 2474778624
+      },
+      "training_wall_seconds": 675.508193947986,
+      "validation_full_spectra_per_second": 46369.00025595788,
+      "validation_observed_spectra_per_second": 48842.09938915783
+    },
+    "theta_distribution": {
+      "fraction_max_theta_ge_0_2": 0.7819490871689381,
+      "fraction_max_theta_ge_0_3": 0.6130110568269478,
+      "fraction_max_theta_ge_0_5": 0.304448444330162,
+      "max_theta_p10": 0.13156366774404996,
+      "max_theta_p25": 0.21927120286727425,
+      "max_theta_p50": 0.36559028242307284,
+      "max_theta_p75": 0.5477668058948496,
+      "max_theta_p90": 0.7496511313274901,
+      "max_theta_p95": 0.8616351724202008,
+      "mean_effective_topics_per_spectrum": 103.38841776327541,
+      "median_effective_topics_per_spectrum": 41.951853754140785,
+      "median_max_theta": 0.36559028242307284,
+      "unique_top1_topics": 291
+    },
+    "topic_inventory": {
+      "active_topic_usage_threshold": 0.0005,
+      "active_topics_above_usage_threshold": 311,
+      "active_topics_mean_usage_ge_1_over_k": 148,
+      "catastrophic_duplicate_component": false,
+      "catastrophic_duplicate_component_fraction": 0.5,
+      "corpus_effective_topic_count": 346.6862422997211,
+      "documents": 3889,
+      "duplicate_components": [
+        {
+          "duplicate_component_count": 7,
+          "largest_component_size": 3,
+          "pair_count": 9,
+          "threshold": 0.95,
+          "topics_in_duplicate_components": 15
+        },
+        {
+          "duplicate_component_count": 4,
+          "largest_component_size": 2,
+          "pair_count": 4,
+          "threshold": 0.99,
+          "topics_in_duplicate_components": 8
+        },
+        {
+          "duplicate_component_count": 2,
+          "largest_component_size": 2,
+          "pair_count": 2,
+          "threshold": 0.999,
+          "topics_in_duplicate_components": 4
+        }
+      ],
+      "largest_strict_duplicate_component": 2,
+      "maximum_mean_topic_usage": 0.03722984896419099,
+      "maximum_pairwise_beta_cosine": 0.999939501285553,
+      "mean_effective_topics_per_spectrum": 103.38841776327541,
+      "mean_nearest_topic_beta_cosine": 0.29289862513542175,
+      "median_beta_effective_words": 92.20744323730469,
+      "median_beta_max_probability": 0.1672515720129013,
+      "median_beta_top_n_mass": 0.6248724460601807,
+      "median_effective_topics_per_spectrum": 41.951853754140785,
+      "median_nearest_topic_beta_cosine": 0.22246254980564117,
+      "strictest_duplicate_cosine_threshold": 0.999,
+      "top_word_count": 20,
+      "top_word_uniqueness": 0.34005,
+      "topics": 1000,
+      "topics_never_top1": 709,
+      "unique_top1_topics": 291
+    }
+  },
+  "parameters": 19278000
+}

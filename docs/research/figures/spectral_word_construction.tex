@@ -1,0 +1,91 @@
+% A numerical illustration of preprocessing, not an accepted one-peak spectrum.
+% Coordinates are in centimetres at final size: do not shrink the text to fit.
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[x=1cm,y=1cm,font=\fontsize{9}{11}\selectfont]
+\path[use as bounding box] (0,0.2) rectangle (16.8,-7.4);
+\node[anchor=west,font=\bfseries\fontsize{10}{12}\selectfont] at (0,0)
+  {(a) One retained peak becomes two spectral words};
+
+% The dashed precursor marker is a mass reference, not a measured intensity.
+\node[anchor=west] at (0,-0.60) {Intensity};
+\draw[black!65] (0.42,-2.80)--(4.0,-2.80);
+\draw[black!65] (0.42,-2.80)--(0.42,-1.05);
+\draw[black!65] (0.36,-1.05)--(0.48,-1.05);
+\node[anchor=east] at (0.31,-1.05) {1};
+\node[anchor=east] at (0.31,-2.80) {0};
+\draw[accent,line width=1.6pt] (2.43,-2.80)--(2.43,-2.10);
+\node[accent,anchor=south] at (2.43,-2.06) {0.40};
+\draw[dashed,black!60,line width=0.6pt] (3.77,-2.80)--(3.77,-1.05);
+\draw[black!65] (2.43,-2.80)--(2.43,-2.87);
+\draw[black!65] (3.77,-2.80)--(3.77,-2.87);
+\node[anchor=north] at (2.43,-2.91) {60.00};
+\node[anchor=north] at (3.77,-2.91) {100.00};
+\node[anchor=north] at (2.21,-3.27) {fragment};
+\node[anchor=north] at (3.85,-3.27) {precursor};
+\node[anchor=north west] at (0.42,-2.91) {$m/z$};
+% A bracket, rather than an arrow, denotes the precursor-minus-fragment gap.
+\draw[lossgold,line width=0.7pt]
+  (2.43,-1.18)--(2.43,-0.94)--(3.77,-0.94)--(3.77,-1.18);
+\node[lossgold!65!black,anchor=south] at (3.10,-0.90) {loss: 40.00};
+
+\draw[dataflow] (4.38,-1.83)--(4.91,-1.83);
+\node[anchor=west,font=\bfseries\fontsize{9}{11}\selectfont] at (5.13,-0.70)
+  {Spectral word};
+\node[anchor=east,font=\bfseries\fontsize{9}{11}\selectfont] at (9.55,-0.70)
+  {Count};
+\draw[black!35] (5.13,-0.98)--(9.55,-0.98);
+\node[anchor=west,text=accent] at (5.13,-1.42) {\texttt{frag@60.0}};
+\node[anchor=east] at (9.55,-1.42) {40};
+\node[anchor=west,text=lossgold!65!black] at (5.13,-2.03) {\texttt{loss@40.0}};
+\node[anchor=east] at (9.55,-2.03) {40};
+\node[align=center] at (7.34,-2.84)
+  {$\operatorname{round}(100\times0.40)=40$};
+\node[align=center,text width=4.40cm] at (7.34,-3.32)
+  {The two words keep one peak-group identity.};
+
+\draw[dataflow] (9.79,-1.83)--(10.32,-1.83);
+\node[align=center,font=\bfseries\fontsize{9}{11}\selectfont,text width=5.9cm]
+  at (13.55,-0.70)
+  {Accumulate over all retained peaks};
+\node[align=center] at (13.55,-1.37) {Raw-count reconstruction target};
+\node[align=center,font=\fontsize{11}{13}\selectfont] at (13.55,-1.83) {$c_d$};
+\node[align=center] at (13.55,-2.49) {Normalized encoder input};
+\node[align=center,font=\fontsize{11}{13}\selectfont] at (13.55,-3.02)
+  {$x_d=c_d/N_d$};
+
+\draw[black!20] (0,-3.88)--(16.8,-3.88);
+\node[anchor=west,font=\bfseries\fontsize{10}{12}\selectfont] at (0,-4.22)
+  {(b) Structure groups stay within one partition};
+\node[anchor=west] at (0,-4.66)
+  {38,888 filtered spectra; no shared compound or split group between partitions};
+
+% Parallel roles, not a training-to-validation flow or a proportional bar chart.
+\fill[accentlight] (0,-5.06) rectangle (5.28,-5.65);
+\fill[softgray] (5.76,-5.06) rectangle (11.04,-5.65);
+\fill[softgray] (11.52,-5.06) rectangle (16.8,-5.65);
+\node[font=\bfseries\fontsize{9}{11}\selectfont] at (2.64,-5.35)
+  {Training: 27,222};
+\node[font=\bfseries\fontsize{9}{11}\selectfont] at (8.40,-5.35)
+  {Validation: 3,889};
+\node[font=\bfseries\fontsize{9}{11}\selectfont] at (14.16,-5.35)
+  {Reserved test: 7,777};
+\node[align=center,text width=5.0cm] at (2.64,-6.12)
+  {Fit vocabulary, word vectors and model.};
+\node[align=center,text width=5.0cm] at (8.40,-6.12)
+  {Compare fitted models;\\results reported here.};
+\node[align=center,text width=5.0cm] at (14.16,-6.12)
+  {Excluded from these\\reported comparisons.};
+\node[align=center] at (2.64,-6.65) {$V=21,233$; $E=48$};
+\node[anchor=west,text width=16.8cm] at (0,-7.12)
+  {Validation uses the vocabulary and word vectors fitted on training spectra.};
+\end{tikzpicture}
+\caption{Spectral representation and evaluation boundaries. (a) An illustrative
+peak with normalized intensity 0.40 contributes paired fragment and neutral-loss
+pseudo-counts when both words
+occur in the training vocabulary. Accumulated raw counts train reconstruction;
+normalized counts enter inference. The dashed precursor marker indicates mass,
+not intensity. (b) Structure-grouped partitions have different roles; validation
+does not fit the vocabulary or word embeddings.}
+\label{fig:data}
+\end{figure}

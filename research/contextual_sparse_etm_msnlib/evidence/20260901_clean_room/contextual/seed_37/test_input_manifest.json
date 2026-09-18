@@ -1,0 +1,65 @@
+{
+  "completed_validation_outputs": [
+    {
+      "bytes": 5705,
+      "path": "<reproduction-root>/real/contextual_seed_37/validation_evaluation/contextual_sparse_etm/complete.json",
+      "sha256": "c21dfe5b76e3201fa13e0baf3fe196968d900c7b463c1efdff1bfd0ce1a12f7d"
+    },
+    {
+      "bytes": 162361,
+      "path": "<reproduction-root>/real/contextual_seed_37/validation_chemical/contextual_sparse_etm/complete.json",
+      "sha256": "c6119652de3e7afdc28dea7a5bb700ca5300cc166137f75f62b57aa307078d1d"
+    }
+  ],
+  "exposed_after_validation": true,
+  "frozen_models": [
+    {
+      "bytes": 81193085,
+      "method": "contextual_sparse_etm",
+      "path": "<reproduction-root>/real/contextual_seed_37/models/contextual_sparse_etm/weights.pt",
+      "sha256": "7133ec455b2112ff6b78b8e627d179fdcac2472c50424b9deba486f73c2ce159"
+    },
+    {
+      "bytes": 1315,
+      "method": "contextual_sparse_etm",
+      "path": "<reproduction-root>/real/contextual_seed_37/models/contextual_sparse_etm/config.json",
+      "sha256": "812e05d676791fdb0c630247d724bf989f6842d9dfd4b8634700a6db932ebeb2"
+    },
+    {
+      "bytes": 13698,
+      "method": "contextual_sparse_etm",
+      "path": "<reproduction-root>/real/contextual_seed_37/models/contextual_sparse_etm/result.json",
+      "sha256": "4368d34c44196be5cbf60e594b72ffac00c822f493a491fd2871d46d5403d78b"
+    }
+  ],
+  "linked_test_inputs": [
+    {
+      "bytes": 1482593,
+      "linked_path": "<reproduction-root>/real/contextual_seed_37/data/test_observed.npz",
+      "path": "<reproduction-root>/prepared/data/test_observed.npz",
+      "sha256": "855154fb1ee2c72f8dc56bef5258de997e951075042b458cbafe7877ab355f33"
+    },
+    {
+      "bytes": 1484769,
+      "linked_path": "<reproduction-root>/real/contextual_seed_37/data/test_completion.npz",
+      "path": "<reproduction-root>/prepared/data/test_completion.npz",
+      "sha256": "328f5970632ee03877c0151846db6034d98d0041f4012f9603d6519552553c45"
+    },
+    {
+      "bytes": 2917737,
+      "linked_path": "<reproduction-root>/real/contextual_seed_37/data/test_full.npz",
+      "path": "<reproduction-root>/prepared/data/test_full.npz",
+      "sha256": "45b931c5c5a56d8a4f86ca0d19942d09089056c815a41210aae55c12e692cd01"
+    },
+    {
+      "bytes": 2481149,
+      "linked_path": "<reproduction-root>/real/contextual_seed_37/data/test_records.jsonl",
+      "path": "<reproduction-root>/prepared/data/test_records.jsonl",
+      "sha256": "94647034814f2d040e2912e76ff5d919d414613429bd6809cdbf0ce87b436ac5"
+    }
+  ],
+  "methods": [
+    "contextual_sparse_etm"
+  ],
+  "split": "test"
+}

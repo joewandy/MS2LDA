@@ -1,0 +1,31 @@
+{
+  "attempt": 1,
+  "command": [
+    "/home/joewandy/miniforge3/envs/ms2lda-neural/bin/python",
+    "-u",
+    "-m",
+    "scripts.run_etm_controls",
+    "train",
+    "--run",
+    "<repeat-root>/real/etm_seed7024_attempt1",
+    "--method",
+    "etm",
+    "--device",
+    "cuda",
+    "--epochs",
+    "120",
+    "--batch-size",
+    "256",
+    "--training-seed",
+    "7024"
+  ],
+  "cwd": "<repeat-root>/source_snapshot",
+  "finished_utc": "2026-09-08T16:43:52.192068+00:00",
+  "log": "<repeat-root>/logs/etm_seed7024_attempt1.fit_validation.log",
+  "pid": 456117,
+  "return_code": 0,
+  "run": "<repeat-root>/real/etm_seed7024_attempt1",
+  "stage": "fit_validation",
+  "started_utc": "2026-09-08T15:02:09.795850+00:00",
+  "status": "complete"
+}

@@ -1,0 +1,36 @@
+{
+  "attempt": 1,
+  "command": [
+    "<python-prefix>/bin/python",
+    "-m",
+    "scripts.run_etm_controls",
+    "chemical",
+    "--run",
+    "<reproduction-root>/real/controls",
+    "--data-root",
+    "<reproduction-root>/assets",
+    "--method",
+    "etm"
+  ],
+  "finished_utc": "2026-09-01T20:58:55.588712+00:00",
+  "log": "<reproduction-root>/logs/canonical_etm_chemistry.attempt-1.log",
+  "name": "canonical_etm_chemistry",
+  "outputs": [
+    {
+      "bytes": 159171,
+      "modified_ns": 1788296334586758927,
+      "path": "<reproduction-root>/real/controls/validation_chemical/etm/complete.json",
+      "sha256": "bfe961d8b5e25ba9f3fe8aa13ccd7cd2e7253dcfaa57077ee521e639ac36dbfa"
+    },
+    {
+      "bytes": 5426,
+      "modified_ns": 1788296334587093540,
+      "path": "<reproduction-root>/real/controls/models/etm/validation_access_audit.json",
+      "sha256": "b2dc60651d417d7d7e4c454550ad6ec4940e388b9e14fabbd169dd19fe8bd8bb"
+    }
+  ],
+  "pre_stage_load": null,
+  "return_code": 0,
+  "started_utc": "2026-09-01T20:58:09.983456+00:00",
+  "status": "complete"
+}

@@ -1,0 +1,354 @@
+{
+  "confirmation_rule": "Any passing candidate still needs two further real seeds",
+  "initial_real_gates": {
+    "batchnorm_fixed_entmax": {
+      "checks": {
+        "broad_winner_inventory": false,
+        "no_catastrophic_duplicate": true,
+        "reference_0_completion_nll": true,
+        "reference_0_evaluable_motifs": false,
+        "reference_0_mean_sos": true,
+        "reference_0_useful_motifs": false,
+        "reference_1_completion_nll": true,
+        "reference_1_evaluable_motifs": false,
+        "reference_1_mean_sos": true,
+        "reference_1_useful_motifs": false,
+        "sparse_mixtures": true
+      },
+      "passed": false
+    },
+    "contextual_unbalanced": {
+      "checks": {
+        "broad_winner_inventory": true,
+        "no_catastrophic_duplicate": true,
+        "reference_0_completion_nll": true,
+        "reference_0_evaluable_motifs": false,
+        "reference_0_mean_sos": true,
+        "reference_0_useful_motifs": false,
+        "reference_1_completion_nll": true,
+        "reference_1_evaluable_motifs": false,
+        "reference_1_mean_sos": true,
+        "reference_1_useful_motifs": false,
+        "sparse_mixtures": true
+      },
+      "passed": false
+    }
+  },
+  "new_training_runs": 27,
+  "replacement_confirmed": false,
+  "source_sha256": {
+    "benchmarks/neural_ms2lda/review_tables.py": "868167a44599ed9725bbd42d5679bdaa1c2b1315d497c68141f282df597ed738",
+    "benchmarks/neural_ms2lda/utils.py": "0b766770351d5511ff71b995c4516f77d2c93c432abe5a36b7e615e4fec72701",
+    "research/contextual_sparse_etm_msnlib/evidence/20260901_clean_room/validation_comparison.csv": "5fb5b6d90f470233a9ea35724c6eefebdf07a36dcef616d93d3c1b0302b0ebba",
+    "research/minimal_neural_etm/review_20260907/evidence/manifest.json": "aa20a7e456eb09695c2f016f93b5666d657602da5807ae4e7671c09ebaa01628",
+    "research/minimal_neural_etm/review_20260907/evidence/prior_round/manifest.json": "947127db7d3dd36202415506839d70c3d74c1bb2d67d9c02fffa27b5c8155731",
+    "research/minimal_neural_etm/review_20260907/evidence/prior_round/runs.csv": "da4e680f4a5446b211446ced3cbc5080382284615f5b3136413ae7fe95d406c2",
+    "research/minimal_neural_etm/review_20260907/evidence/runs.csv": "03652b9de4e6a2ae2db7f836ac71848cfb950744fbfe336669c52e278d5b3c5d",
+    "scripts/generate_minimal_etm_review.py": "175f6bef19b0e445813a77fae89579fa5eb826f92a7a8e50e0dc344f3362047d"
+  },
+  "stage": "validation development after historical test results were available",
+  "synthetic_gates": {
+    "128_batchnorm_entmax": {
+      "checks": {
+        "beta_recovery": true,
+        "median_effective_topics": true,
+        "no_catastrophic_duplicate": true,
+        "recovered_motif_retention": true,
+        "theta_recovery": true
+      },
+      "passed": true
+    },
+    "128_batchnorm_fixed_entmax": {
+      "checks": {
+        "beta_recovery": true,
+        "median_effective_topics": true,
+        "no_catastrophic_duplicate": true,
+        "recovered_motif_retention": true,
+        "theta_recovery": true
+      },
+      "passed": true
+    },
+    "128_contextual": {
+      "checks": {
+        "beta_recovery": true,
+        "median_effective_topics": true,
+        "no_catastrophic_duplicate": true,
+        "recovered_motif_retention": true,
+        "theta_recovery": true
+      },
+      "passed": true
+    },
+    "128_contextual_unbalanced": {
+      "checks": {
+        "beta_recovery": true,
+        "median_effective_topics": true,
+        "no_catastrophic_duplicate": true,
+        "recovered_motif_retention": true,
+        "theta_recovery": true
+      },
+      "passed": true
+    },
+    "36_batchnorm_entmax": {
+      "checks": {
+        "beta_recovery": true,
+        "median_effective_topics": true,
+        "no_catastrophic_duplicate": true,
+        "theta_recovery": true
+      },
+      "passed": true
+    },
+    "36_batchnorm_fixed_entmax": {
+      "checks": {
+        "beta_recovery": true,
+        "median_effective_topics": true,
+        "no_catastrophic_duplicate": true,
+        "theta_recovery": true
+      },
+      "passed": true
+    },
+    "36_contextual": {
+      "checks": {
+        "beta_recovery": true,
+        "median_effective_topics": true,
+        "no_catastrophic_duplicate": true,
+        "theta_recovery": true
+      },
+      "passed": true
+    },
+    "36_contextual_unbalanced": {
+      "checks": {
+        "beta_recovery": true,
+        "median_effective_topics": true,
+        "no_catastrophic_duplicate": true,
+        "theta_recovery": true
+      },
+      "passed": true
+    }
+  },
+  "synthetic_groups": [
+    {
+      "beta_recovery": {
+        "mean": 0.4645886818567912,
+        "sample_sd": 0.039291476725910296
+      },
+      "completion_nll": {
+        "mean": 6.286959410701103,
+        "sample_sd": 0.01185529400049792
+      },
+      "median_effective_topics": {
+        "mean": 1.9997645674160642,
+        "sample_sd": 0.02985961489912325
+      },
+      "nearest_beta_cosine": {
+        "mean": 0.7457494139671326,
+        "sample_sd": 0.03452897933795722
+      },
+      "recovered_motifs": {
+        "mean": 8.0,
+        "sample_sd": 1.7320508075688772
+      },
+      "theta_recovery": {
+        "mean": 0.7535118526010829,
+        "sample_sd": 0.024732112415071075
+      },
+      "topics": 36,
+      "variant": "contextual"
+    },
+    {
+      "beta_recovery": {
+        "mean": 0.5679784417152405,
+        "sample_sd": 0.027383319986194126
+      },
+      "completion_nll": {
+        "mean": 6.181051461223676,
+        "sample_sd": 0.03065246450613186
+      },
+      "median_effective_topics": {
+        "mean": 1.3956953424483933,
+        "sample_sd": 0.23254550459233597
+      },
+      "nearest_beta_cosine": {
+        "mean": 0.7622723380724589,
+        "sample_sd": 0.011435683500053634
+      },
+      "recovered_motifs": {
+        "mean": 12.666666666666666,
+        "sample_sd": 1.1547005383792515
+      },
+      "theta_recovery": {
+        "mean": 0.858095856245431,
+        "sample_sd": 0.0619376352529747
+      },
+      "topics": 36,
+      "variant": "batchnorm_entmax"
+    },
+    {
+      "beta_recovery": {
+        "mean": 0.5962260166803995,
+        "sample_sd": 0.013677337511761669
+      },
+      "completion_nll": {
+        "mean": 6.146492871174799,
+        "sample_sd": 0.007442554269196528
+      },
+      "median_effective_topics": {
+        "mean": 1.5232270876406904,
+        "sample_sd": 0.1446423130269213
+      },
+      "nearest_beta_cosine": {
+        "mean": 0.7352089881896973,
+        "sample_sd": 0.02002795546796171
+      },
+      "recovered_motifs": {
+        "mean": 13.666666666666666,
+        "sample_sd": 1.5275252316519468
+      },
+      "theta_recovery": {
+        "mean": 0.8854696384059874,
+        "sample_sd": 0.0526472401794557
+      },
+      "topics": 36,
+      "variant": "batchnorm_fixed_entmax"
+    },
+    {
+      "beta_recovery": {
+        "mean": 0.46682750185330707,
+        "sample_sd": 0.03568161548715503
+      },
+      "completion_nll": {
+        "mean": 6.286862268421276,
+        "sample_sd": 0.023545203042687163
+      },
+      "median_effective_topics": {
+        "mean": 1.9763095283256864,
+        "sample_sd": 0.023179445022435158
+      },
+      "nearest_beta_cosine": {
+        "mean": 0.7339534362157186,
+        "sample_sd": 0.03361088632194481
+      },
+      "recovered_motifs": {
+        "mean": 8.333333333333334,
+        "sample_sd": 1.5275252316519468
+      },
+      "theta_recovery": {
+        "mean": 0.7408353450695616,
+        "sample_sd": 0.021893306347059976
+      },
+      "topics": 36,
+      "variant": "contextual_unbalanced"
+    },
+    {
+      "beta_recovery": {
+        "mean": 0.6412508686383566,
+        "sample_sd": 0.02007315125019517
+      },
+      "completion_nll": {
+        "mean": 6.188339093961716,
+        "sample_sd": 0.07938644270526209
+      },
+      "median_effective_topics": {
+        "mean": 1.6685491867619868,
+        "sample_sd": 0.2739695145793871
+      },
+      "nearest_beta_cosine": {
+        "mean": 0.8854352831840515,
+        "sample_sd": 0.01961808098518662
+      },
+      "recovered_motifs": {
+        "mean": 16.666666666666668,
+        "sample_sd": 1.1547005383792515
+      },
+      "theta_recovery": {
+        "mean": 0.9102827087118721,
+        "sample_sd": 0.03139888379980004
+      },
+      "topics": 128,
+      "variant": "contextual"
+    },
+    {
+      "beta_recovery": {
+        "mean": 0.6406850814819336,
+        "sample_sd": 0.05479506235309458
+      },
+      "completion_nll": {
+        "mean": 6.122024663854568,
+        "sample_sd": 0.02311664434081622
+      },
+      "median_effective_topics": {
+        "mean": 1.3362699919007544,
+        "sample_sd": 0.07213341202654301
+      },
+      "nearest_beta_cosine": {
+        "mean": 0.9200146993001302,
+        "sample_sd": 0.004532475531597509
+      },
+      "recovered_motifs": {
+        "mean": 15.666666666666666,
+        "sample_sd": 1.5275252316519468
+      },
+      "theta_recovery": {
+        "mean": 0.9135126024329583,
+        "sample_sd": 0.09063984731087417
+      },
+      "topics": 128,
+      "variant": "batchnorm_entmax"
+    },
+    {
+      "beta_recovery": {
+        "mean": 0.6658981839815775,
+        "sample_sd": 0.019720268840502035
+      },
+      "completion_nll": {
+        "mean": 6.0951336717897195,
+        "sample_sd": 0.01935630377987275
+      },
+      "median_effective_topics": {
+        "mean": 1.5109525661711969,
+        "sample_sd": 0.07639799877507232
+      },
+      "nearest_beta_cosine": {
+        "mean": 0.923623522122701,
+        "sample_sd": 0.005917532352160001
+      },
+      "recovered_motifs": {
+        "mean": 15.333333333333334,
+        "sample_sd": 0.5773502691896257
+      },
+      "theta_recovery": {
+        "mean": 0.9393816273196799,
+        "sample_sd": 0.04868477204443435
+      },
+      "topics": 128,
+      "variant": "batchnorm_fixed_entmax"
+    },
+    {
+      "beta_recovery": {
+        "mean": 0.6388503114382426,
+        "sample_sd": 0.021564258122150907
+      },
+      "completion_nll": {
+        "mean": 6.184587298930315,
+        "sample_sd": 0.08333240457437956
+      },
+      "median_effective_topics": {
+        "mean": 1.7433517220695434,
+        "sample_sd": 0.3865052578924849
+      },
+      "nearest_beta_cosine": {
+        "mean": 0.884102463722229,
+        "sample_sd": 0.01764643205739943
+      },
+      "recovered_motifs": {
+        "mean": 16.333333333333332,
+        "sample_sd": 1.5275252316519468
+      },
+      "theta_recovery": {
+        "mean": 0.9169953921629818,
+        "sample_sd": 0.028560318026646665
+      },
+      "topics": 128,
+      "variant": "contextual_unbalanced"
+    }
+  ]
+}

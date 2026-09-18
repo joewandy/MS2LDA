@@ -1,0 +1,82 @@
+{
+  "candidate_test_artifacts_accessed": false,
+  "candidate_test_metrics_inspected": false,
+  "evidence_boundary": "training plus validation only",
+  "forbidden_test_files": [],
+  "linked_inputs": [
+    {
+      "bytes": 1933,
+      "linked_path": "<reproduction-root>/real/contextual_seed_7043/protocol.json",
+      "path": "<reproduction-root>/prepared/protocol.json",
+      "sha256": "006a14e8112d86be34b461bcef32feef06224f95fe20bfaf816387e69e610955"
+    },
+    {
+      "bytes": 10657989,
+      "linked_path": "<reproduction-root>/real/contextual_seed_7043/data/train.npz",
+      "path": "<reproduction-root>/prepared/data/train.npz",
+      "sha256": "b4808f341864ba1df246a5093992f52397c2f96e0b48b23245b9b17e30aa5b52"
+    },
+    {
+      "bytes": 775961,
+      "linked_path": "<reproduction-root>/real/contextual_seed_7043/data/validation_observed.npz",
+      "path": "<reproduction-root>/prepared/data/validation_observed.npz",
+      "sha256": "76afa43a3540d91edd4dd7e851afe10c65e3d67bcf06007c83eac1d9b6e15bff"
+    },
+    {
+      "bytes": 778241,
+      "linked_path": "<reproduction-root>/real/contextual_seed_7043/data/validation_completion.npz",
+      "path": "<reproduction-root>/prepared/data/validation_completion.npz",
+      "sha256": "f75245b599bc3c087aad97ff7247112d422ec0ab87418c5f96b0a889b2f661f0"
+    },
+    {
+      "bytes": 1528665,
+      "linked_path": "<reproduction-root>/real/contextual_seed_7043/data/validation_full.npz",
+      "path": "<reproduction-root>/prepared/data/validation_full.npz",
+      "sha256": "51888951815f448d0527a6a876be345cfe76ab346d9e97bada9a186e8857fab2"
+    },
+    {
+      "bytes": 1285639,
+      "linked_path": "<reproduction-root>/real/contextual_seed_7043/data/validation_records.jsonl",
+      "path": "<reproduction-root>/prepared/data/validation_records.jsonl",
+      "sha256": "0e85218489af6a07413474bb2db6ce74da537f6fd3c8ee77d5286f5775ba068c"
+    },
+    {
+      "bytes": 399495,
+      "linked_path": "<reproduction-root>/real/contextual_seed_7043/data/vocabulary.json",
+      "path": "<reproduction-root>/prepared/data/vocabulary.json",
+      "sha256": "9ed46f54a4e4917560f764d4ac662bae7036c1b98733d6b25a62a869799bd90e"
+    },
+    {
+      "bytes": 4246728,
+      "linked_path": "<reproduction-root>/real/contextual_seed_7043/token_features/features.npy",
+      "path": "<reproduction-root>/prepared/token_features/features.npy",
+      "sha256": "a9d21070b111be3e5f59e3650f47d2eede9ae264ecb3085305bcd160c2d1883d"
+    },
+    {
+      "bytes": 169,
+      "linked_path": "<reproduction-root>/real/contextual_seed_7043/mag/index/complete.json",
+      "path": "<reproduction-root>/prepared/mag/index/complete.json",
+      "sha256": "6157d53dc131841a8e02e9f6047efbb7e18163a003ff2e70ff5ae3950f3bb25b"
+    },
+    {
+      "bytes": 254110,
+      "linked_path": "<reproduction-root>/real/contextual_seed_7043/mag/index/excluded_connectivity_keys.json",
+      "path": "<reproduction-root>/prepared/mag/index/excluded_connectivity_keys.json",
+      "sha256": "36ad6649271965ddc88e8c5c7484362e121887f204bbf8c5bf3fd27f6c624a70"
+    },
+    {
+      "bytes": 2982960,
+      "linked_path": "<reproduction-root>/real/contextual_seed_7043/mag/index/kept_original_ids.npy",
+      "path": "<reproduction-root>/prepared/mag/index/kept_original_ids.npy",
+      "sha256": "97c63d3da5e77877a7786993a0b5bc123f3e37161febf8b006628194c9f3485b"
+    },
+    {
+      "bytes": 447424845,
+      "linked_path": "<reproduction-root>/real/contextual_seed_7043/mag/index/spec2vec_filtered.faiss",
+      "path": "<reproduction-root>/prepared/mag/index/spec2vec_filtered.faiss",
+      "sha256": "845408fe7338135cb23cbe9023f5805c11dafcb8d028ca631fb1968292aef300"
+    }
+  ],
+  "prepared_run": "<reproduction-root>/prepared",
+  "test_spectra_exposed_to_model_run": false
+}

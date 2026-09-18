@@ -1,0 +1,31 @@
+{
+  "attempt": 1,
+  "command": [
+    "<python-prefix>/bin/python",
+    "-m",
+    "scripts.prepare_msnlib_test_view",
+    "--run",
+    "<reproduction-root>/real/controls",
+    "--prepared-run",
+    "<reproduction-root>/prepared",
+    "--method",
+    "etm",
+    "--method",
+    "etm_balanced"
+  ],
+  "finished_utc": "2026-09-01T21:54:37.537920+00:00",
+  "log": "<reproduction-root>/logs/release_test_view_controls.attempt-1.log",
+  "name": "release_test_view_controls",
+  "outputs": [
+    {
+      "bytes": 4553,
+      "modified_ns": 1788299677335299681,
+      "path": "<reproduction-root>/real/controls/test_input_manifest.json",
+      "sha256": "e85f4d93533b39b666a4124237f9060273ad67ba27320648b2d62c89e533e79b"
+    }
+  ],
+  "pre_stage_load": null,
+  "return_code": 0,
+  "started_utc": "2026-09-01T21:54:36.550477+00:00",
+  "status": "complete"
+}

@@ -1,0 +1,272 @@
+{
+  "inputs": {
+    "MS2LDA/MotifDB/Motifset GNPS library derived Mass2Motifs.json": {
+      "bytes": 295340,
+      "sha256": "5424f9321b4525e20b199212874256abd9cca828791f26c2a7725220940c007b"
+    },
+    "MS2LDA/MotifDB/Motifset Massbank library derived Mass2Motifs.json": {
+      "bytes": 74878,
+      "sha256": "cb1823b52ec0aa1840194636c959f66574c0e2f29e68e047c62986fc4a68091b"
+    },
+    "MS2LDA/MotifDB/Motifset Urine derived Mass2Motifs.json": {
+      "bytes": 458686,
+      "sha256": "560188c6ba168e4d63d69041ca48da09bccad2d9003169750223bef0876494ae"
+    },
+    "output/benchmarks/baseline_repeats_20260908/real/tomotopy_seed11_attempt1/data/validation_records.jsonl": {
+      "bytes": 1285639,
+      "sha256": "0e85218489af6a07413474bb2db6ce74da537f6fd3c8ee77d5286f5775ba068c"
+    },
+    "output/benchmarks/baseline_repeats_20260908/real/tomotopy_seed11_attempt1/data/vocabulary.json": {
+      "bytes": 399495,
+      "sha256": "9ed46f54a4e4917560f764d4ac662bae7036c1b98733d6b25a62a869799bd90e"
+    },
+    "output/benchmarks/baseline_repeats_20260908/real/tomotopy_seed11_attempt1/mag/annotations/tomotopy/annotations.jsonl": {
+      "bytes": 190232,
+      "sha256": "56d80e116ac26278c833f91e5c31fb0bef4e8510714d13055dac0828b37e3d3f"
+    },
+    "output/benchmarks/baseline_repeats_20260908/real/tomotopy_seed11_attempt1/protocol.json": {
+      "bytes": 1951,
+      "sha256": "8044718d019cac4f92524c7980bc5217d7db861d58c940b3f0a6ac8970d48021"
+    },
+    "output/benchmarks/baseline_repeats_20260908/real/tomotopy_seed11_attempt1/validation_chemical/tomotopy/complete.json": {
+      "bytes": 163852,
+      "sha256": "e34d9d68c0afa3c5d91b6c2bc2579206b95684a797d376041a7d778db971f5f8"
+    },
+    "output/benchmarks/baseline_repeats_20260908/real/tomotopy_seed11_attempt1/validation_evaluation/tomotopy/beta.npy": {
+      "bytes": 84932128,
+      "sha256": "ba917d5d0e78f366dc77ae5e1a9193f350fff28bb7e071857b446ab4f0a7e025"
+    },
+    "output/benchmarks/baseline_repeats_20260908/real/tomotopy_seed11_attempt1/validation_evaluation/tomotopy/complete.json": {
+      "bytes": 348,
+      "sha256": "63b7f138e928fe197397ea2d9420a4379e7d016b0d540391c4f7436f5666aefd"
+    },
+    "output/benchmarks/baseline_repeats_20260908/real/tomotopy_seed11_attempt1/validation_evaluation/tomotopy/validation_full_theta.npy": {
+      "bytes": 15556128,
+      "sha256": "3cfb3ed022a76797b4ab733c73f942452a3c9316fbba1cc7853d86fdaa99812d"
+    },
+    "output/benchmarks/baseline_repeats_20260908/real/tomotopy_seed11_attempt1/validation_input_manifest.json": {
+      "bytes": 5172,
+      "sha256": "be77fb8bc3e08b2d3fe67d18d09141bb3116e5efa6fcba49f49bcfb9a6cd18f9"
+    },
+    "output/benchmarks/baseline_repeats_20260908/real/tomotopy_seed23_attempt1/data/validation_records.jsonl": {
+      "bytes": 1285639,
+      "sha256": "0e85218489af6a07413474bb2db6ce74da537f6fd3c8ee77d5286f5775ba068c"
+    },
+    "output/benchmarks/baseline_repeats_20260908/real/tomotopy_seed23_attempt1/data/vocabulary.json": {
+      "bytes": 399495,
+      "sha256": "9ed46f54a4e4917560f764d4ac662bae7036c1b98733d6b25a62a869799bd90e"
+    },
+    "output/benchmarks/baseline_repeats_20260908/real/tomotopy_seed23_attempt1/mag/annotations/tomotopy/annotations.jsonl": {
+      "bytes": 192987,
+      "sha256": "4167cd11e3abe457cd86d0cc96004646a416a2c30b8cab423ffe758c8487aa20"
+    },
+    "output/benchmarks/baseline_repeats_20260908/real/tomotopy_seed23_attempt1/protocol.json": {
+      "bytes": 1951,
+      "sha256": "8044718d019cac4f92524c7980bc5217d7db861d58c940b3f0a6ac8970d48021"
+    },
+    "output/benchmarks/baseline_repeats_20260908/real/tomotopy_seed23_attempt1/validation_chemical/tomotopy/complete.json": {
+      "bytes": 164038,
+      "sha256": "916bde822cb837409ac0ec741e289151041f27c8f76cf69ff55c1fb335c4f001"
+    },
+    "output/benchmarks/baseline_repeats_20260908/real/tomotopy_seed23_attempt1/validation_evaluation/tomotopy/beta.npy": {
+      "bytes": 84932128,
+      "sha256": "59bead29c7b030ace020389345b976fb7cbcb4577f13400484de2930cce542b6"
+    },
+    "output/benchmarks/baseline_repeats_20260908/real/tomotopy_seed23_attempt1/validation_evaluation/tomotopy/complete.json": {
+      "bytes": 348,
+      "sha256": "b9d402aa12e34e1e21337aef3e00a2af72da08d21f02460ee5007edc77ba6ca5"
+    },
+    "output/benchmarks/baseline_repeats_20260908/real/tomotopy_seed23_attempt1/validation_evaluation/tomotopy/validation_full_theta.npy": {
+      "bytes": 15556128,
+      "sha256": "a8f8d56bc69de8c04e3c699dec792a57c8ad77669d462fbb5d449311fd733802"
+    },
+    "output/benchmarks/baseline_repeats_20260908/real/tomotopy_seed23_attempt1/validation_input_manifest.json": {
+      "bytes": 5172,
+      "sha256": "c973b0d6c6eb27947ddb0ad4d31f43298618c907c65efa3030dd1fd12cd0da4b"
+    },
+    "output/benchmarks/baseline_repeats_20260908/real/tomotopy_seed42_attempt1/data/validation_records.jsonl": {
+      "bytes": 1285639,
+      "sha256": "0e85218489af6a07413474bb2db6ce74da537f6fd3c8ee77d5286f5775ba068c"
+    },
+    "output/benchmarks/baseline_repeats_20260908/real/tomotopy_seed42_attempt1/data/vocabulary.json": {
+      "bytes": 399495,
+      "sha256": "9ed46f54a4e4917560f764d4ac662bae7036c1b98733d6b25a62a869799bd90e"
+    },
+    "output/benchmarks/baseline_repeats_20260908/real/tomotopy_seed42_attempt1/mag/annotations/tomotopy/annotations.jsonl": {
+      "bytes": 193479,
+      "sha256": "62caba110bd6cc8417c4e9d0a860a0ac868000cfec719d5890100c4b61615415"
+    },
+    "output/benchmarks/baseline_repeats_20260908/real/tomotopy_seed42_attempt1/protocol.json": {
+      "bytes": 1951,
+      "sha256": "8044718d019cac4f92524c7980bc5217d7db861d58c940b3f0a6ac8970d48021"
+    },
+    "output/benchmarks/baseline_repeats_20260908/real/tomotopy_seed42_attempt1/validation_chemical/tomotopy/complete.json": {
+      "bytes": 164148,
+      "sha256": "1a43d7b16ed56399cdcbe3e8151db476d2aff64e0b0d2b2f483178aa906daae1"
+    },
+    "output/benchmarks/baseline_repeats_20260908/real/tomotopy_seed42_attempt1/validation_evaluation/tomotopy/beta.npy": {
+      "bytes": 84932128,
+      "sha256": "b29f1640807298c5ab6a89cf204530d8eca128b9dab6ccd9193b46c8d56507f6"
+    },
+    "output/benchmarks/baseline_repeats_20260908/real/tomotopy_seed42_attempt1/validation_evaluation/tomotopy/complete.json": {
+      "bytes": 348,
+      "sha256": "04ff946d0cd8eac5a798661c2cda84b4b148883e21fc7f74575ac501c4199a05"
+    },
+    "output/benchmarks/baseline_repeats_20260908/real/tomotopy_seed42_attempt1/validation_evaluation/tomotopy/validation_full_theta.npy": {
+      "bytes": 15556128,
+      "sha256": "0ab3a32df0743a2f8ae5ff75a984bcca90cab9a76c5fefe49f7eba0ea1fbaf54"
+    },
+    "output/benchmarks/baseline_repeats_20260908/real/tomotopy_seed42_attempt1/validation_input_manifest.json": {
+      "bytes": 5172,
+      "sha256": "12b74cfb135486bdcf60f9f563f78ad95549b25e58d013284b481d6e34c30375"
+    },
+    "output/benchmarks/contextual_reduction_20260907/real/reduced_document_context_seed11/data/validation_records.jsonl": {
+      "bytes": 1285639,
+      "sha256": "0e85218489af6a07413474bb2db6ce74da537f6fd3c8ee77d5286f5775ba068c"
+    },
+    "output/benchmarks/contextual_reduction_20260907/real/reduced_document_context_seed11/data/vocabulary.json": {
+      "bytes": 399495,
+      "sha256": "9ed46f54a4e4917560f764d4ac662bae7036c1b98733d6b25a62a869799bd90e"
+    },
+    "output/benchmarks/contextual_reduction_20260907/real/reduced_document_context_seed11/mag/annotations/minimal_etm/annotations.jsonl": {
+      "bytes": 183153,
+      "sha256": "f980e1ccf778515d9dba47dc93ce22e2e0abc6a2a8d38b6fe4bf6987e8e73806"
+    },
+    "output/benchmarks/contextual_reduction_20260907/real/reduced_document_context_seed11/protocol.json": {
+      "bytes": 1951,
+      "sha256": "8044718d019cac4f92524c7980bc5217d7db861d58c940b3f0a6ac8970d48021"
+    },
+    "output/benchmarks/contextual_reduction_20260907/real/reduced_document_context_seed11/validation_chemical/minimal_etm/complete.json": {
+      "bytes": 165552,
+      "sha256": "8997f8057a2fe39eed32cac981fce62201cb48dd0826b19cdafa297e7c1c8c52"
+    },
+    "output/benchmarks/contextual_reduction_20260907/real/reduced_document_context_seed11/validation_evaluation/minimal_etm/beta.npy": {
+      "bytes": 84932128,
+      "sha256": "13237c032f7bc835f87f88aec78ed699eb564adb8ed379dc9922e02773c32d16"
+    },
+    "output/benchmarks/contextual_reduction_20260907/real/reduced_document_context_seed11/validation_evaluation/minimal_etm/complete.json": {
+      "bytes": 3392,
+      "sha256": "124d29afb3253db645ad3bee78d903905da997461bfc2342da151e079bf86c3a"
+    },
+    "output/benchmarks/contextual_reduction_20260907/real/reduced_document_context_seed11/validation_evaluation/minimal_etm/validation_full_theta.npy": {
+      "bytes": 15556128,
+      "sha256": "1082384cf6ff59c089461f538d6fb699f6ebf6460d1a01d332cb978c4658173d"
+    },
+    "output/benchmarks/contextual_reduction_20260907/real/reduced_document_context_seed11/validation_input_manifest.json": {
+      "bytes": 5304,
+      "sha256": "b7536f453adbcff4d466ef6b8fd0a90e3a877950f3ced0034d369793bce4f197"
+    },
+    "output/benchmarks/contextual_reduction_20260907/real/reduced_document_context_seed23/data/validation_records.jsonl": {
+      "bytes": 1285639,
+      "sha256": "0e85218489af6a07413474bb2db6ce74da537f6fd3c8ee77d5286f5775ba068c"
+    },
+    "output/benchmarks/contextual_reduction_20260907/real/reduced_document_context_seed23/data/vocabulary.json": {
+      "bytes": 399495,
+      "sha256": "9ed46f54a4e4917560f764d4ac662bae7036c1b98733d6b25a62a869799bd90e"
+    },
+    "output/benchmarks/contextual_reduction_20260907/real/reduced_document_context_seed23/mag/annotations/minimal_etm/annotations.jsonl": {
+      "bytes": 184822,
+      "sha256": "9583cf5df1c2a9305f43dc1f9c952ccf000ef8d6fd8d11b4fc38fe61c4b6fabc"
+    },
+    "output/benchmarks/contextual_reduction_20260907/real/reduced_document_context_seed23/protocol.json": {
+      "bytes": 1951,
+      "sha256": "8044718d019cac4f92524c7980bc5217d7db861d58c940b3f0a6ac8970d48021"
+    },
+    "output/benchmarks/contextual_reduction_20260907/real/reduced_document_context_seed23/validation_chemical/minimal_etm/complete.json": {
+      "bytes": 165286,
+      "sha256": "708f97e4eb979d9cabb641b3a8622138b8a4a4f3e543b301dd0b19fd6e09ca8c"
+    },
+    "output/benchmarks/contextual_reduction_20260907/real/reduced_document_context_seed23/validation_evaluation/minimal_etm/beta.npy": {
+      "bytes": 84932128,
+      "sha256": "35d78a6c841ebea5bc41e652658f27913460b4a7ac8027f453db33f8b46b0da6"
+    },
+    "output/benchmarks/contextual_reduction_20260907/real/reduced_document_context_seed23/validation_evaluation/minimal_etm/complete.json": {
+      "bytes": 3395,
+      "sha256": "a5292664c68a4a37fb92fe5ef352050510128fb48b26258ed132e9c84047c1cb"
+    },
+    "output/benchmarks/contextual_reduction_20260907/real/reduced_document_context_seed23/validation_evaluation/minimal_etm/validation_full_theta.npy": {
+      "bytes": 15556128,
+      "sha256": "8c913373c586202ecf2de8bfd0b157b58f3e2e596309c1ec020dc0dff0015469"
+    },
+    "output/benchmarks/contextual_reduction_20260907/real/reduced_document_context_seed23/validation_input_manifest.json": {
+      "bytes": 5304,
+      "sha256": "093e6449b4572fa34ceb1bc2b9551934c90f70c1b13c2641be77a3de8a7486f0"
+    },
+    "output/benchmarks/contextual_reduction_20260907/real/reduced_document_context_seed42_retry1/data/validation_records.jsonl": {
+      "bytes": 1285639,
+      "sha256": "0e85218489af6a07413474bb2db6ce74da537f6fd3c8ee77d5286f5775ba068c"
+    },
+    "output/benchmarks/contextual_reduction_20260907/real/reduced_document_context_seed42_retry1/data/vocabulary.json": {
+      "bytes": 399495,
+      "sha256": "9ed46f54a4e4917560f764d4ac662bae7036c1b98733d6b25a62a869799bd90e"
+    },
+    "output/benchmarks/contextual_reduction_20260907/real/reduced_document_context_seed42_retry1/mag/annotations/minimal_etm/annotations.jsonl": {
+      "bytes": 185064,
+      "sha256": "aa460d607b185d65b529e0d037273e41c05a19775cb5fbe69248a8c9686b1eae"
+    },
+    "output/benchmarks/contextual_reduction_20260907/real/reduced_document_context_seed42_retry1/protocol.json": {
+      "bytes": 1951,
+      "sha256": "8044718d019cac4f92524c7980bc5217d7db861d58c940b3f0a6ac8970d48021"
+    },
+    "output/benchmarks/contextual_reduction_20260907/real/reduced_document_context_seed42_retry1/validation_chemical/minimal_etm/complete.json": {
+      "bytes": 165586,
+      "sha256": "54354ce34ae8e4dec3ae2ebeac6508c55fcb2373e1bb568d10aa825c6c1611d8"
+    },
+    "output/benchmarks/contextual_reduction_20260907/real/reduced_document_context_seed42_retry1/validation_evaluation/minimal_etm/beta.npy": {
+      "bytes": 84932128,
+      "sha256": "509987ebd2f3d9ec216ffa65aa3cc09f4e23815bfdee6da61bc0341da6c101d1"
+    },
+    "output/benchmarks/contextual_reduction_20260907/real/reduced_document_context_seed42_retry1/validation_evaluation/minimal_etm/complete.json": {
+      "bytes": 3383,
+      "sha256": "580d0d81758ec6f16ab2568c0caac3a4c47ba338d62a0a3eb1b511b3b0460f0f"
+    },
+    "output/benchmarks/contextual_reduction_20260907/real/reduced_document_context_seed42_retry1/validation_evaluation/minimal_etm/validation_full_theta.npy": {
+      "bytes": 15556128,
+      "sha256": "34049d875c874c8bae798edd1d069a95fd62dfea3f3ad2b1b88d9820401ff39f"
+    },
+    "output/benchmarks/contextual_reduction_20260907/real/reduced_document_context_seed42_retry1/validation_input_manifest.json": {
+      "bytes": 5388,
+      "sha256": "2863b6783ee9273b5d05b9274026c81f34f8af2ceac97e86c504e433ef629400"
+    },
+    "output/benchmarks/minimal_neural_20260905/assets/extracted/Data/Benchmark_MSn_Lib/Corinna_Library_filtered_positive.mgf": {
+      "bytes": 88159030,
+      "sha256": "c1a2389754e630590111bde8f50403c9d90081d3f3427bc63defef0b9714682f"
+    },
+    "output/benchmarks/minimal_neural_20260905/assets/extracted/model_positive_mode/positive_train_data/150225_Spec2Vec_pos_CleanedLibraries.model": {
+      "bytes": 9943191,
+      "sha256": "322a81fcd4f1f77a12007735d71f0a4f509f87c76703e2fef8f954eb909a2b82"
+    },
+    "output/benchmarks/minimal_neural_20260905/assets/extracted/model_positive_mode/positive_train_data/150225_Spec2Vec_pos_CleanedLibraries.model.syn1neg.npy": {
+      "bytes": 333434528,
+      "sha256": "bfa13debb3dcb744eae69ea988851043a2cc4e7c0a3364b0916eb90f59c63c5f"
+    },
+    "output/benchmarks/minimal_neural_20260905/assets/extracted/model_positive_mode/positive_train_data/150225_Spec2Vec_pos_CleanedLibraries.model.wv.vectors.npy": {
+      "bytes": 333434528,
+      "sha256": "25d95370655c5a9569f55e8acb82bae7cedbc5be3de932d7cf1fc034ba21e4d4"
+    },
+    "output/benchmarks/minimal_neural_20260905/prepared/data/validation_records.jsonl": {
+      "bytes": 1285639,
+      "sha256": "0e85218489af6a07413474bb2db6ce74da537f6fd3c8ee77d5286f5775ba068c"
+    },
+    "output/benchmarks/minimal_neural_20260905/prepared/data/vocabulary.json": {
+      "bytes": 399495,
+      "sha256": "9ed46f54a4e4917560f764d4ac662bae7036c1b98733d6b25a62a869799bd90e"
+    },
+    "research/motif_chemical_assessment_20260908/protocol.json": {
+      "bytes": 4672,
+      "sha256": "ddaa673fa4d9d16dda11f015b1f9fee977d2ea35e730654f2a3b3fa7fd65ba32"
+    }
+  },
+  "outcomes_calculated_before_seal": false,
+  "protocol_sha256": "ddaa673fa4d9d16dda11f015b1f9fee977d2ea35e730654f2a3b3fa7fd65ba32",
+  "sealed_at_utc": "2026-09-08T18:37:25.044939+00:00",
+  "versions": {
+    "gensim": "4.4.0",
+    "matchms": "0.29.0",
+    "numba": "0.60.0",
+    "numpy": "1.26.4",
+    "rdkit": "2024.9.6",
+    "scipy": "1.17.1",
+    "spec2vec": "0.9.1"
+  }
+}

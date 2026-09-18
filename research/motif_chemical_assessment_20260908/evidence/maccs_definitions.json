@@ -1,0 +1,1003 @@
+{
+  "keys": [
+    {
+      "count_threshold_exclusive": 0,
+      "position": 1,
+      "smarts": "?",
+      "special_definition": "Isotope key: undefined and always unset in native RDKit."
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 2,
+      "smarts": "[#104]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 3,
+      "smarts": "[#32,#33,#34,#50,#51,#52,#82,#83,#84]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 4,
+      "smarts": "[Ac,Th,Pa,U,Np,Pu,Am,Cm,Bk,Cf,Es,Fm,Md,No,Lr]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 5,
+      "smarts": "[Sc,Ti,Y,Zr,Hf]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 6,
+      "smarts": "[La,Ce,Pr,Nd,Pm,Sm,Eu,Gd,Tb,Dy,Ho,Er,Tm,Yb,Lu]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 7,
+      "smarts": "[V,Cr,Mn,Nb,Mo,Tc,Ta,W,Re]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 8,
+      "smarts": "[!#6;!#1]1~*~*~*~1",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 9,
+      "smarts": "[Fe,Co,Ni,Ru,Rh,Pd,Os,Ir,Pt]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 10,
+      "smarts": "[Be,Mg,Ca,Sr,Ba,Ra]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 11,
+      "smarts": "*1~*~*~*~1",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 12,
+      "smarts": "[Cu,Zn,Ag,Cd,Au,Hg]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 13,
+      "smarts": "[#8]~[#7](~[#6])~[#6]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 14,
+      "smarts": "[#16]-[#16]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 15,
+      "smarts": "[#8]~[#6](~[#8])~[#8]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 16,
+      "smarts": "[!#6;!#1]1~*~*~1",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 17,
+      "smarts": "[#6]#[#6]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 18,
+      "smarts": "[#5,#13,#31,#49,#81]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 19,
+      "smarts": "*1~*~*~*~*~*~*~1",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 20,
+      "smarts": "[#14]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 21,
+      "smarts": "[#6]=[#6](~[!#6;!#1])~[!#6;!#1]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 22,
+      "smarts": "*1~*~*~1",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 23,
+      "smarts": "[#7]~[#6](~[#8])~[#8]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 24,
+      "smarts": "[#7]-[#8]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 25,
+      "smarts": "[#7]~[#6](~[#7])~[#7]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 26,
+      "smarts": "[#6]=;@[#6](@*)@*",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 27,
+      "smarts": "[I]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 28,
+      "smarts": "[!#6;!#1]~[CH2]~[!#6;!#1]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 29,
+      "smarts": "[#15]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 30,
+      "smarts": "[#6]~[!#6;!#1](~[#6])(~[#6])~*",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 31,
+      "smarts": "[!#6;!#1]~[F,Cl,Br,I]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 32,
+      "smarts": "[#6]~[#16]~[#7]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 33,
+      "smarts": "[#7]~[#16]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 34,
+      "smarts": "[CH2]=*",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 35,
+      "smarts": "[Li,Na,K,Rb,Cs,Fr]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 36,
+      "smarts": "[#16R]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 37,
+      "smarts": "[#7]~[#6](~[#8])~[#7]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 38,
+      "smarts": "[#7]~[#6](~[#6])~[#7]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 39,
+      "smarts": "[#8]~[#16](~[#8])~[#8]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 40,
+      "smarts": "[#16]-[#8]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 41,
+      "smarts": "[#6]#[#7]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 42,
+      "smarts": "F",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 43,
+      "smarts": "[!#6;!#1;!H0]~*~[!#6;!#1;!H0]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 44,
+      "smarts": "[!#1;!#6;!#7;!#8;!#9;!#14;!#15;!#16;!#17;!#35;!#53]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 45,
+      "smarts": "[#6]=[#6]~[#7]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 46,
+      "smarts": "Br",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 47,
+      "smarts": "[#16]~*~[#7]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 48,
+      "smarts": "[#8]~[!#6;!#1](~[#8])(~[#8])",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 49,
+      "smarts": "[!+0]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 50,
+      "smarts": "[#6]=[#6](~[#6])~[#6]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 51,
+      "smarts": "[#6]~[#16]~[#8]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 52,
+      "smarts": "[#7]~[#7]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 53,
+      "smarts": "[!#6;!#1;!H0]~*~*~*~[!#6;!#1;!H0]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 54,
+      "smarts": "[!#6;!#1;!H0]~*~*~[!#6;!#1;!H0]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 55,
+      "smarts": "[#8]~[#16]~[#8]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 56,
+      "smarts": "[#8]~[#7](~[#8])~[#6]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 57,
+      "smarts": "[#8R]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 58,
+      "smarts": "[!#6;!#1]~[#16]~[!#6;!#1]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 59,
+      "smarts": "[#16]!:*:*",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 60,
+      "smarts": "[#16]=[#8]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 61,
+      "smarts": "*~[#16](~*)~*",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 62,
+      "smarts": "*@*!@*@*",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 63,
+      "smarts": "[#7]=[#8]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 64,
+      "smarts": "*@*!@[#16]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 65,
+      "smarts": "c:n",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 66,
+      "smarts": "[#6]~[#6](~[#6])(~[#6])~*",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 67,
+      "smarts": "[!#6;!#1]~[#16]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 68,
+      "smarts": "[!#6;!#1;!H0]~[!#6;!#1;!H0]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 69,
+      "smarts": "[!#6;!#1]~[!#6;!#1;!H0]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 70,
+      "smarts": "[!#6;!#1]~[#7]~[!#6;!#1]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 71,
+      "smarts": "[#7]~[#8]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 72,
+      "smarts": "[#8]~*~*~[#8]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 73,
+      "smarts": "[#16]=*",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 74,
+      "smarts": "[CH3]~*~[CH3]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 75,
+      "smarts": "*!@[#7]@*",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 76,
+      "smarts": "[#6]=[#6](~*)~*",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 77,
+      "smarts": "[#7]~*~[#7]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 78,
+      "smarts": "[#6]=[#7]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 79,
+      "smarts": "[#7]~*~*~[#7]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 80,
+      "smarts": "[#7]~*~*~*~[#7]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 81,
+      "smarts": "[#16]~*(~*)~*",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 82,
+      "smarts": "*~[CH2]~[!#6;!#1;!H0]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 83,
+      "smarts": "[!#6;!#1]1~*~*~*~*~1",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 84,
+      "smarts": "[NH2]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 85,
+      "smarts": "[#6]~[#7](~[#6])~[#6]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 86,
+      "smarts": "[C;H2,H3][!#6;!#1][C;H2,H3]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 87,
+      "smarts": "[F,Cl,Br,I]!@*@*",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 88,
+      "smarts": "[#16]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 89,
+      "smarts": "[#8]~*~*~*~[#8]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 90,
+      "smarts": "[$([!#6;!#1;!H0]~*~*~[CH2]~*),$([!#6;!#1;!H0;R]1@[R]@[R]@[CH2;R]1),$([!#6;!#1;!H0]~[R]1@[R]@[CH2;R]1)]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 91,
+      "smarts": "[$([!#6;!#1;!H0]~*~*~*~[CH2]~*),$([!#6;!#1;!H0;R]1@[R]@[R]@[R]@[CH2;R]1),$([!#6;!#1;!H0]~[R]1@[R]@[R]@[CH2;R]1),$([!#6;!#1;!H0]~*~[R]1@[R]@[CH2;R]1)]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 92,
+      "smarts": "[#8]~[#6](~[#7])~[#6]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 93,
+      "smarts": "[!#6;!#1]~[CH3]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 94,
+      "smarts": "[!#6;!#1]~[#7]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 95,
+      "smarts": "[#7]~*~*~[#8]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 96,
+      "smarts": "*1~*~*~*~*~1",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 97,
+      "smarts": "[#7]~*~*~*~[#8]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 98,
+      "smarts": "[!#6;!#1]1~*~*~*~*~*~1",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 99,
+      "smarts": "[#6]=[#6]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 100,
+      "smarts": "*~[CH2]~[#7]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 101,
+      "smarts": "[$([R]@1@[R]@[R]@[R]@[R]@[R]@[R]@[R]1),$([R]@1@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]1),$([R]@1@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]1),$([R]@1@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]1),$([R]@1@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]1),$([R]@1@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]1),$([R]@1@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]@[R]1)]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 102,
+      "smarts": "[!#6;!#1]~[#8]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 103,
+      "smarts": "Cl",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 104,
+      "smarts": "[!#6;!#1;!H0]~*~[CH2]~*",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 105,
+      "smarts": "*@*(@*)@*",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 106,
+      "smarts": "[!#6;!#1]~*(~[!#6;!#1])~[!#6;!#1]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 107,
+      "smarts": "[F,Cl,Br,I]~*(~*)~*",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 108,
+      "smarts": "[CH3]~*~*~*~[CH2]~*",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 109,
+      "smarts": "*~[CH2]~[#8]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 110,
+      "smarts": "[#7]~[#6]~[#8]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 111,
+      "smarts": "[#7]~*~[CH2]~*",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 112,
+      "smarts": "*~*(~*)(~*)~*",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 113,
+      "smarts": "[#8]!:*:*",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 114,
+      "smarts": "[CH3]~[CH2]~*",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 115,
+      "smarts": "[CH3]~*~[CH2]~*",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 116,
+      "smarts": "[$([CH3]~*~*~[CH2]~*),$([CH3]~*1~*~[CH2]1)]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 117,
+      "smarts": "[#7]~*~[#8]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 1,
+      "position": 118,
+      "smarts": "[$(*~[CH2]~[CH2]~*),$(*1~[CH2]~[CH2]1)]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 119,
+      "smarts": "[#7]=*",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 1,
+      "position": 120,
+      "smarts": "[!#6;R]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 121,
+      "smarts": "[#7;R]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 122,
+      "smarts": "*~[#7](~*)~*",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 123,
+      "smarts": "[#8]~[#6]~[#8]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 124,
+      "smarts": "[!#6;!#1]~[!#6;!#1]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 125,
+      "smarts": "?",
+      "special_definition": "More than one aromatic ring (native procedural implementation)."
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 126,
+      "smarts": "*!@[#8]!@*",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 1,
+      "position": 127,
+      "smarts": "*@*!@[#8]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 128,
+      "smarts": "[$(*~[CH2]~*~*~*~[CH2]~*),$([R]1@[CH2;R]@[R]@[R]@[R]@[CH2;R]1),$(*~[CH2]~[R]1@[R]@[R]@[CH2;R]1),$(*~[CH2]~*~[R]1@[R]@[CH2;R]1)]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 129,
+      "smarts": "[$(*~[CH2]~*~*~[CH2]~*),$([R]1@[CH2]@[R]@[R]@[CH2;R]1),$(*~[CH2]~[R]1@[R]@[CH2;R]1)]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 1,
+      "position": 130,
+      "smarts": "[!#6;!#1]~[!#6;!#1]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 1,
+      "position": 131,
+      "smarts": "[!#6;!#1;!H0]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 132,
+      "smarts": "[#8]~*~[CH2]~*",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 133,
+      "smarts": "*@*!@[#7]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 134,
+      "smarts": "[F,Cl,Br,I]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 135,
+      "smarts": "[#7]!:*:*",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 1,
+      "position": 136,
+      "smarts": "[#8]=*",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 137,
+      "smarts": "[!C;!c;R]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 1,
+      "position": 138,
+      "smarts": "[!#6;!#1]~[CH2]~*",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 139,
+      "smarts": "[O;!H0]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 3,
+      "position": 140,
+      "smarts": "[#8]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 2,
+      "position": 141,
+      "smarts": "[CH3]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 1,
+      "position": 142,
+      "smarts": "[#7]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 143,
+      "smarts": "*@*!@[#8]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 144,
+      "smarts": "*!:*:*!:*",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 1,
+      "position": 145,
+      "smarts": "*1~*~*~*~*~*~1",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 2,
+      "position": 146,
+      "smarts": "[#8]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 147,
+      "smarts": "[$(*~[CH2]~[CH2]~*),$([R]1@[CH2;R]@[CH2;R]1)]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 148,
+      "smarts": "*~[!#6;!#1](~*)~*",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 1,
+      "position": 149,
+      "smarts": "[C;H3,H4]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 150,
+      "smarts": "*!@*@*!@*",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 151,
+      "smarts": "[#7;!H0]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 152,
+      "smarts": "[#8]~[#6](~[#6])~[#6]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 153,
+      "smarts": "[!#6;!#1]~[CH2]~*",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 154,
+      "smarts": "[#6]=[#8]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 155,
+      "smarts": "*!@[CH2]!@*",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 156,
+      "smarts": "[#7]~*(~*)~*",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 157,
+      "smarts": "[#6]-[#8]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 158,
+      "smarts": "[#6]-[#7]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 1,
+      "position": 159,
+      "smarts": "[#8]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 160,
+      "smarts": "[C;H3,H4]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 161,
+      "smarts": "[#7]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 162,
+      "smarts": "a",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 163,
+      "smarts": "*1~*~*~*~*~*~1",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 164,
+      "smarts": "[#8]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 165,
+      "smarts": "[R]",
+      "special_definition": null
+    },
+    {
+      "count_threshold_exclusive": 0,
+      "position": 166,
+      "smarts": "?",
+      "special_definition": "More than one disconnected molecular fragment (native procedure)."
+    }
+  ],
+  "position_zero": "unused and excluded from enrichment family",
+  "source": "Sealed rdkit.Chem.MACCSkeys.smartsPatts; native GenMACCSKeys",
+  "source_file_sha256": "ce59b105475ef63a4845f977fff107b1f9f964ad0e162a93b4f155f664dfaa4c"
+}

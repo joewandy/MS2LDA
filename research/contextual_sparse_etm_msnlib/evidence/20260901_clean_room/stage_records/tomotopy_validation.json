@@ -1,0 +1,66 @@
+{
+  "attempt": 1,
+  "command": [
+    "<python-prefix>/bin/python",
+    "-m",
+    "scripts.run_tomotopy_validation",
+    "--run",
+    "<reproduction-root>/real/tomotopy"
+  ],
+  "finished_utc": "2026-09-01T18:03:58.428098+00:00",
+  "log": "<reproduction-root>/logs/tomotopy_validation.attempt-1.log",
+  "name": "tomotopy_validation",
+  "outputs": [
+    {
+      "bytes": 869,
+      "modified_ns": 1788285838056632481,
+      "path": "<reproduction-root>/real/tomotopy/tomotopy/validation_only_result.json",
+      "sha256": "27192c679c6baf4c3699c337d8b0de8aeafb8ee739d6bc23b0476243dca3589e"
+    },
+    {
+      "bytes": 274547245,
+      "modified_ns": 1788284820211965609,
+      "path": "<reproduction-root>/real/tomotopy/tomotopy/model.bin",
+      "sha256": "67b51cb661b61a950f04efa244b9fc8168b963fa20b6b3e5272f64f55e79226a"
+    },
+    {
+      "bytes": 98,
+      "modified_ns": 1788284820219106051,
+      "path": "<reproduction-root>/real/tomotopy/tomotopy/complete.json",
+      "sha256": "95c7e79e22de32410684458c3f32bf39e4d47886bc8779e0d9eccbb99e63a278"
+    },
+    {
+      "bytes": 286,
+      "modified_ns": 1788285838056529774,
+      "path": "<reproduction-root>/real/tomotopy/tomotopy/validation_access_audit.json",
+      "sha256": "4e37b3bfb8b90ddf5d7739740fca26b8675e65c2fdd929c924efcb698f49ab04"
+    },
+    {
+      "bytes": 348,
+      "modified_ns": 1788285838030133980,
+      "path": "<reproduction-root>/real/tomotopy/validation_evaluation/tomotopy/complete.json",
+      "sha256": "04ff946d0cd8eac5a798661c2cda84b4b148883e21fc7f74575ac501c4199a05"
+    },
+    {
+      "bytes": 84932128,
+      "modified_ns": 1788285838003591460,
+      "path": "<reproduction-root>/real/tomotopy/validation_evaluation/tomotopy/beta.npy",
+      "sha256": "b29f1640807298c5ab6a89cf204530d8eca128b9dab6ccd9193b46c8d56507f6"
+    },
+    {
+      "bytes": 15556128,
+      "modified_ns": 1788285837956760800,
+      "path": "<reproduction-root>/real/tomotopy/validation_evaluation/tomotopy/validation_full_theta.npy",
+      "sha256": "0ab3a32df0743a2f8ae5ff75a984bcca90cab9a76c5fefe49f7eba0ea1fbaf54"
+    }
+  ],
+  "pre_stage_load": {
+    "available_memory_bytes": 13805109248,
+    "gpu_compute_processes": [],
+    "one_minute_load_average": 1.0078125,
+    "utc": "2026-09-01T16:17:41.783096+00:00"
+  },
+  "return_code": 0,
+  "started_utc": "2026-09-01T16:17:41.783114+00:00",
+  "status": "complete"
+}

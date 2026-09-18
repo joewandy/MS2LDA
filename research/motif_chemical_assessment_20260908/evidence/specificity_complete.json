@@ -1,0 +1,1329 @@
+{
+  "payloads": {
+    "compounds.jsonl": {
+      "bytes": 2805914,
+      "sha256": "37c7d5cef1169b8af48edea47f170821e267d8b080470f9a4a76d5c36a179e55"
+    },
+    "inventory/selected_11.jsonl": {
+      "bytes": 416677,
+      "sha256": "263b678c9cd8c3e8de3b1a11cbf01e3c3201c89f2e5bf6087400cae0be322cfa"
+    },
+    "inventory/selected_23.jsonl": {
+      "bytes": 413733,
+      "sha256": "a709139cfdf07db738afb72564f147a4bce6993eab693c175fa560e3badb098e"
+    },
+    "inventory/selected_42.jsonl": {
+      "bytes": 416676,
+      "sha256": "5c35ce8a7dfdca0278b6e324f8849589df95fbdecd43e1ecf4ac4421f823b686"
+    },
+    "inventory/tomotopy_11.jsonl": {
+      "bytes": 347874,
+      "sha256": "13a0996de2739cc4b4e9221d5e6443ecea33703bdfb3927f29e2277c70bfb6ac"
+    },
+    "inventory/tomotopy_23.jsonl": {
+      "bytes": 351811,
+      "sha256": "b6f79ff48b20107a77a683c8f38b224944b3ee37a648cded129f72cf44db5bf5"
+    },
+    "inventory/tomotopy_42.jsonl": {
+      "bytes": 348549,
+      "sha256": "39c7c59b45336becdb1087871d8c09d3ee9554c7675b0dc572ba79cedd159b20"
+    },
+    "maccs_definitions.json": {
+      "bytes": 24585,
+      "sha256": "9a796057b50bf4aa1f14a6458693a1cbc819858681f3ccd91670101c7ae5d937"
+    },
+    "original_sos_verification.json": {
+      "bytes": 1125,
+      "sha256": "763c1a4b835a56825009c47f3267b3273f29ea391a79f23877f21527b98dcd07"
+    },
+    "primary_50_cohort.json": {
+      "bytes": 84519,
+      "sha256": "17379779534ccdf21f53edb1b4e52cd6109430577e11254afc96a10b74a3194e"
+    },
+    "primary_50_complete.json": {
+      "bytes": 10454,
+      "sha256": "59271ea0a4b036ab5864f2a1fed200d9813a54eda47032e61bdf2ad53fb7a1d6"
+    },
+    "primary_50_enrichment.npz": {
+      "bytes": 7772841,
+      "sha256": "715385bfc61a4ee3baab26ff9d40aef2a1d37e4ffbe3e1332ce00dbd963a4a5c"
+    },
+    "primary_50_topics.jsonl": {
+      "bytes": 2890025,
+      "sha256": "251b2cd7406c838389d9e00a8951e18be9db4f43e11a3e60ef80a3afd3e2df16"
+    },
+    "scaffold_50_cohort.json": {
+      "bytes": 62468,
+      "sha256": "e2e5ce15e7a8c4237e554ef5ae5510aca44871af192d094c7a4495516ac14ffa"
+    },
+    "scaffold_50_complete.json": {
+      "bytes": 10397,
+      "sha256": "01ae6778678d4ddb63f69ff546777ab14cffa6b295b5d8c8297ad5e8c3773756"
+    },
+    "scaffold_50_enrichment.npz": {
+      "bytes": 6358108,
+      "sha256": "f5eb0f4079e2ce2f3eb8e5cddd111497494d5f49db4a2dccc9a755622f221bcc"
+    },
+    "scaffold_50_topics.jsonl": {
+      "bytes": 2869683,
+      "sha256": "379b17f7064a38eef1bc7391c6efe3f0e50474104db3ff0f24fcb98606e210ad"
+    },
+    "sensitivity_100_cohort.json": {
+      "bytes": 83895,
+      "sha256": "406a0e29d324af1cdb3ae57fa2eedbc2c8485d7b11ca7df0e675595a64b7ce38"
+    },
+    "sensitivity_100_complete.json": {
+      "bytes": 10469,
+      "sha256": "4cbd213afe4e9da00d945f32debe82678c9fc59012be4840d3b2ab0d5a6ed5f1"
+    },
+    "sensitivity_100_enrichment.npz": {
+      "bytes": 7024011,
+      "sha256": "a6a85738403bc3e274f09568ae87cd110c3bb4e58ecb498f5f32435631789ba2"
+    },
+    "sensitivity_100_topics.jsonl": {
+      "bytes": 2890086,
+      "sha256": "1131f3eec3453c0ad6409702b160fb7b4b82ecc03033a288a2a870bbea50bfa4"
+    },
+    "sensitivity_25_cohort.json": {
+      "bytes": 85371,
+      "sha256": "6312def9f459f01b85c35ff513ae8f39250575381f0be5b841c0c1c22e99c4c2"
+    },
+    "sensitivity_25_complete.json": {
+      "bytes": 10473,
+      "sha256": "13d84584f0b603d0383984f24437e5bca4d807484492e5c178c8f2d9e88a90da"
+    },
+    "sensitivity_25_enrichment.npz": {
+      "bytes": 7903607,
+      "sha256": "dd193688edceb5d53bf1dc98184e6710fa3d593d72bef927d34aaea98197a3ca"
+    },
+    "sensitivity_25_topics.jsonl": {
+      "bytes": 2889643,
+      "sha256": "5a77f270d5e7ecb1728ceef4024459e2e92c9d0864c325c7751a839191e5d41f"
+    }
+  },
+  "source_sha256": {
+    "/home/joewandy/Work/git/MS2LDA/benchmarks/neural_ms2lda/chemical_assessment.py": "b50a1cd7a8d1767701726a80e8e48f827ee0e227c10d8d98e7c2cc27d29b1f41",
+    "/home/joewandy/Work/git/MS2LDA/benchmarks/neural_ms2lda/chemical_assessment_io.py": "3f6dd4c095d166d048d630f9ff300c51cfa89af65a326c39ef64bacae42d9d0e",
+    "/home/joewandy/Work/git/MS2LDA/benchmarks/neural_ms2lda/chemical_nulls.py": "571c75136c3ab5e23421cb495609fd449c26792e7856f0e2da1c2539c04d7663",
+    "/home/joewandy/Work/git/MS2LDA/benchmarks/neural_ms2lda/motif_correspondence.py": "5805b10575ebeec6c78659cbfd06411c6bbe5d614d559515e2c2eb4c043add65",
+    "/home/joewandy/Work/git/MS2LDA/benchmarks/neural_ms2lda/motif_reference.py": "0f14ecb83e8a0d66d5f88466cb1e69a8b5e8859025cc592451adcde39624ca1f",
+    "scripts/run_motif_chemical_assessment.py": "8c121be4dabf019d0b639d989bb7937fcf20e863f3a6322da3be51db31da3a6f"
+  },
+  "summary": {
+    "primary_50": {
+      "compounds": 3854,
+      "configuration": {
+        "id": "primary_50",
+        "scaffold_balanced": false,
+        "width_da": 50
+      },
+      "feature_family_size": 996000,
+      "fits": [
+        {
+          "background_sos": {
+            "mean": 0.5959506073453371,
+            "median": 0.5945376951492547,
+            "n": 671,
+            "q10": 0.47648323590673924,
+            "q90": 0.7177771017138221
+          },
+          "eligible_topics": 671,
+          "excess_sos": {
+            "mean": 0.031863879076674054,
+            "median": 0.03222924381140229,
+            "n": 671,
+            "q10": -0.08083392788736082,
+            "q90": 0.14511670761670759
+          },
+          "feature_q05_tests": 24,
+          "feature_q05_topics": 11,
+          "fit": "selected_11",
+          "informative_sos_topics": 669,
+          "mean_sos": {
+            "mean": 0.6278144864220111,
+            "median": 0.6271186440677966,
+            "n": 671,
+            "q10": 0.45614035087719296,
+            "q90": 0.8095238095238095
+          },
+          "model": "selected",
+          "positive_excess_topics": 437,
+          "reasons": {
+            "constant_conditional_null": 2,
+            "informative": 669,
+            "missing_MAG_consensus": 146,
+            "no_compound_support": 183
+          },
+          "recurring_eligible_topics": 512,
+          "recurring_excess_sos": {
+            "mean": 0.03401497362540329,
+            "median": 0.03343777299134652,
+            "n": 512,
+            "q10": -0.06923976623262344,
+            "q90": 0.13418474071581377
+          },
+          "single_compound_topics": 204,
+          "sos_q05_topics": 11,
+          "supported_topics": 817,
+          "total_topics": 1000
+        },
+        {
+          "background_sos": {
+            "mean": 0.5969614396226616,
+            "median": 0.6003900737541551,
+            "n": 657,
+            "q10": 0.47573341292853494,
+            "q90": 0.7154109417591019
+          },
+          "eligible_topics": 657,
+          "excess_sos": {
+            "mean": 0.034728004717373334,
+            "median": 0.035059786702892,
+            "n": 657,
+            "q10": -0.08620688503049213,
+            "q90": 0.15588984652559099
+          },
+          "feature_q05_tests": 21,
+          "feature_q05_topics": 8,
+          "fit": "selected_23",
+          "informative_sos_topics": 654,
+          "mean_sos": {
+            "mean": 0.6316894443400348,
+            "median": 0.6326530612244898,
+            "n": 657,
+            "q10": 0.44004329004329007,
+            "q90": 0.8161403508771929
+          },
+          "model": "selected",
+          "positive_excess_topics": 423,
+          "reasons": {
+            "constant_conditional_null": 3,
+            "informative": 654,
+            "missing_MAG_consensus": 142,
+            "no_compound_support": 201
+          },
+          "recurring_eligible_topics": 502,
+          "recurring_excess_sos": {
+            "mean": 0.03613980036296298,
+            "median": 0.035263203069347424,
+            "n": 502,
+            "q10": -0.060918711886248256,
+            "q90": 0.13452357915882723
+          },
+          "single_compound_topics": 200,
+          "sos_q05_topics": 12,
+          "supported_topics": 799,
+          "total_topics": 1000
+        },
+        {
+          "background_sos": {
+            "mean": 0.5905321283322736,
+            "median": 0.589515558554795,
+            "n": 669,
+            "q10": 0.4671287351754714,
+            "q90": 0.7180804335115777
+          },
+          "eligible_topics": 669,
+          "excess_sos": {
+            "mean": 0.03714981309193923,
+            "median": 0.038463414078445744,
+            "n": 669,
+            "q10": -0.07829921167940551,
+            "q90": 0.16219682573552593
+          },
+          "feature_q05_tests": 31,
+          "feature_q05_topics": 11,
+          "fit": "selected_42",
+          "informative_sos_topics": 665,
+          "mean_sos": {
+            "mean": 0.6276819414242129,
+            "median": 0.6285714285714286,
+            "n": 669,
+            "q10": 0.4523302938196555,
+            "q90": 0.8141257536606374
+          },
+          "model": "selected",
+          "positive_excess_topics": 437,
+          "reasons": {
+            "constant_conditional_null": 4,
+            "informative": 665,
+            "missing_MAG_consensus": 137,
+            "no_compound_support": 194
+          },
+          "recurring_eligible_topics": 530,
+          "recurring_excess_sos": {
+            "mean": 0.03724131977751104,
+            "median": 0.038459220773552134,
+            "n": 530,
+            "q10": -0.0643294566793989,
+            "q90": 0.14534037631690758
+          },
+          "single_compound_topics": 187,
+          "sos_q05_topics": 9,
+          "supported_topics": 806,
+          "total_topics": 1000
+        },
+        {
+          "background_sos": {
+            "mean": 0.6028785649833348,
+            "median": 0.6026793720740362,
+            "n": 578,
+            "q10": 0.4762790666733833,
+            "q90": 0.7283270509455481
+          },
+          "eligible_topics": 578,
+          "excess_sos": {
+            "mean": 0.034645614090475785,
+            "median": 0.03546223631568554,
+            "n": 578,
+            "q10": -0.07541581851277526,
+            "q90": 0.1419927972685355
+          },
+          "feature_q05_tests": 16,
+          "feature_q05_topics": 12,
+          "fit": "tomotopy_11",
+          "informative_sos_topics": 574,
+          "mean_sos": {
+            "mean": 0.6375241790738104,
+            "median": 0.636130536130536,
+            "n": 578,
+            "q10": 0.46632183908045977,
+            "q90": 0.8307692307692308
+          },
+          "model": "tomotopy",
+          "positive_excess_topics": 390,
+          "reasons": {
+            "constant_conditional_null": 4,
+            "informative": 574,
+            "missing_MAG_consensus": 381,
+            "no_compound_support": 41
+          },
+          "recurring_eligible_topics": 490,
+          "recurring_excess_sos": {
+            "mean": 0.03506083631565206,
+            "median": 0.034682682561813616,
+            "n": 490,
+            "q10": -0.06904723724669451,
+            "q90": 0.13767844894071685
+          },
+          "single_compound_topics": 147,
+          "sos_q05_topics": 6,
+          "supported_topics": 959,
+          "total_topics": 1000
+        },
+        {
+          "background_sos": {
+            "mean": 0.6025097836993779,
+            "median": 0.6069582618639222,
+            "n": 583,
+            "q10": 0.48039690571988547,
+            "q90": 0.7226711499562866
+          },
+          "eligible_topics": 583,
+          "excess_sos": {
+            "mean": 0.0340133215445357,
+            "median": 0.029059438853942413,
+            "n": 583,
+            "q10": -0.07159112957403203,
+            "q90": 0.15270237467591302
+          },
+          "feature_q05_tests": 11,
+          "feature_q05_topics": 9,
+          "fit": "tomotopy_23",
+          "informative_sos_topics": 579,
+          "mean_sos": {
+            "mean": 0.6365231052439135,
+            "median": 0.6377358490566037,
+            "n": 583,
+            "q10": 0.45925925925925926,
+            "q90": 0.8204761904761906
+          },
+          "model": "tomotopy",
+          "positive_excess_topics": 377,
+          "reasons": {
+            "constant_conditional_null": 4,
+            "informative": 579,
+            "missing_MAG_consensus": 362,
+            "no_compound_support": 55
+          },
+          "recurring_eligible_topics": 516,
+          "recurring_excess_sos": {
+            "mean": 0.035367685887509805,
+            "median": 0.02942533453358387,
+            "n": 516,
+            "q10": -0.06816323437258395,
+            "q90": 0.14468820633805635
+          },
+          "single_compound_topics": 122,
+          "sos_q05_topics": 13,
+          "supported_topics": 945,
+          "total_topics": 1000
+        },
+        {
+          "background_sos": {
+            "mean": 0.6064095510308251,
+            "median": 0.602246913580247,
+            "n": 573,
+            "q10": 0.47856959783804337,
+            "q90": 0.7336911531764364
+          },
+          "eligible_topics": 573,
+          "excess_sos": {
+            "mean": 0.03565361525932916,
+            "median": 0.03852893692012678,
+            "n": 573,
+            "q10": -0.06627888600110024,
+            "q90": 0.13966698493796745
+          },
+          "feature_q05_tests": 20,
+          "feature_q05_topics": 15,
+          "fit": "tomotopy_42",
+          "informative_sos_topics": 572,
+          "mean_sos": {
+            "mean": 0.6420631662901543,
+            "median": 0.6410256410256411,
+            "n": 573,
+            "q10": 0.45907137907137907,
+            "q90": 0.8125
+          },
+          "model": "tomotopy",
+          "positive_excess_topics": 391,
+          "reasons": {
+            "constant_conditional_null": 1,
+            "informative": 572,
+            "missing_MAG_consensus": 360,
+            "no_compound_support": 67
+          },
+          "recurring_eligible_topics": 502,
+          "recurring_excess_sos": {
+            "mean": 0.03726925581109874,
+            "median": 0.039398341253108496,
+            "n": 502,
+            "q10": -0.05782894204036526,
+            "q90": 0.130648291539797
+          },
+          "single_compound_topics": 129,
+          "sos_q05_topics": 10,
+          "supported_topics": 933,
+          "total_topics": 1000
+        }
+      ],
+      "max_mc_mean_minus_analytic_in_mc_se": 4.145011940940965,
+      "permutations": 99999,
+      "singleton_compounds": 64,
+      "sos_family_size": 6000,
+      "strata": 158
+    },
+    "scaffold_50": {
+      "compounds": 2856,
+      "configuration": {
+        "id": "scaffold_50",
+        "scaffold_balanced": true,
+        "width_da": 50
+      },
+      "feature_family_size": 996000,
+      "fits": [
+        {
+          "background_sos": {
+            "mean": 0.6091568549818074,
+            "median": 0.6106560664831828,
+            "n": 630,
+            "q10": 0.47918196848295075,
+            "q90": 0.7364240700892322
+          },
+          "eligible_topics": 630,
+          "excess_sos": {
+            "mean": 0.03223325191510508,
+            "median": 0.028049157817960607,
+            "n": 630,
+            "q10": -0.08472545794107164,
+            "q90": 0.1499738502788326
+          },
+          "feature_q05_tests": 6,
+          "feature_q05_topics": 3,
+          "fit": "selected_11",
+          "informative_sos_topics": 625,
+          "mean_sos": {
+            "mean": 0.6413901068969124,
+            "median": 0.6448028673835126,
+            "n": 630,
+            "q10": 0.46260580719762,
+            "q90": 0.8172467532467533
+          },
+          "model": "selected",
+          "positive_excess_topics": 408,
+          "reasons": {
+            "constant_conditional_null": 5,
+            "informative": 625,
+            "missing_MAG_consensus": 128,
+            "no_compound_support": 242
+          },
+          "recurring_eligible_topics": 437,
+          "recurring_excess_sos": {
+            "mean": 0.031772192262821276,
+            "median": 0.02832264944263915,
+            "n": 437,
+            "q10": -0.06394071667167985,
+            "q90": 0.12411162790697676
+          },
+          "single_compound_topics": 236,
+          "sos_q05_topics": 6,
+          "supported_topics": 758,
+          "total_topics": 1000
+        },
+        {
+          "background_sos": {
+            "mean": 0.6088241073742467,
+            "median": 0.6129972100572654,
+            "n": 620,
+            "q10": 0.47873998127740114,
+            "q90": 0.7331943092920288
+          },
+          "eligible_topics": 620,
+          "excess_sos": {
+            "mean": 0.030987574494806054,
+            "median": 0.03005035292833337,
+            "n": 620,
+            "q10": -0.0853837835448726,
+            "q90": 0.1409112108653334
+          },
+          "feature_q05_tests": 6,
+          "feature_q05_topics": 4,
+          "fit": "selected_23",
+          "informative_sos_topics": 617,
+          "mean_sos": {
+            "mean": 0.6398116818690528,
+            "median": 0.6428571428571429,
+            "n": 620,
+            "q10": 0.4421945701357466,
+            "q90": 0.8271575984990619
+          },
+          "model": "selected",
+          "positive_excess_topics": 393,
+          "reasons": {
+            "constant_conditional_null": 3,
+            "informative": 617,
+            "missing_MAG_consensus": 122,
+            "no_compound_support": 258
+          },
+          "recurring_eligible_topics": 441,
+          "recurring_excess_sos": {
+            "mean": 0.03568590477020341,
+            "median": 0.03243636982664216,
+            "n": 441,
+            "q10": -0.05220108781308103,
+            "q90": 0.13008419822989836
+          },
+          "single_compound_topics": 221,
+          "sos_q05_topics": 8,
+          "supported_topics": 742,
+          "total_topics": 1000
+        },
+        {
+          "background_sos": {
+            "mean": 0.6040795445407529,
+            "median": 0.6019013783145691,
+            "n": 633,
+            "q10": 0.47357146044252413,
+            "q90": 0.7334468223246691
+          },
+          "eligible_topics": 633,
+          "excess_sos": {
+            "mean": 0.034183315007845605,
+            "median": 0.033006457785218865,
+            "n": 633,
+            "q10": -0.08592415101385202,
+            "q90": 0.15194223707182003
+          },
+          "feature_q05_tests": 5,
+          "feature_q05_topics": 2,
+          "fit": "selected_42",
+          "informative_sos_topics": 629,
+          "mean_sos": {
+            "mean": 0.6382628595485985,
+            "median": 0.640625,
+            "n": 633,
+            "q10": 0.44468599033816425,
+            "q90": 0.8333333333333334
+          },
+          "model": "selected",
+          "positive_excess_topics": 415,
+          "reasons": {
+            "constant_conditional_null": 4,
+            "informative": 629,
+            "missing_MAG_consensus": 127,
+            "no_compound_support": 240
+          },
+          "recurring_eligible_topics": 457,
+          "recurring_excess_sos": {
+            "mean": 0.03373804661933142,
+            "median": 0.031943346956164284,
+            "n": 457,
+            "q10": -0.0654026391156978,
+            "q90": 0.1356269117632267
+          },
+          "single_compound_topics": 232,
+          "sos_q05_topics": 4,
+          "supported_topics": 760,
+          "total_topics": 1000
+        },
+        {
+          "background_sos": {
+            "mean": 0.6131558595740151,
+            "median": 0.6107478139405815,
+            "n": 542,
+            "q10": 0.4775496639825331,
+            "q90": 0.7488034575015436
+          },
+          "eligible_topics": 542,
+          "excess_sos": {
+            "mean": 0.0287522186186511,
+            "median": 0.025079797963165368,
+            "n": 542,
+            "q10": -0.08565355401497224,
+            "q90": 0.14228265224358982
+          },
+          "feature_q05_tests": 4,
+          "feature_q05_topics": 3,
+          "fit": "tomotopy_11",
+          "informative_sos_topics": 537,
+          "mean_sos": {
+            "mean": 0.6419080781926662,
+            "median": 0.6363636363636364,
+            "n": 542,
+            "q10": 0.46055211558307535,
+            "q90": 0.8460212201591513
+          },
+          "model": "tomotopy",
+          "positive_excess_topics": 354,
+          "reasons": {
+            "constant_conditional_null": 5,
+            "informative": 537,
+            "missing_MAG_consensus": 362,
+            "no_compound_support": 96
+          },
+          "recurring_eligible_topics": 431,
+          "recurring_excess_sos": {
+            "mean": 0.026246660612148566,
+            "median": 0.02415037770962337,
+            "n": 431,
+            "q10": -0.07576977716036677,
+            "q90": 0.1281092975762661
+          },
+          "single_compound_topics": 203,
+          "sos_q05_topics": 2,
+          "supported_topics": 904,
+          "total_topics": 1000
+        },
+        {
+          "background_sos": {
+            "mean": 0.6127201761683684,
+            "median": 0.6184885566629752,
+            "n": 566,
+            "q10": 0.48123767885137847,
+            "q90": 0.7389806008985556
+          },
+          "eligible_topics": 566,
+          "excess_sos": {
+            "mean": 0.0299257288370494,
+            "median": 0.027267452734207234,
+            "n": 566,
+            "q10": -0.09178095927142921,
+            "q90": 0.1528008683432614
+          },
+          "feature_q05_tests": 3,
+          "feature_q05_topics": 3,
+          "fit": "tomotopy_23",
+          "informative_sos_topics": 563,
+          "mean_sos": {
+            "mean": 0.6426459050054176,
+            "median": 0.6394444444444445,
+            "n": 566,
+            "q10": 0.47834224598930486,
+            "q90": 0.8304597701149425
+          },
+          "model": "tomotopy",
+          "positive_excess_topics": 358,
+          "reasons": {
+            "constant_conditional_null": 3,
+            "informative": 563,
+            "missing_MAG_consensus": 344,
+            "no_compound_support": 90
+          },
+          "recurring_eligible_topics": 444,
+          "recurring_excess_sos": {
+            "mean": 0.03005548263032866,
+            "median": 0.02786836952532,
+            "n": 444,
+            "q10": -0.07531304558349759,
+            "q90": 0.14524654590355363
+          },
+          "single_compound_topics": 220,
+          "sos_q05_topics": 5,
+          "supported_topics": 910,
+          "total_topics": 1000
+        },
+        {
+          "background_sos": {
+            "mean": 0.619080148281657,
+            "median": 0.6191797882304286,
+            "n": 548,
+            "q10": 0.4860979464231847,
+            "q90": 0.7474536385900645
+          },
+          "eligible_topics": 548,
+          "excess_sos": {
+            "mean": 0.028618301590526144,
+            "median": 0.032222526279688926,
+            "n": 548,
+            "q10": -0.08580523452364106,
+            "q90": 0.14266450325263705
+          },
+          "feature_q05_tests": 3,
+          "feature_q05_topics": 3,
+          "fit": "tomotopy_42",
+          "informative_sos_topics": 548,
+          "mean_sos": {
+            "mean": 0.6476984498721831,
+            "median": 0.6458333333333334,
+            "n": 548,
+            "q10": 0.4587644787644788,
+            "q90": 0.8216666666666667
+          },
+          "model": "tomotopy",
+          "positive_excess_topics": 359,
+          "reasons": {
+            "informative": 548,
+            "missing_MAG_consensus": 341,
+            "no_compound_support": 111
+          },
+          "recurring_eligible_topics": 446,
+          "recurring_excess_sos": {
+            "mean": 0.03230937362237576,
+            "median": 0.034350615124282516,
+            "n": 446,
+            "q10": -0.0663308470744271,
+            "q90": 0.12904977652070676
+          },
+          "single_compound_topics": 185,
+          "sos_q05_topics": 1,
+          "supported_topics": 889,
+          "total_topics": 1000
+        }
+      ],
+      "max_mc_mean_minus_analytic_in_mc_se": 3.901971631796894,
+      "permutations": 99999,
+      "singleton_compounds": 54,
+      "sos_family_size": 6000,
+      "strata": 124
+    },
+    "sensitivity_100": {
+      "compounds": 3854,
+      "configuration": {
+        "id": "sensitivity_100",
+        "scaffold_balanced": false,
+        "width_da": 100
+      },
+      "feature_family_size": 996000,
+      "fits": [
+        {
+          "background_sos": {
+            "mean": 0.5953148957635263,
+            "median": 0.5925925925925926,
+            "n": 671,
+            "q10": 0.4775974893162393,
+            "q90": 0.7129622979680815
+          },
+          "eligible_topics": 671,
+          "excess_sos": {
+            "mean": 0.03249959065848485,
+            "median": 0.03402848148884314,
+            "n": 671,
+            "q10": -0.07881821194514697,
+            "q90": 0.14872330089143737
+          },
+          "feature_q05_tests": 23,
+          "feature_q05_topics": 10,
+          "fit": "selected_11",
+          "informative_sos_topics": 669,
+          "mean_sos": {
+            "mean": 0.6278144864220111,
+            "median": 0.6271186440677966,
+            "n": 671,
+            "q10": 0.45614035087719296,
+            "q90": 0.8095238095238095
+          },
+          "model": "selected",
+          "positive_excess_topics": 443,
+          "reasons": {
+            "constant_conditional_null": 2,
+            "informative": 669,
+            "missing_MAG_consensus": 146,
+            "no_compound_support": 183
+          },
+          "recurring_eligible_topics": 512,
+          "recurring_excess_sos": {
+            "mean": 0.03446672548348975,
+            "median": 0.03447309029512864,
+            "n": 512,
+            "q10": -0.06302145870187069,
+            "q90": 0.1319532964919045
+          },
+          "single_compound_topics": 204,
+          "sos_q05_topics": 10,
+          "supported_topics": 817,
+          "total_topics": 1000
+        },
+        {
+          "background_sos": {
+            "mean": 0.5970743263410728,
+            "median": 0.5995988138845282,
+            "n": 657,
+            "q10": 0.47551831221317437,
+            "q90": 0.7146404466202694
+          },
+          "eligible_topics": 657,
+          "excess_sos": {
+            "mean": 0.03461511799896211,
+            "median": 0.03678819749570628,
+            "n": 657,
+            "q10": -0.08527499339450365,
+            "q90": 0.15166430056089836
+          },
+          "feature_q05_tests": 23,
+          "feature_q05_topics": 7,
+          "fit": "selected_23",
+          "informative_sos_topics": 655,
+          "mean_sos": {
+            "mean": 0.6316894443400348,
+            "median": 0.6326530612244898,
+            "n": 657,
+            "q10": 0.44004329004329007,
+            "q90": 0.8161403508771929
+          },
+          "model": "selected",
+          "positive_excess_topics": 431,
+          "reasons": {
+            "constant_conditional_null": 2,
+            "informative": 655,
+            "missing_MAG_consensus": 142,
+            "no_compound_support": 201
+          },
+          "recurring_eligible_topics": 502,
+          "recurring_excess_sos": {
+            "mean": 0.03603685346925919,
+            "median": 0.036778541991102975,
+            "n": 502,
+            "q10": -0.06122539918153129,
+            "q90": 0.13707597699487453
+          },
+          "single_compound_topics": 200,
+          "sos_q05_topics": 13,
+          "supported_topics": 799,
+          "total_topics": 1000
+        },
+        {
+          "background_sos": {
+            "mean": 0.590007709328212,
+            "median": 0.5892452864711637,
+            "n": 669,
+            "q10": 0.4690489882320404,
+            "q90": 0.7140236656549294
+          },
+          "eligible_topics": 669,
+          "excess_sos": {
+            "mean": 0.037674232096000855,
+            "median": 0.036394352312824986,
+            "n": 669,
+            "q10": -0.07424224345349582,
+            "q90": 0.16310999936124052
+          },
+          "feature_q05_tests": 35,
+          "feature_q05_topics": 11,
+          "fit": "selected_42",
+          "informative_sos_topics": 665,
+          "mean_sos": {
+            "mean": 0.6276819414242129,
+            "median": 0.6285714285714286,
+            "n": 669,
+            "q10": 0.4523302938196555,
+            "q90": 0.8141257536606374
+          },
+          "model": "selected",
+          "positive_excess_topics": 439,
+          "reasons": {
+            "constant_conditional_null": 4,
+            "informative": 665,
+            "missing_MAG_consensus": 137,
+            "no_compound_support": 194
+          },
+          "recurring_eligible_topics": 530,
+          "recurring_excess_sos": {
+            "mean": 0.037839863097060424,
+            "median": 0.03877457957787457,
+            "n": 530,
+            "q10": -0.06288269029411446,
+            "q90": 0.14937435799534893
+          },
+          "single_compound_topics": 187,
+          "sos_q05_topics": 10,
+          "supported_topics": 806,
+          "total_topics": 1000
+        },
+        {
+          "background_sos": {
+            "mean": 0.602240876997353,
+            "median": 0.5986826324546913,
+            "n": 578,
+            "q10": 0.4769035268459611,
+            "q90": 0.7249300613206431
+          },
+          "eligible_topics": 578,
+          "excess_sos": {
+            "mean": 0.035283302076457614,
+            "median": 0.03636993356005962,
+            "n": 578,
+            "q10": -0.07850429771753306,
+            "q90": 0.14441312002650641
+          },
+          "feature_q05_tests": 15,
+          "feature_q05_topics": 12,
+          "fit": "tomotopy_11",
+          "informative_sos_topics": 574,
+          "mean_sos": {
+            "mean": 0.6375241790738104,
+            "median": 0.636130536130536,
+            "n": 578,
+            "q10": 0.46632183908045977,
+            "q90": 0.8307692307692308
+          },
+          "model": "tomotopy",
+          "positive_excess_topics": 390,
+          "reasons": {
+            "constant_conditional_null": 4,
+            "informative": 574,
+            "missing_MAG_consensus": 381,
+            "no_compound_support": 41
+          },
+          "recurring_eligible_topics": 490,
+          "recurring_excess_sos": {
+            "mean": 0.035908792428141795,
+            "median": 0.03484526191116909,
+            "n": 490,
+            "q10": -0.0672409828122051,
+            "q90": 0.1418416408562859
+          },
+          "single_compound_topics": 147,
+          "sos_q05_topics": 7,
+          "supported_topics": 959,
+          "total_topics": 1000
+        },
+        {
+          "background_sos": {
+            "mean": 0.601858500978681,
+            "median": 0.6045624673075654,
+            "n": 583,
+            "q10": 0.48486043498425657,
+            "q90": 0.7201759271514613
+          },
+          "eligible_topics": 583,
+          "excess_sos": {
+            "mean": 0.03466460426523257,
+            "median": 0.032232458257550084,
+            "n": 583,
+            "q10": -0.07797921983509411,
+            "q90": 0.1537857816590989
+          },
+          "feature_q05_tests": 11,
+          "feature_q05_topics": 9,
+          "fit": "tomotopy_23",
+          "informative_sos_topics": 580,
+          "mean_sos": {
+            "mean": 0.6365231052439135,
+            "median": 0.6377358490566037,
+            "n": 583,
+            "q10": 0.45925925925925926,
+            "q90": 0.8204761904761906
+          },
+          "model": "tomotopy",
+          "positive_excess_topics": 374,
+          "reasons": {
+            "constant_conditional_null": 3,
+            "informative": 580,
+            "missing_MAG_consensus": 362,
+            "no_compound_support": 55
+          },
+          "recurring_eligible_topics": 516,
+          "recurring_excess_sos": {
+            "mean": 0.03539723232934907,
+            "median": 0.03133362386983096,
+            "n": 516,
+            "q10": -0.07181257083515882,
+            "q90": 0.14347336691086693
+          },
+          "single_compound_topics": 122,
+          "sos_q05_topics": 12,
+          "supported_topics": 945,
+          "total_topics": 1000
+        },
+        {
+          "background_sos": {
+            "mean": 0.6064653319464249,
+            "median": 0.6015242832301928,
+            "n": 573,
+            "q10": 0.4806650612546328,
+            "q90": 0.729760481790557
+          },
+          "eligible_topics": 573,
+          "excess_sos": {
+            "mean": 0.0355978343437292,
+            "median": 0.03904837493309979,
+            "n": 573,
+            "q10": -0.07398853455143256,
+            "q90": 0.13788097816378375
+          },
+          "feature_q05_tests": 20,
+          "feature_q05_topics": 16,
+          "fit": "tomotopy_42",
+          "informative_sos_topics": 572,
+          "mean_sos": {
+            "mean": 0.6420631662901543,
+            "median": 0.6410256410256411,
+            "n": 573,
+            "q10": 0.45907137907137907,
+            "q90": 0.8125
+          },
+          "model": "tomotopy",
+          "positive_excess_topics": 394,
+          "reasons": {
+            "constant_conditional_null": 1,
+            "informative": 572,
+            "missing_MAG_consensus": 360,
+            "no_compound_support": 67
+          },
+          "recurring_eligible_topics": 502,
+          "recurring_excess_sos": {
+            "mean": 0.03759188035822261,
+            "median": 0.04110887238525169,
+            "n": 502,
+            "q10": -0.05459633773031206,
+            "q90": 0.13133751071245225
+          },
+          "single_compound_topics": 129,
+          "sos_q05_topics": 10,
+          "supported_topics": 933,
+          "total_topics": 1000
+        }
+      ],
+      "max_mc_mean_minus_analytic_in_mc_se": 3.23090927413445,
+      "permutations": 99999,
+      "singleton_compounds": 45,
+      "sos_family_size": 6000,
+      "strata": 106
+    },
+    "sensitivity_25": {
+      "compounds": 3854,
+      "configuration": {
+        "id": "sensitivity_25",
+        "scaffold_balanced": false,
+        "width_da": 25
+      },
+      "feature_family_size": 996000,
+      "fits": [
+        {
+          "background_sos": {
+            "mean": 0.5961230184811678,
+            "median": 0.5965129573170731,
+            "n": 671,
+            "q10": 0.4772512870130135,
+            "q90": 0.7122408243568592
+          },
+          "eligible_topics": 671,
+          "excess_sos": {
+            "mean": 0.031691467940843474,
+            "median": 0.031967803154243864,
+            "n": 671,
+            "q10": -0.08212360500934208,
+            "q90": 0.14583333333333337
+          },
+          "feature_q05_tests": 20,
+          "feature_q05_topics": 9,
+          "fit": "selected_11",
+          "informative_sos_topics": 668,
+          "mean_sos": {
+            "mean": 0.6278144864220111,
+            "median": 0.6271186440677966,
+            "n": 671,
+            "q10": 0.45614035087719296,
+            "q90": 0.8095238095238095
+          },
+          "model": "selected",
+          "positive_excess_topics": 436,
+          "reasons": {
+            "constant_conditional_null": 3,
+            "informative": 668,
+            "missing_MAG_consensus": 146,
+            "no_compound_support": 183
+          },
+          "recurring_eligible_topics": 512,
+          "recurring_excess_sos": {
+            "mean": 0.03364646001667442,
+            "median": 0.03268428250151595,
+            "n": 512,
+            "q10": -0.06609246552464214,
+            "q90": 0.13071413601044654
+          },
+          "single_compound_topics": 204,
+          "sos_q05_topics": 10,
+          "supported_topics": 817,
+          "total_topics": 1000
+        },
+        {
+          "background_sos": {
+            "mean": 0.5981312843381976,
+            "median": 0.6003861003861004,
+            "n": 657,
+            "q10": 0.47326850239852053,
+            "q90": 0.7177896477188681
+          },
+          "eligible_topics": 657,
+          "excess_sos": {
+            "mean": 0.03355816000183731,
+            "median": 0.032176893789188955,
+            "n": 657,
+            "q10": -0.08643697822886777,
+            "q90": 0.15009790353795724
+          },
+          "feature_q05_tests": 16,
+          "feature_q05_topics": 7,
+          "fit": "selected_23",
+          "informative_sos_topics": 654,
+          "mean_sos": {
+            "mean": 0.6316894443400348,
+            "median": 0.6326530612244898,
+            "n": 657,
+            "q10": 0.44004329004329007,
+            "q90": 0.8161403508771929
+          },
+          "model": "selected",
+          "positive_excess_topics": 425,
+          "reasons": {
+            "constant_conditional_null": 3,
+            "informative": 654,
+            "missing_MAG_consensus": 142,
+            "no_compound_support": 201
+          },
+          "recurring_eligible_topics": 502,
+          "recurring_excess_sos": {
+            "mean": 0.03543103108942065,
+            "median": 0.03335427911734522,
+            "n": 502,
+            "q10": -0.05939857351471666,
+            "q90": 0.13177131258413644
+          },
+          "single_compound_topics": 200,
+          "sos_q05_topics": 12,
+          "supported_topics": 799,
+          "total_topics": 1000
+        },
+        {
+          "background_sos": {
+            "mean": 0.5914935413464072,
+            "median": 0.5895137616133221,
+            "n": 669,
+            "q10": 0.4691395948538805,
+            "q90": 0.7194772056984832
+          },
+          "eligible_topics": 669,
+          "excess_sos": {
+            "mean": 0.03618840007780559,
+            "median": 0.034994566244566226,
+            "n": 669,
+            "q10": -0.07685114651414673,
+            "q90": 0.16311187871836394
+          },
+          "feature_q05_tests": 27,
+          "feature_q05_topics": 11,
+          "fit": "selected_42",
+          "informative_sos_topics": 665,
+          "mean_sos": {
+            "mean": 0.6276819414242129,
+            "median": 0.6285714285714286,
+            "n": 669,
+            "q10": 0.4523302938196555,
+            "q90": 0.8141257536606374
+          },
+          "model": "selected",
+          "positive_excess_topics": 436,
+          "reasons": {
+            "constant_conditional_null": 4,
+            "informative": 665,
+            "missing_MAG_consensus": 137,
+            "no_compound_support": 194
+          },
+          "recurring_eligible_topics": 530,
+          "recurring_excess_sos": {
+            "mean": 0.036611378471530384,
+            "median": 0.03524769310653515,
+            "n": 530,
+            "q10": -0.05992171887661819,
+            "q90": 0.14270112945675756
+          },
+          "single_compound_topics": 187,
+          "sos_q05_topics": 10,
+          "supported_topics": 806,
+          "total_topics": 1000
+        },
+        {
+          "background_sos": {
+            "mean": 0.6035509805537423,
+            "median": 0.6024016755050989,
+            "n": 578,
+            "q10": 0.4692041728047526,
+            "q90": 0.7352582380749805
+          },
+          "eligible_topics": 578,
+          "excess_sos": {
+            "mean": 0.03397319852006829,
+            "median": 0.03525798464078934,
+            "n": 578,
+            "q10": -0.0768440613493233,
+            "q90": 0.1386302132666035
+          },
+          "feature_q05_tests": 15,
+          "feature_q05_topics": 11,
+          "fit": "tomotopy_11",
+          "informative_sos_topics": 572,
+          "mean_sos": {
+            "mean": 0.6375241790738104,
+            "median": 0.636130536130536,
+            "n": 578,
+            "q10": 0.46632183908045977,
+            "q90": 0.8307692307692308
+          },
+          "model": "tomotopy",
+          "positive_excess_topics": 393,
+          "reasons": {
+            "constant_conditional_null": 6,
+            "informative": 572,
+            "missing_MAG_consensus": 381,
+            "no_compound_support": 41
+          },
+          "recurring_eligible_topics": 490,
+          "recurring_excess_sos": {
+            "mean": 0.03420144139633016,
+            "median": 0.034470309043071294,
+            "n": 490,
+            "q10": -0.06907163574107006,
+            "q90": 0.1340442035599884
+          },
+          "single_compound_topics": 147,
+          "sos_q05_topics": 9,
+          "supported_topics": 959,
+          "total_topics": 1000
+        },
+        {
+          "background_sos": {
+            "mean": 0.6038733454396445,
+            "median": 0.6064552477504539,
+            "n": 583,
+            "q10": 0.4840335358700355,
+            "q90": 0.7256801914314472
+          },
+          "eligible_topics": 583,
+          "excess_sos": {
+            "mean": 0.032649759804268964,
+            "median": 0.028360369456786872,
+            "n": 583,
+            "q10": -0.07078732889325626,
+            "q90": 0.15326597639875156
+          },
+          "feature_q05_tests": 10,
+          "feature_q05_topics": 8,
+          "fit": "tomotopy_23",
+          "informative_sos_topics": 578,
+          "mean_sos": {
+            "mean": 0.6365231052439135,
+            "median": 0.6377358490566037,
+            "n": 583,
+            "q10": 0.45925925925925926,
+            "q90": 0.8204761904761906
+          },
+          "model": "tomotopy",
+          "positive_excess_topics": 373,
+          "reasons": {
+            "constant_conditional_null": 5,
+            "informative": 578,
+            "missing_MAG_consensus": 362,
+            "no_compound_support": 55
+          },
+          "recurring_eligible_topics": 516,
+          "recurring_excess_sos": {
+            "mean": 0.03434057480505454,
+            "median": 0.029125015169639903,
+            "n": 516,
+            "q10": -0.06908335433002089,
+            "q90": 0.1447788949733955
+          },
+          "single_compound_topics": 122,
+          "sos_q05_topics": 12,
+          "supported_topics": 945,
+          "total_topics": 1000
+        },
+        {
+          "background_sos": {
+            "mean": 0.6070861519276785,
+            "median": 0.603253717890942,
+            "n": 573,
+            "q10": 0.4787271587019525,
+            "q90": 0.7369504315485792
+          },
+          "eligible_topics": 573,
+          "excess_sos": {
+            "mean": 0.03497701436247578,
+            "median": 0.036542956280800204,
+            "n": 573,
+            "q10": -0.06789753073999528,
+            "q90": 0.13797285205996193
+          },
+          "feature_q05_tests": 18,
+          "feature_q05_topics": 13,
+          "fit": "tomotopy_42",
+          "informative_sos_topics": 571,
+          "mean_sos": {
+            "mean": 0.6420631662901543,
+            "median": 0.6410256410256411,
+            "n": 573,
+            "q10": 0.45907137907137907,
+            "q90": 0.8125
+          },
+          "model": "tomotopy",
+          "positive_excess_topics": 386,
+          "reasons": {
+            "constant_conditional_null": 2,
+            "informative": 571,
+            "missing_MAG_consensus": 360,
+            "no_compound_support": 67
+          },
+          "recurring_eligible_topics": 502,
+          "recurring_excess_sos": {
+            "mean": 0.03663723733344419,
+            "median": 0.038550206417419366,
+            "n": 502,
+            "q10": -0.057362249461853164,
+            "q90": 0.13302818009371284
+          },
+          "single_compound_topics": 129,
+          "sos_q05_topics": 10,
+          "supported_topics": 933,
+          "total_topics": 1000
+        }
+      ],
+      "max_mc_mean_minus_analytic_in_mc_se": 3.6216274869043765,
+      "permutations": 99999,
+      "singleton_compounds": 95,
+      "sos_family_size": 6000,
+      "strata": 229
+    }
+  }
+}

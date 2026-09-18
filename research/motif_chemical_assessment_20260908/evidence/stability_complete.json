@@ -1,0 +1,626 @@
+{
+  "payloads": {
+    "redundancy.jsonl": {
+      "bytes": 964716,
+      "sha256": "5eab5923be2e480b39a87f8f5530cf7e16b0bce2bb75f75e5bf01d311c5f55ba"
+    },
+    "stability_summary.json": {
+      "bytes": 16089,
+      "sha256": "c04dff6dbcaa78faaf3dd80acbb891be840610c814baf36a8771f965aa149abd"
+    },
+    "topic_matches.jsonl": {
+      "bytes": 4072200,
+      "sha256": "39f6ce734860562005daede5a0c2376cefcedd8956aaa78387a5784d71336172"
+    }
+  },
+  "source_sha256": {
+    "/home/joewandy/Work/git/MS2LDA/benchmarks/neural_ms2lda/chemical_assessment.py": "b50a1cd7a8d1767701726a80e8e48f827ee0e227c10d8d98e7c2cc27d29b1f41",
+    "/home/joewandy/Work/git/MS2LDA/benchmarks/neural_ms2lda/chemical_assessment_io.py": "3f6dd4c095d166d048d630f9ff300c51cfa89af65a326c39ef64bacae42d9d0e",
+    "/home/joewandy/Work/git/MS2LDA/benchmarks/neural_ms2lda/chemical_assessment_report.py": "c6b6da28ec9cec5d03bf38a8afca2623a0613ad18b8fc5fb1b4724bfd1b55aad",
+    "/home/joewandy/Work/git/MS2LDA/benchmarks/neural_ms2lda/chemical_nulls.py": "571c75136c3ab5e23421cb495609fd449c26792e7856f0e2da1c2539c04d7663",
+    "/home/joewandy/Work/git/MS2LDA/benchmarks/neural_ms2lda/motif_correspondence.py": "727aff4697f67c91519128c50ed852344ed0dd1ee681466fe73df4089e653f16",
+    "/home/joewandy/Work/git/MS2LDA/benchmarks/neural_ms2lda/motif_reference.py": "a37c15cd9783085d7c7c457276c3de6c236f5e7540856d26a1a23d4220a81486",
+    "scripts/run_motif_chemical_assessment.py": "8c121be4dabf019d0b639d989bb7937fcf20e863f3a6322da3be51db31da3a6f"
+  },
+  "summary": {
+    "interpretation": "Dependent fit-pair comparisons, not independent chemical replication.",
+    "pairs": [
+      {
+        "beta_cosine": {
+          "mean": 0.5734665568981827,
+          "median": 0.6376452897428397,
+          "n": 1000,
+          "q10": 0.04859528112084508,
+          "q90": 0.9790228621281719
+        },
+        "compound_jaccard": {
+          "mean": 0.18606566888767248,
+          "median": 0.0,
+          "n": 921,
+          "q10": 0.0,
+          "q90": 0.5
+        },
+        "feature_effect_cosine": {
+          "mean": 0.4231941760557411,
+          "median": 0.461150001633707,
+          "n": 692,
+          "q10": -0.05739715271072429,
+          "q90": 0.8787485969497358
+        },
+        "kind": "within_selected",
+        "left_fit": "selected_11",
+        "reciprocal_fraction": 0.674,
+        "right_fit": "selected_23",
+        "top20_jaccard": {
+          "mean": 0.2076421762539834,
+          "median": 0.14285714285714285,
+          "n": 1000,
+          "q10": 0.02564102564102564,
+          "q90": 0.48148148148148145
+        }
+      },
+      {
+        "beta_cosine": {
+          "mean": 0.5722762403582964,
+          "median": 0.6309997568701288,
+          "n": 1000,
+          "q10": 0.04926628301968581,
+          "q90": 0.9687509896406447
+        },
+        "compound_jaccard": {
+          "mean": 0.19235393153983107,
+          "median": 0.037037037037037035,
+          "n": 921,
+          "q10": 0.0,
+          "q90": 0.5
+        },
+        "feature_effect_cosine": {
+          "mean": 0.4195343299369259,
+          "median": 0.4545245628834747,
+          "n": 699,
+          "q10": -0.09829781033079178,
+          "q90": 0.8778710526351269
+        },
+        "kind": "within_selected",
+        "left_fit": "selected_11",
+        "reciprocal_fraction": 0.673,
+        "right_fit": "selected_42",
+        "top20_jaccard": {
+          "mean": 0.20782837065039664,
+          "median": 0.14285714285714285,
+          "n": 1000,
+          "q10": 0.02564102564102564,
+          "q90": 0.48148148148148145
+        }
+      },
+      {
+        "beta_cosine": {
+          "mean": 0.4173676003099197,
+          "median": 0.41243720659036454,
+          "n": 1000,
+          "q10": 0.015122356855080999,
+          "q90": 0.837681348717428
+        },
+        "compound_jaccard": {
+          "mean": 0.08606915426934493,
+          "median": 0.0,
+          "n": 989,
+          "q10": 0.0,
+          "q90": 0.2885714285714292
+        },
+        "feature_effect_cosine": {
+          "mean": 0.24119295825922557,
+          "median": 0.200724870881244,
+          "n": 784,
+          "q10": -0.15396087918558912,
+          "q90": 0.7157493088182327
+        },
+        "kind": "cross_model",
+        "left_fit": "selected_11",
+        "reciprocal_fraction": 0.585,
+        "right_fit": "tomotopy_11",
+        "top20_jaccard": {
+          "mean": 0.043173027343151184,
+          "median": 0.02564102564102564,
+          "n": 1000,
+          "q10": 0.02564102564102564,
+          "q90": 0.08108108108108109
+        }
+      },
+      {
+        "beta_cosine": {
+          "mean": 0.41992754326941634,
+          "median": 0.41508145931224183,
+          "n": 1000,
+          "q10": 0.017790321738241154,
+          "q90": 0.8479190261275492
+        },
+        "compound_jaccard": {
+          "mean": 0.10021120967143958,
+          "median": 0.0,
+          "n": 979,
+          "q10": 0.0,
+          "q90": 0.3333333333333333
+        },
+        "feature_effect_cosine": {
+          "mean": 0.2617628067277549,
+          "median": 0.22343631406612402,
+          "n": 780,
+          "q10": -0.13416915853445668,
+          "q90": 0.7320771969223177
+        },
+        "kind": "cross_model",
+        "left_fit": "selected_11",
+        "reciprocal_fraction": 0.595,
+        "right_fit": "tomotopy_23",
+        "top20_jaccard": {
+          "mean": 0.04457517875419603,
+          "median": 0.02564102564102564,
+          "n": 1000,
+          "q10": 0.02564102564102564,
+          "q90": 0.08108108108108109
+        }
+      },
+      {
+        "beta_cosine": {
+          "mean": 0.41515233949722236,
+          "median": 0.4021689186181226,
+          "n": 1000,
+          "q10": 0.01505687890718919,
+          "q90": 0.8356317574467582
+        },
+        "compound_jaccard": {
+          "mean": 0.09236361255770806,
+          "median": 0.0,
+          "n": 978,
+          "q10": 0.0,
+          "q90": 0.3333333333333333
+        },
+        "feature_effect_cosine": {
+          "mean": 0.24538682735235554,
+          "median": 0.20175787299207593,
+          "n": 770,
+          "q10": -0.17486432173138916,
+          "q90": 0.7271543890195571
+        },
+        "kind": "cross_model",
+        "left_fit": "selected_11",
+        "reciprocal_fraction": 0.596,
+        "right_fit": "tomotopy_42",
+        "top20_jaccard": {
+          "mean": 0.04330238683636267,
+          "median": 0.02564102564102564,
+          "n": 1000,
+          "q10": 0.02564102564102564,
+          "q90": 0.08108108108108109
+        }
+      },
+      {
+        "beta_cosine": {
+          "mean": 0.5605026997307714,
+          "median": 0.6055781254850199,
+          "n": 1000,
+          "q10": 0.046357570787881726,
+          "q90": 0.9739818277949805
+        },
+        "compound_jaccard": {
+          "mean": 0.18069053143018987,
+          "median": 0.0,
+          "n": 920,
+          "q10": 0.0,
+          "q90": 0.5
+        },
+        "feature_effect_cosine": {
+          "mean": 0.399928190707693,
+          "median": 0.41846777500167515,
+          "n": 681,
+          "q10": -0.09102073818311426,
+          "q90": 0.8894663348489334
+        },
+        "kind": "within_selected",
+        "left_fit": "selected_23",
+        "reciprocal_fraction": 0.672,
+        "right_fit": "selected_42",
+        "top20_jaccard": {
+          "mean": 0.2022200281610422,
+          "median": 0.14285714285714285,
+          "n": 1000,
+          "q10": 0.02564102564102564,
+          "q90": 0.48148148148148145
+        }
+      },
+      {
+        "beta_cosine": {
+          "mean": 0.4092954219841304,
+          "median": 0.4008690727008734,
+          "n": 1000,
+          "q10": 0.014289634943541402,
+          "q90": 0.8321561733146059
+        },
+        "compound_jaccard": {
+          "mean": 0.0879992035382816,
+          "median": 0.0,
+          "n": 987,
+          "q10": 0.0,
+          "q90": 0.2857142857142857
+        },
+        "feature_effect_cosine": {
+          "mean": 0.24767591556875734,
+          "median": 0.2119033600959331,
+          "n": 765,
+          "q10": -0.1574958930380007,
+          "q90": 0.7120096228493382
+        },
+        "kind": "cross_model",
+        "left_fit": "selected_23",
+        "reciprocal_fraction": 0.567,
+        "right_fit": "tomotopy_11",
+        "top20_jaccard": {
+          "mean": 0.04253015958890322,
+          "median": 0.02564102564102564,
+          "n": 1000,
+          "q10": 0.02564102564102564,
+          "q90": 0.08108108108108109
+        }
+      },
+      {
+        "beta_cosine": {
+          "mean": 0.4100047964614951,
+          "median": 0.3959407236228569,
+          "n": 1000,
+          "q10": 0.01694585564507951,
+          "q90": 0.8366520249914684
+        },
+        "compound_jaccard": {
+          "mean": 0.08893285197160139,
+          "median": 0.0,
+          "n": 981,
+          "q10": 0.0,
+          "q90": 0.3
+        },
+        "feature_effect_cosine": {
+          "mean": 0.2391519094667502,
+          "median": 0.20368401630250835,
+          "n": 757,
+          "q10": -0.18621598029154182,
+          "q90": 0.7006775752846376
+        },
+        "kind": "cross_model",
+        "left_fit": "selected_23",
+        "reciprocal_fraction": 0.584,
+        "right_fit": "tomotopy_23",
+        "top20_jaccard": {
+          "mean": 0.043220632934330136,
+          "median": 0.02564102564102564,
+          "n": 1000,
+          "q10": 0.02564102564102564,
+          "q90": 0.08108108108108109
+        }
+      },
+      {
+        "beta_cosine": {
+          "mean": 0.414098158682965,
+          "median": 0.40251252697790163,
+          "n": 1000,
+          "q10": 0.01452937141023861,
+          "q90": 0.8405718485708248
+        },
+        "compound_jaccard": {
+          "mean": 0.08903457557065292,
+          "median": 0.0,
+          "n": 979,
+          "q10": 0.0,
+          "q90": 0.3125
+        },
+        "feature_effect_cosine": {
+          "mean": 0.24852153818080328,
+          "median": 0.21591089263779206,
+          "n": 749,
+          "q10": -0.15270152908208745,
+          "q90": 0.7190616340691709
+        },
+        "kind": "cross_model",
+        "left_fit": "selected_23",
+        "reciprocal_fraction": 0.585,
+        "right_fit": "tomotopy_42",
+        "top20_jaccard": {
+          "mean": 0.043417937866000386,
+          "median": 0.02564102564102564,
+          "n": 1000,
+          "q10": 0.02564102564102564,
+          "q90": 0.08108108108108109
+        }
+      },
+      {
+        "beta_cosine": {
+          "mean": 0.40614230921173,
+          "median": 0.40151363692051323,
+          "n": 1000,
+          "q10": 0.01693865488472602,
+          "q90": 0.823940130613315
+        },
+        "compound_jaccard": {
+          "mean": 0.0875528345818472,
+          "median": 0.0,
+          "n": 989,
+          "q10": 0.0,
+          "q90": 0.3333333333333333
+        },
+        "feature_effect_cosine": {
+          "mean": 0.2387272108949923,
+          "median": 0.18566594303816966,
+          "n": 771,
+          "q10": -0.16394835041573871,
+          "q90": 0.7283456267994715
+        },
+        "kind": "cross_model",
+        "left_fit": "selected_42",
+        "reciprocal_fraction": 0.562,
+        "right_fit": "tomotopy_11",
+        "top20_jaccard": {
+          "mean": 0.042570930673247666,
+          "median": 0.02564102564102564,
+          "n": 1000,
+          "q10": 0.02564102564102564,
+          "q90": 0.08108108108108109
+        }
+      },
+      {
+        "beta_cosine": {
+          "mean": 0.40829171822231186,
+          "median": 0.39998450239300726,
+          "n": 1000,
+          "q10": 0.01612225674838915,
+          "q90": 0.8285010668985229
+        },
+        "compound_jaccard": {
+          "mean": 0.09781363371123152,
+          "median": 0.0,
+          "n": 985,
+          "q10": 0.0,
+          "q90": 0.3333333333333333
+        },
+        "feature_effect_cosine": {
+          "mean": 0.27028639457335896,
+          "median": 0.2355706447134464,
+          "n": 762,
+          "q10": -0.11104183520611235,
+          "q90": 0.7322370417781642
+        },
+        "kind": "cross_model",
+        "left_fit": "selected_42",
+        "reciprocal_fraction": 0.577,
+        "right_fit": "tomotopy_23",
+        "top20_jaccard": {
+          "mean": 0.042407453104896436,
+          "median": 0.02564102564102564,
+          "n": 1000,
+          "q10": 0.02564102564102564,
+          "q90": 0.08108108108108109
+        }
+      },
+      {
+        "beta_cosine": {
+          "mean": 0.4089978886375273,
+          "median": 0.40981384273088894,
+          "n": 1000,
+          "q10": 0.014449376071700404,
+          "q90": 0.817503662062963
+        },
+        "compound_jaccard": {
+          "mean": 0.09390586461160048,
+          "median": 0.0,
+          "n": 984,
+          "q10": 0.0,
+          "q90": 0.3333333333333333
+        },
+        "feature_effect_cosine": {
+          "mean": 0.25628228132810854,
+          "median": 0.21422947358402036,
+          "n": 751,
+          "q10": -0.14634718830463356,
+          "q90": 0.7223330384068474
+        },
+        "kind": "cross_model",
+        "left_fit": "selected_42",
+        "reciprocal_fraction": 0.572,
+        "right_fit": "tomotopy_42",
+        "top20_jaccard": {
+          "mean": 0.04252768217388712,
+          "median": 0.02564102564102564,
+          "n": 1000,
+          "q10": 0.02564102564102564,
+          "q90": 0.08108108108108109
+        }
+      },
+      {
+        "beta_cosine": {
+          "mean": 0.5087858478287822,
+          "median": 0.5325157686865665,
+          "n": 1000,
+          "q10": 0.0566608100684725,
+          "q90": 0.9308020830944732
+        },
+        "compound_jaccard": {
+          "mean": 0.15937535137516257,
+          "median": 0.0,
+          "n": 998,
+          "q10": 0.0,
+          "q90": 0.5
+        },
+        "feature_effect_cosine": {
+          "mean": 0.29973912905143074,
+          "median": 0.2444512352015863,
+          "n": 900,
+          "q10": -0.14633387560975128,
+          "q90": 0.8173399377872194
+        },
+        "kind": "within_tomotopy",
+        "left_fit": "tomotopy_11",
+        "reciprocal_fraction": 0.658,
+        "right_fit": "tomotopy_23",
+        "top20_jaccard": {
+          "mean": 0.1170970702771903,
+          "median": 0.05263157894736842,
+          "n": 1000,
+          "q10": 0.02564102564102564,
+          "q90": 0.2946236559139795
+        }
+      },
+      {
+        "beta_cosine": {
+          "mean": 0.5127746016084458,
+          "median": 0.5314448014737156,
+          "n": 1000,
+          "q10": 0.06894684213072781,
+          "q90": 0.9294046056042392
+        },
+        "compound_jaccard": {
+          "mean": 0.158517587993777,
+          "median": 0.0,
+          "n": 995,
+          "q10": 0.0,
+          "q90": 0.5
+        },
+        "feature_effect_cosine": {
+          "mean": 0.3075948704948641,
+          "median": 0.283873886272747,
+          "n": 894,
+          "q10": -0.15409665728554342,
+          "q90": 0.8276107253689595
+        },
+        "kind": "within_tomotopy",
+        "left_fit": "tomotopy_11",
+        "reciprocal_fraction": 0.666,
+        "right_fit": "tomotopy_42",
+        "top20_jaccard": {
+          "mean": 0.11661759858902516,
+          "median": 0.05263157894736842,
+          "n": 1000,
+          "q10": 0.02564102564102564,
+          "q90": 0.2903225806451613
+        }
+      },
+      {
+        "beta_cosine": {
+          "mean": 0.5124987216017062,
+          "median": 0.5228498566339002,
+          "n": 1000,
+          "q10": 0.05634809868855917,
+          "q90": 0.9375199411983601
+        },
+        "compound_jaccard": {
+          "mean": 0.16373715797983485,
+          "median": 0.0,
+          "n": 997,
+          "q10": 0.0,
+          "q90": 0.5
+        },
+        "feature_effect_cosine": {
+          "mean": 0.31711482729067936,
+          "median": 0.30268661580457296,
+          "n": 878,
+          "q10": -0.13894666948818155,
+          "q90": 0.8068535279190703
+        },
+        "kind": "within_tomotopy",
+        "left_fit": "tomotopy_23",
+        "reciprocal_fraction": 0.673,
+        "right_fit": "tomotopy_42",
+        "top20_jaccard": {
+          "mean": 0.12287063575168475,
+          "median": 0.05263157894736842,
+          "n": 1000,
+          "q10": 0.02564102564102564,
+          "q90": 0.3333333333333333
+        }
+      }
+    ],
+    "redundancy": [
+      {
+        "available_MAG_profiles": 813,
+        "distinct_MAG_profiles": 765,
+        "fit": "selected_11",
+        "model": "selected",
+        "nearest_beta_cosine": {
+          "mean": 0.14445253769952626,
+          "median": 0.09125704254715805,
+          "n": 1000,
+          "q10": 0.041826768364937254,
+          "q90": 0.32278267891618984
+        },
+        "topics_sharing_MAG_profile": 88
+      },
+      {
+        "available_MAG_profiles": 804,
+        "distinct_MAG_profiles": 750,
+        "fit": "selected_23",
+        "model": "selected",
+        "nearest_beta_cosine": {
+          "mean": 0.147731936980532,
+          "median": 0.09381389459019346,
+          "n": 1000,
+          "q10": 0.048073572097595094,
+          "q90": 0.2939089122535371
+        },
+        "topics_sharing_MAG_profile": 99
+      },
+      {
+        "available_MAG_profiles": 813,
+        "distinct_MAG_profiles": 758,
+        "fit": "selected_42",
+        "model": "selected",
+        "nearest_beta_cosine": {
+          "mean": 0.15169064959712975,
+          "median": 0.09424013664922067,
+          "n": 1000,
+          "q10": 0.04817241848731494,
+          "q90": 0.34083588681900845
+        },
+        "topics_sharing_MAG_profile": 102
+      },
+      {
+        "available_MAG_profiles": 605,
+        "distinct_MAG_profiles": 582,
+        "fit": "tomotopy_11",
+        "model": "tomotopy",
+        "nearest_beta_cosine": {
+          "mean": 0.039485275619792475,
+          "median": 0.025088586822533537,
+          "n": 1000,
+          "q10": 0.008320573801983346,
+          "q90": 0.07833111273506126
+        },
+        "topics_sharing_MAG_profile": 43
+      },
+      {
+        "available_MAG_profiles": 617,
+        "distinct_MAG_profiles": 583,
+        "fit": "tomotopy_23",
+        "model": "tomotopy",
+        "nearest_beta_cosine": {
+          "mean": 0.04152389913053176,
+          "median": 0.025155637894243153,
+          "n": 1000,
+          "q10": 0.008322424204065605,
+          "q90": 0.08199916347296313
+        },
+        "topics_sharing_MAG_profile": 64
+      },
+      {
+        "available_MAG_profiles": 607,
+        "distinct_MAG_profiles": 587,
+        "fit": "tomotopy_42",
+        "model": "tomotopy",
+        "nearest_beta_cosine": {
+          "mean": 0.04018870667636422,
+          "median": 0.02456791404080229,
+          "n": 1000,
+          "q10": 0.008344741700669537,
+          "q90": 0.08716717417785777
+        },
+        "topics_sharing_MAG_profile": 36
+      }
+    ]
+  }
+}

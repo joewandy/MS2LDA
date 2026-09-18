@@ -1,0 +1,7 @@
+{
+  "device": "cuda",
+  "frozen_weights_sha256": "7133ec455b2112ff6b78b8e627d179fdcac2472c50424b9deba486f73c2ce159",
+  "split": "test",
+  "test_input_manifest": "<reproduction-root>/real/contextual_seed_37/test_input_manifest.json",
+  "training_or_optimization_performed": false
+}

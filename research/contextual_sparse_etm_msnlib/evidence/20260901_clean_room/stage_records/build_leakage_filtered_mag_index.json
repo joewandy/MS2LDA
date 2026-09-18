@@ -1,0 +1,27 @@
+{
+  "attempt": 1,
+  "command": [
+    "<python-prefix>/bin/python",
+    "-m",
+    "benchmarks.neural_ms2lda.mag",
+    "--run",
+    "<reproduction-root>/prepared",
+    "--data-root",
+    "<reproduction-root>/assets"
+  ],
+  "finished_utc": "2026-09-01T16:15:29.741310+00:00",
+  "log": "<reproduction-root>/logs/build_leakage_filtered_mag_index.attempt-1.log",
+  "name": "build_leakage_filtered_mag_index",
+  "outputs": [
+    {
+      "bytes": 169,
+      "modified_ns": 1788279329506286138,
+      "path": "<reproduction-root>/prepared/mag/index/complete.json",
+      "sha256": "6157d53dc131841a8e02e9f6047efbb7e18163a003ff2e70ff5ae3950f3bb25b"
+    }
+  ],
+  "pre_stage_load": null,
+  "return_code": 0,
+  "started_utc": "2026-09-01T16:13:54.679707+00:00",
+  "status": "complete"
+}

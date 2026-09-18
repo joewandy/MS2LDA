@@ -1,0 +1,54 @@
+# Canonical MS2LDA environment. The historical environment name is retained so
+# existing WSL and macOS checkouts can be updated in place.
+name: ms2lda-neural
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip=26.0
+  - setuptools=80.10.2
+  - wheel=0.46.3
+  - numpy=1.26.4
+  - scipy=1.17.1
+  - rdkit=2024.9.6
+  - gensim=4.4.0
+  - joblib=1.5.3
+  - networkx=3.6.1
+  - pyyaml=6.0.3
+  - requests=2.32.5
+  - scikit-learn=1.8.0
+  - tqdm=4.67.2
+  # Notebook and development tools carried forward from the former production
+  # environment so this remains the one environment for all repository work.
+  - ipython=8.26.0
+  - jupyterlab=4.2.4
+  - flake8=7.0.0
+  - mypy=1.10.0
+  - pre-commit=3.7.0
+  - pip:
+      # CUDA 12.8 wheels support RTX 50-series GPUs (sm_120). Keep the
+      # non-CUDA macOS installation available for reproducing earlier work.
+      - --extra-index-url https://download.pytorch.org/whl/cu128
+      - "torch==2.10.0+cu128; sys_platform == 'linux' or sys_platform == 'win32'"
+      - "torch==2.10.0; sys_platform == 'darwin'"
+      # The production package, neural models, and MAG/Spec2Vec annotation
+      # stack share one interpreter. The editable install resolves the full
+      # application runtime declared in pyproject.toml.
+      - faiss-cpu==1.10.0
+      # Exact, tested sparsemax and 1.5-entmax probability transforms used by
+      # the bounded sparse-ETM research campaign.
+      - entmax==1.3
+      - llvmlite==0.43.0
+      - lxml==4.9.4
+      - matchms==0.29.0
+      - numba==0.60.0
+      - pandas==2.3.3
+      - spec2vec==0.9.1
+      - tomotopy==0.13.0
+      - -e .
+      # Development and packaging checks used by this checkout.
+      - pytest==8.3.5
+      - black==24.10.0
+      - ruff==0.11.13
+      - build==1.2.2.post1
+      - poetry-core==1.9.1

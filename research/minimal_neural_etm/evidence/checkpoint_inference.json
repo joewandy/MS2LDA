@@ -1,0 +1,8 @@
+{
+  "cpu_vs_gpu_changed_dominant_topics": 4,
+  "cpu_vs_gpu_max_abs_theta_difference": 8.428096771240234e-05,
+  "cpu_vs_gpu_max_row_l1_difference": 0.0005350421415641904,
+  "gpu_reload_changed_dominant_topics": 0,
+  "gpu_reload_max_abs_theta_difference": 0.0,
+  "validation_spectra": 3889
+}

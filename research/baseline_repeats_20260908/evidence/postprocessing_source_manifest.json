@@ -1,0 +1,297 @@
+[
+  {
+    "bytes": 107,
+    "path": "benchmarks/neural_ms2lda/__init__.py",
+    "sha256": "50b3264e708a46c121366cfab223d02898113ef08c0b552028983fead6e4b87e"
+  },
+  {
+    "bytes": 7174,
+    "path": "benchmarks/neural_ms2lda/attention_etm.py",
+    "sha256": "f8254dbad6a645865d98a13f7c80745f60fdfd9b50f0dc75fcab0a20e0102c23"
+  },
+  {
+    "bytes": 22598,
+    "path": "benchmarks/neural_ms2lda/baseline_repeat_evidence.py",
+    "sha256": "c7854047bbc1d3b679442d14626090d6ee11f515193c38fc68ad1e210dbada86"
+  },
+  {
+    "bytes": 4236,
+    "path": "benchmarks/neural_ms2lda/baseline_repeats.py",
+    "sha256": "cf06d6ca84038133f992342605633bfdd3d3417a46cef020f84785c290b44a59"
+  },
+  {
+    "bytes": 2721,
+    "path": "benchmarks/neural_ms2lda/batchnorm_calibration.py",
+    "sha256": "beb297c04b65a1af031575d544f79d8c937fd3d36111fb02ada1f451522bd78e"
+  },
+  {
+    "bytes": 17488,
+    "path": "benchmarks/neural_ms2lda/chemical.py",
+    "sha256": "3362c57b1e5bec33eacb87e2d47fd9e057d9a4e0f9a7533921e1f652aabbc645"
+  },
+  {
+    "bytes": 11896,
+    "path": "benchmarks/neural_ms2lda/contextual_reductions.py",
+    "sha256": "2b6d7c36ce6c4e86a9407f83748f31180528e8527bcb74e2a349c43525898416"
+  },
+  {
+    "bytes": 18053,
+    "path": "benchmarks/neural_ms2lda/contextual_sparse_etm.py",
+    "sha256": "d98472edf35d8e3b715cbd10969cfaefab9a8781b0fd9677635759e8221e587a"
+  },
+  {
+    "bytes": 16147,
+    "path": "benchmarks/neural_ms2lda/data.py",
+    "sha256": "27ece830a7d697ca0e4e34e036d6d54af2ed23d3701b6155698ff5762fde63f5"
+  },
+  {
+    "bytes": 10685,
+    "path": "benchmarks/neural_ms2lda/diagnostics.py",
+    "sha256": "b2f39e91b32114ce9400537868de9438359e96278a86436a3cc3fdf3305b3dfa"
+  },
+  {
+    "bytes": 5419,
+    "path": "benchmarks/neural_ms2lda/etm_baselines.py",
+    "sha256": "6697b888476ba74565d13617e9ddd550b540829ef7c1e831503685ea73d3e89c"
+  },
+  {
+    "bytes": 13092,
+    "path": "benchmarks/neural_ms2lda/evidence_bundle.py",
+    "sha256": "ab906d11dd32268c23d20179251bfc824f4d817680ab9ad942ca8002ec0d28a3"
+  },
+  {
+    "bytes": 8940,
+    "path": "benchmarks/neural_ms2lda/mag.py",
+    "sha256": "5d3f7428847747cd124559b6c66f39f2ce84ca0ea2f6d599bab6b87981e85a7b"
+  },
+  {
+    "bytes": 11260,
+    "path": "benchmarks/neural_ms2lda/model_evaluation.py",
+    "sha256": "501c5694179cd0cbb7fd218ad1cf974f063c40d035fb745ec08bb6c3cd84ae25"
+  },
+  {
+    "bytes": 1926,
+    "path": "benchmarks/neural_ms2lda/model_inference.py",
+    "sha256": "3e610e69e32383adcdef0e865b28b916ee1b91583859b15edea6f91da40cb7c1"
+  },
+  {
+    "bytes": 2264,
+    "path": "benchmarks/neural_ms2lda/model_variants.py",
+    "sha256": "276bef4df4ad62b11d5fa7a469641cb251ebd5c47623b656c1b4279c38f1f467"
+  },
+  {
+    "bytes": 3791,
+    "path": "benchmarks/neural_ms2lda/prior_etm.py",
+    "sha256": "c528b20e27fc773c42f5dd591144003efffd7a914e8cce04bd659f8fa33812c9"
+  },
+  {
+    "bytes": 3090,
+    "path": "benchmarks/neural_ms2lda/published_evaluation.py",
+    "sha256": "b25d35e162a544b6e2a6ac17aaafd0e71588b6cebe2c5123842459f324360140"
+  },
+  {
+    "bytes": 7492,
+    "path": "benchmarks/neural_ms2lda/published_models.py",
+    "sha256": "3c16bd4a7f53ff8698e4f7d8392534b4eb9bd00722543522f7eca080c804edd6"
+  },
+  {
+    "bytes": 7682,
+    "path": "benchmarks/neural_ms2lda/report_comparison.py",
+    "sha256": "7ec86d7cc6013facc8f562293516672b7acfb7ae1d6f84b0215f7f10b2462b33"
+  },
+  {
+    "bytes": 13457,
+    "path": "benchmarks/neural_ms2lda/report_evidence.py",
+    "sha256": "a0d55917bb22399213a716b55a2c23ed39fbe32c2a804acb78f866f0abc4e2f5"
+  },
+  {
+    "bytes": 10992,
+    "path": "benchmarks/neural_ms2lda/reproducibility.py",
+    "sha256": "d3066625ea353e89da36eec88f3d42315536375ee32952919ff451ae25ad1ecb"
+  },
+  {
+    "bytes": 9677,
+    "path": "benchmarks/neural_ms2lda/reproduction_audit.py",
+    "sha256": "6eea4a8ec79d4779f2cc989a67895c60cdeb461e9f3e8d590d58d7047094b46c"
+  },
+  {
+    "bytes": 18743,
+    "path": "benchmarks/neural_ms2lda/reproduction_comparison.py",
+    "sha256": "7d5f7ba51bfca2833940982556547a658aea8a995146bd6c835a0cf1ed8d5633"
+  },
+  {
+    "bytes": 24123,
+    "path": "benchmarks/neural_ms2lda/reproduction_plan.py",
+    "sha256": "4d7037854fae2bb66b1216afe37a86d60dfef90793564c96f70d0949bfde86c6"
+  },
+  {
+    "bytes": 15772,
+    "path": "benchmarks/neural_ms2lda/reproduction_summaries.py",
+    "sha256": "0268833dcc223edeeeef674556e1235f04bd2c14eeb9279a5f820558fe7ea722"
+  },
+  {
+    "bytes": 3815,
+    "path": "benchmarks/neural_ms2lda/review_tables.py",
+    "sha256": "868167a44599ed9725bbd42d5679bdaa1c2b1315d497c68141f282df597ed738"
+  },
+  {
+    "bytes": 2204,
+    "path": "benchmarks/neural_ms2lda/simplified_etm.py",
+    "sha256": "d7f7b50f08fccf89bedb12609bff8107d466d6e4a9b81296bf43602547fcbd7e"
+  },
+  {
+    "bytes": 19626,
+    "path": "benchmarks/neural_ms2lda/spectra.py",
+    "sha256": "54b8746de3397b7757bf28838679ee476322015efbe79fbf6b2321dbdadcd6b0"
+  },
+  {
+    "bytes": 2864,
+    "path": "benchmarks/neural_ms2lda/study_protocol.py",
+    "sha256": "42f6d233299d2286162382159bf85b50da0dcdce147f663a9ff67d0866c2e8f3"
+  },
+  {
+    "bytes": 25784,
+    "path": "benchmarks/neural_ms2lda/synthetic_msms.py",
+    "sha256": "0e247e33ba749c9e16b8a86c5bf434ea844ab83c285d344a6267df2f781cf488"
+  },
+  {
+    "bytes": 5836,
+    "path": "benchmarks/neural_ms2lda/test_release.py",
+    "sha256": "70399321ad06c523a3037c2befc3819ac4060a3e7d625f53b1d4c1ae7aea2aef"
+  },
+  {
+    "bytes": 49,
+    "path": "benchmarks/neural_ms2lda/tests/__init__.py",
+    "sha256": "1b35f5b202071928ad25b75578e8eda8a3d08f41606148b5e077c90db1246886"
+  },
+  {
+    "bytes": 4413,
+    "path": "benchmarks/neural_ms2lda/tests/_support.py",
+    "sha256": "e31619bff37398c42ea8e362f66990411e1bfff9032e2cfbc45b43587426341d"
+  },
+  {
+    "bytes": 5705,
+    "path": "benchmarks/neural_ms2lda/tests/test_attention_etm.py",
+    "sha256": "30954147080b4cc0e15befa45f89ebd721cc142f2307615abddab00818b221a3"
+  },
+  {
+    "bytes": 19295,
+    "path": "benchmarks/neural_ms2lda/tests/test_baseline_repeats.py",
+    "sha256": "54023eb949d62d1615dab74b1c7e36cd7fd49899323e46cf7988a994f161d32a"
+  },
+  {
+    "bytes": 12026,
+    "path": "benchmarks/neural_ms2lda/tests/test_contextual_reduction_review.py",
+    "sha256": "b6c48145a22404a8fb2f69980aa3a6d562f38b2991fabdecdac9d4a7fa6819bf"
+  },
+  {
+    "bytes": 9064,
+    "path": "benchmarks/neural_ms2lda/tests/test_contextual_reductions.py",
+    "sha256": "45526c2d2748420c8818c0bbcf141846c59cf6c1b87cbd0b66b9e58f6d0963f3"
+  },
+  {
+    "bytes": 14331,
+    "path": "benchmarks/neural_ms2lda/tests/test_contextual_sparse_etm.py",
+    "sha256": "f37ba00c42b217dc3c81e698ce83f23e31b64da9455e97760531afa5ef3b1962"
+  },
+  {
+    "bytes": 17082,
+    "path": "benchmarks/neural_ms2lda/tests/test_current_model_equations.py",
+    "sha256": "f6cb6edb8a11742ec7d517103a13ffae0c985ae8a7933a9c83b577be46d92e91"
+  },
+  {
+    "bytes": 3513,
+    "path": "benchmarks/neural_ms2lda/tests/test_diagnostics.py",
+    "sha256": "9b7819f139398777a9e88e9dd9c11cb3bd16b62d38f60f015d9505971172bb4c"
+  },
+  {
+    "bytes": 2278,
+    "path": "benchmarks/neural_ms2lda/tests/test_minimal_etm_recovery.py",
+    "sha256": "ac37eb4505361ff2c48cdf4acf0c77b66537d8316833577800c1e55775d35f20"
+  },
+  {
+    "bytes": 3118,
+    "path": "benchmarks/neural_ms2lda/tests/test_minimal_etm_review.py",
+    "sha256": "4fe4951149c0541a7e153f547459d3d7987140d14be3c374b029008e4675a0b8"
+  },
+  {
+    "bytes": 5794,
+    "path": "benchmarks/neural_ms2lda/tests/test_minimal_etm_workflow.py",
+    "sha256": "0620e798fb2e7ccff85fb44ee791b783377f6c39af1ba88b5e5f4b1f95e83278"
+  },
+  {
+    "bytes": 7610,
+    "path": "benchmarks/neural_ms2lda/tests/test_prior_etm.py",
+    "sha256": "d0ff78c351a600c50f719ca4250c6f2eae12c447c52f5c9b70ae3ba992d7b230"
+  },
+  {
+    "bytes": 1418,
+    "path": "benchmarks/neural_ms2lda/tests/test_probability_matrices.py",
+    "sha256": "5562b876410ffac129590d23e5d71afe1828632c67a0ce5c6e594ec3dffd554b"
+  },
+  {
+    "bytes": 6631,
+    "path": "benchmarks/neural_ms2lda/tests/test_published_models.py",
+    "sha256": "1470f7567c7cdeff755db435e4d5b96a27020a482953c8808cb63a52cb220330"
+  },
+  {
+    "bytes": 2147,
+    "path": "benchmarks/neural_ms2lda/tests/test_published_review.py",
+    "sha256": "21bdc705af6de792871a25f78013200e853fc7845fda80bcedbf91322fb4f4dd"
+  },
+  {
+    "bytes": 7313,
+    "path": "benchmarks/neural_ms2lda/tests/test_report_comparison.py",
+    "sha256": "48a6eb5ffa49214b18dee72f4965fb642443a55de563c269a93c2771cc5751d0"
+  },
+  {
+    "bytes": 15943,
+    "path": "benchmarks/neural_ms2lda/tests/test_reproduction_evidence.py",
+    "sha256": "fb63a3e90a863c215937940f377485424580946e95ea8eb01bdb4b3f45ea7b62"
+  },
+  {
+    "bytes": 10156,
+    "path": "benchmarks/neural_ms2lda/tests/test_review_boundaries.py",
+    "sha256": "ecfc45008116709db461f77f4b30f8d77bc8cbe8b8c92545b16beaeb784b61fd"
+  },
+  {
+    "bytes": 6970,
+    "path": "benchmarks/neural_ms2lda/tests/test_scientific_contracts.py",
+    "sha256": "526e90f193df9bbeec4daaefe3dbce4e1494fb02bdefe572fea8e28ac140e448"
+  },
+  {
+    "bytes": 3107,
+    "path": "benchmarks/neural_ms2lda/tests/test_simplified_etm.py",
+    "sha256": "22b54ce5bc185b27a482a21783f853a41cb980f2892a551679acbfe00e789d78"
+  },
+  {
+    "bytes": 1933,
+    "path": "benchmarks/neural_ms2lda/tests/test_synthetic_msms.py",
+    "sha256": "390065782282e52f62846aacaa41b6024b639dc62c7ac1dae597f43c764ae3bb"
+  },
+  {
+    "bytes": 20061,
+    "path": "benchmarks/neural_ms2lda/tests/test_workflow.py",
+    "sha256": "6a361a77f670adb2f9600011c8a198089a5397f57bdfb755a375559cdd9da9a4"
+  },
+  {
+    "bytes": 15229,
+    "path": "benchmarks/neural_ms2lda/tomotopy.py",
+    "sha256": "003983b1b5a2578fb4dc9d0c24bdaab2dadfc6de19cddf2fe3b91dd09ffdd327"
+  },
+  {
+    "bytes": 5458,
+    "path": "benchmarks/neural_ms2lda/topic_model_training.py",
+    "sha256": "6e1b44086e14f08619f7822827b45b07d1cb5d2a6041ffaee4053f7a38097b71"
+  },
+  {
+    "bytes": 3756,
+    "path": "benchmarks/neural_ms2lda/utils.py",
+    "sha256": "0b766770351d5511ff71b995c4516f77d2c93c432abe5a36b7e615e4fec72701"
+  },
+  {
+    "bytes": 3454,
+    "path": "benchmarks/neural_ms2lda/validation_data.py",
+    "sha256": "722b7c3e4b87f95e096ccbe18fce40ecacf241cfac2182f574fecd3429115131"
+  }
+]

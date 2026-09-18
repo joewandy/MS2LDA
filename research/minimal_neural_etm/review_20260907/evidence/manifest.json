@@ -1,0 +1,368 @@
+{
+  "sources": [
+    {
+      "path": "real/batchnorm_fixed_entmax_seed42/validation_chemical/minimal_etm/complete.json",
+      "sha256": "15cb5470ccc91f1b08cec407f98e8324290e0299d097f8c0a1facda75351679e"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/batchnorm_calibration.py": "beb297c04b65a1af031575d544f79d8c937fd3d36111fb02ada1f451522bd78e",
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/etm_baselines.py": "96780dc3c43d090c5b43839a5e499ffc2d8400f57b99eb694c0093922bd7fd2a",
+        "benchmarks/neural_ms2lda/prior_etm.py": "c528b20e27fc773c42f5dd591144003efffd7a914e8cce04bd659f8fa33812c9",
+        "benchmarks/neural_ms2lda/simplified_etm.py": "d7f7b50f08fccf89bedb12609bff8107d466d6e4a9b81296bf43602547fcbd7e",
+        "benchmarks/neural_ms2lda/topic_model_training.py": "b7dfb36001adf53f0a902318b7a0cd60973a430280ec336a7ab6053a3fb2cce8",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c"
+      },
+      "path": "real/batchnorm_fixed_entmax_seed42/models/minimal_etm/result.json",
+      "sha256": "52139dc4bb69f20d8d6a950e4dfdd779fe806eb907f03255709762aeb6136148"
+    },
+    {
+      "path": "real/contextual_seed42/validation_chemical/minimal_etm/complete.json",
+      "sha256": "1675021cbcc220882d40d979db45d17662b4a5187dd4907a059dcd95b5675d4c"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/batchnorm_calibration.py": "beb297c04b65a1af031575d544f79d8c937fd3d36111fb02ada1f451522bd78e",
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/etm_baselines.py": "96780dc3c43d090c5b43839a5e499ffc2d8400f57b99eb694c0093922bd7fd2a",
+        "benchmarks/neural_ms2lda/prior_etm.py": "c528b20e27fc773c42f5dd591144003efffd7a914e8cce04bd659f8fa33812c9",
+        "benchmarks/neural_ms2lda/simplified_etm.py": "d7f7b50f08fccf89bedb12609bff8107d466d6e4a9b81296bf43602547fcbd7e",
+        "benchmarks/neural_ms2lda/topic_model_training.py": "b7dfb36001adf53f0a902318b7a0cd60973a430280ec336a7ab6053a3fb2cce8",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c"
+      },
+      "path": "real/contextual_seed42/models/minimal_etm/result.json",
+      "sha256": "59a03918473b019d500313c6ae05b733af91f411d79565ba184c3b5cf513c49b"
+    },
+    {
+      "path": "real/contextual_unbalanced_seed42/validation_chemical/minimal_etm/complete.json",
+      "sha256": "f574c65b56424f0bd59a1200459719df60e121538bc03e4e58f221033c51ea04"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/batchnorm_calibration.py": "beb297c04b65a1af031575d544f79d8c937fd3d36111fb02ada1f451522bd78e",
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/etm_baselines.py": "96780dc3c43d090c5b43839a5e499ffc2d8400f57b99eb694c0093922bd7fd2a",
+        "benchmarks/neural_ms2lda/prior_etm.py": "c528b20e27fc773c42f5dd591144003efffd7a914e8cce04bd659f8fa33812c9",
+        "benchmarks/neural_ms2lda/simplified_etm.py": "d7f7b50f08fccf89bedb12609bff8107d466d6e4a9b81296bf43602547fcbd7e",
+        "benchmarks/neural_ms2lda/topic_model_training.py": "b7dfb36001adf53f0a902318b7a0cd60973a430280ec336a7ab6053a3fb2cce8",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c"
+      },
+      "path": "real/contextual_unbalanced_seed42/models/minimal_etm/result.json",
+      "sha256": "885cb86b607b25b748159502c0058c7788e6675ccf2166fab6573b4da3907b34"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/batchnorm_calibration.py": "beb297c04b65a1af031575d544f79d8c937fd3d36111fb02ada1f451522bd78e",
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/etm_baselines.py": "96780dc3c43d090c5b43839a5e499ffc2d8400f57b99eb694c0093922bd7fd2a",
+        "benchmarks/neural_ms2lda/prior_etm.py": "c528b20e27fc773c42f5dd591144003efffd7a914e8cce04bd659f8fa33812c9",
+        "benchmarks/neural_ms2lda/simplified_etm.py": "d7f7b50f08fccf89bedb12609bff8107d466d6e4a9b81296bf43602547fcbd7e",
+        "benchmarks/neural_ms2lda/topic_model_training.py": "b7dfb36001adf53f0a902318b7a0cd60973a430280ec336a7ab6053a3fb2cce8",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c"
+      },
+      "path": "synthetic/seed11_k128_batchnorm_entmax/result.json",
+      "sha256": "bffce4a8cffa5a3c307efcc2a3d2ae5f4c0f1c746a9d281700a7361ab4d35d96"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/batchnorm_calibration.py": "beb297c04b65a1af031575d544f79d8c937fd3d36111fb02ada1f451522bd78e",
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/etm_baselines.py": "96780dc3c43d090c5b43839a5e499ffc2d8400f57b99eb694c0093922bd7fd2a",
+        "benchmarks/neural_ms2lda/prior_etm.py": "c528b20e27fc773c42f5dd591144003efffd7a914e8cce04bd659f8fa33812c9",
+        "benchmarks/neural_ms2lda/simplified_etm.py": "d7f7b50f08fccf89bedb12609bff8107d466d6e4a9b81296bf43602547fcbd7e",
+        "benchmarks/neural_ms2lda/topic_model_training.py": "b7dfb36001adf53f0a902318b7a0cd60973a430280ec336a7ab6053a3fb2cce8",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c"
+      },
+      "path": "synthetic/seed11_k128_batchnorm_fixed_entmax/result.json",
+      "sha256": "d09e4fb713f8f067d4508505f9517286c4a77bacd68e76d28a30c8076ebc792d"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/batchnorm_calibration.py": "beb297c04b65a1af031575d544f79d8c937fd3d36111fb02ada1f451522bd78e",
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/etm_baselines.py": "96780dc3c43d090c5b43839a5e499ffc2d8400f57b99eb694c0093922bd7fd2a",
+        "benchmarks/neural_ms2lda/prior_etm.py": "c528b20e27fc773c42f5dd591144003efffd7a914e8cce04bd659f8fa33812c9",
+        "benchmarks/neural_ms2lda/simplified_etm.py": "d7f7b50f08fccf89bedb12609bff8107d466d6e4a9b81296bf43602547fcbd7e",
+        "benchmarks/neural_ms2lda/topic_model_training.py": "b7dfb36001adf53f0a902318b7a0cd60973a430280ec336a7ab6053a3fb2cce8",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c"
+      },
+      "path": "synthetic/seed11_k128_contextual/result.json",
+      "sha256": "91f29c3ec0a00034a32960b1b03fe0b7c0d3d970e24b1bee8e845a0fe7c8a64a"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/batchnorm_calibration.py": "beb297c04b65a1af031575d544f79d8c937fd3d36111fb02ada1f451522bd78e",
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/etm_baselines.py": "96780dc3c43d090c5b43839a5e499ffc2d8400f57b99eb694c0093922bd7fd2a",
+        "benchmarks/neural_ms2lda/prior_etm.py": "c528b20e27fc773c42f5dd591144003efffd7a914e8cce04bd659f8fa33812c9",
+        "benchmarks/neural_ms2lda/simplified_etm.py": "d7f7b50f08fccf89bedb12609bff8107d466d6e4a9b81296bf43602547fcbd7e",
+        "benchmarks/neural_ms2lda/topic_model_training.py": "b7dfb36001adf53f0a902318b7a0cd60973a430280ec336a7ab6053a3fb2cce8",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c"
+      },
+      "path": "synthetic/seed11_k128_contextual_unbalanced/result.json",
+      "sha256": "5f0f2e059ebd97867cf6ded4f497176b4699abd0b5f10fd0d44283732df94934"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/batchnorm_calibration.py": "beb297c04b65a1af031575d544f79d8c937fd3d36111fb02ada1f451522bd78e",
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/etm_baselines.py": "96780dc3c43d090c5b43839a5e499ffc2d8400f57b99eb694c0093922bd7fd2a",
+        "benchmarks/neural_ms2lda/prior_etm.py": "c528b20e27fc773c42f5dd591144003efffd7a914e8cce04bd659f8fa33812c9",
+        "benchmarks/neural_ms2lda/simplified_etm.py": "d7f7b50f08fccf89bedb12609bff8107d466d6e4a9b81296bf43602547fcbd7e",
+        "benchmarks/neural_ms2lda/topic_model_training.py": "b7dfb36001adf53f0a902318b7a0cd60973a430280ec336a7ab6053a3fb2cce8",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c"
+      },
+      "path": "synthetic/seed11_k36_batchnorm_entmax/result.json",
+      "sha256": "6b0710926a89bca396ca5e060ddc74ae7327b3dcfb489c7fa31029f897c26292"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/batchnorm_calibration.py": "beb297c04b65a1af031575d544f79d8c937fd3d36111fb02ada1f451522bd78e",
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/etm_baselines.py": "96780dc3c43d090c5b43839a5e499ffc2d8400f57b99eb694c0093922bd7fd2a",
+        "benchmarks/neural_ms2lda/prior_etm.py": "c528b20e27fc773c42f5dd591144003efffd7a914e8cce04bd659f8fa33812c9",
+        "benchmarks/neural_ms2lda/simplified_etm.py": "d7f7b50f08fccf89bedb12609bff8107d466d6e4a9b81296bf43602547fcbd7e",
+        "benchmarks/neural_ms2lda/topic_model_training.py": "b7dfb36001adf53f0a902318b7a0cd60973a430280ec336a7ab6053a3fb2cce8",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c"
+      },
+      "path": "synthetic/seed11_k36_batchnorm_fixed_entmax/result.json",
+      "sha256": "df3979a679c08ed92eafcd1beca19b9a3d3066737f9bc8593e5e79e965db984f"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/batchnorm_calibration.py": "beb297c04b65a1af031575d544f79d8c937fd3d36111fb02ada1f451522bd78e",
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/etm_baselines.py": "96780dc3c43d090c5b43839a5e499ffc2d8400f57b99eb694c0093922bd7fd2a",
+        "benchmarks/neural_ms2lda/prior_etm.py": "c528b20e27fc773c42f5dd591144003efffd7a914e8cce04bd659f8fa33812c9",
+        "benchmarks/neural_ms2lda/simplified_etm.py": "d7f7b50f08fccf89bedb12609bff8107d466d6e4a9b81296bf43602547fcbd7e",
+        "benchmarks/neural_ms2lda/topic_model_training.py": "b7dfb36001adf53f0a902318b7a0cd60973a430280ec336a7ab6053a3fb2cce8",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c"
+      },
+      "path": "synthetic/seed11_k36_contextual/result.json",
+      "sha256": "93b93f01d11cfebe535b7735afbf063609870a65978b311342ab7ae11cf9ee3f"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/batchnorm_calibration.py": "beb297c04b65a1af031575d544f79d8c937fd3d36111fb02ada1f451522bd78e",
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/etm_baselines.py": "96780dc3c43d090c5b43839a5e499ffc2d8400f57b99eb694c0093922bd7fd2a",
+        "benchmarks/neural_ms2lda/prior_etm.py": "c528b20e27fc773c42f5dd591144003efffd7a914e8cce04bd659f8fa33812c9",
+        "benchmarks/neural_ms2lda/simplified_etm.py": "d7f7b50f08fccf89bedb12609bff8107d466d6e4a9b81296bf43602547fcbd7e",
+        "benchmarks/neural_ms2lda/topic_model_training.py": "b7dfb36001adf53f0a902318b7a0cd60973a430280ec336a7ab6053a3fb2cce8",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c"
+      },
+      "path": "synthetic/seed11_k36_contextual_unbalanced/result.json",
+      "sha256": "4cf4c7099b79f189dc809ef4146383af7ac6a85e5384e876a944418930117486"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/batchnorm_calibration.py": "beb297c04b65a1af031575d544f79d8c937fd3d36111fb02ada1f451522bd78e",
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/etm_baselines.py": "96780dc3c43d090c5b43839a5e499ffc2d8400f57b99eb694c0093922bd7fd2a",
+        "benchmarks/neural_ms2lda/prior_etm.py": "c528b20e27fc773c42f5dd591144003efffd7a914e8cce04bd659f8fa33812c9",
+        "benchmarks/neural_ms2lda/simplified_etm.py": "d7f7b50f08fccf89bedb12609bff8107d466d6e4a9b81296bf43602547fcbd7e",
+        "benchmarks/neural_ms2lda/topic_model_training.py": "b7dfb36001adf53f0a902318b7a0cd60973a430280ec336a7ab6053a3fb2cce8",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c"
+      },
+      "path": "synthetic/seed23_k128_batchnorm_entmax/result.json",
+      "sha256": "7c8999b6a4ea9c7a6090e978fb0cabb7fbaeb1d99cb40e7193a0c70a17ad1d6a"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/batchnorm_calibration.py": "beb297c04b65a1af031575d544f79d8c937fd3d36111fb02ada1f451522bd78e",
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/etm_baselines.py": "96780dc3c43d090c5b43839a5e499ffc2d8400f57b99eb694c0093922bd7fd2a",
+        "benchmarks/neural_ms2lda/prior_etm.py": "c528b20e27fc773c42f5dd591144003efffd7a914e8cce04bd659f8fa33812c9",
+        "benchmarks/neural_ms2lda/simplified_etm.py": "d7f7b50f08fccf89bedb12609bff8107d466d6e4a9b81296bf43602547fcbd7e",
+        "benchmarks/neural_ms2lda/topic_model_training.py": "b7dfb36001adf53f0a902318b7a0cd60973a430280ec336a7ab6053a3fb2cce8",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c"
+      },
+      "path": "synthetic/seed23_k128_batchnorm_fixed_entmax/result.json",
+      "sha256": "793bf7d0d4299cfd6e0c3f07b9744a2174ac10e05256eff6041f71518b14a570"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/batchnorm_calibration.py": "beb297c04b65a1af031575d544f79d8c937fd3d36111fb02ada1f451522bd78e",
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/etm_baselines.py": "96780dc3c43d090c5b43839a5e499ffc2d8400f57b99eb694c0093922bd7fd2a",
+        "benchmarks/neural_ms2lda/prior_etm.py": "c528b20e27fc773c42f5dd591144003efffd7a914e8cce04bd659f8fa33812c9",
+        "benchmarks/neural_ms2lda/simplified_etm.py": "d7f7b50f08fccf89bedb12609bff8107d466d6e4a9b81296bf43602547fcbd7e",
+        "benchmarks/neural_ms2lda/topic_model_training.py": "b7dfb36001adf53f0a902318b7a0cd60973a430280ec336a7ab6053a3fb2cce8",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c"
+      },
+      "path": "synthetic/seed23_k128_contextual/result.json",
+      "sha256": "a6d650912283f3ffb864e53bcd0bebdb2ac31951a9ed789e9e7c2b6a35fcc6ce"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/batchnorm_calibration.py": "beb297c04b65a1af031575d544f79d8c937fd3d36111fb02ada1f451522bd78e",
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/etm_baselines.py": "96780dc3c43d090c5b43839a5e499ffc2d8400f57b99eb694c0093922bd7fd2a",
+        "benchmarks/neural_ms2lda/prior_etm.py": "c528b20e27fc773c42f5dd591144003efffd7a914e8cce04bd659f8fa33812c9",
+        "benchmarks/neural_ms2lda/simplified_etm.py": "d7f7b50f08fccf89bedb12609bff8107d466d6e4a9b81296bf43602547fcbd7e",
+        "benchmarks/neural_ms2lda/topic_model_training.py": "b7dfb36001adf53f0a902318b7a0cd60973a430280ec336a7ab6053a3fb2cce8",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c"
+      },
+      "path": "synthetic/seed23_k128_contextual_unbalanced/result.json",
+      "sha256": "ae0fe3f54dca87ecfa93aec58330e44a1b6816999a67a3d3976a64042ca14461"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/batchnorm_calibration.py": "beb297c04b65a1af031575d544f79d8c937fd3d36111fb02ada1f451522bd78e",
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/etm_baselines.py": "96780dc3c43d090c5b43839a5e499ffc2d8400f57b99eb694c0093922bd7fd2a",
+        "benchmarks/neural_ms2lda/prior_etm.py": "c528b20e27fc773c42f5dd591144003efffd7a914e8cce04bd659f8fa33812c9",
+        "benchmarks/neural_ms2lda/simplified_etm.py": "d7f7b50f08fccf89bedb12609bff8107d466d6e4a9b81296bf43602547fcbd7e",
+        "benchmarks/neural_ms2lda/topic_model_training.py": "b7dfb36001adf53f0a902318b7a0cd60973a430280ec336a7ab6053a3fb2cce8",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c"
+      },
+      "path": "synthetic/seed23_k36_batchnorm_entmax/result.json",
+      "sha256": "bbbfee9f66e11d1be1dbe31ac237233d8dd02ce74ed8f5259643485279604df7"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/batchnorm_calibration.py": "beb297c04b65a1af031575d544f79d8c937fd3d36111fb02ada1f451522bd78e",
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/etm_baselines.py": "96780dc3c43d090c5b43839a5e499ffc2d8400f57b99eb694c0093922bd7fd2a",
+        "benchmarks/neural_ms2lda/prior_etm.py": "c528b20e27fc773c42f5dd591144003efffd7a914e8cce04bd659f8fa33812c9",
+        "benchmarks/neural_ms2lda/simplified_etm.py": "d7f7b50f08fccf89bedb12609bff8107d466d6e4a9b81296bf43602547fcbd7e",
+        "benchmarks/neural_ms2lda/topic_model_training.py": "b7dfb36001adf53f0a902318b7a0cd60973a430280ec336a7ab6053a3fb2cce8",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c"
+      },
+      "path": "synthetic/seed23_k36_batchnorm_fixed_entmax/result.json",
+      "sha256": "86e55393e2f0b6a6e12d0303b64e4b09c902405b5c921e7fadebba6bfadf6fb6"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/batchnorm_calibration.py": "beb297c04b65a1af031575d544f79d8c937fd3d36111fb02ada1f451522bd78e",
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/etm_baselines.py": "96780dc3c43d090c5b43839a5e499ffc2d8400f57b99eb694c0093922bd7fd2a",
+        "benchmarks/neural_ms2lda/prior_etm.py": "c528b20e27fc773c42f5dd591144003efffd7a914e8cce04bd659f8fa33812c9",
+        "benchmarks/neural_ms2lda/simplified_etm.py": "d7f7b50f08fccf89bedb12609bff8107d466d6e4a9b81296bf43602547fcbd7e",
+        "benchmarks/neural_ms2lda/topic_model_training.py": "b7dfb36001adf53f0a902318b7a0cd60973a430280ec336a7ab6053a3fb2cce8",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c"
+      },
+      "path": "synthetic/seed23_k36_contextual/result.json",
+      "sha256": "023dcbad24583c8184889524520a5a473c6836615c4d72856e23b0c7b86c39a6"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/batchnorm_calibration.py": "beb297c04b65a1af031575d544f79d8c937fd3d36111fb02ada1f451522bd78e",
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/etm_baselines.py": "96780dc3c43d090c5b43839a5e499ffc2d8400f57b99eb694c0093922bd7fd2a",
+        "benchmarks/neural_ms2lda/prior_etm.py": "c528b20e27fc773c42f5dd591144003efffd7a914e8cce04bd659f8fa33812c9",
+        "benchmarks/neural_ms2lda/simplified_etm.py": "d7f7b50f08fccf89bedb12609bff8107d466d6e4a9b81296bf43602547fcbd7e",
+        "benchmarks/neural_ms2lda/topic_model_training.py": "b7dfb36001adf53f0a902318b7a0cd60973a430280ec336a7ab6053a3fb2cce8",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c"
+      },
+      "path": "synthetic/seed23_k36_contextual_unbalanced/result.json",
+      "sha256": "15124b3d50526b9506cef36607248cdc942de729a92161b6805727ef8757d8fd"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/batchnorm_calibration.py": "beb297c04b65a1af031575d544f79d8c937fd3d36111fb02ada1f451522bd78e",
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/etm_baselines.py": "96780dc3c43d090c5b43839a5e499ffc2d8400f57b99eb694c0093922bd7fd2a",
+        "benchmarks/neural_ms2lda/prior_etm.py": "c528b20e27fc773c42f5dd591144003efffd7a914e8cce04bd659f8fa33812c9",
+        "benchmarks/neural_ms2lda/simplified_etm.py": "d7f7b50f08fccf89bedb12609bff8107d466d6e4a9b81296bf43602547fcbd7e",
+        "benchmarks/neural_ms2lda/topic_model_training.py": "b7dfb36001adf53f0a902318b7a0cd60973a430280ec336a7ab6053a3fb2cce8",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c"
+      },
+      "path": "synthetic/seed37_k128_batchnorm_entmax/result.json",
+      "sha256": "26134e14768d5eac504895d944e21f55c8d8bdd9c8008d73a9f38ac1a5f0a5e1"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/batchnorm_calibration.py": "beb297c04b65a1af031575d544f79d8c937fd3d36111fb02ada1f451522bd78e",
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/etm_baselines.py": "96780dc3c43d090c5b43839a5e499ffc2d8400f57b99eb694c0093922bd7fd2a",
+        "benchmarks/neural_ms2lda/prior_etm.py": "c528b20e27fc773c42f5dd591144003efffd7a914e8cce04bd659f8fa33812c9",
+        "benchmarks/neural_ms2lda/simplified_etm.py": "d7f7b50f08fccf89bedb12609bff8107d466d6e4a9b81296bf43602547fcbd7e",
+        "benchmarks/neural_ms2lda/topic_model_training.py": "b7dfb36001adf53f0a902318b7a0cd60973a430280ec336a7ab6053a3fb2cce8",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c"
+      },
+      "path": "synthetic/seed37_k128_batchnorm_fixed_entmax/result.json",
+      "sha256": "cb0688f0b2d662499e067d8121db378823242d9003f6992a1d7f0d2d62605077"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/batchnorm_calibration.py": "beb297c04b65a1af031575d544f79d8c937fd3d36111fb02ada1f451522bd78e",
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/etm_baselines.py": "96780dc3c43d090c5b43839a5e499ffc2d8400f57b99eb694c0093922bd7fd2a",
+        "benchmarks/neural_ms2lda/prior_etm.py": "c528b20e27fc773c42f5dd591144003efffd7a914e8cce04bd659f8fa33812c9",
+        "benchmarks/neural_ms2lda/simplified_etm.py": "d7f7b50f08fccf89bedb12609bff8107d466d6e4a9b81296bf43602547fcbd7e",
+        "benchmarks/neural_ms2lda/topic_model_training.py": "b7dfb36001adf53f0a902318b7a0cd60973a430280ec336a7ab6053a3fb2cce8",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c"
+      },
+      "path": "synthetic/seed37_k128_contextual/result.json",
+      "sha256": "20252db2bc808ceae3534ddd943e900b4ad0ab3cb37b28ac5b89bf895bbccd27"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/batchnorm_calibration.py": "beb297c04b65a1af031575d544f79d8c937fd3d36111fb02ada1f451522bd78e",
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/etm_baselines.py": "96780dc3c43d090c5b43839a5e499ffc2d8400f57b99eb694c0093922bd7fd2a",
+        "benchmarks/neural_ms2lda/prior_etm.py": "c528b20e27fc773c42f5dd591144003efffd7a914e8cce04bd659f8fa33812c9",
+        "benchmarks/neural_ms2lda/simplified_etm.py": "d7f7b50f08fccf89bedb12609bff8107d466d6e4a9b81296bf43602547fcbd7e",
+        "benchmarks/neural_ms2lda/topic_model_training.py": "b7dfb36001adf53f0a902318b7a0cd60973a430280ec336a7ab6053a3fb2cce8",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c"
+      },
+      "path": "synthetic/seed37_k128_contextual_unbalanced/result.json",
+      "sha256": "d0b9d7992230f2529d833b89c7f973a33ef0633314dc60485370f11c0f608087"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/batchnorm_calibration.py": "beb297c04b65a1af031575d544f79d8c937fd3d36111fb02ada1f451522bd78e",
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/etm_baselines.py": "96780dc3c43d090c5b43839a5e499ffc2d8400f57b99eb694c0093922bd7fd2a",
+        "benchmarks/neural_ms2lda/prior_etm.py": "c528b20e27fc773c42f5dd591144003efffd7a914e8cce04bd659f8fa33812c9",
+        "benchmarks/neural_ms2lda/simplified_etm.py": "d7f7b50f08fccf89bedb12609bff8107d466d6e4a9b81296bf43602547fcbd7e",
+        "benchmarks/neural_ms2lda/topic_model_training.py": "b7dfb36001adf53f0a902318b7a0cd60973a430280ec336a7ab6053a3fb2cce8",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c"
+      },
+      "path": "synthetic/seed37_k36_batchnorm_entmax/result.json",
+      "sha256": "3f04ac66039d466ac85c0860415e4df1335e060dcd50322648804e83b314fdf3"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/batchnorm_calibration.py": "beb297c04b65a1af031575d544f79d8c937fd3d36111fb02ada1f451522bd78e",
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/etm_baselines.py": "96780dc3c43d090c5b43839a5e499ffc2d8400f57b99eb694c0093922bd7fd2a",
+        "benchmarks/neural_ms2lda/prior_etm.py": "c528b20e27fc773c42f5dd591144003efffd7a914e8cce04bd659f8fa33812c9",
+        "benchmarks/neural_ms2lda/simplified_etm.py": "d7f7b50f08fccf89bedb12609bff8107d466d6e4a9b81296bf43602547fcbd7e",
+        "benchmarks/neural_ms2lda/topic_model_training.py": "b7dfb36001adf53f0a902318b7a0cd60973a430280ec336a7ab6053a3fb2cce8",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c"
+      },
+      "path": "synthetic/seed37_k36_batchnorm_fixed_entmax/result.json",
+      "sha256": "db9676d2e2e566bd94d26e92e3440b2e3bac7ed95ec32fc7ce5a0e837d211c1e"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/batchnorm_calibration.py": "beb297c04b65a1af031575d544f79d8c937fd3d36111fb02ada1f451522bd78e",
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/etm_baselines.py": "96780dc3c43d090c5b43839a5e499ffc2d8400f57b99eb694c0093922bd7fd2a",
+        "benchmarks/neural_ms2lda/prior_etm.py": "c528b20e27fc773c42f5dd591144003efffd7a914e8cce04bd659f8fa33812c9",
+        "benchmarks/neural_ms2lda/simplified_etm.py": "d7f7b50f08fccf89bedb12609bff8107d466d6e4a9b81296bf43602547fcbd7e",
+        "benchmarks/neural_ms2lda/topic_model_training.py": "b7dfb36001adf53f0a902318b7a0cd60973a430280ec336a7ab6053a3fb2cce8",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c"
+      },
+      "path": "synthetic/seed37_k36_contextual/result.json",
+      "sha256": "ff6388c5049af56d48d67942daadd63b654a15ba40ddd45d05029f8834c93f49"
+    },
+    {
+      "code_sha256": {
+        "benchmarks/neural_ms2lda/batchnorm_calibration.py": "beb297c04b65a1af031575d544f79d8c937fd3d36111fb02ada1f451522bd78e",
+        "benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+        "benchmarks/neural_ms2lda/etm_baselines.py": "96780dc3c43d090c5b43839a5e499ffc2d8400f57b99eb694c0093922bd7fd2a",
+        "benchmarks/neural_ms2lda/prior_etm.py": "c528b20e27fc773c42f5dd591144003efffd7a914e8cce04bd659f8fa33812c9",
+        "benchmarks/neural_ms2lda/simplified_etm.py": "d7f7b50f08fccf89bedb12609bff8107d466d6e4a9b81296bf43602547fcbd7e",
+        "benchmarks/neural_ms2lda/topic_model_training.py": "b7dfb36001adf53f0a902318b7a0cd60973a430280ec336a7ab6053a3fb2cce8",
+        "scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c"
+      },
+      "path": "synthetic/seed37_k36_contextual_unbalanced/result.json",
+      "sha256": "148bcc54e0473a25cf715a62127772ad4d581fdf344ca205e8bcd1d9ed152e93"
+    }
+  ],
+  "stage": "validation development"
+}

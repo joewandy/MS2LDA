@@ -1,0 +1,29 @@
+{
+  "input_seal_sha256": "c039edaa71385e505703f70ec4940961bf029315dfde1ef97b943098665aaa0b",
+  "payloads": {
+    "directed_matches.npy": {
+      "bytes": 11324340,
+      "sha256": "1a9c2caca76a750d68c24f8337664903e6cd9c9238426cb54e02a47b7e9e3414"
+    },
+    "examples.json": {
+      "bytes": 38923,
+      "sha256": "cd935bcee51f2ff10ff0d23f8bd9f84d4115613cb068a7ce7487dfe0afb3c07c"
+    },
+    "inventory.json": {
+      "bytes": 2992,
+      "sha256": "b49949eb424b6abde39ab6d0465010662f285f73be2f92d7800fc96004944ae7"
+    },
+    "summary.json": {
+      "bytes": 5490232,
+      "sha256": "635c0dff51366dd17fc2379f4abf1480cfabc9556294c1f70a80f5a5b72705ce"
+    }
+  },
+  "protocol_sha256": "074c4b8d8fbeb75e6a27f9255b35e32f86a9f3e96e6911bd401d1a3f41377cbd",
+  "source_sha256": {
+    "/home/joewandy/Work/git/MS2LDA/benchmarks/neural_ms2lda/cross_model_overlap.py": "4dacefaf41da8480008d2633a6f28e407d2f9f7da3478250e0d07d08635c1ea7",
+    "/home/joewandy/Work/git/MS2LDA/benchmarks/neural_ms2lda/cross_model_overlap_evidence.py": "42e5c2851fe7709d1c0b8bdc76c2159000829ed0a9869f54cee5752745dcb655",
+    "/home/joewandy/Work/git/MS2LDA/benchmarks/neural_ms2lda/cross_model_overlap_examples.py": "97f2d12e823c04216f1e45efcca2e3ce83cf7ff7765807a7f8aa8f63dfb57640",
+    "/home/joewandy/Work/git/MS2LDA/benchmarks/neural_ms2lda/motif_correspondence.py": "62a657d29c3588c7fc9c435068707b92949d044a3c17f13ecea9f1b5d637f36b",
+    "/home/joewandy/Work/git/MS2LDA/benchmarks/neural_ms2lda/motif_reference.py": "a37c15cd9783085d7c7c457276c3de6c236f5e7540856d26a1a23d4220a81486"
+  }
+}

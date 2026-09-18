@@ -1,0 +1,37 @@
+{
+  "implementation": {
+    "bytes": 11260,
+    "path": "benchmarks/neural_ms2lda/model_evaluation.py",
+    "sha256": "501c5694179cd0cbb7fd218ad1cf974f063c40d035fb745ec08bb6c3cd84ae25"
+  },
+  "metrics": {
+    "fraction_max_theta_ge_0_2": 0.7891488814605297,
+    "fraction_max_theta_ge_0_3": 0.6189251735664695,
+    "fraction_max_theta_ge_0_5": 0.30804834147595783,
+    "fraction_support_le_3": 0.0,
+    "maximum_exact_support": 1000,
+    "mean_effective_topics_per_spectrum": 102.5639724944491,
+    "mean_exact_support": 1000.0,
+    "median_effective_topics_per_spectrum": 39.833300258306885,
+    "median_exact_support": 1000.0,
+    "median_maximum_theta": 0.3791729907510135,
+    "minimum_exact_support": 1000,
+    "support_size_percentiles": {
+      "1": 1000.0,
+      "25": 1000.0,
+      "5": 1000.0,
+      "50": 1000.0,
+      "75": 1000.0,
+      "95": 1000.0,
+      "99": 1000.0
+    },
+    "unique_top1_topics": 297
+  },
+  "model_fitting_performed": false,
+  "split": "validation",
+  "theta": {
+    "bytes": 15556128,
+    "path": "output/benchmarks/baseline_repeats_20260908/real/etm_seed7024_attempt1/validation_evaluation/etm/validation_full_theta.npy",
+    "sha256": "46a694054e6d46f59c526fdebc9b739e579b9e83f7b2ea14f4546d6bb3a5ccb2"
+  }
+}

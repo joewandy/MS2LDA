@@ -1,0 +1,62 @@
+{
+  "attempt": 1,
+  "command": [
+    "<python-prefix>/bin/python",
+    "-m",
+    "scripts.evaluate_frozen_etm_test",
+    "--run",
+    "<reproduction-root>/real/controls",
+    "--method",
+    "etm_balanced",
+    "--device",
+    "cuda",
+    "--batch-size",
+    "256",
+    "--threads",
+    "6"
+  ],
+  "finished_utc": "2026-09-01T21:54:55.060225+00:00",
+  "log": "<reproduction-root>/logs/etm_balanced_test_evaluation.attempt-1.log",
+  "name": "etm_balanced_test_evaluation",
+  "outputs": [
+    {
+      "bytes": 5254,
+      "modified_ns": 1788299694517913879,
+      "path": "<reproduction-root>/real/controls/evaluation/etm_balanced/complete.json",
+      "sha256": "ffd0bc4829f5107d8a71833d5300d095e4e095ad8a743baec512e180393ef339"
+    },
+    {
+      "bytes": 331,
+      "modified_ns": 1788299694518060184,
+      "path": "<reproduction-root>/real/controls/evaluation/etm_balanced/test_access_audit.json",
+      "sha256": "918cc1f47427ae573d8fa88d540502e13127e6f92c404c3b64adf05564ebe4d5"
+    },
+    {
+      "bytes": 84932128,
+      "modified_ns": 1788299694429547936,
+      "path": "<reproduction-root>/real/controls/evaluation/etm_balanced/beta.npy",
+      "sha256": "aa70082e0841b307b62f5728560343134f8778a27f6b5f7080df33d548dfe81c"
+    },
+    {
+      "bytes": 31108128,
+      "modified_ns": 1788299694457549140,
+      "path": "<reproduction-root>/real/controls/evaluation/etm_balanced/test_observed_theta.npy",
+      "sha256": "b3470fb1af4f738f377edcebcba2f3f497efa9e831e6b9df83e5391bab822ad2"
+    },
+    {
+      "bytes": 31108128,
+      "modified_ns": 1788299694477550000,
+      "path": "<reproduction-root>/real/controls/evaluation/etm_balanced/test_full_theta.npy",
+      "sha256": "6e6b208c31d5f4b160d15abd761450795a38c267f43790dc6a35e7cf9da9f45e"
+    }
+  ],
+  "pre_stage_load": {
+    "available_memory_bytes": 13634871296,
+    "gpu_compute_processes": [],
+    "one_minute_load_average": 1.88525390625,
+    "utc": "2026-09-01T21:54:50.513564+00:00"
+  },
+  "return_code": 0,
+  "started_utc": "2026-09-01T21:54:50.513582+00:00",
+  "status": "complete"
+}

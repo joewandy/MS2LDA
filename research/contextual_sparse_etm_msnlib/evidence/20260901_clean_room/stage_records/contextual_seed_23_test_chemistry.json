@@ -1,0 +1,31 @@
+{
+  "attempt": 1,
+  "command": [
+    "<python-prefix>/bin/python",
+    "-m",
+    "benchmarks.neural_ms2lda.chemical",
+    "--run",
+    "<reproduction-root>/real/contextual_seed_23",
+    "--data-root",
+    "<reproduction-root>/assets",
+    "--method",
+    "contextual_sparse_etm",
+    "--split",
+    "test"
+  ],
+  "finished_utc": "2026-09-01T22:35:35.344014+00:00",
+  "log": "<reproduction-root>/logs/contextual_seed_23_test_chemistry.attempt-1.log",
+  "name": "contextual_seed_23_test_chemistry",
+  "outputs": [
+    {
+      "bytes": 164294,
+      "modified_ns": 1788302135093557188,
+      "path": "<reproduction-root>/real/contextual_seed_23/chemical/contextual_sparse_etm/complete.json",
+      "sha256": "ec8d5ea5e9ba3ecf34a23e8e1390d80378cbc61376b413729eadcda771bfd301"
+    }
+  ],
+  "pre_stage_load": null,
+  "return_code": 0,
+  "started_utc": "2026-09-01T22:35:30.603259+00:00",
+  "status": "complete"
+}

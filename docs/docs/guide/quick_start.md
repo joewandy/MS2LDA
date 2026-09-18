@@ -47,9 +47,9 @@ Now we will create the Conda environment using the provided **YAML configuration
 
 ```bash
 # Create and activate the environment 
-conda env create -f MS2LDA_environment.yml
+conda env create -f environment.yml
 
-conda activate MS2LDA_v2
+conda activate ms2lda-neural
 ```
 
 ## Viz App vs Command-Line

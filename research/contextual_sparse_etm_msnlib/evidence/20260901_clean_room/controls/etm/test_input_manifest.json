@@ -1,0 +1,94 @@
+{
+  "completed_validation_outputs": [
+    {
+      "bytes": 3886,
+      "path": "<reproduction-root>/real/controls/validation_evaluation/etm/complete.json",
+      "sha256": "eadc1aefa3a39cd45fa50555082aab724deb35e2b9a1c43f33d610d0aa77b746"
+    },
+    {
+      "bytes": 159171,
+      "path": "<reproduction-root>/real/controls/validation_chemical/etm/complete.json",
+      "sha256": "bfe961d8b5e25ba9f3fe8aa13ccd7cd2e7253dcfaa57077ee521e639ac36dbfa"
+    },
+    {
+      "bytes": 3890,
+      "path": "<reproduction-root>/real/controls/validation_evaluation/etm_balanced/complete.json",
+      "sha256": "be290578051992f5c66b84885bd19f56313553d140e197e61214fbe59cf9c6ae"
+    },
+    {
+      "bytes": 159559,
+      "path": "<reproduction-root>/real/controls/validation_chemical/etm_balanced/complete.json",
+      "sha256": "cd79cf1af4285898008c37b75ed22b2dcd0436aeb3a36e764f381cee558c0e31"
+    }
+  ],
+  "exposed_after_validation": true,
+  "frozen_models": [
+    {
+      "bytes": 81192805,
+      "method": "etm",
+      "path": "<reproduction-root>/real/controls/models/etm/weights.pt",
+      "sha256": "10a4b18a1dd99ebfc7b87bf7a40108d2ea57c2cd9a6f8845ace21be784a659bd"
+    },
+    {
+      "bytes": 430,
+      "method": "etm",
+      "path": "<reproduction-root>/real/controls/models/etm/config.json",
+      "sha256": "959a87d26280d093a261b87c3b0cfbc97c4e9424f70e3b859865e7e3985204ce"
+    },
+    {
+      "bytes": 4394,
+      "method": "etm",
+      "path": "<reproduction-root>/real/controls/models/etm/result.json",
+      "sha256": "3bf57150d2604ea18ea185f62b471446c806663ed8f8d3c433c472c35d5f3f9d"
+    },
+    {
+      "bytes": 81192821,
+      "method": "etm_balanced",
+      "path": "<reproduction-root>/real/controls/models/etm_balanced/weights.pt",
+      "sha256": "5bfe0d80646c6d4a6f77687886c60e600f0146c94c0ca915e743965bdf632841"
+    },
+    {
+      "bytes": 546,
+      "method": "etm_balanced",
+      "path": "<reproduction-root>/real/controls/models/etm_balanced/config.json",
+      "sha256": "b9981a4cbf4a0d41127cdae9226a36346e7cb44fe2507f7f4fe081aa372cedf9"
+    },
+    {
+      "bytes": 4523,
+      "method": "etm_balanced",
+      "path": "<reproduction-root>/real/controls/models/etm_balanced/result.json",
+      "sha256": "ace7678ceb1a963401124a5797c13fbfecadf2960bf91d0a9c01fd0d4824f161"
+    }
+  ],
+  "linked_test_inputs": [
+    {
+      "bytes": 1482593,
+      "linked_path": "<reproduction-root>/real/controls/data/test_observed.npz",
+      "path": "<reproduction-root>/prepared/data/test_observed.npz",
+      "sha256": "855154fb1ee2c72f8dc56bef5258de997e951075042b458cbafe7877ab355f33"
+    },
+    {
+      "bytes": 1484769,
+      "linked_path": "<reproduction-root>/real/controls/data/test_completion.npz",
+      "path": "<reproduction-root>/prepared/data/test_completion.npz",
+      "sha256": "328f5970632ee03877c0151846db6034d98d0041f4012f9603d6519552553c45"
+    },
+    {
+      "bytes": 2917737,
+      "linked_path": "<reproduction-root>/real/controls/data/test_full.npz",
+      "path": "<reproduction-root>/prepared/data/test_full.npz",
+      "sha256": "45b931c5c5a56d8a4f86ca0d19942d09089056c815a41210aae55c12e692cd01"
+    },
+    {
+      "bytes": 2481149,
+      "linked_path": "<reproduction-root>/real/controls/data/test_records.jsonl",
+      "path": "<reproduction-root>/prepared/data/test_records.jsonl",
+      "sha256": "94647034814f2d040e2912e76ff5d919d414613429bd6809cdbf0ce87b436ac5"
+    }
+  ],
+  "methods": [
+    "etm",
+    "etm_balanced"
+  ],
+  "split": "test"
+}

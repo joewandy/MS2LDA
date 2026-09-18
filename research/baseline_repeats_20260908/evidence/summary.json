@@ -1,0 +1,58 @@
+{
+  "Tomotopy LDA": {
+    "completion_nll": {
+      "mean": 9.692856296458386,
+      "sample_sd": 0.004091381983344296
+    },
+    "evaluable_motifs": {
+      "mean": 578.0,
+      "sample_sd": 5.0
+    },
+    "fits": 3,
+    "mean_sos": {
+      "mean": 0.6387034835359594,
+      "sample_sd": 0.0029523106814580754
+    },
+    "median_effective_topics": {
+      "mean": 9.264586087059765,
+      "sample_sd": 0.0852552100389699
+    },
+    "training_seeds": [
+      11,
+      23,
+      42
+    ],
+    "useful_motifs": {
+      "mean": 351.6666666666667,
+      "sample_sd": 7.023769168568492
+    }
+  },
+  "canonical ETM": {
+    "completion_nll": {
+      "mean": 8.707371027066522,
+      "sample_sd": 0.028800727315574752
+    },
+    "evaluable_motifs": {
+      "mean": 202.66666666666666,
+      "sample_sd": 5.507570547286102
+    },
+    "fits": 3,
+    "mean_sos": {
+      "mean": 0.6372920220637556,
+      "sample_sd": 0.0063498484159291565
+    },
+    "median_effective_topics": {
+      "mean": 40.74960150316136,
+      "sample_sd": 1.087838955889514
+    },
+    "training_seeds": [
+      7012,
+      7024,
+      7043
+    ],
+    "useful_motifs": {
+      "mean": 125.0,
+      "sample_sd": 6.082762530298219
+    }
+  }
+}

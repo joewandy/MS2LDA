@@ -1,0 +1,27 @@
+{
+  "attempt": 1,
+  "command": [
+    "<python-prefix>/bin/python",
+    "-m",
+    "scripts.prepare_msnlib_validation_view",
+    "--run",
+    "<reproduction-root>/real/contextual_smoke_epoch1",
+    "--prepared-run",
+    "<reproduction-root>/prepared"
+  ],
+  "finished_utc": "2026-09-01T16:15:39.711090+00:00",
+  "log": "<reproduction-root>/logs/seal_validation_view_contextual_smoke.attempt-1.log",
+  "name": "seal_validation_view_contextual_smoke",
+  "outputs": [
+    {
+      "bytes": 5311,
+      "modified_ns": 1788279339521402705,
+      "path": "<reproduction-root>/real/contextual_smoke_epoch1/validation_input_manifest.json",
+      "sha256": "c6462d8de0e6c63fb9cb433446450767643c8bb0bd860e535460bb3e9f0a2f42"
+    }
+  ],
+  "pre_stage_load": null,
+  "return_code": 0,
+  "started_utc": "2026-09-01T16:15:38.707291+00:00",
+  "status": "complete"
+}

@@ -1,0 +1,99 @@
+{
+  "attempt": 1,
+  "command": [
+    "<python-prefix>/bin/python",
+    "-m",
+    "scripts.run_etm_controls",
+    "train",
+    "--run",
+    "<reproduction-root>/real/controls",
+    "--method",
+    "etm_balanced",
+    "--device",
+    "cuda",
+    "--epochs",
+    "120",
+    "--batch-size",
+    "256"
+  ],
+  "finished_utc": "2026-09-01T21:11:19.178884+00:00",
+  "log": "<reproduction-root>/logs/balanced_etm_train.attempt-1.log",
+  "name": "balanced_etm_train",
+  "outputs": [
+    {
+      "bytes": 4523,
+      "modified_ns": 1788297078587817640,
+      "path": "<reproduction-root>/real/controls/models/etm_balanced/result.json",
+      "sha256": "ace7678ceb1a963401124a5797c13fbfecadf2960bf91d0a9c01fd0d4824f161"
+    },
+    {
+      "bytes": 81192821,
+      "modified_ns": 1788297078579393584,
+      "path": "<reproduction-root>/real/controls/models/etm_balanced/weights.pt",
+      "sha256": "5bfe0d80646c6d4a6f77687886c60e600f0146c94c0ca915e743965bdf632841"
+    },
+    {
+      "bytes": 546,
+      "modified_ns": 1788297078584420324,
+      "path": "<reproduction-root>/real/controls/models/etm_balanced/config.json",
+      "sha256": "b9981a4cbf4a0d41127cdae9226a36346e7cb44fe2507f7f4fe081aa372cedf9"
+    },
+    {
+      "bytes": 7080,
+      "modified_ns": 1788297077247183476,
+      "path": "<reproduction-root>/real/controls/models/etm_balanced/training_history.csv",
+      "sha256": "35b8caa6746b88082b5b6ce73eca0955e43dbd7b1bebf481b8399c21e5602feb"
+    },
+    {
+      "bytes": 526818,
+      "modified_ns": 1788297078584469727,
+      "path": "<reproduction-root>/real/controls/models/etm_balanced/top_words.csv",
+      "sha256": "9c9747fbc5e7cebf3b94d87584cb586da08683b327d208e708dc617ad6e9ba4f"
+    },
+    {
+      "bytes": 420,
+      "modified_ns": 1788297078587507093,
+      "path": "<reproduction-root>/real/controls/models/etm_balanced/fragment_mass_summary.json",
+      "sha256": "282d04f4d00969df4accff265efb14b6b4d7dc4bd311459c74dd12b66e71071d"
+    },
+    {
+      "bytes": 654,
+      "modified_ns": 1788297078587583923,
+      "path": "<reproduction-root>/real/controls/models/etm_balanced/duplicate_component_summary.json",
+      "sha256": "e1539d2bddadb6e27dd4b3c302f692b78fe1b33a821eb6bed321c40f7e9bc1b5"
+    },
+    {
+      "bytes": 5131,
+      "modified_ns": 1788296337326939298,
+      "path": "<reproduction-root>/real/controls/models/etm_balanced/training_access_audit.json",
+      "sha256": "1c32b3d9d969f316fedca5aa3f12c75b4169c3f9739ab32ca36638a0ba468846"
+    },
+    {
+      "bytes": 3890,
+      "modified_ns": 1788297078647353373,
+      "path": "<reproduction-root>/real/controls/validation_evaluation/etm_balanced/complete.json",
+      "sha256": "be290578051992f5c66b84885bd19f56313553d140e197e61214fbe59cf9c6ae"
+    },
+    {
+      "bytes": 84932128,
+      "modified_ns": 1788297078599394592,
+      "path": "<reproduction-root>/real/controls/validation_evaluation/etm_balanced/beta.npy",
+      "sha256": "aa70082e0841b307b62f5728560343134f8778a27f6b5f7080df33d548dfe81c"
+    },
+    {
+      "bytes": 15556128,
+      "modified_ns": 1788297078639396608,
+      "path": "<reproduction-root>/real/controls/validation_evaluation/etm_balanced/validation_full_theta.npy",
+      "sha256": "6246974dea8bea335712a96c0ac39d8bc59b51c125370d1d1de42ad0adea3908"
+    }
+  ],
+  "pre_stage_load": {
+    "available_memory_bytes": 13657915392,
+    "gpu_compute_processes": [],
+    "one_minute_load_average": 3.35546875,
+    "utc": "2026-09-01T20:58:55.646902+00:00"
+  },
+  "return_code": 0,
+  "started_utc": "2026-09-01T20:58:55.646919+00:00",
+  "status": "complete"
+}

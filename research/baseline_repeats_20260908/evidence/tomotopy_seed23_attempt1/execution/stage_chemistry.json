@@ -1,0 +1,26 @@
+{
+  "attempt": 1,
+  "command": [
+    "/home/joewandy/miniforge3/envs/ms2lda-neural/bin/python",
+    "-u",
+    "-m",
+    "benchmarks.neural_ms2lda.chemical",
+    "--run",
+    "<repeat-root>/real/tomotopy_seed23_attempt1",
+    "--data-root",
+    "<repository>/output/benchmarks/minimal_neural_20260905/assets",
+    "--method",
+    "tomotopy",
+    "--split",
+    "validation"
+  ],
+  "cwd": "<repeat-root>/source_snapshot",
+  "finished_utc": "2026-09-08T16:43:23.190297+00:00",
+  "log": "<repeat-root>/parallel_handoff/logs/tomotopy_seed23_attempt1.chemistry.log",
+  "pid": 640817,
+  "return_code": 0,
+  "run": "<repeat-root>/real/tomotopy_seed23_attempt1",
+  "stage": "chemistry",
+  "started_utc": "2026-09-08T16:42:52.354919+00:00",
+  "status": "complete"
+}

@@ -1,0 +1,27 @@
+{
+  "attempt": 1,
+  "command": [
+    "<python-prefix>/bin/python",
+    "-m",
+    "scripts.prepare_msnlib_validation_view",
+    "--run",
+    "<reproduction-root>/real/contextual_seed_23",
+    "--prepared-run",
+    "<reproduction-root>/prepared"
+  ],
+  "finished_utc": "2026-09-01T16:15:41.739644+00:00",
+  "log": "<reproduction-root>/logs/seal_validation_view_contextual_seed_23.attempt-1.log",
+  "name": "seal_validation_view_contextual_seed_23",
+  "outputs": [
+    {
+      "bytes": 5251,
+      "modified_ns": 1788279341556110418,
+      "path": "<reproduction-root>/real/contextual_seed_23/validation_input_manifest.json",
+      "sha256": "4e0cab8cb73e09bb5444aa5b85565604544092a55dba2b9fe3287d0e614d923e"
+    }
+  ],
+  "pre_stage_load": null,
+  "return_code": 0,
+  "started_utc": "2026-09-01T16:15:40.738003+00:00",
+  "status": "complete"
+}

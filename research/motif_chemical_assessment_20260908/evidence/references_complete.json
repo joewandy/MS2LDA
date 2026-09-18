@@ -1,0 +1,164 @@
+{
+  "payloads": {
+    "query_embeddings_coverage.jsonl": {
+      "bytes": 893340,
+      "sha256": "7c1a4ef441d5017d52e896c96781391c6cdcbd61fc55a6b7a268649231a0e6c7"
+    },
+    "reference_hits.jsonl": {
+      "bytes": 34304230,
+      "sha256": "183f48d2e0c92048738929e6c89ca983754d0ce823a4145d9018197fea184519"
+    },
+    "reference_similarities.npz": {
+      "bytes": 10687867,
+      "sha256": "53e875cadacca273fae1a5e1ec24759b0c0fc79f96115c1115739d435cac6982"
+    },
+    "references.json": {
+      "bytes": 1165822,
+      "sha256": "e298379fa571d9c3f1e408e78c7f061ff74edc88f817158d45e6e44b70e65e60"
+    }
+  },
+  "source_sha256": {
+    "/home/joewandy/Work/git/MS2LDA/benchmarks/neural_ms2lda/chemical_assessment.py": "b50a1cd7a8d1767701726a80e8e48f827ee0e227c10d8d98e7c2cc27d29b1f41",
+    "/home/joewandy/Work/git/MS2LDA/benchmarks/neural_ms2lda/chemical_assessment_io.py": "3f6dd4c095d166d048d630f9ff300c51cfa89af65a326c39ef64bacae42d9d0e",
+    "/home/joewandy/Work/git/MS2LDA/benchmarks/neural_ms2lda/chemical_assessment_report.py": "c6b6da28ec9cec5d03bf38a8afca2623a0613ad18b8fc5fb1b4724bfd1b55aad",
+    "/home/joewandy/Work/git/MS2LDA/benchmarks/neural_ms2lda/chemical_nulls.py": "571c75136c3ab5e23421cb495609fd449c26792e7856f0e2da1c2539c04d7663",
+    "/home/joewandy/Work/git/MS2LDA/benchmarks/neural_ms2lda/motif_correspondence.py": "727aff4697f67c91519128c50ed852344ed0dd1ee681466fe73df4089e653f16",
+    "/home/joewandy/Work/git/MS2LDA/benchmarks/neural_ms2lda/motif_reference.py": "a37c15cd9783085d7c7c457276c3de6c236f5e7540856d26a1a23d4220a81486",
+    "scripts/run_motif_chemical_assessment.py": "8c121be4dabf019d0b639d989bb7937fcf20e863f3a6322da3be51db31da3a6f"
+  },
+  "summary": {
+    "conflicting_label_signatures": 8,
+    "excluded_records": 0,
+    "fits": [
+      {
+        "distinct_top_references": 218,
+        "fit": "selected_11",
+        "model": "selected",
+        "scorable_topics": 1000,
+        "top_reference_cosine": {
+          "mean": 0.24144381994468603,
+          "median": 0.20272768480872866,
+          "n": 1000,
+          "q10": 0.15457013849014,
+          "q90": 0.3669792460251618
+        },
+        "top_reference_query_coverage": {
+          "mean": 0.06620000000000001,
+          "median": 0.05,
+          "n": 1000,
+          "q10": 0.0,
+          "q90": 0.15
+        },
+        "top_reference_with_any_direct_overlap": 648
+      },
+      {
+        "distinct_top_references": 220,
+        "fit": "selected_23",
+        "model": "selected",
+        "scorable_topics": 1000,
+        "top_reference_cosine": {
+          "mean": 0.23988743156680767,
+          "median": 0.19927064480162648,
+          "n": 1000,
+          "q10": 0.15629384662866153,
+          "q90": 0.3664421070304688
+        },
+        "top_reference_query_coverage": {
+          "mean": 0.067,
+          "median": 0.05,
+          "n": 1000,
+          "q10": 0.0,
+          "q90": 0.15
+        },
+        "top_reference_with_any_direct_overlap": 672
+      },
+      {
+        "distinct_top_references": 219,
+        "fit": "selected_42",
+        "model": "selected",
+        "scorable_topics": 1000,
+        "top_reference_cosine": {
+          "mean": 0.24149770381001134,
+          "median": 0.20192876364167414,
+          "n": 1000,
+          "q10": 0.15509287501789779,
+          "q90": 0.38567170390554895
+        },
+        "top_reference_query_coverage": {
+          "mean": 0.06485,
+          "median": 0.05,
+          "n": 1000,
+          "q10": 0.0,
+          "q90": 0.15
+        },
+        "top_reference_with_any_direct_overlap": 666
+      },
+      {
+        "distinct_top_references": 225,
+        "fit": "tomotopy_11",
+        "model": "tomotopy",
+        "scorable_topics": 1000,
+        "top_reference_cosine": {
+          "mean": 0.2412111080742635,
+          "median": 0.18634900742882582,
+          "n": 1000,
+          "q10": 0.14003659157458903,
+          "q90": 0.4114947238866675
+        },
+        "top_reference_query_coverage": {
+          "mean": 0.0686,
+          "median": 0.05,
+          "n": 1000,
+          "q10": 0.0,
+          "q90": 0.2
+        },
+        "top_reference_with_any_direct_overlap": 536
+      },
+      {
+        "distinct_top_references": 220,
+        "fit": "tomotopy_23",
+        "model": "tomotopy",
+        "scorable_topics": 1000,
+        "top_reference_cosine": {
+          "mean": 0.24516620263592043,
+          "median": 0.18880576993442288,
+          "n": 1000,
+          "q10": 0.14092480621586326,
+          "q90": 0.42962913422727206
+        },
+        "top_reference_query_coverage": {
+          "mean": 0.0705,
+          "median": 0.05,
+          "n": 1000,
+          "q10": 0.0,
+          "q90": 0.2
+        },
+        "top_reference_with_any_direct_overlap": 524
+      },
+      {
+        "distinct_top_references": 220,
+        "fit": "tomotopy_42",
+        "model": "tomotopy",
+        "scorable_topics": 1000,
+        "top_reference_cosine": {
+          "mean": 0.2435118379905615,
+          "median": 0.18886338785516016,
+          "n": 1000,
+          "q10": 0.1395157562382449,
+          "q90": 0.42187912909089437
+        },
+        "top_reference_query_coverage": {
+          "mean": 0.0694,
+          "median": 0.05,
+          "n": 1000,
+          "q10": 0.0,
+          "q90": 0.2
+        },
+        "top_reference_with_any_direct_overlap": 534
+      }
+    ],
+    "raw_reference_records": 255,
+    "scorable_references": 234,
+    "unique_reference_signatures": 234
+  }
+}

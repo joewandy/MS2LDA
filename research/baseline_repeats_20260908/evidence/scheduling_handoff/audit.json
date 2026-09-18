@@ -1,0 +1,79 @@
+{
+  "completed": [
+    {
+      "completed_utc": "2026-09-08T16:43:23.209557+00:00",
+      "run": "<repeat-root>/real/tomotopy_seed23_attempt1",
+      "training_seed": 23
+    },
+    {
+      "completed_utc": "2026-09-08T16:43:52.190727+00:00",
+      "run": "<repeat-root>/real/tomotopy_seed42_attempt1",
+      "training_seed": 42
+    }
+  ],
+  "finished_utc": "2026-09-08T16:43:52.191206+00:00",
+  "handoff_pid": 456689,
+  "model_recipe_changed": false,
+  "paused_utc": "2026-09-08T15:02:27.490468+00:00",
+  "preserved_active_stages": [
+    {
+      "attempt": 1,
+      "command": [
+        "/home/joewandy/miniforge3/envs/ms2lda-neural/bin/python",
+        "-u",
+        "-m",
+        "scripts.run_tomotopy_validation",
+        "--run",
+        "<repeat-root>/real/tomotopy_seed11_attempt1",
+        "--training-seed",
+        "11"
+      ],
+      "cwd": "<repeat-root>/source_snapshot",
+      "log": "<repeat-root>/logs/tomotopy_seed11_attempt1.fit_validation.log",
+      "pid": 434253,
+      "run": "<repeat-root>/real/tomotopy_seed11_attempt1",
+      "stage": "fit_validation",
+      "started_utc": "2026-09-08T14:50:19.266925+00:00",
+      "status": "running"
+    },
+    {
+      "attempt": 1,
+      "command": [
+        "/home/joewandy/miniforge3/envs/ms2lda-neural/bin/python",
+        "-u",
+        "-m",
+        "scripts.run_etm_controls",
+        "train",
+        "--run",
+        "<repeat-root>/real/etm_seed7024_attempt1",
+        "--method",
+        "etm",
+        "--device",
+        "cuda",
+        "--epochs",
+        "120",
+        "--batch-size",
+        "256",
+        "--training-seed",
+        "7024"
+      ],
+      "cwd": "<repeat-root>/source_snapshot",
+      "log": "<repeat-root>/logs/etm_seed7024_attempt1.fit_validation.log",
+      "pid": 456117,
+      "run": "<repeat-root>/real/etm_seed7024_attempt1",
+      "stage": "fit_validation",
+      "started_utc": "2026-09-08T15:02:09.795850+00:00",
+      "status": "running"
+    }
+  ],
+  "prior_gpu_pids": [
+    456117
+  ],
+  "reason": "Run independent one-worker LDA fits on separate CPU cores.",
+  "resumed_utc": "2026-09-08T16:43:52.191810+00:00",
+  "runner_sha256": "007336ab9c703917ebfa7c5a0de24af0420e66e125d14ebdd3118282407250df",
+  "source_snapshot_changed": false,
+  "started_utc": "2026-09-08T15:02:27.489939+00:00",
+  "status": "supervisor_resumed",
+  "supervisor_pid": 434157
+}

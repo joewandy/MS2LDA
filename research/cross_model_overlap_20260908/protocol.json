@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "parent_commit": "b7cce23",
+  "status": "Post-hoc descriptive extension; no retraining or independent chemical confirmation",
+  "chemical_evidence": "research/motif_chemical_assessment_20260908/evidence",
+  "chemical_input_seal_sha256": "87119b8c48e52297449ad890103414018e19c44b84d33808421764838fb37b13",
+  "cohorts": ["all", "recurring_evaluable", "recurring"],
+  "cohort_definitions": {
+    "all": "All 1000 topics in each fit, including unsupported or unannotated topics",
+    "recurring_evaluable": "At least two distinct supporting compounds and an available MAG consensus; filter both inventories BEFORE nearest-neighbour matching",
+    "recurring": "At least two distinct supporting compounds, without requiring MAG; annotation-selection sensitivity"
+  },
+  "similarities": ["full_beta", "balanced_channels"],
+  "primary_similarity": "Cosine of full topic-word probability vectors over the same 21233 ordered columns",
+  "balanced_similarity": "Arithmetic mean of fragment-only and loss-only cosines, each independently L2-normalized; sensitivity to channel dominance",
+  "directions": "Every ordered pair of distinct fits: six within-neural, six within-Tomotopy, nine neural-to-Tomotopy and nine Tomotopy-to-neural",
+  "nearest_rule": "Highest similarity in the target cohort; exact ties choose lowest target topic ID. Target topics may be reused; no forced one-to-one recovery",
+  "threshold_grid": {"minimum": 0.0, "maximum": 1.0, "points": 201},
+  "coverage": "Fraction of the source cohort with at least one target at or above the threshold; the denominator never excludes weak or unmatched source topics",
+  "multiplicity": "Fraction with zero, exactly one, or at least two targets above each threshold, computed from the two largest scores; spectral multiplicity is not proof of a chemical split or merge",
+  "matched_metrics": ["full_beta_cosine", "fragment_cosine", "loss_cosine", "top20_jaccard", "compound_jaccard", "feature_effect_cosine"],
+  "feature_effect": "Signed MACCS prevalence difference from the existing primary 50 Da matched background, not raw ubiquitous fingerprint overlap",
+  "aggregation": "Compute each source-fit/target-fit statistic separately; average target fits within each source fit, then report mean and sample SD across the three source-fit summaries. Reused targets create dependence; SD is descriptive, not a confidence interval. Never maximize across target runs",
+  "example_selection": {
+    "cohort": "recurring_evaluable",
+    "similarity": "full_beta",
+    "display_quantiles": [0.5, 0.9],
+    "matched_pairs": "For each direction select the query nearest the pooled median and 90th percentile of best scores; exact ties by source fit, target fit, topic. Show the median neural-to-Tomotopy pair and 90th-percentile pair as illustrative spectra, not representative chemical validations",
+    "multiplicity": "Select the neural-to-Tomotopy query nearest the pooled 90th percentile of second-best scores, and its two best targets; inspect actual spectral features instead of selecting an arbitrary high-overlap cutoff",
+    "spectra": "Top 20 words per topic, retaining typed mass, unrenormalized beta probability, support and MAG availability. Display probabilities relative to each topic's maximum, never as experimental ion intensities",
+    "mass_tolerances_da": [0.005, 0.01, 0.02]
+  },
+  "interpretation": "Agreement is corroboration, not chemical ground truth, formal equivalence, validated novelty or independent replication. Report full recovery curves, channel and MAG-filter sensitivities, small support and discordant chemical evidence. Do not relabel cosine as percentage recovery. No p-values are added"
+}

@@ -1,0 +1,130 @@
+% Schematic mathematics plus a worked probability example, not measured results.
+% For z=(1,0,-1), entmax_1.5(z)=(.8307189,.1692811,0). Each beta row
+% below sums to one and assigns exactly .5 to fragments and .5 to losses.
+% Matrix multiplication gives p=(.3492157,.1507843,.1507843,.3492157).
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[x=1cm,y=1cm,font=\fontsize{9}{11}\selectfont]
+\path[use as bounding box] (0,0.2) rectangle (16.8,-9.65);
+\node[anchor=west,font=\bfseries\fontsize{10}{12}\selectfont] at (0,0)
+  {(a) From normalized counts to latent topic scores};
+\node[font=\fontsize{11}{14}\selectfont] at (6.45,-0.80)
+  {$\displaystyle m_d=
+    \underbrace{\mu_\phi(x_d)}_{\text{\fontsize{9}{11}\selectfont ETM MLP}}
+    +\underbrace{\color{accent}o_d}_{\text{\fontsize{9}{11}\selectfont
+      \color{accent}2. Whole-spectrum evidence}}$};
+\node[font=\fontsize{11}{14}\selectfont] at (13.62,-0.69)
+  {$\ell_d=\ell_\phi(x_d)$};
+\node[font=\fontsize{10}{13}\selectfont] at (8.4,-1.62)
+  {$q(z_d\mid x_d)=\mathcal N\!\left(m_d,\operatorname{diag}(\exp\ell_d)\right)$};
+\node[anchor=west] at (0,-2.20)
+  {\textbf{Training:} draw scores $z_d$ from this Gaussian};
+\node[anchor=east] at (16.8,-2.20)
+  {\textbf{Inference:} $z_d=m_d$};
+
+\draw[black!20] (0,-2.61)--(16.8,-2.61);
+\node[anchor=west,font=\bfseries\fontsize{10}{12}\selectfont] at (0,-2.98)
+  {(b) Combine a few topics to predict spectral words};
+\node[align=center,font=\bfseries\fontsize{9}{11}\selectfont,text width=3.9cm]
+  at (1.85,-3.47) {3. Sparse weights};
+\node[align=center,font=\bfseries\fontsize{9}{11}\selectfont,text width=5.8cm]
+  at (8.17,-3.47)
+  {1. Balanced topic emissions};
+\node[align=center,font=\bfseries\fontsize{9}{11}\selectfont,text width=4.1cm]
+  at (14.75,-3.47) {Predicted words};
+\node at (1.85,-3.94) {$\theta_d=\entmax(z_d)$};
+\node at (8.17,-3.94) {$\beta$};
+\node at (14.75,-3.94) {$p_d=\theta_d\beta$};
+
+% Topic weights: all three bars share a probability scale from zero to one.
+\draw[black!65] (0.45,-6.76)--(3.73,-6.76);
+\draw[black!65] (0.45,-6.76)--(0.45,-4.93);
+\node[anchor=east] at (0.37,-4.96) {1};
+\node[anchor=east] at (0.37,-6.76) {0};
+\fill[accent!75] (0.78,-6.76) rectangle (1.43,-5.2647);
+\fill[accent!75] (1.86,-6.76) rectangle (2.51,-6.4553);
+\draw[accent,line width=1pt] (2.94,-6.76)--(3.59,-6.76);
+\node[anchor=south] at (1.105,-5.20) {0.831};
+\node[anchor=south] at (2.185,-6.39) {0.169};
+\node[anchor=south] at (3.265,-6.69) {0};
+\node[anchor=north] at (1.105,-6.85) {T1};
+\node[anchor=north] at (2.185,-6.85) {T2};
+\node[anchor=north] at (3.265,-6.85) {T3};
+\node[align=center,text width=4.0cm] at (1.85,-7.56)
+  {$z=(1,0,-1)$};
+\node[font=\fontsize{18}{20}\selectfont] at (4.32,-5.83) {$\times$};
+
+% Matrix columns correspond to the output-word bars. Grayscale cells encode
+% probability; channel-colored headers distinguish fragments from losses.
+\fill[accentlight] (6.01,-4.28) rectangle (8.25,-4.79);
+\fill[lossgold!20] (8.25,-4.28) rectangle (10.49,-4.79);
+\node at (7.13,-4.535) {Fragments};
+\node at (9.37,-4.535) {Losses};
+\foreach \x/\label in {6.57/F1,7.69/F2,8.81/L1,9.93/L2}
+  \node at (\x,-5.05) {\label};
+% Row 1: .40, .10, .10, .40.
+\fill[black!30] (6.01,-5.26) rectangle (7.13,-5.86);
+\fill[black!8] (7.13,-5.26) rectangle (8.25,-5.86);
+\fill[black!8] (8.25,-5.26) rectangle (9.37,-5.86);
+\fill[black!30] (9.37,-5.26) rectangle (10.49,-5.86);
+% Row 2 reverses the within-channel preferences.
+\fill[black!8] (6.01,-5.86) rectangle (7.13,-6.46);
+\fill[black!30] (7.13,-5.86) rectangle (8.25,-6.46);
+\fill[black!30] (8.25,-5.86) rectangle (9.37,-6.46);
+\fill[black!8] (9.37,-5.86) rectangle (10.49,-6.46);
+\fill[black!18] (6.01,-6.46) rectangle (10.49,-7.06);
+\foreach \x/\value in {6.57/0.40,7.69/0.10,8.81/0.10,9.93/0.40}
+  \node at (\x,-5.56) {\value};
+\foreach \x/\value in {6.57/0.10,7.69/0.40,8.81/0.40,9.93/0.10}
+  \node at (\x,-6.16) {\value};
+\foreach \x in {6.57,7.69,8.81,9.93}
+  \node at (\x,-6.76) {0.25};
+\foreach \y/\label in {-5.56/Topic 1,-6.16/Topic 2,-6.76/Topic 3}
+  \node[anchor=east] at (5.90,\y) {\label};
+\draw[black!45] (6.01,-5.26) rectangle (10.49,-7.06);
+\draw[white,line width=0.6pt] (7.13,-5.26)--(7.13,-7.06);
+\draw[white,line width=0.6pt] (9.37,-5.26)--(9.37,-7.06);
+\draw[white,line width=0.6pt] (6.01,-5.86)--(10.49,-5.86);
+\draw[white,line width=0.6pt] (6.01,-6.46)--(10.49,-6.46);
+\draw[black!65,line width=0.7pt] (8.25,-5.26)--(8.25,-7.06);
+\node[align=center,text width=6.0cm] at (8.17,-7.56)
+  {Every row: 0.5 fragments + 0.5 losses};
+\node[font=\fontsize{18}{20}\selectfont] at (11.71,-5.83) {$=$};
+
+% Prediction bars have an explicitly labeled 0--0.5 probability scale.
+\draw[black!65] (12.69,-6.76)--(16.78,-6.76);
+\draw[black!65] (12.69,-6.76)--(12.69,-4.93);
+\node[anchor=east] at (12.60,-4.96) {0.5};
+\node[anchor=east] at (12.60,-6.76) {0};
+\fill[accent!75] (13.03,-6.76) rectangle (13.68,-5.5028);
+\fill[accent!75] (14.00,-6.76) rectangle (14.65,-6.2172);
+\fill[lossgold!75] (14.97,-6.76) rectangle (15.62,-6.2172);
+\fill[lossgold!75] (15.94,-6.76) rectangle (16.59,-5.5028);
+\node[anchor=south] at (13.355,-5.44) {0.349};
+\node[anchor=south] at (14.325,-6.15) {0.151};
+\node[anchor=south] at (15.295,-6.15) {0.151};
+\node[anchor=south] at (16.265,-5.44) {0.349};
+\foreach \x/\label in {13.355/F1,14.325/F2,15.295/L1,16.265/L2}
+  \node[anchor=north] at (\x,-6.85) {\label};
+\node[align=center,text width=4.1cm] at (14.75,-7.56)
+  {Illustrative values, rounded};
+
+\draw[black!20] (0,-7.98)--(16.8,-7.98);
+\node[anchor=north west,align=left,text width=16.8cm] at (0,-8.18)
+  {\textbf{Shared embeddings:} fixed word vectors $\rho$ and learned topic
+   vectors $\alpha$.\\
+   Context matches their unit directions; the decoder uses their inner products.};
+\node[anchor=west] at (0,-9.38)
+  {\textbf{Training objective:} raw-count reconstruction minus Gaussian KL
+   (Equation~\ref{eq:main-objective}).};
+\end{tikzpicture}
+\caption{How the selected model infers and explains a spectrum. (a) The ETM
+encoder supplies Gaussian parameters; whole-spectrum evidence corrects the
+mean. Training samples latent scores; deterministic inference uses their mean.
+(b) Sparse topic weights combine balanced topic--word distributions into word
+probabilities. The example illustrates this computation, not experimental
+performance. T1--T3 identify three topics; F1/F2 and L1/L2 denote illustrative
+fragment and loss words.
+Numbered labels identify the three enhancements.}
+\label{fig:model}
+\end{figure}

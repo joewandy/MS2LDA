@@ -1,0 +1,27 @@
+{
+  "attempt": 1,
+  "command": [
+    "<python-prefix>/bin/python",
+    "-m",
+    "scripts.prepare_msnlib_validation_view",
+    "--run",
+    "<reproduction-root>/real/controls",
+    "--prepared-run",
+    "<reproduction-root>/prepared"
+  ],
+  "finished_utc": "2026-09-01T16:15:37.683884+00:00",
+  "log": "<reproduction-root>/logs/seal_validation_view_controls.attempt-1.log",
+  "name": "seal_validation_view_controls",
+  "outputs": [
+    {
+      "bytes": 5131,
+      "modified_ns": 1788279337505540679,
+      "path": "<reproduction-root>/real/controls/validation_input_manifest.json",
+      "sha256": "1c32b3d9d969f316fedca5aa3f12c75b4169c3f9739ab32ca36638a0ba468846"
+    }
+  ],
+  "pre_stage_load": null,
+  "return_code": 0,
+  "started_utc": "2026-09-01T16:15:36.674465+00:00",
+  "status": "complete"
+}

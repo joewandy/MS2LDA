@@ -1,0 +1,489 @@
+{
+  "created_utc": "2026-09-08T14:50:18.164566+00:00",
+  "dirty": true,
+  "git_status": " M benchmarks/neural_ms2lda/chemical.py\n M benchmarks/neural_ms2lda/contextual_sparse_etm.py\n M benchmarks/neural_ms2lda/model_evaluation.py\n M benchmarks/neural_ms2lda/synthetic_msms.py\n M benchmarks/neural_ms2lda/tomotopy.py\n M benchmarks/neural_ms2lda/topic_model_training.py\n M docs/research/contextual_sparse_etm_report.tex\n M scripts/run_etm_controls.py\n M scripts/run_tomotopy_validation.py\n?? benchmarks/neural_ms2lda/baseline_repeats.py\n?? benchmarks/neural_ms2lda/report_comparison.py\n?? benchmarks/neural_ms2lda/tests/test_baseline_repeats.py\n?? docs/research/figures/selected_model_explanation.tex\n?? docs/research/figures/spectral_word_construction.tex\n?? scripts/run_baseline_repeats.py\n",
+  "python": "/home/joewandy/miniforge3/envs/ms2lda-neural/bin/python",
+  "revision": "3fb579dd8a4fc0b59b29c11d5da611cb979c8bc8",
+  "sources": [
+    {
+      "path": "benchmarks/__init__.py",
+      "sha256": "f3a8e74f178a9919bcda0bede208b8a7289f26363164d4f0fa1a126a5666a60c"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/__init__.py",
+      "sha256": "50b3264e708a46c121366cfab223d02898113ef08c0b552028983fead6e4b87e"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/attention_etm.py",
+      "sha256": "f8254dbad6a645865d98a13f7c80745f60fdfd9b50f0dc75fcab0a20e0102c23"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/baseline_repeats.py",
+      "sha256": "8bddae58400f6b44ab1ed4b7e9945a461820725f11389efc4e06898dde82fd78"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/batchnorm_calibration.py",
+      "sha256": "beb297c04b65a1af031575d544f79d8c937fd3d36111fb02ada1f451522bd78e"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/chemical.py",
+      "sha256": "3362c57b1e5bec33eacb87e2d47fd9e057d9a4e0f9a7533921e1f652aabbc645"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/contextual_reductions.py",
+      "sha256": "2b6d7c36ce6c4e86a9407f83748f31180528e8527bcb74e2a349c43525898416"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/contextual_sparse_etm.py",
+      "sha256": "d98472edf35d8e3b715cbd10969cfaefab9a8781b0fd9677635759e8221e587a"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/data.py",
+      "sha256": "27ece830a7d697ca0e4e34e036d6d54af2ed23d3701b6155698ff5762fde63f5"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/diagnostics.py",
+      "sha256": "b2f39e91b32114ce9400537868de9438359e96278a86436a3cc3fdf3305b3dfa"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/etm_baselines.py",
+      "sha256": "6697b888476ba74565d13617e9ddd550b540829ef7c1e831503685ea73d3e89c"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/evidence_bundle.py",
+      "sha256": "ab906d11dd32268c23d20179251bfc824f4d817680ab9ad942ca8002ec0d28a3"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/mag.py",
+      "sha256": "5d3f7428847747cd124559b6c66f39f2ce84ca0ea2f6d599bab6b87981e85a7b"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/model_evaluation.py",
+      "sha256": "501c5694179cd0cbb7fd218ad1cf974f063c40d035fb745ec08bb6c3cd84ae25"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/model_inference.py",
+      "sha256": "3e610e69e32383adcdef0e865b28b916ee1b91583859b15edea6f91da40cb7c1"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/model_variants.py",
+      "sha256": "276bef4df4ad62b11d5fa7a469641cb251ebd5c47623b656c1b4279c38f1f467"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/prior_etm.py",
+      "sha256": "c528b20e27fc773c42f5dd591144003efffd7a914e8cce04bd659f8fa33812c9"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/published_evaluation.py",
+      "sha256": "b25d35e162a544b6e2a6ac17aaafd0e71588b6cebe2c5123842459f324360140"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/published_models.py",
+      "sha256": "3c16bd4a7f53ff8698e4f7d8392534b4eb9bd00722543522f7eca080c804edd6"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/report_comparison.py",
+      "sha256": "c2c8d7b960c964c1c6f3bb853e44532de14a823e723afebf61856ecb7ca8176b"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/report_evidence.py",
+      "sha256": "a0d55917bb22399213a716b55a2c23ed39fbe32c2a804acb78f866f0abc4e2f5"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/reproducibility.py",
+      "sha256": "d3066625ea353e89da36eec88f3d42315536375ee32952919ff451ae25ad1ecb"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/reproduction_audit.py",
+      "sha256": "6eea4a8ec79d4779f2cc989a67895c60cdeb461e9f3e8d590d58d7047094b46c"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/reproduction_comparison.py",
+      "sha256": "7d5f7ba51bfca2833940982556547a658aea8a995146bd6c835a0cf1ed8d5633"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/reproduction_plan.py",
+      "sha256": "4d7037854fae2bb66b1216afe37a86d60dfef90793564c96f70d0949bfde86c6"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/reproduction_summaries.py",
+      "sha256": "0268833dcc223edeeeef674556e1235f04bd2c14eeb9279a5f820558fe7ea722"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/review_tables.py",
+      "sha256": "868167a44599ed9725bbd42d5679bdaa1c2b1315d497c68141f282df597ed738"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/simplified_etm.py",
+      "sha256": "d7f7b50f08fccf89bedb12609bff8107d466d6e4a9b81296bf43602547fcbd7e"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/spectra.py",
+      "sha256": "54b8746de3397b7757bf28838679ee476322015efbe79fbf6b2321dbdadcd6b0"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/study_protocol.py",
+      "sha256": "42f6d233299d2286162382159bf85b50da0dcdce147f663a9ff67d0866c2e8f3"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/synthetic_msms.py",
+      "sha256": "7b21204ba889d88889f0ad92a3c36f96414924d3387c5517d2ac3afd3f1042b3"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/test_release.py",
+      "sha256": "70399321ad06c523a3037c2befc3819ac4060a3e7d625f53b1d4c1ae7aea2aef"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/tests/__init__.py",
+      "sha256": "1b35f5b202071928ad25b75578e8eda8a3d08f41606148b5e077c90db1246886"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/tests/_support.py",
+      "sha256": "e31619bff37398c42ea8e362f66990411e1bfff9032e2cfbc45b43587426341d"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/tests/test_attention_etm.py",
+      "sha256": "30954147080b4cc0e15befa45f89ebd721cc142f2307615abddab00818b221a3"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/tests/test_baseline_repeats.py",
+      "sha256": "d066c5f58f7bd21597b1607e89fa407fcef997003624c0ba37ea82373df51478"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/tests/test_contextual_reduction_review.py",
+      "sha256": "dcf58f88a172ba1ed095a2741c605cc5790fab3dd75eb676b13727d5fe6a66c8"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/tests/test_contextual_reductions.py",
+      "sha256": "45526c2d2748420c8818c0bbcf141846c59cf6c1b87cbd0b66b9e58f6d0963f3"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/tests/test_contextual_sparse_etm.py",
+      "sha256": "f37ba00c42b217dc3c81e698ce83f23e31b64da9455e97760531afa5ef3b1962"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/tests/test_diagnostics.py",
+      "sha256": "9b7819f139398777a9e88e9dd9c11cb3bd16b62d38f60f015d9505971172bb4c"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/tests/test_minimal_etm_recovery.py",
+      "sha256": "ac37eb4505361ff2c48cdf4acf0c77b66537d8316833577800c1e55775d35f20"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/tests/test_minimal_etm_review.py",
+      "sha256": "4fe4951149c0541a7e153f547459d3d7987140d14be3c374b029008e4675a0b8"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/tests/test_minimal_etm_workflow.py",
+      "sha256": "0620e798fb2e7ccff85fb44ee791b783377f6c39af1ba88b5e5f4b1f95e83278"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/tests/test_prior_etm.py",
+      "sha256": "d0ff78c351a600c50f719ca4250c6f2eae12c447c52f5c9b70ae3ba992d7b230"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/tests/test_probability_matrices.py",
+      "sha256": "5562b876410ffac129590d23e5d71afe1828632c67a0ce5c6e594ec3dffd554b"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/tests/test_published_models.py",
+      "sha256": "1470f7567c7cdeff755db435e4d5b96a27020a482953c8808cb63a52cb220330"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/tests/test_published_review.py",
+      "sha256": "21bdc705af6de792871a25f78013200e853fc7845fda80bcedbf91322fb4f4dd"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/tests/test_reproduction_evidence.py",
+      "sha256": "fb63a3e90a863c215937940f377485424580946e95ea8eb01bdb4b3f45ea7b62"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/tests/test_review_boundaries.py",
+      "sha256": "ecfc45008116709db461f77f4b30f8d77bc8cbe8b8c92545b16beaeb784b61fd"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/tests/test_scientific_contracts.py",
+      "sha256": "fe950541dad0382c54626e88d4eafca07cbb0b64877409ba07ca926c468e69bd"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/tests/test_simplified_etm.py",
+      "sha256": "22b54ce5bc185b27a482a21783f853a41cb980f2892a551679acbfe00e789d78"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/tests/test_synthetic_msms.py",
+      "sha256": "390065782282e52f62846aacaa41b6024b639dc62c7ac1dae597f43c764ae3bb"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/tests/test_workflow.py",
+      "sha256": "6a361a77f670adb2f9600011c8a198089a5397f57bdfb755a375559cdd9da9a4"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/tomotopy.py",
+      "sha256": "4b6cab1f22a2ab0f4dae0d9a77bdfd28e6b28a02d086c33f9cfc22199623a04b"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/topic_model_training.py",
+      "sha256": "6e1b44086e14f08619f7822827b45b07d1cb5d2a6041ffaee4053f7a38097b71"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/utils.py",
+      "sha256": "0b766770351d5511ff71b995c4516f77d2c93c432abe5a36b7e615e4fec72701"
+    },
+    {
+      "path": "benchmarks/neural_ms2lda/validation_data.py",
+      "sha256": "722b7c3e4b87f95e096ccbe18fce40ecacf241cfac2182f574fecd3429115131"
+    },
+    {
+      "path": "scripts/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "scripts/audit_attention_etm_interface.py",
+      "sha256": "2465197440b29fddc0ca22c92673eace6b6f0f5c51b77de45d6ac2bc904c5087"
+    },
+    {
+      "path": "scripts/audit_contextual_reduction_identities.py",
+      "sha256": "3a8dac5fabf781e6ca8f1c001eec89ed4e134abdf51d4097a2e8ff8461ebec71"
+    },
+    {
+      "path": "scripts/download_msnlib_validation_assets.py",
+      "sha256": "9c8278768f07b53d2970a195427284e85547c65af7839438b24700d318c08822"
+    },
+    {
+      "path": "scripts/evaluate_frozen_etm_test.py",
+      "sha256": "aa39bb02f5cbd9b6523d760c1d9cdfcb286bf45e8d00a856b456f73bd2a1098c"
+    },
+    {
+      "path": "scripts/evaluate_frozen_tomotopy_test.py",
+      "sha256": "da93a0558ed74de91c550c8c89e9fde396667de51d04be7fe2a9e03389760074"
+    },
+    {
+      "path": "scripts/generate_contextual_reduction_review.py",
+      "sha256": "0bbe4392f4d9b6681d553ead553f130e66993f1cc58730042382ddf513a3a5b4"
+    },
+    {
+      "path": "scripts/generate_contextual_sparse_etm_report.py",
+      "sha256": "c84c1dc07311f398d86ffa5d3eab95d135ba2d5f89afe392b827f48a097a17c4"
+    },
+    {
+      "path": "scripts/generate_minimal_etm_review.py",
+      "sha256": "175f6bef19b0e445813a77fae89579fa5eb826f92a7a8e50e0dc344f3362047d"
+    },
+    {
+      "path": "scripts/generate_published_neural_review.py",
+      "sha256": "1d583d6c870ae016ad898dcf76c2783caaadfa4b0c92e0866eccc44f63d6a975"
+    },
+    {
+      "path": "scripts/ms2lda_runfull.py",
+      "sha256": "60c6d5331e77b6eb36e0b39dbab9cb6fa13ee3825a8e77232062ca6818b116d1"
+    },
+    {
+      "path": "scripts/package_contextual_sparse_etm_reproduction.py",
+      "sha256": "ec18401340c39330a7d4f2f2b2db2b40266fc1b7ecb292623526764090e0645b"
+    },
+    {
+      "path": "scripts/prepare_contextual_sparse_etm_data.py",
+      "sha256": "e90da6cab221ae8867c14021a57cc5ac132ef072256e8d8eba0df25bc6b6861c"
+    },
+    {
+      "path": "scripts/prepare_contextual_sparse_etm_synthetic.py",
+      "sha256": "adbc6a5cade4bbec9ee0d2bc9bb572ec9d0917fe92a0d4dc9d5dbc986919a65e"
+    },
+    {
+      "path": "scripts/prepare_msnlib_test_view.py",
+      "sha256": "0c16e3eb958da278c4f7245e21eb27037afbef4394455fece75bf0675bf3f390"
+    },
+    {
+      "path": "scripts/prepare_msnlib_validation_view.py",
+      "sha256": "20f30b007718a2baf158c9b943271011984b7aa7083076ad8c990914c845b3ea"
+    },
+    {
+      "path": "scripts/run_baseline_repeats.py",
+      "sha256": "d75f52d223d12e3439ecf511ea6c3fe37e61c238974774d35ff088372b5db76e"
+    },
+    {
+      "path": "scripts/run_contextual_sparse_etm.py",
+      "sha256": "3bc00f0424a83774c1b4ab1cffb207a0875f8739f2b4de223d145a7bb193bac2"
+    },
+    {
+      "path": "scripts/run_contextual_sparse_etm_reproduction.py",
+      "sha256": "61771240af821e06934216e78a39362f0088dc4db22e1da9fca9568e2f055e0e"
+    },
+    {
+      "path": "scripts/run_contextual_sparse_etm_synthetic.py",
+      "sha256": "e0dfd8dad92eb24a00e6a220a7457c0966397b8e2ca1735d7a38e4f0bc250193"
+    },
+    {
+      "path": "scripts/run_etm_controls.py",
+      "sha256": "e856a812711c5ac33af25257b0c235f7a838fac2aa636f2fb3119e93942a4514"
+    },
+    {
+      "path": "scripts/run_minimal_etm.py",
+      "sha256": "0c9afdff0f60849e979317f85909205c6a1246b9ebfbdf894357a95398d6f23d"
+    },
+    {
+      "path": "scripts/run_published_neural.py",
+      "sha256": "6fdbfc2b9edab5fe5ba107b9b4e80431f7b5e352d446ca6de2bdb3ef3405b5d0"
+    },
+    {
+      "path": "scripts/run_tomotopy_validation.py",
+      "sha256": "c1340dc411e1e2ec7c6d17a6914951ee621dba33f100bf890a2a92ae9a345a2e"
+    },
+    {
+      "path": "scripts/summarize_minimal_etm.py",
+      "sha256": "749135281413883d1f23fceb6d68830c31efa07d3025bbc8eb1de43ef3a3fdca"
+    },
+    {
+      "path": "MS2LDA/Add_On/Fingerprints/FP_annotation.py",
+      "sha256": "40ca27b727b28ca35fb95d1ac6bcc0d2311e5669fd009a0df127d7e4072efbf4"
+    },
+    {
+      "path": "MS2LDA/Add_On/Fingerprints/FP_calculation/__init__.py",
+      "sha256": "a29ed668c1ec6ba93be28289ba5b9134290aa04923c943ac81d3208cbf86e363"
+    },
+    {
+      "path": "MS2LDA/Add_On/Fingerprints/FP_calculation/adaptive_fps.py",
+      "sha256": "95c7318f06466033321999affb35dbf86c253ed82dfc8825202e9e286ee18627"
+    },
+    {
+      "path": "MS2LDA/Add_On/Fingerprints/FP_calculation/cdk_fps.py",
+      "sha256": "09fda80e0549cbe0ed62e235eb5c800101aa9e49fb850932e4a0bc8674c7aac9"
+    },
+    {
+      "path": "MS2LDA/Add_On/Fingerprints/FP_calculation/jmap_fps.py",
+      "sha256": "35e4af016696cc43f1f11ab02d6e49f93f16796cd47513701571a8d02c5e0082"
+    },
+    {
+      "path": "MS2LDA/Add_On/Fingerprints/FP_calculation/map4.py",
+      "sha256": "14777ba9e39f5c24e329a100e2743af41a1da32ecd23e8f2eaa7850f16c577a8"
+    },
+    {
+      "path": "MS2LDA/Add_On/Fingerprints/FP_calculation/mhfp.py",
+      "sha256": "dfa261c07fe438ee76e0f69c885e299152d873ba79b2336d83fb1803a168f8c2"
+    },
+    {
+      "path": "MS2LDA/Add_On/Fingerprints/FP_calculation/minhash_fps.py",
+      "sha256": "a6808af060bd75c6b9a1cafd1b1d80e4f6e64ccbf78e6702980099674f583c0d"
+    },
+    {
+      "path": "MS2LDA/Add_On/Fingerprints/FP_calculation/rdkit_fps.py",
+      "sha256": "11a7968db33bae59e8172bf2ffc5c958df2554e99834a2cc50b91054dcecfe9e"
+    },
+    {
+      "path": "MS2LDA/Add_On/Fingerprints/Substructure_retrieval.py",
+      "sha256": "e711673c35530e4ae3057fbbdcd80581418e0f43f7e5c4af0a153fb2d7c5e77a"
+    },
+    {
+      "path": "MS2LDA/Add_On/Fingerprints/__init__.py",
+      "sha256": "be6d3e8f817f0c561afc787da8b86ac7ca26c39f1660ca59f295f7efd13a1915"
+    },
+    {
+      "path": "MS2LDA/Add_On/Fingerprints/__version__.py",
+      "sha256": "fd6c175c8bef48516998855f45d89f1a3a04ca12fd5c6ed6bc9b0ae949a5cc58"
+    },
+    {
+      "path": "MS2LDA/Add_On/MassQL/MassQL4MotifDB.py",
+      "sha256": "108840d027863794fb75a1ee02a17d4c852f83cd7c145f80898674c30e858eab"
+    },
+    {
+      "path": "MS2LDA/Add_On/MassQL/__init__.py",
+      "sha256": "c1d018e05d5d4016c3964f69c3e99ca465b85842e935a3606d5a5d9cddca57b7"
+    },
+    {
+      "path": "MS2LDA/Add_On/NTS/Screening.py",
+      "sha256": "740a9b6bbf8e482062ff3f4bd40999f1bc94f91d02de78f369405170259016b0"
+    },
+    {
+      "path": "MS2LDA/Add_On/NTS/__init__.py",
+      "sha256": "c1d018e05d5d4016c3964f69c3e99ca465b85842e935a3606d5a5d9cddca57b7"
+    },
+    {
+      "path": "MS2LDA/Add_On/Spec2Vec/__init__.py",
+      "sha256": "c1d018e05d5d4016c3964f69c3e99ca465b85842e935a3606d5a5d9cddca57b7"
+    },
+    {
+      "path": "MS2LDA/Add_On/Spec2Vec/annotation.py",
+      "sha256": "574589801914233de7400db07dac2ae8ecdf4a17deb80082070dec0da6a38c30"
+    },
+    {
+      "path": "MS2LDA/Add_On/Spec2Vec/annotation_refined.py",
+      "sha256": "13d1ab3a6081171df27b5e0ba361e7916bfece0ff386cbcdfc7f6c6d57a5d8bf"
+    },
+    {
+      "path": "MS2LDA/Add_On/__init__.py",
+      "sha256": "c1d018e05d5d4016c3964f69c3e99ca465b85842e935a3606d5a5d9cddca57b7"
+    },
+    {
+      "path": "MS2LDA/Mass2Motif.py",
+      "sha256": "6d140aa0d916d28085b312177936f79d19231ed9bfebab16f8a2444f4c841ad5"
+    },
+    {
+      "path": "MS2LDA/Mass2MotifDocument.py",
+      "sha256": "5acffd92850614c6c394385c3cd086cd41f1e5a487faa9d3993665396d400020"
+    },
+    {
+      "path": "MS2LDA/Preprocessing/__init__.py",
+      "sha256": "c1d018e05d5d4016c3964f69c3e99ca465b85842e935a3606d5a5d9cddca57b7"
+    },
+    {
+      "path": "MS2LDA/Preprocessing/generate_corpus.py",
+      "sha256": "47647ad666f5a374460c7471dd205276e359f155cba7d2c55ecbbbafadb9187d"
+    },
+    {
+      "path": "MS2LDA/Preprocessing/load_and_clean.py",
+      "sha256": "f5bfd3c5acfe5bd0297050cce2e332b7e4c4b5a1d8c7fdd0c10ec66a6e22e154"
+    },
+    {
+      "path": "MS2LDA/Visualisation/MS2LDA_visualisation.py",
+      "sha256": "0880a5850108cca6c494fe0545caf784002b0a878137466f5cc5bc9e961391d3"
+    },
+    {
+      "path": "MS2LDA/Visualisation/__init__.py",
+      "sha256": "c1d018e05d5d4016c3964f69c3e99ca465b85842e935a3606d5a5d9cddca57b7"
+    },
+    {
+      "path": "MS2LDA/Visualisation/ldadict.py",
+      "sha256": "cd0670d133ae7a17fcd0fa3410824874159ada874a722d4e0f3bd9a4d2a744fb"
+    },
+    {
+      "path": "MS2LDA/Visualisation/plot_MotifsetSimilarity.py",
+      "sha256": "e503c03ebc8fb04c8047d935f1f930fc61d08201b9596b6851fa623d12c130a3"
+    },
+    {
+      "path": "MS2LDA/Visualisation/visualisation.py",
+      "sha256": "ae7bbb38959e99385410872377ae735b1b24d2bb68d0262f6a133154e32d8007"
+    },
+    {
+      "path": "MS2LDA/__init__.py",
+      "sha256": "d7812df8d859e11b4f6f17a0031a2e88058654d4afd4ca3bd034f955df0ff841"
+    },
+    {
+      "path": "MS2LDA/__version__.py",
+      "sha256": "ffb3a541d6d590ae2369dd022dda48d20ad3fb31006feaa01661f9985cc35e20"
+    },
+    {
+      "path": "MS2LDA/modeling.py",
+      "sha256": "7badee55b61bf25c47a4a399a3ea2de8074dfca6b750dca66a5f0d617e2bd743"
+    },
+    {
+      "path": "MS2LDA/motif_parser.py",
+      "sha256": "cbf1842b5f35c064075d8745688b9d964721c155d2c40766e59a1fdc603a396a"
+    },
+    {
+      "path": "MS2LDA/run.py",
+      "sha256": "b539e4616559180efc69654fbdfa63de5a240d025eba511a37d955514ea214ce"
+    },
+    {
+      "path": "MS2LDA/utils.py",
+      "sha256": "1e610003370e5e099fe4c1327f2a208cdf98606e4c404f2b72aa06d34d266a6f"
+    },
+    {
+      "path": "environment.yml",
+      "sha256": "570ab03e400c36c31c43e91053fead3b6788546f3ee5a6b699428ef844541ba8"
+    },
+    {
+      "path": "pyproject.toml",
+      "sha256": "160d9d05f30f6bb21cf286a0bcc246fa416da1108ed6017926172127c40ba201"
+    }
+  ]
+}

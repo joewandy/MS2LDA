@@ -1,0 +1,124 @@
+{
+  "architecture_method": "etm_balanced",
+  "config": {
+    "architecture": "fixed-SGNS ETM with fragment/loss-balanced decoder",
+    "batch_size": 256,
+    "decoder_normalization": "independent fragment/loss softmaxes at 0.5 each",
+    "device": "cuda",
+    "embedding_dimensions": 48,
+    "epochs": 120,
+    "hidden_dimensions": 800,
+    "learning_rate": 0.005,
+    "only_scientific_change": "beta normalization: global softmax to fixed 0.5 fragment and 0.5 loss",
+    "optimizer": "Adam",
+    "paired_reference_method": "etm",
+    "seed": 7043,
+    "topics": 1000,
+    "trained_separately": true,
+    "weight_decay": 1.2e-06
+  },
+  "method": "etm_balanced",
+  "metrics": {
+    "document_completion": {
+      "eligible_documents": 3888,
+      "in_vocabulary_tokens": 1277983,
+      "nll_per_token": 8.77493781358444,
+      "oov_fraction": 0.031355544236867795,
+      "out_of_vocabulary_tokens": 41369,
+      "total_documents": 3889
+    },
+    "finite_stable": true,
+    "fragment_probability_mass": {
+      "extreme_definition": "fragment mass <0.1 or >0.9",
+      "fraction_extreme_skew": 0.0,
+      "maximum": 0.5000000742455563,
+      "median": 0.4999999979033518,
+      "minimum": 0.49999991161266033,
+      "percentiles": {
+        "1": 0.49999993617619476,
+        "25": 0.49999998200151735,
+        "5": 0.4999999552278835,
+        "50": 0.4999999979033518,
+        "75": 0.500000013755723,
+        "95": 0.5000000354680864,
+        "99": 0.5000000553782962
+      }
+    },
+    "runtime": {
+      "memory": {
+        "measurement": "sampled per epoch; process is Linux ru_maxrss and system is minimum /proc/meminfo MemAvailable",
+        "minimum_system_available_bytes": 12058103808,
+        "peak_cuda_allocated_bytes": 894749184,
+        "peak_cuda_reserved_bytes": 1084227584,
+        "peak_process_bytes": 2652319744
+      },
+      "training_wall_seconds": 739.956851641,
+      "validation_full_spectra_per_second": 40163.75161200652,
+      "validation_observed_spectra_per_second": 40595.11838113273
+    },
+    "theta_distribution": {
+      "fraction_max_theta_ge_0_2": 0.7726922087940344,
+      "fraction_max_theta_ge_0_3": 0.6112111082540499,
+      "fraction_max_theta_ge_0_5": 0.3275906402674209,
+      "max_theta_p10": 0.12020175265963885,
+      "max_theta_p25": 0.21236720622215263,
+      "max_theta_p50": 0.37364920778714217,
+      "max_theta_p75": 0.5642682478223099,
+      "max_theta_p90": 0.7619968014231732,
+      "max_theta_p95": 0.8678355582392232,
+      "mean_effective_topics_per_spectrum": 111.98146878494953,
+      "median_effective_topics_per_spectrum": 45.08973752108426,
+      "median_max_theta": 0.37364920778714217,
+      "unique_top1_topics": 254
+    },
+    "topic_inventory": {
+      "active_topic_usage_threshold": 0.0005,
+      "active_topics_above_usage_threshold": 274,
+      "active_topics_mean_usage_ge_1_over_k": 175,
+      "catastrophic_duplicate_component": false,
+      "catastrophic_duplicate_component_fraction": 0.5,
+      "corpus_effective_topic_count": 364.20121026516324,
+      "documents": 3889,
+      "duplicate_components": [
+        {
+          "duplicate_component_count": 9,
+          "largest_component_size": 4,
+          "pair_count": 15,
+          "threshold": 0.95,
+          "topics_in_duplicate_components": 23
+        },
+        {
+          "duplicate_component_count": 0,
+          "largest_component_size": 1,
+          "pair_count": 0,
+          "threshold": 0.99,
+          "topics_in_duplicate_components": 0
+        },
+        {
+          "duplicate_component_count": 0,
+          "largest_component_size": 1,
+          "pair_count": 0,
+          "threshold": 0.999,
+          "topics_in_duplicate_components": 0
+        }
+      ],
+      "largest_strict_duplicate_component": 1,
+      "maximum_mean_topic_usage": 0.03155670959921622,
+      "maximum_pairwise_beta_cosine": 0.984429657459259,
+      "mean_effective_topics_per_spectrum": 111.98146878494953,
+      "mean_nearest_topic_beta_cosine": 0.396365225315094,
+      "median_beta_effective_words": 73.7106704711914,
+      "median_beta_max_probability": 0.18552455306053162,
+      "median_beta_top_n_mass": 0.6565001010894775,
+      "median_effective_topics_per_spectrum": 45.08973752108426,
+      "median_nearest_topic_beta_cosine": 0.34676194190979004,
+      "strictest_duplicate_cosine_threshold": 0.999,
+      "top_word_count": 20,
+      "top_word_uniqueness": 0.3361,
+      "topics": 1000,
+      "topics_never_top1": 746,
+      "unique_top1_topics": 254
+    }
+  },
+  "parameters": 19278000
+}

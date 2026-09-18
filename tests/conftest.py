@@ -1,6 +1,7 @@
 """
 Shared test fixtures and configuration for MS2LDA tests.
 """
+
 import tempfile
 from pathlib import Path
 from typing import List, Tuple
@@ -30,8 +31,9 @@ def sample_spectrum():
 @pytest.fixture
 def sample_spectra_list():
     """Create a list of diverse sample spectra for testing."""
+    rng = np.random.default_rng(0)
     spectra = []
-    
+
     # Spectrum 1: Normal spectrum with losses
     spec1 = Spectrum(
         mz=np.array([100.0, 150.0, 200.0, 250.0]),
@@ -48,7 +50,7 @@ def sample_spectra_list():
         intensities=np.array([0.3, 0.5, 0.7]),
     )
     spectra.append(spec1)
-    
+
     # Spectrum 2: Spectrum with few peaks
     spectra.append(
         Spectrum(
@@ -62,10 +64,10 @@ def sample_spectra_list():
             },
         )
     )
-    
+
     # Spectrum 3: Spectrum with many peaks
     mz_values = np.linspace(50, 500, 50)
-    intensities = np.random.exponential(0.3, 50)
+    intensities = rng.exponential(0.3, 50)
     intensities = intensities / intensities.max()
     spectra.append(
         Spectrum(
@@ -79,7 +81,7 @@ def sample_spectra_list():
             },
         )
     )
-    
+
     # Spectrum 4: Empty spectrum (edge case)
     spectra.append(
         Spectrum(
@@ -93,7 +95,7 @@ def sample_spectra_list():
             },
         )
     )
-    
+
     return spectra
 
 
@@ -182,10 +184,18 @@ def mock_tomotopy_model():
     model.k = 3  # 3 topics
     model.num_vocabs = 10
     model.vocabs = [
-        "frag@100.00", "frag@150.00", "frag@200.00", "frag@250.00", "frag@300.00",
-        "loss@50.00", "loss@100.00", "loss@150.00", "loss@200.00", "loss@250.00"
+        "frag@100.00",
+        "frag@150.00",
+        "frag@200.00",
+        "frag@250.00",
+        "frag@300.00",
+        "loss@50.00",
+        "loss@100.00",
+        "loss@150.00",
+        "loss@200.00",
+        "loss@250.00",
     ]
-    
+
     # Mock document-topic distributions
     model.docs = []
     for i in range(5):
@@ -193,7 +203,7 @@ def mock_tomotopy_model():
         doc.get_topic_dist = MagicMock(return_value=[0.3, 0.5, 0.2])
         doc.words = [0, 1, 5]  # Word indices
         model.docs.append(doc)
-    
+
     # Mock topic-word distributions
     def get_topic_word_dist(topic_id):
         if topic_id == 0:
@@ -202,14 +212,14 @@ def mock_tomotopy_model():
             return np.array([0.1, 0.1, 0.3, 0.2, 0.1, 0.05, 0.1, 0.03, 0.01, 0.01])
         else:
             return np.array([0.05, 0.05, 0.1, 0.1, 0.3, 0.1, 0.15, 0.1, 0.03, 0.02])
-    
+
     model.get_topic_word_dist = get_topic_word_dist
-    
+
     # Mock training methods
     model.train = MagicMock()
     model.perplexity = 10.0
     model.ll_per_word = -2.5
-    
+
     return model
 
 
@@ -217,18 +227,17 @@ def mock_tomotopy_model():
 def mock_spec2vec_model():
     """Create a mock Spec2Vec model."""
     model = MagicMock()
-    
+
     # Mock embedding calculation
     def mock_embedding(spectrum):
         # Return a consistent embedding based on spectrum size
         embedding_size = 300
-        if hasattr(spectrum, 'peaks') and hasattr(spectrum.peaks, 'mz'):
+        if hasattr(spectrum, "peaks") and hasattr(spectrum.peaks, "mz"):
             seed = len(spectrum.peaks.mz)
         else:
             seed = 42
-        np.random.seed(seed)
-        return np.random.randn(embedding_size)
-    
+        return np.random.default_rng(seed).standard_normal(embedding_size)
+
     model.model.calculate_embedding = mock_embedding
     return model
 
@@ -292,13 +301,14 @@ def generate_random_spectrum(
     add_losses: bool = False,
 ) -> Spectrum:
     """Generate a random spectrum with specified parameters."""
-    mz = np.sort(np.random.uniform(mz_range[0], mz_range[1], n_peaks))
-    intensities = np.random.exponential(0.3, n_peaks)
+    rng = np.random.default_rng(n_peaks)
+    mz = np.sort(rng.uniform(mz_range[0], mz_range[1], n_peaks))
+    intensities = rng.exponential(0.3, n_peaks)
     intensities = intensities / intensities.max()
-    
+
     if precursor_mz is None:
         precursor_mz = mz_range[1] + 50
-    
+
     spectrum = Spectrum(
         mz=mz,
         intensities=intensities,
@@ -308,14 +318,14 @@ def generate_random_spectrum(
             "ionmode": "positive",
         },
     )
-    
+
     if add_losses and n_peaks > 3:
         n_losses = n_peaks // 2
-        loss_mz = np.sort(np.random.uniform(10, 200, n_losses))
-        loss_intensities = np.random.exponential(0.2, n_losses)
+        loss_mz = np.sort(rng.uniform(10, 200, n_losses))
+        loss_intensities = rng.exponential(0.2, n_losses)
         loss_intensities = loss_intensities / loss_intensities.max()
         spectrum._losses = Fragments(mz=loss_mz, intensities=loss_intensities)
-    
+
     return spectrum
 
 
@@ -325,29 +335,31 @@ def generate_test_documents(
     doc_length_range: Tuple[int, int] = (5, 20),
 ) -> List[List[str]]:
     """Generate random documents for LDA testing."""
+    rng = np.random.default_rng(0)
     # Create vocabulary
     vocab = []
     for i in range(vocab_size // 2):
         vocab.append(f"frag@{100 + i*50:.2f}")
     for i in range(vocab_size // 2):
         vocab.append(f"loss@{20 + i*30:.2f}")
-    
+
     # Generate documents
     documents = []
     for _ in range(n_docs):
-        doc_length = np.random.randint(doc_length_range[0], doc_length_range[1])
-        doc = np.random.choice(vocab, doc_length).tolist()
+        doc_length = rng.integers(doc_length_range[0], doc_length_range[1])
+        doc = rng.choice(vocab, doc_length).tolist()
         documents.append(doc)
-    
+
     return documents
 
 
 @pytest.fixture
 def mock_download_function(monkeypatch):
     """Mock the download_model_and_data function."""
+
     def mock_download(*args, **kwargs):
         # Create dummy files instead of downloading
         return True
-    
+
     monkeypatch.setattr("MS2LDA.utils.download_model_and_data", mock_download)
     return mock_download

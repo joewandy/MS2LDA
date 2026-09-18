@@ -1,0 +1,24 @@
+{
+  "runs": [
+    {
+      "variant": "reduced_linear_evidence",
+      "seed": 42,
+      "training_seed": 7043,
+      "topics": 1000,
+      "selection_split": "validation",
+      "test_matrices_loaded": false,
+      "planned_epochs": 120,
+      "last_completed_checkpoint_epoch": 80,
+      "status": "non_finite_training_loss",
+      "error": "FloatingPointError: non-finite training loss",
+      "metrics": null,
+      "interpretation": "Training failed after the epoch-80 checkpoint and before completing 120 epochs. The exact failing epoch and numerical root cause were not instrumented. No final model or chemical evaluation exists; missing metrics are not zero. This configuration was not retried or retuned.",
+      "source_sha256": {
+        "output/benchmarks/contextual_reduction_20260907/worker_a_persistent.log": "2d6eac06d7d0cd5edeb1504c194f8e6d1f991781cf1d83598afe0d5ca92e9f4d",
+        "output/benchmarks/contextual_reduction_20260907/real/reduced_linear_evidence_seed42/models/minimal_etm/config.json": "c8d1638a0889c523bdd424d660743a081e75dbcfa42eb9cc173df6b0f764920a",
+        "output/benchmarks/contextual_reduction_20260907/real/reduced_linear_evidence_seed42/models/minimal_etm/training_access_audit.json": "16c5d5fbe6c70caaa701db4211b5607a907d2b361b81003f944f5478e965f6d2",
+        "output/benchmarks/contextual_reduction_20260907/real/reduced_linear_evidence_seed42/models/minimal_etm/training_recovery_epoch080.pt": "6d55d758f9ea220efb8ec7446c77f9e37e563d9ec3a029f586912de80ad8d8f5"
+      }
+    }
+  ]
+}

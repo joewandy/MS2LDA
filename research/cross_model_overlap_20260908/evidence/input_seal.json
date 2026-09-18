@@ -1,0 +1,140 @@
+{
+  "fits": [
+    {
+      "id": "selected_11",
+      "method": "minimal_etm",
+      "model": "selected",
+      "path": "output/benchmarks/contextual_reduction_20260907/real/reduced_document_context_seed11"
+    },
+    {
+      "id": "selected_23",
+      "method": "minimal_etm",
+      "model": "selected",
+      "path": "output/benchmarks/contextual_reduction_20260907/real/reduced_document_context_seed23"
+    },
+    {
+      "id": "selected_42",
+      "method": "minimal_etm",
+      "model": "selected",
+      "path": "output/benchmarks/contextual_reduction_20260907/real/reduced_document_context_seed42_retry1"
+    },
+    {
+      "id": "tomotopy_11",
+      "method": "tomotopy",
+      "model": "tomotopy",
+      "path": "output/benchmarks/baseline_repeats_20260908/real/tomotopy_seed11_attempt1"
+    },
+    {
+      "id": "tomotopy_23",
+      "method": "tomotopy",
+      "model": "tomotopy",
+      "path": "output/benchmarks/baseline_repeats_20260908/real/tomotopy_seed23_attempt1"
+    },
+    {
+      "id": "tomotopy_42",
+      "method": "tomotopy",
+      "model": "tomotopy",
+      "path": "output/benchmarks/baseline_repeats_20260908/real/tomotopy_seed42_attempt1"
+    }
+  ],
+  "inputs": {
+    "output/benchmarks/baseline_repeats_20260908/real/tomotopy_seed11_attempt1/data/vocabulary.json": {
+      "bytes": 399495,
+      "sha256": "9ed46f54a4e4917560f764d4ac662bae7036c1b98733d6b25a62a869799bd90e"
+    },
+    "output/benchmarks/baseline_repeats_20260908/real/tomotopy_seed11_attempt1/validation_evaluation/tomotopy/beta.npy": {
+      "bytes": 84932128,
+      "sha256": "ba917d5d0e78f366dc77ae5e1a9193f350fff28bb7e071857b446ab4f0a7e025"
+    },
+    "output/benchmarks/baseline_repeats_20260908/real/tomotopy_seed23_attempt1/data/vocabulary.json": {
+      "bytes": 399495,
+      "sha256": "9ed46f54a4e4917560f764d4ac662bae7036c1b98733d6b25a62a869799bd90e"
+    },
+    "output/benchmarks/baseline_repeats_20260908/real/tomotopy_seed23_attempt1/validation_evaluation/tomotopy/beta.npy": {
+      "bytes": 84932128,
+      "sha256": "59bead29c7b030ace020389345b976fb7cbcb4577f13400484de2930cce542b6"
+    },
+    "output/benchmarks/baseline_repeats_20260908/real/tomotopy_seed42_attempt1/data/vocabulary.json": {
+      "bytes": 399495,
+      "sha256": "9ed46f54a4e4917560f764d4ac662bae7036c1b98733d6b25a62a869799bd90e"
+    },
+    "output/benchmarks/baseline_repeats_20260908/real/tomotopy_seed42_attempt1/validation_evaluation/tomotopy/beta.npy": {
+      "bytes": 84932128,
+      "sha256": "b29f1640807298c5ab6a89cf204530d8eca128b9dab6ccd9193b46c8d56507f6"
+    },
+    "output/benchmarks/contextual_reduction_20260907/real/reduced_document_context_seed11/data/vocabulary.json": {
+      "bytes": 399495,
+      "sha256": "9ed46f54a4e4917560f764d4ac662bae7036c1b98733d6b25a62a869799bd90e"
+    },
+    "output/benchmarks/contextual_reduction_20260907/real/reduced_document_context_seed11/validation_evaluation/minimal_etm/beta.npy": {
+      "bytes": 84932128,
+      "sha256": "13237c032f7bc835f87f88aec78ed699eb564adb8ed379dc9922e02773c32d16"
+    },
+    "output/benchmarks/contextual_reduction_20260907/real/reduced_document_context_seed23/data/vocabulary.json": {
+      "bytes": 399495,
+      "sha256": "9ed46f54a4e4917560f764d4ac662bae7036c1b98733d6b25a62a869799bd90e"
+    },
+    "output/benchmarks/contextual_reduction_20260907/real/reduced_document_context_seed23/validation_evaluation/minimal_etm/beta.npy": {
+      "bytes": 84932128,
+      "sha256": "35d78a6c841ebea5bc41e652658f27913460b4a7ac8027f453db33f8b46b0da6"
+    },
+    "output/benchmarks/contextual_reduction_20260907/real/reduced_document_context_seed42_retry1/data/vocabulary.json": {
+      "bytes": 399495,
+      "sha256": "9ed46f54a4e4917560f764d4ac662bae7036c1b98733d6b25a62a869799bd90e"
+    },
+    "output/benchmarks/contextual_reduction_20260907/real/reduced_document_context_seed42_retry1/validation_evaluation/minimal_etm/beta.npy": {
+      "bytes": 84932128,
+      "sha256": "509987ebd2f3d9ec216ffa65aa3cc09f4e23815bfdee6da61bc0341da6c101d1"
+    },
+    "research/cross_model_overlap_20260908/protocol.json": {
+      "bytes": 3698,
+      "sha256": "074c4b8d8fbeb75e6a27f9255b35e32f86a9f3e96e6911bd401d1a3f41377cbd"
+    },
+    "research/motif_chemical_assessment_20260908/evidence/input_seal.json": {
+      "bytes": 15514,
+      "sha256": "87119b8c48e52297449ad890103414018e19c44b84d33808421764838fb37b13"
+    },
+    "research/motif_chemical_assessment_20260908/evidence/inventory/selected_11.jsonl": {
+      "bytes": 416677,
+      "sha256": "263b678c9cd8c3e8de3b1a11cbf01e3c3201c89f2e5bf6087400cae0be322cfa"
+    },
+    "research/motif_chemical_assessment_20260908/evidence/inventory/selected_23.jsonl": {
+      "bytes": 413733,
+      "sha256": "a709139cfdf07db738afb72564f147a4bce6993eab693c175fa560e3badb098e"
+    },
+    "research/motif_chemical_assessment_20260908/evidence/inventory/selected_42.jsonl": {
+      "bytes": 416676,
+      "sha256": "5c35ce8a7dfdca0278b6e324f8849589df95fbdecd43e1ecf4ac4421f823b686"
+    },
+    "research/motif_chemical_assessment_20260908/evidence/inventory/tomotopy_11.jsonl": {
+      "bytes": 347874,
+      "sha256": "13a0996de2739cc4b4e9221d5e6443ecea33703bdfb3927f29e2277c70bfb6ac"
+    },
+    "research/motif_chemical_assessment_20260908/evidence/inventory/tomotopy_23.jsonl": {
+      "bytes": 351811,
+      "sha256": "b6f79ff48b20107a77a683c8f38b224944b3ee37a648cded129f72cf44db5bf5"
+    },
+    "research/motif_chemical_assessment_20260908/evidence/inventory/tomotopy_42.jsonl": {
+      "bytes": 348549,
+      "sha256": "39c7c59b45336becdb1087871d8c09d3ee9554c7675b0dc572ba79cedd159b20"
+    },
+    "research/motif_chemical_assessment_20260908/evidence/primary_50_enrichment.npz": {
+      "bytes": 7772841,
+      "sha256": "715385bfc61a4ee3baab26ff9d40aef2a1d37e4ffbe3e1332ce00dbd963a4a5c"
+    },
+    "research/motif_chemical_assessment_20260908/evidence/primary_50_topics.jsonl": {
+      "bytes": 2890025,
+      "sha256": "251b2cd7406c838389d9e00a8951e18be9db4f43e11a3e60ef80a3afd3e2df16"
+    },
+    "research/motif_chemical_assessment_20260908/evidence/protocol.json": {
+      "bytes": 4672,
+      "sha256": "ddaa673fa4d9d16dda11f015b1f9fee977d2ea35e730654f2a3b3fa7fd65ba32"
+    }
+  },
+  "protocol_sha256": "074c4b8d8fbeb75e6a27f9255b35e32f86a9f3e96e6911bd401d1a3f41377cbd",
+  "sealed_at_utc": "2026-09-08T21:17:16.269310+00:00",
+  "versions": {
+    "numpy": "1.26.4",
+    "scipy": "1.17.1"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "bit_identical": {
+    "beta.npy": true,
+    "validation_theta.npy": true
+  },
+  "device": "cuda",
+  "independent_scientific_fit": false,
+  "replay_cpu_threads": 4,
+  "seed_argument": 11,
+  "source_cpu_threads": 2,
+  "topics": 36,
+  "variant": "reduced_no_loo"
+}

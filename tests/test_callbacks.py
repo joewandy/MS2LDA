@@ -1,3 +1,5 @@
+"""Unit tests for callback helpers with stable, non-Dash contracts."""
+
 import base64
 import gzip
 import io
@@ -8,12 +10,12 @@ import pandas as pd
 import plotly.graph_objs as go
 import pytest
 
-from App import callbacks
+from App.callbacks import common, network, rankings_details, run_and_load, screening
 from MS2LDA.Mass2Motif import Mass2Motif
 
 
-def test_calculate_motif_shares_mixed():
-    spec = {
+def test_calculate_motif_shares_mixed() -> None:
+    spectrum = {
         "mz": [110.0],
         "intensities": [1.0],
         "metadata": {"id": "s1", "precursor_mz": 200.0},
@@ -25,89 +27,100 @@ def test_calculate_motif_shares_mixed():
             "motif_2": {"loss@90": 0.4},
         },
     }
-    shares = callbacks.calculate_motif_shares(spec, lda, tolerance=0.01)
-    assert shares[0] == pytest.approx({"motif_1": 0.6, "motif_2": 0.4})  # noqa: S101
+
+    shares = common.calculate_motif_shares(spectrum, lda, tolerance=0.01)
+
+    assert shares[0] == pytest.approx({"motif_1": 0.6, "motif_2": 0.4})
 
 
-def test_make_spectrum_plot_none():
-    spec = {"mz": [100.0], "intensities": [1.0], "metadata": {"id": "a"}}
-    fig = callbacks.make_spectrum_plot(spec, None, {}, highlight_mode="none")
-    assert isinstance(fig, go.Figure)  # noqa: S101
-    assert fig.data[0].marker.color == "#7f7f7f"  # noqa: S101
+def test_make_spectrum_plot_without_highlighting() -> None:
+    spectrum = {"mz": [100.0], "intensities": [1.0], "metadata": {"id": "a"}}
+
+    figure = common.make_spectrum_plot(
+        spectrum,
+        None,
+        {},
+        highlight_mode="none",
+    )
+
+    assert isinstance(figure, go.Figure)
+    assert figure.data[0].marker.color == "#7f7f7f"
 
 
-def test_apply_common_layout():
-    fig = go.Figure()
-    callbacks.apply_common_layout(fig, ytitle="Intensity")
-    assert fig.layout.bargap == 0.35  # noqa: S101,PLR2004
-    assert fig.layout.yaxis.title.text == "Intensity"  # noqa: S101
+def test_apply_common_layout() -> None:
+    figure = go.Figure()
+
+    common.apply_common_layout(figure, ytitle="Intensity")
+
+    assert figure.layout.bargap == 0.35
+    assert figure.layout.yaxis.title.text == "Intensity"
 
 
-def test_load_motifset_file(monkeypatch, tmp_path):
-    def fake_load(_path):
-        return pd.DataFrame(), pd.DataFrame()
+def test_load_motifset_file_uses_the_motifdb_converter(monkeypatch, tmp_path) -> None:
+    monkeypatch.setattr(
+        common,
+        "load_motifDB",
+        lambda _path: (pd.DataFrame(), pd.DataFrame()),
+    )
+    monkeypatch.setattr(common, "motifDB2motifs", lambda _frame: ["m1"])
+    motif_file = tmp_path / "motifs.json"
+    motif_file.write_text("{}", encoding="utf-8")
 
-    def fake_convert(_df):
-        return ["m1"]
-
-    monkeypatch.setattr(callbacks, "load_motifDB", fake_load)
-    monkeypatch.setattr(callbacks, "motifDB2motifs", fake_convert)
-    f = tmp_path / "file.json"
-    f.write_text("{}")
-    res = callbacks.load_motifset_file(str(f))
-    assert res == ["m1"]  # noqa: S101
+    assert common.load_motifset_file(str(motif_file)) == ["m1"]
 
 
-def test_toggle_tab_content():
-    res = callbacks.toggle_tab_content("load-results-tab")
-    assert res[1] == {"display": "block"}  # noqa: S101
+def test_tab_and_upload_helpers() -> None:
+    tab_content = common.toggle_tab_content("load-results-tab")
+    upload_message = run_and_load.update_output("data", "x.txt")
+
+    assert tab_content[1] == {"display": "block"}
+    assert upload_message.children[-1] == "Selected file: x.txt"
+    assert run_and_load.toggle_advanced_settings(1, is_open=False)
+    assert not run_and_load.toggle_advanced_settings(None, is_open=False)
 
 
-def test_update_output():
-    out = callbacks.update_output("data", "x.txt")
-    assert "Uploaded File" in out.children[0].children  # noqa: S101
-
-
-def test_toggle_advanced_settings():
-    assert callbacks.toggle_advanced_settings(1, is_open=False)  # noqa: S101
-    assert not callbacks.toggle_advanced_settings(None, is_open=False)  # noqa: S101
-
-
-def test_parse_ms2lda_viz_file_roundtrip():
+def test_parse_ms2lda_visualization_json_and_gzip() -> None:
     data = {"a": 1}
     raw = json.dumps(data).encode()
-    enc = base64.b64encode(raw).decode()
-    content = f"data:application/json;base64,{enc}"
-    assert callbacks.parse_ms2lda_viz_file(content) == data  # noqa: S101
+    encoded = base64.b64encode(raw).decode()
+    plain_content = f"data:application/json;base64,{encoded}"
 
-    gz_bytes = io.BytesIO()
-    with gzip.GzipFile(fileobj=gz_bytes, mode="w") as gz:
-        gz.write(raw)
-    enc_gz = base64.b64encode(gz_bytes.getvalue()).decode()
-    content_gz = f"data:application/json;base64,{enc_gz}"
-    assert callbacks.parse_ms2lda_viz_file(content_gz) == data  # noqa: S101
+    compressed = io.BytesIO()
+    with gzip.GzipFile(fileobj=compressed, mode="w") as handle:
+        handle.write(raw)
+    encoded_gzip = base64.b64encode(compressed.getvalue()).decode()
+    gzip_content = f"data:application/gzip;base64,{encoded_gzip}"
+
+    assert run_and_load.parse_ms2lda_viz_file(plain_content) == data
+    assert run_and_load.parse_ms2lda_viz_file(gzip_content) == data
 
 
-def test_create_cytoscape_elements_simple():
-    spectrum = Mass2Motif(
-        frag_mz=np.array([100.0]),
-        frag_intensities=np.array([0.8]),
-        loss_mz=np.array([50.0]),
-        loss_intensities=np.array([0.4]),
+def test_create_cytoscape_elements_for_fragment_and_loss() -> None:
+    motif = Mass2Motif(
+        frag_mz=np.asarray([100.0]),
+        frag_intensities=np.asarray([0.8]),
+        loss_mz=np.asarray([50.0]),
+        loss_intensities=np.asarray([0.4]),
         metadata={
             "precursor_mz": 150.0,
             "losses": [{"loss_mz": 50.0, "loss_intensity": 0.4}],
         },
     )
-    elems = callbacks.create_cytoscape_elements([spectrum], [], intensity_threshold=0.1)
-    ids = {e["data"]["id"] for e in elems if "id" in e.get("data", {})}
-    assert "motif_0" in ids  # noqa: S101
-    assert "frag_100.0" in ids  # noqa: S101
-    assert "loss_50.0" in ids  # noqa: S101
+
+    elements = network.create_cytoscape_elements(
+        [motif],
+        [],
+        intensity_threshold=0.1,
+    )
+
+    identifiers = {
+        element["data"]["id"] for element in elements if "id" in element.get("data", {})
+    }
+    assert {"motif_0", "frag_100.0", "loss_50.0"} <= identifiers
 
 
-def test_compute_motif_degrees():
-    lda = {
+def _lda_for_rankings() -> dict:
+    return {
         "beta": {"motif_a": {}, "motif_b": {}},
         "theta": {
             "doc1": {"motif_a": 0.6, "motif_b": 0.2},
@@ -118,13 +131,22 @@ def test_compute_motif_degrees():
             "doc2": {"motif_a": 0.3, "motif_b": 0.05},
         },
     }
-    res = callbacks.compute_motif_degrees(lda, 0.4, 1.0, 0.1, 0.3)
-    assert res[0][0] == "motif_a"  # noqa: S101
-    assert res[0][1] == 2  # noqa: S101,PLR2004
-    assert res[1][1] == 0  # noqa: S101
 
 
-def _simple_specs():
+def test_compute_motif_degrees() -> None:
+    degrees = rankings_details.compute_motif_degrees(
+        _lda_for_rankings(),
+        0.4,
+        1.0,
+        0.1,
+        0.3,
+    )
+
+    assert degrees[0][:2] == ("motif_a", 2)
+    assert degrees[1][1] == 0
+
+
+def _simple_spectra() -> list[dict]:
     return [
         {
             "mz": [150.0, 120.0],
@@ -143,51 +165,44 @@ def _simple_specs():
     ]
 
 
-def test_update_spectra_search_table_frag_numeric():
-    rows, _ = callbacks.update_spectra_search_table(
-        _simple_specs(), "frag@150.00", [0, 1000],
+@pytest.mark.parametrize(
+    ("query", "fragment_checked", "loss_checked", "expected_id"),
+    [
+        ("150.00", True, False, "s1"),
+        ("40.234", False, True, "s2"),
+    ],
+)
+def test_spectra_search_respects_channel_selection(
+    query: str,
+    fragment_checked: bool,
+    loss_checked: bool,
+    expected_id: str,
+) -> None:
+    rows, message = screening.update_spectra_search_table(
+        _simple_spectra(),
+        query,
+        [0, 1000],
+        fragment_checked,
+        loss_checked,
+        [],
     )
-    assert len(rows) == 1  # noqa: S101
-    assert rows[0]["spec_id"] == "s1"  # noqa: S101
+
+    assert [row["spec_id"] for row in rows] == [expected_id]
+    assert message == "1 spectra pass the filter"
 
 
-def test_update_spectra_search_table_loss_numeric_tolerance():
-    rows, _ = callbacks.update_spectra_search_table(
-        _simple_specs(), "loss@40.234", [0, 1000],
-    )
-    assert len(rows) == 1  # noqa: S101
-    assert rows[0]["spec_id"] == "s2"  # noqa: S101
-
-
-def test_run_massql_query(monkeypatch):
-    motifs = [
-        {"mz": [100.0], "intensities": [1.0], "metadata": {"id": "motif_1"}},
-        {"mz": [150.0], "intensities": [1.0], "metadata": {"id": "motif_2"}},
-    ]
-
-    def fake_process(_query, **_kwargs):
-        return pd.DataFrame({"motif_id": ["motif_2"]})
-
-    monkeypatch.setattr(callbacks.msql_engine, "process_query", fake_process)
-    res = callbacks.run_massql_query(1, "QUERY", motifs)
-    assert res == ["motif_2"]  # noqa: S101
-
-
-def test_update_motif_rankings_table_massql_filter():
-    lda = {
-        "beta": {"motif_a": {}, "motif_b": {}},
-        "theta": {"doc": {"motif_a": 0.6, "motif_b": 0.3}},
-        "overlap_scores": {"doc": {"motif_a": 0.2, "motif_b": 0.1}},
-    }
-    rows, cols, msg = callbacks.update_motif_rankings_table(
-        lda,
+def test_motif_ranking_applies_massql_matches() -> None:
+    rows, columns, message = rankings_details.update_motif_rankings_table(
+        _lda_for_rankings(),
         [0, 1],
         [0, 1],
         "motif-rankings-tab",
         ["motif_a"],
         None,
         None,
+        None,
     )
-    assert len(rows) == 1  # noqa: S101
-    assert rows[0]["Motif"] == "motif_a"  # noqa: S101
 
+    assert [row["Motif"] for row in rows] == ["motif_a"]
+    assert columns
+    assert message == "2 motif(s) pass the filter, 1 displayed after MassQL query"

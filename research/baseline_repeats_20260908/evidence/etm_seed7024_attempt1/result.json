@@ -1,0 +1,156 @@
+{
+  "architecture_method": "etm",
+  "config": {
+    "architecture": "canonical fixed-SGNS ETM",
+    "batch_size": 256,
+    "decoder_normalization": "global topic-word softmax",
+    "device": "cuda",
+    "embedding_dimensions": 48,
+    "epochs": 120,
+    "hidden_dimensions": 800,
+    "learning_rate": 0.005,
+    "only_scientific_change": null,
+    "optimizer": "Adam",
+    "paired_reference_method": null,
+    "seed": 7024,
+    "shuffle_seed": 7042,
+    "topics": 1000,
+    "trained_separately": true,
+    "training_seed": 7024,
+    "weight_decay": 1.2e-06
+  },
+  "fit_identity": {
+    "input_sha256": {
+      "data/train.npz": "b4808f341864ba1df246a5093992f52397c2f96e0b48b23245b9b17e30aa5b52",
+      "data/validation_completion.npz": "f75245b599bc3c087aad97ff7247112d422ec0ab87418c5f96b0a889b2f661f0",
+      "data/validation_full.npz": "51888951815f448d0527a6a876be345cfe76ab346d9e97bada9a186e8857fab2",
+      "data/validation_observed.npz": "76afa43a3540d91edd4dd7e851afe10c65e3d67bcf06007c83eac1d9b6e15bff",
+      "data/validation_records.jsonl": "0e85218489af6a07413474bb2db6ce74da537f6fd3c8ee77d5286f5775ba068c",
+      "data/vocabulary.json": "9ed46f54a4e4917560f764d4ac662bae7036c1b98733d6b25a62a869799bd90e",
+      "protocol.json": "8044718d019cac4f92524c7980bc5217d7db861d58c940b3f0a6ac8970d48021",
+      "token_features/features.npy": "a9d21070b111be3e5f59e3650f47d2eede9ae264ecb3085305bcd160c2d1883d"
+    },
+    "recipe": {
+      "adam_betas": [
+        0.9,
+        0.999
+      ],
+      "batch_size": 256,
+      "device": "cuda",
+      "epochs": 120,
+      "hidden": 800,
+      "learning_rate": 0.005,
+      "method": "etm",
+      "shuffle_seed": 7042,
+      "threads": 6,
+      "topics": 1000,
+      "torch": "2.10.0+cu128",
+      "weight_decay": 1.2e-06
+    },
+    "training_seed": 7024
+  },
+  "method": "etm",
+  "metrics": {
+    "document_completion": {
+      "eligible_documents": 3888,
+      "in_vocabulary_tokens": 1277983,
+      "nll_per_token": 8.733827556009679,
+      "oov_fraction": 0.031355544236867795,
+      "out_of_vocabulary_tokens": 41369,
+      "total_documents": 3889
+    },
+    "finite_stable": true,
+    "fragment_probability_mass": {
+      "extreme_definition": "fragment mass <0.1 or >0.9",
+      "fraction_extreme_skew": 0.176,
+      "maximum": 0.9955234264372741,
+      "median": 0.32646522966061764,
+      "minimum": 0.009893717127831317,
+      "percentiles": {
+        "1": 0.019780372825577056,
+        "25": 0.1714881018122515,
+        "5": 0.05237172602787052,
+        "50": 0.32646522966061764,
+        "75": 0.5346710870678963,
+        "95": 0.8732621719746029,
+        "99": 0.9720326411039308
+      }
+    },
+    "runtime": {
+      "memory": {
+        "measurement": "sampled per epoch; process is platform-normalized ru_maxrss and system is minimum /proc/meminfo MemAvailable",
+        "minimum_system_available_bytes": 13659045888,
+        "peak_cuda_allocated_bytes": 757763584,
+        "peak_cuda_reserved_bytes": 1025507328,
+        "peak_process_bytes": 2477211648
+      },
+      "training_wall_seconds": 678.2339223979798,
+      "validation_full_spectra_per_second": 46213.977249438154,
+      "validation_observed_spectra_per_second": 47332.61370126065
+    },
+    "theta_distribution": {
+      "fraction_max_theta_ge_0_2": 0.7891488814605297,
+      "fraction_max_theta_ge_0_3": 0.6189251735664695,
+      "fraction_max_theta_ge_0_5": 0.30804834147595783,
+      "max_theta_p10": 0.13089948960050976,
+      "max_theta_p25": 0.22493786673319463,
+      "max_theta_p50": 0.37917298763477836,
+      "max_theta_p75": 0.550521502506838,
+      "max_theta_p90": 0.7506789082815771,
+      "max_theta_p95": 0.8422194078636743,
+      "mean_effective_topics_per_spectrum": 102.56397250862537,
+      "median_effective_topics_per_spectrum": 39.83330218831636,
+      "median_max_theta": 0.37917298763477836,
+      "unique_top1_topics": 297
+    },
+    "topic_inventory": {
+      "active_topic_usage_threshold": 0.0005,
+      "active_topics_above_usage_threshold": 295,
+      "active_topics_mean_usage_ge_1_over_k": 153,
+      "catastrophic_duplicate_component": false,
+      "catastrophic_duplicate_component_fraction": 0.5,
+      "corpus_effective_topic_count": 337.5638463107937,
+      "documents": 3889,
+      "duplicate_components": [
+        {
+          "duplicate_component_count": 5,
+          "largest_component_size": 3,
+          "pair_count": 9,
+          "threshold": 0.95,
+          "topics_in_duplicate_components": 12
+        },
+        {
+          "duplicate_component_count": 2,
+          "largest_component_size": 2,
+          "pair_count": 2,
+          "threshold": 0.99,
+          "topics_in_duplicate_components": 4
+        },
+        {
+          "duplicate_component_count": 1,
+          "largest_component_size": 2,
+          "pair_count": 1,
+          "threshold": 0.999,
+          "topics_in_duplicate_components": 2
+        }
+      ],
+      "largest_strict_duplicate_component": 2,
+      "maximum_mean_topic_usage": 0.03792038443248328,
+      "maximum_pairwise_beta_cosine": 0.9998897910118103,
+      "mean_effective_topics_per_spectrum": 102.56397250862537,
+      "mean_nearest_topic_beta_cosine": 0.28764116764068604,
+      "median_beta_effective_words": 79.6884765625,
+      "median_beta_max_probability": 0.17538321018218994,
+      "median_beta_top_n_mass": 0.6465237140655518,
+      "median_effective_topics_per_spectrum": 39.83330218831636,
+      "median_nearest_topic_beta_cosine": 0.2193634808063507,
+      "strictest_duplicate_cosine_threshold": 0.999,
+      "top_word_count": 20,
+      "top_word_uniqueness": 0.34075,
+      "topics": 1000,
+      "topics_never_top1": 703,
+      "unique_top1_topics": 297
+    }
+  },
+  "parameters": 19278000
+}

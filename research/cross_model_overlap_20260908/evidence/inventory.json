@@ -1,0 +1,165 @@
+{
+  "cohort_sizes": {
+    "selected_11": {
+      "all": 1000,
+      "recurring": 613,
+      "recurring_evaluable": 512
+    },
+    "selected_23": {
+      "all": 1000,
+      "recurring": 599,
+      "recurring_evaluable": 502
+    },
+    "selected_42": {
+      "all": 1000,
+      "recurring": 619,
+      "recurring_evaluable": 530
+    },
+    "tomotopy_11": {
+      "all": 1000,
+      "recurring": 812,
+      "recurring_evaluable": 490
+    },
+    "tomotopy_23": {
+      "all": 1000,
+      "recurring": 823,
+      "recurring_evaluable": 516
+    },
+    "tomotopy_42": {
+      "all": 1000,
+      "recurring": 804,
+      "recurring_evaluable": 502
+    }
+  },
+  "cohorts": [
+    "all",
+    "recurring_evaluable",
+    "recurring"
+  ],
+  "directed_match_rows": 133220,
+  "dtype": [
+    [
+      "source_fit",
+      "<i2"
+    ],
+    [
+      "target_fit",
+      "<i2"
+    ],
+    [
+      "cohort",
+      "<i2"
+    ],
+    [
+      "similarity",
+      "<i2"
+    ],
+    [
+      "source_topic",
+      "<i2"
+    ],
+    [
+      "target_topic",
+      "<i2"
+    ],
+    [
+      "second_topic",
+      "<i2"
+    ],
+    [
+      "source_compounds",
+      "<i2"
+    ],
+    [
+      "target_compounds",
+      "<i2"
+    ],
+    [
+      "best_score",
+      "<f8"
+    ],
+    [
+      "second_score",
+      "<f8"
+    ],
+    [
+      "full_beta_cosine",
+      "<f8"
+    ],
+    [
+      "fragment_cosine",
+      "<f8"
+    ],
+    [
+      "loss_cosine",
+      "<f8"
+    ],
+    [
+      "top20_jaccard",
+      "<f8"
+    ],
+    [
+      "compound_jaccard",
+      "<f8"
+    ],
+    [
+      "feature_effect_cosine",
+      "<f8"
+    ],
+    [
+      "reciprocal",
+      "|b1"
+    ],
+    [
+      "source_mag",
+      "|b1"
+    ],
+    [
+      "target_mag",
+      "|b1"
+    ]
+  ],
+  "fits": [
+    {
+      "id": "selected_11",
+      "method": "minimal_etm",
+      "model": "selected",
+      "path": "output/benchmarks/contextual_reduction_20260907/real/reduced_document_context_seed11"
+    },
+    {
+      "id": "selected_23",
+      "method": "minimal_etm",
+      "model": "selected",
+      "path": "output/benchmarks/contextual_reduction_20260907/real/reduced_document_context_seed23"
+    },
+    {
+      "id": "selected_42",
+      "method": "minimal_etm",
+      "model": "selected",
+      "path": "output/benchmarks/contextual_reduction_20260907/real/reduced_document_context_seed42_retry1"
+    },
+    {
+      "id": "tomotopy_11",
+      "method": "tomotopy",
+      "model": "tomotopy",
+      "path": "output/benchmarks/baseline_repeats_20260908/real/tomotopy_seed11_attempt1"
+    },
+    {
+      "id": "tomotopy_23",
+      "method": "tomotopy",
+      "model": "tomotopy",
+      "path": "output/benchmarks/baseline_repeats_20260908/real/tomotopy_seed23_attempt1"
+    },
+    {
+      "id": "tomotopy_42",
+      "method": "tomotopy",
+      "model": "tomotopy",
+      "path": "output/benchmarks/baseline_repeats_20260908/real/tomotopy_seed42_attempt1"
+    }
+  ],
+  "similarities": [
+    "full_beta",
+    "balanced_channels"
+  ],
+  "vocabulary_size": 21233
+}

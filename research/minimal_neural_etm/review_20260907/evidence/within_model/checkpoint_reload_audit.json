@@ -1,0 +1,24 @@
+[
+  {
+    "audit_device": "cpu",
+    "checkpoint_sha256": "7569fcd92c9c798af6e5615d357eeeb78b903002fe74a3a99f2aeba093afd76a",
+    "frozen_state_unchanged": true,
+    "max_theta_error": 6.556510925292969e-07,
+    "nll_absolute_error": 2.6561451704765204e-08,
+    "test_matrices_loaded": false,
+    "training_device": "cuda",
+    "validation_rows": 3889,
+    "variant": "reduced_shallow"
+  },
+  {
+    "audit_device": "cpu",
+    "checkpoint_sha256": "74d6cb7f93db6c9aa95fd0fe69ce81aeef081e894df3f4fcfa6d003721478135",
+    "frozen_state_unchanged": true,
+    "max_theta_error": 7.450580596923828e-07,
+    "nll_absolute_error": 5.4357172984964564e-08,
+    "test_matrices_loaded": false,
+    "training_device": "cuda",
+    "validation_rows": 3889,
+    "variant": "reduced_document_context_shallow"
+  }
+]

@@ -1,0 +1,83 @@
+{
+  "all_stage_summaries_identical": {
+    "references": true,
+    "specificity": true,
+    "stability": true
+  },
+  "bitwise_identical_payloads": [
+    "compounds.jsonl",
+    "inventory/selected_11.jsonl",
+    "inventory/selected_23.jsonl",
+    "inventory/selected_42.jsonl",
+    "inventory/tomotopy_11.jsonl",
+    "inventory/tomotopy_23.jsonl",
+    "inventory/tomotopy_42.jsonl",
+    "maccs_definitions.json",
+    "original_sos_verification.json",
+    "primary_50_cohort.json",
+    "primary_50_enrichment.npz",
+    "primary_50_topics.jsonl",
+    "protocol.json",
+    "query_embeddings_coverage.jsonl",
+    "redundancy.jsonl",
+    "references.json",
+    "scaffold_50_cohort.json",
+    "scaffold_50_enrichment.npz",
+    "scaffold_50_topics.jsonl",
+    "sensitivity_100_cohort.json",
+    "sensitivity_100_enrichment.npz",
+    "sensitivity_100_topics.jsonl",
+    "sensitivity_25_cohort.json",
+    "sensitivity_25_enrichment.npz",
+    "sensitivity_25_topics.jsonl",
+    "stability_summary.json",
+    "topic_matches.jsonl"
+  ],
+  "independent_by_checks": {
+    "primary_50": {
+      "feature_by_max_abs_difference": 2.220446049250313e-16,
+      "feature_min_p": 2.5019719770215344e-17,
+      "feature_tests": 996000,
+      "sos_min_p": 1e-05,
+      "sos_tests": 6000
+    },
+    "scaffold_50": {
+      "feature_by_max_abs_difference": 2.220446049250313e-16,
+      "feature_min_p": 7.477494330491119e-13,
+      "feature_tests": 996000,
+      "sos_min_p": 1e-05,
+      "sos_tests": 6000
+    },
+    "sensitivity_100": {
+      "feature_by_max_abs_difference": 2.220446049250313e-16,
+      "feature_min_p": 6.28416269518108e-19,
+      "feature_tests": 996000,
+      "sos_min_p": 1e-05,
+      "sos_tests": 6000
+    },
+    "sensitivity_25": {
+      "feature_by_max_abs_difference": 2.220446049250313e-16,
+      "feature_min_p": 4.1743844209459977e-16,
+      "feature_tests": 996000,
+      "sos_min_p": 1e-05,
+      "sos_tests": 6000
+    }
+  },
+  "interpretation": "No retraining; no changed ranks, supports, overlaps, p/q values or conclusions. Reference BLAS thread counts differed (2 versus 4).",
+  "original_input_seal_sha256": "87119b8c48e52297449ad890103414018e19c44b84d33808421764838fb37b13",
+  "reference_roundoff_max_abs": {
+    "reference_hits.jsonl": 3.3306690738754696e-16,
+    "reference_similarities.npz": 3.3306690738754696e-16
+  },
+  "replay_input_seal_sha256": "2706096d8fde0818c6d730834baab10318f128958c1d1924a88aea4512f472d7",
+  "validated_source_sha256": {
+    "/home/joewandy/Work/git/MS2LDA/benchmarks/neural_ms2lda/chemical_assessment.py": "3c86d02cac64e4493da0ae1835d7395a56897e81a12239f972646597a49f5a0c",
+    "/home/joewandy/Work/git/MS2LDA/benchmarks/neural_ms2lda/chemical_assessment_figures.py": "44a0741b81e2fdddf8c9ad83451a1f409e6de605fcf4a06d85fb851533519779",
+    "/home/joewandy/Work/git/MS2LDA/benchmarks/neural_ms2lda/chemical_assessment_io.py": "8739857d74d24f9fb3c5bd0665edaa1f9c52d2557657277a869429309c7f49f3",
+    "/home/joewandy/Work/git/MS2LDA/benchmarks/neural_ms2lda/chemical_assessment_report.py": "285b5f9affd6ab0042ad71205f2f98fd50c6226897c9e4b3c79f24d7c1296d12",
+    "/home/joewandy/Work/git/MS2LDA/benchmarks/neural_ms2lda/chemical_nulls.py": "571c75136c3ab5e23421cb495609fd449c26792e7856f0e2da1c2539c04d7663",
+    "/home/joewandy/Work/git/MS2LDA/benchmarks/neural_ms2lda/motif_correspondence.py": "62a657d29c3588c7fc9c435068707b92949d044a3c17f13ecea9f1b5d637f36b",
+    "/home/joewandy/Work/git/MS2LDA/benchmarks/neural_ms2lda/motif_reference.py": "a37c15cd9783085d7c7c457276c3de6c236f5e7540856d26a1a23d4220a81486",
+    "scripts/run_motif_chemical_assessment.py": "8c121be4dabf019d0b639d989bb7937fcf20e863f3a6322da3be51db31da3a6f"
+  }
+}

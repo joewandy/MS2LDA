@@ -1,0 +1,35 @@
+{
+  "checkpoint_sha256": "0ff42e225961c3f2acfa5597c454d8d706fc41af9cc8a4fccd2e7ebba85198ae",
+  "input_sha256": {
+    "/home/joewandy/Work/git/MS2LDA/output/benchmarks/minimal_neural_20260907/real/contextual_seed42/data/train.npz": "b4808f341864ba1df246a5093992f52397c2f96e0b48b23245b9b17e30aa5b52",
+    "/home/joewandy/Work/git/MS2LDA/output/benchmarks/minimal_neural_20260907/real/contextual_seed42/data/validation_completion.npz": "f75245b599bc3c087aad97ff7247112d422ec0ab87418c5f96b0a889b2f661f0",
+    "/home/joewandy/Work/git/MS2LDA/output/benchmarks/minimal_neural_20260907/real/contextual_seed42/data/validation_full.npz": "51888951815f448d0527a6a876be345cfe76ab346d9e97bada9a186e8857fab2",
+    "/home/joewandy/Work/git/MS2LDA/output/benchmarks/minimal_neural_20260907/real/contextual_seed42/data/validation_observed.npz": "76afa43a3540d91edd4dd7e851afe10c65e3d67bcf06007c83eac1d9b6e15bff",
+    "/home/joewandy/Work/git/MS2LDA/output/benchmarks/minimal_neural_20260907/real/contextual_seed42/data/validation_records.jsonl": "0e85218489af6a07413474bb2db6ce74da537f6fd3c8ee77d5286f5775ba068c",
+    "/home/joewandy/Work/git/MS2LDA/output/benchmarks/minimal_neural_20260907/real/contextual_seed42/data/vocabulary.json": "9ed46f54a4e4917560f764d4ac662bae7036c1b98733d6b25a62a869799bd90e",
+    "/home/joewandy/Work/git/MS2LDA/output/benchmarks/minimal_neural_20260907/real/contextual_seed42/token_features/features.npy": "a9d21070b111be3e5f59e3650f47d2eede9ae264ecb3085305bcd160c2d1883d"
+  },
+  "maximum_absolute_errors": {
+    "channel_identity": 7.105427357601002e-15,
+    "compact_loo_direction": 3.3306690738754696e-16,
+    "kl_identity": 2.2698737420917547e-13,
+    "log_rewrite": 2.6645352591003757e-15,
+    "theta_gauge": 1.3322676295501878e-15
+  },
+  "maximum_removable_common_mode_kl": 0.26230621860877484,
+  "mean_gaussian_kl": 322.1172976317519,
+  "mean_removable_common_mode_kl": 0.010977450497785394,
+  "precision": "float64 audit of float32-trained weights; no new fit",
+  "script_sha256": "3a8dac5fabf781e6ca8f1c001eec89ed4e134abdf51d4097a2e8ff8461ebec71",
+  "source_code_sha256": {
+    "/home/joewandy/Work/git/MS2LDA/benchmarks/neural_ms2lda/batchnorm_calibration.py": "beb297c04b65a1af031575d544f79d8c937fd3d36111fb02ada1f451522bd78e",
+    "/home/joewandy/Work/git/MS2LDA/benchmarks/neural_ms2lda/contextual_sparse_etm.py": "81a299193945d6971d82fd241b472b2397b1cb16feec3df37ddaf4acced76355",
+    "/home/joewandy/Work/git/MS2LDA/benchmarks/neural_ms2lda/etm_baselines.py": "96780dc3c43d090c5b43839a5e499ffc2d8400f57b99eb694c0093922bd7fd2a",
+    "/home/joewandy/Work/git/MS2LDA/benchmarks/neural_ms2lda/prior_etm.py": "c528b20e27fc773c42f5dd591144003efffd7a914e8cce04bd659f8fa33812c9",
+    "/home/joewandy/Work/git/MS2LDA/benchmarks/neural_ms2lda/simplified_etm.py": "d7f7b50f08fccf89bedb12609bff8107d466d6e4a9b81296bf43602547fcbd7e",
+    "/home/joewandy/Work/git/MS2LDA/benchmarks/neural_ms2lda/topic_model_training.py": "b7dfb36001adf53f0a902318b7a0cd60973a430280ec336a7ab6053a3fb2cce8",
+    "/home/joewandy/Work/git/MS2LDA/scripts/run_minimal_etm.py": "e568291893a8d399786e941ec78fb1a3966eebc9eec360bca4d175ac86ffa06c"
+  },
+  "test_matrices_loaded": false,
+  "validation_rows": 3889
+}

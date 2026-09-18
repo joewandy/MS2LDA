@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "status": "post-hoc development-set assessment, not independent confirmation",
+  "parent_commit": "cb41e38",
+  "prepared": "output/benchmarks/minimal_neural_20260905/prepared",
+  "mgf": "output/benchmarks/minimal_neural_20260905/assets/extracted/Data/Benchmark_MSn_Lib/Corinna_Library_filtered_positive.mgf",
+  "spec2vec_model": "output/benchmarks/minimal_neural_20260905/assets/extracted/model_positive_mode/positive_train_data/150225_Spec2Vec_pos_CleanedLibraries.model",
+  "references": [
+    "MS2LDA/MotifDB/Motifset GNPS library derived Mass2Motifs.json",
+    "MS2LDA/MotifDB/Motifset Massbank library derived Mass2Motifs.json",
+    "MS2LDA/MotifDB/Motifset Urine derived Mass2Motifs.json"
+  ],
+  "fits": [
+    {"id": "selected_11", "model": "selected", "method": "minimal_etm", "path": "output/benchmarks/contextual_reduction_20260907/real/reduced_document_context_seed11"},
+    {"id": "selected_23", "model": "selected", "method": "minimal_etm", "path": "output/benchmarks/contextual_reduction_20260907/real/reduced_document_context_seed23"},
+    {"id": "selected_42", "model": "selected", "method": "minimal_etm", "path": "output/benchmarks/contextual_reduction_20260907/real/reduced_document_context_seed42_retry1"},
+    {"id": "tomotopy_11", "model": "tomotopy", "method": "tomotopy", "path": "output/benchmarks/baseline_repeats_20260908/real/tomotopy_seed11_attempt1"},
+    {"id": "tomotopy_23", "model": "tomotopy", "method": "tomotopy", "path": "output/benchmarks/baseline_repeats_20260908/real/tomotopy_seed23_attempt1"},
+    {"id": "tomotopy_42", "model": "tomotopy", "method": "tomotopy", "path": "output/benchmarks/baseline_repeats_20260908/real/tomotopy_seed42_attempt1"}
+  ],
+  "association": "dominant topic per spectrum; unique connectivity compounds within each topic",
+  "fingerprint": "RDKit MACCS positions 1 through 166; position 0 unused",
+  "consensus_threshold": 0.8,
+  "strata": "sorted unique (adduct, collision_energy) acquisition pairs per compound, crossed with floor(median precursor_mz / width_da)",
+  "configurations": [
+    {"id": "primary_50", "width_da": 50, "scaffold_balanced": false},
+    {"id": "sensitivity_25", "width_da": 25, "scaffold_balanced": false},
+    {"id": "sensitivity_100", "width_da": 100, "scaffold_balanced": false},
+    {"id": "scaffold_50", "width_da": 50, "scaffold_balanced": true}
+  ],
+  "scaffold_selection": "smallest SHA256(connectivity_key) per nonempty scaffold; each acyclic connectivity is its own group",
+  "permutations": 99999,
+  "permutation_seed": 20260908,
+  "permutation_batch_size": 256,
+  "sos_test": "whole fingerprint vectors shuffled within compound strata; identical draws for all six fits; upper tail including ties; p=(1+b)/(1+B)",
+  "enrichment_test": "exact convolution of independent stratum-specific hypergeometric count distributions; upper tail including observed count",
+  "multiplicity": "Benjamini-Yekutieli across six fits: 6000 SOS slots, separately 996000 motif-feature slots. Unavailable/constant slots contribute p=1. Each fixed configuration has its own family; sensitivities are not selected for significance.",
+  "descriptive_q_cutoff": 0.05,
+  "stability": "full-beta cosine and Hungarian matching for all 15 fit pairs; reciprocal nearest neighbours, top-20 Jaccard, compound Jaccard and cosine of matched-background feature-prevalence differences",
+  "redundancy": "within-fit nearest full-beta cosine and exact repeated available MAG consensus fingerprints",
+  "reference_matching": "existing Spec2Vec model and Mass2MotifDocument at 2 decimals; top-20 learned words; reference signatures use both typed mass-intensity channels, normalized jointly to maximum intensity; ignore auto_annotation as truth; retain all conflicting manual labels",
+  "reference_tolerances_da": [0.01, 0.005, 0.02],
+  "reference_overlap": "maximum cardinality one-to-one mass matching separately within fragment and neutral-loss channels; report each channel's matched count and both denominators",
+  "reference_ranked_hits": 5,
+  "plain_etm_exclusion": "only two complete local repeat fits; the historical third fit has summary evidence only. Retained in existing report comparison, omitted from new assessments without retraining or imputation.",
+  "interpretation": "Conditional exploratory associations, not calibrated post-selection significance, expert confirmation, fragmentation mechanisms, or novel chemistry. Report all topics, missingness, effect distributions and weak/negative results. Training-run SD, Monte Carlo precision and background sensitivities are distinct. Fit-pair comparisons are dependent. MotifDB and MAG evidence are correlated."
+}

@@ -1,0 +1,62 @@
+{
+  "attempt": 1,
+  "command": [
+    "<python-prefix>/bin/python",
+    "-m",
+    "scripts.evaluate_frozen_etm_test",
+    "--run",
+    "<reproduction-root>/real/controls",
+    "--method",
+    "etm",
+    "--device",
+    "cuda",
+    "--batch-size",
+    "256",
+    "--threads",
+    "6"
+  ],
+  "finished_utc": "2026-09-01T21:54:45.818037+00:00",
+  "log": "<reproduction-root>/logs/etm_test_evaluation.attempt-1.log",
+  "name": "etm_test_evaluation",
+  "outputs": [
+    {
+      "bytes": 5127,
+      "modified_ns": 1788299685333018649,
+      "path": "<reproduction-root>/real/controls/evaluation/etm/complete.json",
+      "sha256": "b3eab61f58c4110e442e008b653ca00d5d96c6969081966fb45ef19eeaec9c27"
+    },
+    {
+      "bytes": 331,
+      "modified_ns": 1788299685333118486,
+      "path": "<reproduction-root>/real/controls/evaluation/etm/test_access_audit.json",
+      "sha256": "64805ea95c835753cb169d17afa0a0d16d4165ce67b2f0da257bdeca1c89c0ba"
+    },
+    {
+      "bytes": 84932128,
+      "modified_ns": 1788299685234464310,
+      "path": "<reproduction-root>/real/controls/evaluation/etm/beta.npy",
+      "sha256": "91b7536d3524876ba861556ce08517971bdf660fb40522b914c9111fae1793d2"
+    },
+    {
+      "bytes": 31108128,
+      "modified_ns": 1788299685278466703,
+      "path": "<reproduction-root>/real/controls/evaluation/etm/test_observed_theta.npy",
+      "sha256": "0024af2595287c23a87b159e7405b5c620911d54543d34b93b8ed553df8de3a9"
+    },
+    {
+      "bytes": 31108128,
+      "modified_ns": 1788299685294467572,
+      "path": "<reproduction-root>/real/controls/evaluation/etm/test_full_theta.npy",
+      "sha256": "f2c59229e169babfa8df06eee37ef1f001eac268d1e7ddb709504a9c5358a2b2"
+    }
+  ],
+  "pre_stage_load": {
+    "available_memory_bytes": 13653872640,
+    "gpu_compute_processes": [],
+    "one_minute_load_average": 2.04638671875,
+    "utc": "2026-09-01T21:54:41.627602+00:00"
+  },
+  "return_code": 0,
+  "started_utc": "2026-09-01T21:54:41.627620+00:00",
+  "status": "complete"
+}
